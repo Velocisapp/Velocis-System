@@ -143,7 +143,7 @@
             "SOUTH AMERICA": { hubs: ["RIO", "BOGOTA", "LIMA", "SAO PAULO", "SANTIAGO", "BUENOS AIRES"], air: [{r:"GIG→MAD", p:"$720"}], sea: [{r:"SANTOS", p:"$950"}], rail: [{r:"ANDES", p:"$310"}], sub: [{r:"METRO RIO", p:"R$ 6.90"}] }
         };
 
-        let currentMode = 'air', earthImg;
+        let currentMode = 'air'; let earthImg;
         function setMode(m, el) { currentMode = m; document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); }
         function preload() { 
             earthImg = loadImage('https://upload.wikimedia.org/wikipedia/commons/c/c3/Solarsystemscope_texture_2k_earth_daymap.jpg');
