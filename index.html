@@ -156,17 +156,20 @@
    perspective(PI/3.0, width/height, 0.1, 5000);
 }
        function draw() {
-  background(0);
-if (!earthImg) { sphere(200); return; }
+  background(0); // Forces the space to stay black
   
-  ambientLight(150);
-  pointLight(255, 255, 255, 0, 0, 500);
+  ambientLight(100);
+  pointLight(0, 255, 255, 200, 200, 500); // Adds a Cyan glow to the globe
   
   push();
-  rotateY(frameCount * 0.005);
-  noStroke();
-  texture(earthImg); // This paints the map onto the globe
-  sphere(200);
+  rotateY(frameCount * 0.01); // Makes the world spin faster for your reveal
+  rotateX(frameCount * 0.005);
+  
+  stroke(0, 255, 255, 150); // Gives the globe a glowing Cyan grid line
+  strokeWeight(0.5);
+  noFill(); // This ensures we see through the globe to the other side
+  
+  sphere(220); // Draws a slightly larger glowing wireframe Earth
   pop();
 }
         function openGate(region) {
