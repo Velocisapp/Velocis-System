@@ -146,7 +146,7 @@
         let currentMode = 'air'; let earthImg;
         function setMode(m, el) { currentMode = m; document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); }
         function preload() { 
-            earthImg = loadImage('https://upload.wikimedia.org/wikipedia/commons/c/c3/Solarsystemscope_texture_2k_earth_daymap.jpg');
+           earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg');
         }
        function setup() {
    let canvas = createCanvas(windowWidth, windowHeight, WEBGL);
