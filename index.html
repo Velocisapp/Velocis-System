@@ -88,27 +88,29 @@
 }
  </style>
 </head>
-<body style="margin: 0; padding: 0; overflow: hidden; background: #000;">
-  <style>
-    #master-ui-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none; /* Allows clicks through to the globe if needed */
-      z-index: 99999;
-    }
-    .ui-element { pointer-events: auto; } /* Re-enables clicks for buttons */
-    #brand { top: 5%; width: 100%; text-align: center; position: absolute; }
-    #continent-hub { top: 18%; width: 100%; display: flex; justify-content: center; gap: 10px; position: absolute; flex-wrap: wrap; }
-  </style>
-
-  <div id="master-ui-container">
-    <div id="brand" class="ui-element">
-      <h1 style="margin: 0; color: #FFD700; text-shadow: 0 0 10px #FFD700;">VELOCIS™</h1>
+<body style="margin: 0; background: #000; overflow: hidden;">
+  <div id="master-ui" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; pointer-events: none;">
+    
+    <div id="brand" style="position: absolute; top: 5%; width: 100%; text-align: center; pointer-events: auto;">
+      <h1 style="margin: 0; color: #FFD700; text-shadow: 0 0 10px #FFD700; font-size: 2rem;">VELOCIS™</h1>
       <p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p>
     </div>
+
+    <div id="continent-hub" style="position: absolute; top: 18%; width: 100%; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; pointer-events: auto;">
+      <a href="https://www.klook.com/en-US/city/1-hong-kong-things-to-do/?aid=696305" target="_blank" class="continent-btn" style="text-decoration: none;">ASIA</a>
+      <a href="https://www.klook.com/en-US/city/45-paris-things-to-do/?aid=696305" target="_blank" class="continent-btn" style="text-decoration: none;">EUROPE</a>
+      <button class="continent-btn" onclick="openGate('AFRICA')">AFRICA</button>
+      <button class="continent-btn" onclick="openGate('NORTH AMERICA')">NORTH AMERICA</button>
+      <button class="continent-btn" onclick="openGate('SOUTH AMERICA')">SOUTH AMERICA</button>
+    </div>
+
+    <div id="transport-menu" style="position: absolute; bottom: 8%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto;">
+      <div id="btn-air" class="icon-btn active" onclick="setMode('air', this)">✈️</div>
+      <div id="btn-sea" class="icon-btn" onclick="setMode('sea', this)">🚢</div>
+      <div id="btn-rail" class="icon-btn" onclick="setMode('rail', this)">🚆</div>
+      <div id="btn-sub" class="icon-btn" onclick="setMode('sub', this)">🚇</div>
+    </div>
+  </div>
 
     <div id="continent-hub" class="ui-element">
       <a href="https://www.klook.com/en-US/city/1-hong-kong-things-to-do/?aid=696305" target="_blank" class="continent-btn" style="text-decoration: none;">ASIA</a>
