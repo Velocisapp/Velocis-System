@@ -156,8 +156,8 @@
 
                 <div class="scroll-area">${data[currentMode].map(opt => `<div class="itinerary-line"><span>${opt.r}<br><b style="font-size:1.1rem; color:#fff;">${opt.p}</b></span><button class="validate-btn" onclick="alert('LOCKED')">LOCK</button></div>`).join('')}</div>
                <button style="width:100%; margin-top:10px; padding:12px; color:#FFD700; border:1px solid #FFD700; background:none; font-weight:bold; cursor:pointer;" onclick="this.parentElement.remove()">CLOSE TERMINAL</button>`;
-    document.body.appendChild(card);
- } 
+        document.body.appendChild(card);
+        }
 
  function interceptPort(city, displayId, inputId) {
     const gateway = (geoMap[city] && geoMap[city][currentMode]) || city.toUpperCase() + " HUB";
