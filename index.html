@@ -70,14 +70,15 @@
             box-shadow: 0 0 45px rgba(0,255,255,0.6), inset 0 0 20px rgba(0,255,255,0.3);
         }
 #globe-container {
-    display: flex; align-items: center; justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     background-color: #000 !important;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
- z-index: 0; 
+    z-index: -1; /* This pushes the 3D engine to the bottom layer */
+    display: block !important; /* This forces it to exist */
+    pointer-events: none;
 }
 }
  </style>
@@ -151,7 +152,7 @@
     img => { img.crossOrigin = 'anonymous'; }); 
 }
        function setup() {
-   let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('display', 'block');
+let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.position(0,0); canvas.style('z-index', '-1');
    canvas.parent('globe-container'); // This is the secret key
    perspective(PI/3.0, width/height, 0.1, 5000);
 }
