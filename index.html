@@ -61,16 +61,18 @@
             filter: opacity(1);
             box-shadow: 0 0 45px rgba(0,255,255,0.6), inset 0 0 20px rgba(0,255,255,0.3);
         }
-   canvas { 
-  display: block; 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  z-index: 0; 
-     }  
+#globe-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; 
+}
  </style>
 </head>
 <body>
+    <div id="globe-container"></div>
     <div id="brand"><h1>VELOCIS™</h1><p style="color:#00ffff; font-size:0.6rem; letter-spacing:5px;">GLOBAL MOBILITY COMMAND</p></div>
 
     <div id="continent-hub">
@@ -134,10 +136,11 @@
         function preload() { 
             earthImg = loadImage('https://upload.wikimedia.org/wikipedia/commons/c/c3/Solarsystemscope_texture_2k_earth_daymap.jpg');
         }
-        function setup() {
-    createCanvas(windowWidth, windowHeight, WEBGL);
- perspective(PI/3.0, width/height, 0.1, 5000);
-        }
+       function setup() {
+   let canvas = createCanvas(windowWidth, windowHeight, WEBGL);
+   canvas.parent('globe-container'); // This is the secret key
+   perspective(PI/3.0, width/height, 0.1, 5000);
+}
         function draw() {
   background(0); 
    ambientLight(150);
