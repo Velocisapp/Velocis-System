@@ -6,37 +6,51 @@
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
         #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-        #header-box { position: absolute; top: 20px; left: 5%; width: 90%; border: 2px solid #FFD700; padding: 12px; background: rgba(0,20,20,0.9); box-sizing: border-box; }
-        #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
-        #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
+        
+        /* RESTORED: The Time/Header Window */
+        #header-box { 
+            position: absolute; top: 20px; left: 5%; width: 90%; 
+            border: 2px solid #FFD700; padding: 10px; background: rgba(0,20,20,0.9); 
+            box-sizing: border-box; transition: all 0.5s ease;
+        }
+        #brand-title { color: #FFD700; font-size: 14px; font-weight: 900; }
+        #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
+
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .ticker-wrap { position: absolute; bottom: 0; width: 100%; height: 50px; background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; }
+        .ticker-wrap {
+            position: absolute; bottom: 0; width: 100%; height: 50px; 
+            background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; 
+            display: flex; align-items: center; overflow: hidden;
+        }
     </style>
 </head>
 <body>
     <canvas id="engine"></canvas>
-    <div id="transport-menu" style="position: absolute; bottom: 8%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto;">
-    <div id="btn-air" class="icon-btn active" onclick="window.location.href='security.html'">✈️</div>
-    
-    <div id="btn-sea" class="icon-btn" onclick="window.location.href='security.html'">🚢</div>
-    
-    <div id="btn-rail" class="icon-btn" onclick="window.location.href='rail.html'">🚆</div>
-    
-    <div id="btn-sub" class="icon-btn" onclick="window.location.href='rail.html'">🚇</div>
-</div>
+    <div id="ui">
+        <div id="header-box">
+            <div id="brand-title">VELOCIS™ RAIL COMMAND</div>
+            <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
+            <div id="clock">TIME: --:--:--</div>
+        </div>
+        <div class="ticker-wrap">
+            <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 12s linear infinite;">
+                HUB 107 | PARIS RER B ACTIVE | HUB 2 | HK MTR ACTIVE | SCANNING TRACKS
+            </div>
         </div>
     </div>
+
 <script>
     const canvas = document.getElementById('engine');
     const ctx = canvas.getContext('2d');
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
+    // SPACING ADJUSTED: Reduced positions to prevent overlap
     const gates = [
-        { id: "PLAT 1", pos: 0.18, status: "ON TIME" }, 
-        { id: "PLAT 4", pos: 0.39, status: "BOARDING" },
-        { id: "TRK 12", pos: 0.61, status: "ON TIME" }, 
-        { id: "TRK 15", pos: 0.83, status: "FINAL CALL" }
+        { id: "P1", pos: 0.16, status: "ON TIME" }, 
+        { id: "P4", pos: 0.38, status: "BOARDING" },
+        { id: "T12", pos: 0.62, status: "ON TIME" }, 
+        { id: "T15", pos: 0.84, status: "FINAL CALL" }
     ];
 
     const dots = Array.from({ length: 35 }, () => ({
@@ -48,45 +62,38 @@
     function drawSleekArrow(x, y, color, dark) {
         ctx.save(); ctx.translate(x, y);
         const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
-        ctx.shadowBlur = 10 + pulse; 
-        ctx.shadowColor = color;
-        ctx.fillStyle = dark; 
-        ctx.beginPath();
-        ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-        ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); 
-        ctx.lineTo(-17, 7); ctx.fill();
-        let faceGrd = ctx.createLinearGradient(0, -40, 0, 50);
-        faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
-        ctx.fillStyle = faceGrd; 
-        ctx.beginPath();
-        ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-        ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); 
-        ctx.lineTo(-17, 7); ctx.fill();
+        ctx.shadowBlur = 10 + pulse; ctx.shadowColor = color;
+        ctx.fillStyle = dark; ctx.beginPath();
+        ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); ctx.lineTo(12, 5); ctx.lineTo(12, 40); ctx.lineTo(-12, 40); ctx.lineTo(-12, 5); ctx.fill();
         ctx.restore();
     }
 
     function draw() {
         ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
         gates.forEach((g) => {
-            const gx = canvas.width * g.pos; 
-            const gy = canvas.height * 0.65; 
+            const gx = canvas.width * g.pos; const gy = canvas.height * 0.68; 
             let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
             let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
-            const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
-            pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.35)'); pGrd.addColorStop(1, 'transparent');
-            ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
-            drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
-            ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
+            
+            const pGrd = ctx.createLinearGradient(gx-30, 0, gx+30, 0);
+            pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.3)'); pGrd.addColorStop(1, 'transparent');
+            ctx.fillStyle = pGrd; ctx.fillRect(gx-30, 0, 60, gy);
+
+            drawSleekArrow(gx, gy + 70 + Math.sin(Date.now()/400)*8, color, dark);
+
+            ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 11px Courier New';
             ctx.fillText("TRACK", gx, gy - 60); 
-            ctx.fillStyle = color; ctx.font = '900 35px Courier New';
-            ctx.fillText(g.id, gx, gy - 20);
-            ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
+            ctx.fillStyle = color; ctx.font = '900 28px Courier New';
+            ctx.fillText(g.id, gx, gy - 30);
+            ctx.font = 'bold 12px monospace'; ctx.fillText(g.status, gx, gy - 5);
         });
+
         dots.forEach(d => {
-            const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.65;
+            const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.68;
             d.x += (gx - d.x) * 0.015; d.y -= d.speed;
             if (d.y < gy) d.y = canvas.height + 20;
-            ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, Math.PI*2); ctx.fill();
         });
         requestAnimationFrame(draw);
     }
