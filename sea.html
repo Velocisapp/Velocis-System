@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        #header-box { 
+            position: absolute; top: 20px; left: 5%; width: 90%; 
+            border: 2px solid #FFD700; padding: 10px; background: rgba(0,20,20,0.9); 
+            box-sizing: border-box; transition: all 0.5s ease;
+        }
+        #brand-title { color: #FFD700; font-size: 14px; font-weight: 900; }
+        #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
+        @keyframes alertBoxPulse { 
+            0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 
+            50% { border-width: 6px; box-shadow: 0 0 25px #FF3131; transform: scale(1.02); } 
+            100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 
+        }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .ticker-wrap {
+            position: absolute; bottom: 0; width: 100%; height: 50px; 
+            background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; 
+            display: flex; align-items: center; overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="engine"></canvas>
+    <div id="ui">
+        <div id="header-box">
+            <div id="brand-title">VELOCIS™ SEA COMMAND</div>
+            <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
+            <div id="clock">TIME: --:--:--</div>
+        </div>
+        <div class="ticker-wrap">
+            <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 12s linear infinite;">
+                MARITIME HUB ACTIVE | HK FERRY PIER 7 | CANNES CRUISE TERM | SCANNING DOCKS
+            </div>
+        </div>
+    </div>
+<script>
+    const canvas = document.getElementById('engine');
+    const ctx = canvas.getContext('2d');
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+
+    const gates = [
+        { id: "PIER 7", pos: 0.16, status: "ON TIME" }, 
+        { id: "DOCK A", pos: 0.38, status: "BOARDING" },
+        { id: "PIER 3", pos: 0.62, status: "ON TIME" }, 
+        { id: "TERM 1", pos: 0.84, status: "FINAL CALL" }
+    ];
+
+    const dots = Array.from({ length: 35 }, () => ({
+        x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length)
+    }));
+
+    function drawSleekArrow(x, y, color) {
+        ctx.save(); ctx.translate(x, y);
+        const pulse = Math.abs(Math.sin(Date.now() / 300)) * 25;
+        ctx.shadowBlur = 15 + pulse; ctx.shadowColor = color;
+        ctx.fillStyle = color; ctx.beginPath();
+        ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); ctx.lineTo(12, 5); ctx.lineTo(12, 40); ctx.lineTo(-12, 40); ctx.lineTo(-12, 5); ctx.fill();
+        ctx.globalAlpha = 0.5; ctx.fillStyle = '#FFFFFF'; ctx.beginPath();
+        ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); ctx.fill();
+        ctx.restore();
+    }
+
+    function draw() {
+        ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
+        const hb = document.getElementById('header-box');
+        const clk = document.getElementById('clock');
+        if (hasFinalCall) {
+            hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out';
+            hb.style.borderColor = '#FF3131'; clk.style.color = '#FF3131';
+        } else {
+            hb.style.animation = 'none'; hb.style.borderColor = '#FFD700'; clk.style.color = '#FFD700';
+        }
+        gates.forEach((g) => {
+            const gx = canvas.width * g.pos; const gy = canvas.height * 0.68; 
+            let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
+            const pGrd = ctx.createLinearGradient(gx-30, 0, gx+30, 0);
+            pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.3)'); pGrd.addColorStop(1, 'transparent');
+            ctx.fillStyle = pGrd; ctx.fillRect(gx-30, 0, 60, gy);
+            drawSleekArrow(gx, gy + 70 + Math.sin(Date.now()/400)*8, color);
+            ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 11px Courier New';
+            ctx.fillText("BERTH", gx, gy - 60); 
+            ctx.fillStyle = color; ctx.font = '900 24px Courier New';
+            ctx.fillText(g.id, gx, gy - 30);
+            ctx.font = 'bold 12px monospace'; ctx.fillText(g.status, gx, gy - 5);
+        });
+        dots.forEach(d => {
+            const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.68;
+            d.x += (gx - d.x) * 0.015; d.y -= d.speed;
+            if (d.y < gy) d.y = canvas.height + 20;
+            ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, Math.PI*2); ctx.fill();
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+    setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
+</script>
+</body>
+</html>
