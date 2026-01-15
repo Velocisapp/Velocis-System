@@ -12,10 +12,20 @@
         .status { font-size: 10px; margin-top: 5px; text-transform: uppercase; }
         .boarding { color: #ff4444; }
         .on-time { color: #ffeb3b; }
-        .beam { height: 400px; width: 40px; background: linear-gradient(to top, transparent, #00d4ff, transparent); margin: 0 auto; opacity: 0.5; }
+        .beam { 
+    height: 400px; 
+    width: 40px; 
+    background: linear-gradient(to top, transparent, #00d4ff, transparent); 
+    margin: 0 auto; 
+    opacity: 0.5;
+    animation: pulse 2s infinite ease-in-out; /* Add this line */
+}
         .logs { position: absolute; bottom: 50px; right: 20px; border: 1px solid #ffeb3b; padding: 10px; width: 250px; }
         .log-entry { border-bottom: 1px solid #ffeb3b; padding: 5px; font-size: 10px; display: flex; justify-content: space-between; }
-    </style>
+   @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scaleX(1); }
+    50% { opacity: 0.8; transform: scaleX(1.5); }
+} </style>
 </head>
 <body>
     <div class="header">
