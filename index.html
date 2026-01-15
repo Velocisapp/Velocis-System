@@ -107,7 +107,13 @@
     <div style="width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid #00FFFF; margin: 0 auto; animation: pulse 1s infinite;"></div>
 </div>
 
-<style>
+<div id="ios-prompt" style="display:block; position:fixed; bottom: 2px; left:50%; transform:translateX(-50%); width: 100%; text-align: center; z-index: 2000; pointer-events: none;">
+     <div style="color: #00FFFF; font-weight: 900; font-size: 8px; letter-spacing: 2px; text-shadow: 0 0 10px #00FFFF;">
+         TAP [SHARE] THEN 'ADD TO HOME SCREEN' TO INSTALL
+     </div>
+     <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #00FFFF; margin: 2px auto 0; animation: pulse 1s infinite;"></div>
+</div>
+      <style>
 @keyframes pulse { 0% {transform:translateY(0);} 50% {transform:translateY(10px);} 100% {transform:translateY(0);} }
 </style>
     <div id="brand" style="position: absolute; top: 5%; width: 100%; text-align: center; pointer-events: auto;">
