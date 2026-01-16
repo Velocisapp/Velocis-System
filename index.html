@@ -13,129 +13,103 @@
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
     <style>
         body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
-        #brand { position: fixed; top: 40px; width: 100%; text-align: center; letter-spacing: 12px; z-index: 9999 !important; pointer-events: none; }
-        #brand h1 {
-            color: #FFD700 !important;
-            font-weight: 900 !important;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 5px #000;
-            margin: 0;
-        } 
-        .continent-btn {
-            background: rgba(0, 255, 255, 0.1); border: 2.5px solid #00ffff; color: #00ffff;
-            padding: 12px 18px; font-size: 0.7rem; font-weight: 900; border-radius: 4px;
-            cursor: pointer; animation: pulseGlow 2.5s infinite ease-in-out;
-        }
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px #00ffff; } 50% { box-shadow: 0 0 25px #00ffff; border-color: #fff; } 100% { box-shadow: 0 0 5px #00ffff; } }
         
-        .icon-btn { 
-            width: 85px; height: 85px; display: flex; align-items: center; justify-content: center;
-            border: 3px solid rgba(0, 255, 255, 0.5); border-radius: 50%;
-            cursor: pointer; transition: 0.4s; background: rgba(0, 255, 255, 0.1);
-            font-size: 3.5rem; filter: opacity(0.9);
-        }
-        .icon-btn.active { 
-            border-color: #00ffff; background: rgba(0,255,255,0.25); 
-            transform: scale(1.15) translateY(-10px); 
-            filter: opacity(1);
-            box-shadow: 0 0 45px rgba(0,255,255,0.6), inset 0 0 20px rgba(0,255,255,0.3);
-        }
-        @keyframes palpitates {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.1); filter: brightness(1.4); }
-            100% { transform: scale(1); filter: brightness(1); }
-        }
-        @keyframes pulse { 0% {transform:translateY(0);} 50% {transform:translateY(10px);} 100% {transform:translateY(0);} }
+        /* THE GLOBE LAYER */
+        #globe-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+
+        /* THE UI OVERLAY */
+        #master-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; pointer-events: none; }
+        
+        #brand { position: absolute; top: 40px; width: 100%; text-align: center; letter-spacing: 12px; pointer-events: none; }
+        #brand h1 { color: #FFD700 !important; font-weight: 900; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 5px #000; margin: 0; }
+
+        /* CONTINENT NAVIGATION */
+        #continent-hub { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 95%; pointer-events: auto; }
+        .continent-btn { background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; color: #00ffff; padding: 10px 15px; font-size: 0.7rem; font-weight: 900; border-radius: 4px; cursor: pointer; animation: pulseGlow 2.5s infinite; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px #00ffff; } 50% { box-shadow: 0 0 20px #00ffff; } 100% { box-shadow: 0 0 5px #00ffff; } }
+
+        /* SECURITY HUB / TRAVEL GUIDES */
+        #travel-guides { position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); width: 92%; background: rgba(0, 0, 0, 0.85); border: 1.5px solid #00ffff; border-radius: 12px; padding: 15px; color: #fff; font-size: 11px; text-align: center; pointer-events: auto; }
+
+        /* TRANSPORT DOCK */
+        #transport-menu { position: absolute; bottom: 8%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto; }
+        .icon-btn { width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border: 3px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.15); font-size: 3rem; cursor: pointer; transition: 0.3s; }
+        .icon-btn.active { border-color: #00ffff; box-shadow: 0 0 30px #00ffff; transform: scale(1.1); }
+        
+        @keyframes palpitates { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     </style>
 </head>
-
 <body>
-    <div id="globe-container"></div>
 
-    <div id="master-ui" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; pointer-events: none;">
-        
-        <div id="ios-prompt" style="display:block; position:fixed; bottom: 10px; left:50%; transform:translateX(-50%); width: 100%; text-align: center; z-index: 2000; pointer-events: none;">
-             <div style="color: #00FFFF; font-weight: 900; font-size: 8px; letter-spacing: 2px; text-shadow: 0 0 10px #00FFFF;">
-                 TAP [SHARE] THEN 'ADD TO HOME SCREEN' TO INSTALL
-             </div>
-             <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #00FFFF; margin: 2px auto 0; animation: pulse 1s infinite;"></div>
-        </div>
+<div id="globe-container"></div>
 
-        <div id="brand" style="position: absolute; top: 5%; width: 100%; text-align: center; pointer-events: auto;">
-          <h1 style="margin: 0; color: #FFD700; text-shadow: 0 0 10px #FFD700;">VELOCIS™</h1>
-          <p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p>
-        </div>
+<div id="master-ui">
+    <div id="brand">
+        <h1>VELOCIS™</h1>
+        <p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p>
+    </div>
 
-        <div id="carousel-intel" style="position: absolute; top: 22%; width: 100%; left: 0; z-index: 2000; pointer-events: none;">
-            <div style="position: relative; width: 90%; margin: 0 auto; background: rgba(0,0,0,0.85); border: 2px solid #FFD700; border-radius: 12px; padding: 15px; backdrop-filter: blur(15px); pointer-events: auto; box-shadow: 0 0 20px rgba(255,215,0,0.3);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <span style="color: #FFD700; font-size: 10px; font-weight: 900; letter-spacing: 2px;">ARRIVAL HUB: PARIS (107)</span>
-                    <span onclick="document.getElementById('carousel-intel').style.display='none'" style="color: #FFD700; cursor: pointer; font-weight: bold; font-size: 20px; line-height: 1;">×</span>
-                </div>
-                <div id="intel-content" style="text-align: center;">
-                    <div style="color: #FFF; font-size: 12px; opacity: 0.9;">LUGGAGE CAROUSEL</div>
-                    <div style="color: #FFD700; font-size: 52px; font-weight: 900; text-shadow: 0 0 25px #FFD700; display: inline-block; animation: palpitates 1.5s ease-in-out infinite;">14</div>
-                    <div style="color: #FFF; font-size: 11px; margin-top: 5px; font-weight: bold;">ESTIMATED BAG DROP: <span style="color: #FFD700;">4 MIN</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="continent-hub" style="position: absolute; top: 42%; width: 100%; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; pointer-events: auto; z-index: 1000;">
-            <button class="continent-btn" onclick="openGate('ASIA')">ASIA</button>
-            <button class="continent-btn" onclick="openGate('EUROPE')">EUROPE</button>
-            <button class="continent-btn" onclick="window.open('https://www.klook.com/en-US/?aid=696305', '_blank')">AFRICA</button>
-        </div>
-
-        <section id="travel-guides" style="position: absolute; top: 62%; left: 50%; transform: translate(-50%, -50%); width: 90%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px); color: #fff; padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 212, 255, 0.3); font-size: 11px; text-align: center; pointer-events: auto;">
-            <h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase;">Hub Intelligence: 107 & 2</h3>
-            <p><strong>PARIS (107):</strong> RER B is the 2026 speed-standard from CDG.</p>
-            <p><strong>HONG KONG (2):</strong> Octopus Card is essential for MTR transit.</p>
-        </section>
-
-        <div id="transport-menu" style="position: absolute; bottom: 8%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto;">
-           <div id="btn-air" class="icon-btn active" onclick="updateIntel('AIR')">✈️</div>
-           <div id="btn-sea" class="icon-btn" onclick="updateIntel('SEA')">🚢</div>
-           <div id="btn-rail" class="icon-btn" onclick="updateIntel('RAIL')">🚆</div>
-           <div id="btn-sub" class="icon-btn" onclick="updateIntel('SUBWAY')">🚇</div>
+    <div id="carousel-intel" style="position: absolute; top: 22%; width: 100%; pointer-events: none;">
+        <div style="width: 90%; margin: 0 auto; background: rgba(0,0,0,0.9); border: 2px solid #FFD700; border-radius: 12px; padding: 15px; pointer-events: auto; text-align: center;">
+            <div id="intel-label" style="color: #FFD700; font-size: 10px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;">ARRIVAL HUB: PARIS (107)</div>
+            <div id="intel-mode" style="color: #FFF; font-size: 12px;">LUGGAGE CAROUSEL</div>
+            <div id="intel-number" style="color: #FFD700; font-size: 52px; font-weight: 900; animation: palpitates 1.5s infinite;">14</div>
+            <div id="intel-footer" style="color: #FFF; font-size: 11px;">ESTIMATED BAG DROP: <span style="color: #FFD700;">4 MIN</span></div>
         </div>
     </div>
 
-    <script>
-        // GLOBE SYSTEM
-        let earthImg;
-        function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'); }
-        function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.parent('globe-container'); }
-        function draw() { background(0); if (!earthImg) return; ambientLight(210); rotateY(frameCount * 0.005); texture(earthImg); sphere(200); }
+    <div id="continent-hub">
+        <button class="continent-btn" onclick="openGate('ASIA')">ASIA</button>
+        <button class="continent-btn" onclick="openGate('EUROPE')">EUROPE</button>
+        <button class="continent-btn" onclick="openGate('AFRICA')">AFRICA</button>
+        <button class="continent-btn" onclick="openGate('NORTH AMERICA')">NORTH AMERICA</button>
+        <button class="continent-btn" onclick="openGate('SOUTH AMERICA')">SOUTH AMERICA</button>
+    </div>
 
-        // GATEWAY LOGIC
-        function openGate(region) {
-            let city = (region === 'EUROPE') ? '107-paris' : '2-hong-kong';
-            window.open('https://www.klook.com/en-US/city/' + city + '-things-to-do/?aid=696305', '_blank');
+    <section id="travel-guides">
+        <h3 style="color: #00d4ff; margin-bottom: 8px;">SECURITY HUB GATEWAY</h3>
+        <p id="guide-p1"><strong>PARIS (107):</strong> GATE 12B - BOARDING 12:45</p>
+        <p id="guide-p2"><strong>HK (2):</strong> GATE 44 - ARRIVAL 13:10</p>
+    </section>
+
+    <div id="transport-menu">
+        <div id="btn-air" class="icon-btn active" onclick="updateIntel('AIR')">✈️</div>
+        <div id="btn-sea" class="icon-btn" onclick="updateIntel('SEA')">🚢</div>
+        <div id="btn-rail" class="icon-btn" onclick="updateIntel('RAIL')">🚆</div>
+        <div id="btn-sub" class="icon-btn" onclick="updateIntel('SUBWAY')">🚇</div>
+    </div>
+</div>
+
+<script>
+    let earthImg;
+    function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'); }
+    function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.parent('globe-container'); }
+    function draw() { background(0); if (!earthImg) return; ambientLight(200); pointLight(255, 255, 255, 500, 0, 500); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(200); }
+
+    function openGate(region) { window.open('https://www.klook.com/en-US/?aid=696305', '_blank'); }
+
+    function updateIntel(mode) {
+        document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
+        const mLabel = document.getElementById('intel-mode');
+        const mNum = document.getElementById('intel-number');
+        const mFoot = document.getElementById('intel-footer');
+        const g1 = document.getElementById('guide-p1');
+        const g2 = document.getElementById('guide-p2');
+
+        if (mode === 'AIR') {
+            document.getElementById('btn-air').classList.add('active');
+            mLabel.innerText = "LUGGAGE CAROUSEL"; mNum.innerText = "14"; mFoot.innerHTML = "BAG DROP: <span style='color:#FFD700;'>4 MIN</span>";
+            g1.innerHTML = "<strong>PARIS (107):</strong> GATE 12B - BOARDING 12:45";
+        } else if (mode === 'SEA') {
+            document.getElementById('btn-sea').classList.add('active');
+            mLabel.innerText = "BOARDING DOCK"; mNum.innerText = "04"; mFoot.innerHTML = "STATUS: <span style='color:#FFD700;'>OPEN</span>";
+            g1.innerHTML = "<strong>PARIS (107):</strong> DOCK 4 - RIVER TRANSIT";
+        } else if (mode === 'RAIL') {
+            document.getElementById('btn-rail').classList.add('active');
+            mLabel.innerText = "PLATFORM"; mNum.innerText = "07"; mFoot.innerHTML = "COACH: <span style='color:#FFD700;'>CENTER</span>";
+            g1.innerHTML = "<strong>PARIS (107):</strong> GARE DU NORD - TRACK 7";
         }
-
-        // SYNCHRONIZED INTELLIGENCE
-        function updateIntel(mode) {
-            const content = document.getElementById('intel-content');
-            const hubGuide = document.getElementById('travel-guides');
-            document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
-
-            if (mode === 'AIR') {
-                document.getElementById('btn-air').classList.add('active');
-                content.innerHTML = `<div style="color:#FFF;opacity:0.9;">LUGGAGE CAROUSEL</div><div style="color:#FFD700;font-size:52px;font-weight:900;animation:palpitates 1.5s infinite;">14</div><div style="color:#FFF;font-weight:bold;">ESTIMATED BAG DROP: <span style="color:#FFD700;">4 MIN</span></div>`;
-                hubGuide.innerHTML = `<h3 style="color:#00d4ff;">AIR INTELLIGENCE: 107 & 2</h3><p>PARIS (107): RER B is the 2026 speed-standard.</p>`;
-            } else if (mode === 'SEA') {
-                document.getElementById('btn-sea').classList.add('active');
-                content.innerHTML = `<div style="color:#FFF;opacity:0.9;">BOARDING DOCK</div><div style="color:#FFD700;font-size:52px;font-weight:900;animation:palpitates 1.5s infinite;">04</div><div style="color:#FFF;font-weight:bold;">STATUS: <span style="color:#FFD700;">GATES OPENING</span></div>`;
-                hubGuide.innerHTML = `<h3 style="color:#00d4ff;">SEA INTELLIGENCE: 107 & 2</h3><p>HK: Star Ferry remains high-efficiency.</p>`;
-            } else if (mode === 'RAIL') {
-                document.getElementById('btn-rail').classList.add('active');
-                content.innerHTML = `<div style="color:#FFF;opacity:0.9;">PLATFORM</div><div style="color:#FFD700;font-size:52px;font-weight:900;animation:palpitates 1.5s infinite;">07</div><div style="color:#FFF;font-weight:bold;">COACH LOCATION: <span style="color:#FFD700;">CENTER</span></div>`;
-                hubGuide.innerHTML = `<h3 style="color:#00d4ff;">RAIL INTELLIGENCE: 107 & 2</h3><p>PARIS: Gare du Nord check-in: 60 min.</p>`;
-            } else if (mode === 'SUBWAY') {
-                document.getElementById('btn-sub').classList.add('active');
-                content.innerHTML = `<div style="color:#FFF;opacity:0.9;">EXIT GATE</div><div style="color:#FFD700;font-size:52px;font-weight:900;animation:palpitates 1.5s infinite;">B2</div><div style="color:#FFF;font-weight:bold;">NEXT TRAIN: <span style="color:#FFD700;">ARRIVING</span></div>`;
-                hubGuide.innerHTML = `<h3 style="color:#00d4ff;">SUBWAY INTELLIGENCE: 107 & 2</h3><p>MTR frequency is 1.2 mins peak.</p>`;
-            }
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
