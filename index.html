@@ -157,10 +157,10 @@
 </div>
 
 <div id="transport-menu" style="position: absolute; bottom: 8%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto;">
-   <div id="btn-air" class="icon-btn active" onclick="location.href='security.html'">✈️</div>
-    <div id="btn-sea" class="icon-btn" onclick="location.href='sea.html'">🚢</div>
-    <div id="btn-rail" class="icon-btn" onclick="location.href='rail.html'">🚆</div>
-    <div id="btn-sub" class="icon-btn" onclick="location.href='subway.html'">🚇</div>
+   <div id="btn-air" class="icon-btn active" onclick="updateIntel('AIR')">✈️</div>
+   <div id="btn-sea" class="icon-btn" onclick="updateIntel('SEA')">🚢</div>
+   <div id="btn-rail" class="icon-btn" onclick="updateIntel('RAIL')">🚆</div>
+   <div id="btn-sub" class="icon-btn" onclick="updateIntel('SUBWAY')">🚇</div>
 </div>
 <script>
     const myMarker = "696305"    
@@ -239,6 +239,32 @@ function openGate(region) {
     const gateway = (geoMap[city] && geoMap[city][currentMode]) || city.toUpperCase() + " HUB";
     document.getElementById(displayId).innerText = "IDENTIFIED: " + gateway;
     document.getElementById(inputId).value = city;
+    function updateIntel(mode) {
+    const intelBox = document.getElementById('carousel-intel');
+    const label = intelBox.querySelector('div div:nth-child(1)');
+    const number = intelBox.querySelector('div div:nth-child(2)');
+    const footer = intelBox.querySelector('div div:nth-child(3)');
+
+    intelBox.style.display = 'block'; // Ensure it's visible when a button is tapped
+
+    if (mode === 'AIR') {
+        label.innerText = "LUGGAGE CAROUSEL";
+        number.innerText = "14";
+        footer.innerHTML = "ESTIMATED BAG DROP: <span style='color: #FFD700;'>4 MIN</span>";
+    } else if (mode === 'SEA') {
+        label.innerText = "BOARDING DOCK";
+        number.innerText = "04";
+        footer.innerHTML = "STATUS: <span style='color: #FFD700;'>GATES OPENING</span>";
+    } else if (mode === 'RAIL') {
+        label.innerText = "PLATFORM";
+        number.innerText = "07";
+        footer.innerHTML = "COACH LOCATION: <span style='color: #FFD700;'>CENTER</span>";
+    } else if (mode === 'SUBWAY') {
+        label.innerText = "EXIT GATE";
+        number.innerText = "B2";
+        footer.innerHTML = "NEXT TRAIN: <span style='color: #FFD700;'>ARRIVING</span>";
+    }
+}
  }
    
  </script>
