@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,29 +17,26 @@
         #globe-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
         #master-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; pointer-events: none; }
         
-        /* BRANDING */
         #brand { position: absolute; top: 35px; width: 100%; text-align: center; letter-spacing: 12px; pointer-events: none; }
         #brand h1 { color: #FFD700 !important; font-weight: 900; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 5px #000; margin: 0; }
 
-        /* SECURITY HUB: GATES & ARROWS */
-        #security-hub-panel { position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); width: 95%; text-align: center; pointer-events: auto; }
+        /* SECURITY HUB: Hidden by default */
+        #security-hub-panel { display: none; position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); width: 95%; text-align: center; pointer-events: auto; }
         .gate-status { display: flex; justify-content: space-around; margin-top: 15px; }
         .gate-col { display: flex; flex-direction: column; align-items: center; }
-        .gate-label { font-size: 9px; opacity: 0.8; margin-bottom: 2px; }
         .gate-id { font-size: 20px; font-weight: 900; }
         .gate-msg { font-size: 8px; font-weight: bold; text-transform: uppercase; margin-top: 4px; }
         .status-arrow { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 20px solid; margin-top: 8px; animation: pulse 1s infinite; }
 
-        /* CONTINENTS */
         #continent-hub { position: absolute; top: 46%; width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; pointer-events: auto; }
         .continent-btn { background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; color: #00ffff; padding: 6px 10px; font-size: 0.6rem; font-weight: 900; border-radius: 4px; cursor: pointer; }
 
-        /* TRANSPORT DOCK */
         #transport-menu { position: absolute; bottom: 6%; width: 100%; display: flex; justify-content: center; gap: 15px; pointer-events: auto; }
         .icon-btn { width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; border: 3px solid rgba(0, 255, 255, 0.4); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 2.5rem; cursor: pointer; transition: 0.3s; }
         .icon-btn.active { border-color: #00ffff; box-shadow: 0 0 20px #00ffff; transform: scale(1.1); }
 
         @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+        @keyframes palpitates { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     </style>
 </head>
 <body>
@@ -51,10 +49,10 @@
         <p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p>
     </div>
 
-    <div id="carousel-intel" style="position: absolute; top: 18%; width: 100%; pointer-events: none;">
+    <div id="carousel-intel" style="display: none; position: absolute; top: 18%; width: 100%; pointer-events: none;">
         <div style="width: 88%; margin: 0 auto; background: rgba(0,0,0,0.9); border: 2px solid #FFD700; border-radius: 12px; padding: 10px; pointer-events: auto; text-align: center;">
             <div id="intel-mode" style="color: #FFF; font-size: 11px;">LUGGAGE CAROUSEL</div>
-            <div id="intel-number" style="color: #FFD700; font-size: 42px; font-weight: 900;">14</div>
+            <div id="intel-number" style="color: #FFD700; font-size: 42px; font-weight: 900; animation: palpitates 1.5s infinite;">14</div>
             <div id="intel-footer" style="color: #FFF; font-size: 10px;">BAG DROP: <span style="color: #FFD700;">4 MIN</span></div>
         </div>
     </div>
@@ -70,38 +68,20 @@
     <div id="security-hub-panel">
         <div style="border: 1.5px solid #FFD700; padding: 8px; background: rgba(0,0,0,0.8); border-radius: 4px;">
             <div style="color: #FFD700; font-weight: 900; font-size: 11px; letter-spacing: 2px;">VELOCIS™ SECURITY HUB</div>
-            <div id="hub-clock" style="color: #FFD700; font-family: monospace; font-size: 16px; margin-top: 3px;">TIME: 12:23:11</div>
         </div>
-        
         <div class="gate-status">
-            <div class="gate-col">
-                <span class="gate-label">GATE</span><span class="gate-id" style="color:#ff3b30;">B12</span>
-                <span class="gate-msg" style="color:#ff3b30;">BOARDING</span>
-                <div class="status-arrow" style="border-bottom-color:#ff3b30;"></div>
-            </div>
-            <div class="gate-col">
-                <span class="gate-label">GATE</span><span class="gate-id" style="color:#ff3b30;">B14</span>
-                <span class="gate-msg" style="color:#ff3b30;">BOARDING</span>
-                <div class="status-arrow" style="border-bottom-color:#ff3b30;"></div>
-            </div>
-            <div class="gate-col">
-                <span class="gate-label">GATE</span><span class="gate-id" style="color:#FFD700;">A05</span>
-                <span class="gate-msg" style="color:#FFD700;">ON TIME</span>
-                <div class="status-arrow" style="border-bottom-color:#FFD700;"></div>
-            </div>
-            <div class="gate-col">
-                <span class="gate-label">GATE</span><span class="gate-id" style="color:#ff3b30;">A07</span>
-                <span class="gate-msg" style="color:#ff3b30;">FINAL CALL</span>
-                <div class="status-arrow" style="border-bottom-color:#ff3b30;"></div>
-            </div>
+            <div class="gate-col"><span class="gate-id" style="color:#ff3b30;">B12</span><div class="status-arrow" style="border-bottom-color:#ff3b30;"></div></div>
+            <div class="gate-col"><span class="gate-id" style="color:#ff3b30;">B14</span><div class="status-arrow" style="border-bottom-color:#ff3b30;"></div></div>
+            <div class="gate-col"><span class="gate-id" style="color:#FFD700;">A05</span><div class="status-arrow" style="border-bottom-color:#FFD700;"></div></div>
+            <div class="gate-col"><span class="gate-id" style="color:#ff3b30;">A07</span><div class="status-arrow" style="border-bottom-color:#ff3b30;"></div></div>
         </div>
     </div>
 
     <div id="transport-menu">
-        <div id="btn-air" class="icon-btn active" onclick="updateIntel('AIR')">✈️</div>
-        <div id="btn-sea" class="icon-btn" onclick="updateIntel('SEA')">🚢</div>
-        <div id="btn-rail" class="icon-btn" onclick="updateIntel('RAIL')">🚆</div>
-        <div id="btn-sub" class="icon-btn" onclick="updateIntel('SUBWAY')">🚇</div>
+        <div id="btn-air" class="icon-btn" onclick="updateIntel('AIR')">✈️</div>
+        <div id="btn-sea" class="icon-btn" onclick="onclick="updateIntel('SEA')">🚢</div>
+        <div id="btn-rail" class="icon-btn" onclick="onclick="updateIntel('RAIL')">🚆</div>
+        <div id="btn-sub" class="icon-btn" onclick="onclick="updateIntel('SUBWAY')">🚇</div>
     </div>
 </div>
 
@@ -109,19 +89,16 @@
     let earthImg;
     function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'); }
     function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.parent('globe-container'); }
-    function draw() { 
-        background(0); if (!earthImg) return;
-        ambientLight(200); pointLight(255, 255, 255, 500, 0, 500); 
-        rotateY(frameCount * 0.005); 
-        noStroke(); // NO WIRE GRID
-        texture(earthImg); 
-        sphere(200); 
-    }
+    function draw() { background(0); if (!earthImg) return; ambientLight(200); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(200); }
 
     function updateIntel(mode) {
-        const mLabel = document.getElementById('intel-mode');
-        const mNum = document.getElementById('intel-number');
+        document.getElementById('carousel-intel').style.display = 'block';
+        document.getElementById('security-hub-panel').style.display = 'block';
         document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
+        
+        const mNum = document.getElementById('intel-number');
+        const mLabel = document.getElementById('intel-mode');
+
         if (mode === 'AIR') { document.getElementById('btn-air').classList.add('active'); mLabel.innerText = "LUGGAGE CAROUSEL"; mNum.innerText = "14"; }
         else if (mode === 'SEA') { document.getElementById('btn-sea').classList.add('active'); mLabel.innerText = "BOARDING DOCK"; mNum.innerText = "04"; }
     }
