@@ -144,6 +144,7 @@
 <section id="travel-guides" style="position: absolute; top: 62%; left: 50%; transform: translate(-50%, -50%); width: 90%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px); color: #fff; padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 212, 255, 0.3); font-size: 11px; z-index: 5; text-align: center;">
   <h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase;">Hub Intelligence: 107 & 2</h3>
   <p id="guide-text" style="margin: 0;">Select transport mode for live gate/dock info.</p>
+</section>
   
   <div id="intel-trigger-link" style="margin-top: 10px; display: none;">
       <span onclick="document.getElementById('carousel-intel').style.display='block'" style="color: #FFD700; text-decoration: underline; cursor: pointer; font-weight: 900; font-size: 10px;">
@@ -159,20 +160,21 @@
 </div>
 <script>
    function updateIntel(mode) {
+    // 1. Force the Gold Window to appear instantly
+    document.getElementById('carousel-intel').style.display = 'block';
+    
     const hubText = document.getElementById('guide-text');
-    const triggerLink = document.getElementById('intel-trigger-link');
     const mLabel = document.getElementById('intel-mode');
     const mNum = document.getElementById('intel-number');
 
-    // Reveals the golden link inside the bottom hub
-    triggerLink.style.display = 'block';
-
     if (mode === 'AIR') {
         hubText.innerHTML = "<strong>PARIS (107):</strong> GATE 12B - BOARDING 12:45";
-        mLabel.innerText = "LUGGAGE CAROUSEL"; mNum.innerText = "14";
+        mLabel.innerText = "LUGGAGE CAROUSEL"; 
+        mNum.innerText = "14";
     } else if (mode === 'SEA') {
         hubText.innerHTML = "<strong>PARIS (107):</strong> PORT DOCK 4 - GATES OPENING";
-        mLabel.innerText = "BOARDING DOCK"; mNum.innerText = "04";
+        mLabel.innerText = "BOARDING DOCK"; 
+        mNum.innerText = "04";
     }
 }
     const myMarker = "696305"    
