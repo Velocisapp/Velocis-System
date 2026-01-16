@@ -141,14 +141,40 @@
     <button class="continent-btn" onclick="window.open('https://www.klook.com/en-US/?aid=696305', '_blank')">NORTH AMERICA</button>
     <button class="continent-btn" onclick="window.open('https://www.klook.com/en-US/?aid=696305', '_blank')">SOUTH AMERICA</button>
 </div>
-
+<section id="travel-guides" style="position: absolute; top: 62%; left: 50%; transform: translate(-50%, -50%); width: 90%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px); color: #fff; padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 212, 255, 0.3); font-size: 11px; z-index: 5; text-align: center;">
+  <h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase;">Hub Intelligence: 107 & 2</h3>
+  <p id="guide-text" style="margin: 0;">Select transport mode for live gate/dock info.</p>
+  
+  <div id="intel-trigger-link" style="margin-top: 10px; display: none;">
+      <span onclick="document.getElementById('carousel-intel').style.display='block'" style="color: #FFD700; text-decoration: underline; cursor: pointer; font-weight: 900; font-size: 10px;">
+          TAP FOR LUGGAGE & DOCK INTELLIGENCE
+      </span>
+  </div>
+</section>
 <div id="transport-menu" style="position: absolute; bottom: 8%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto;">
-   <div id="btn-air" class="icon-btn active" onclick="location.href='security.html'">✈️</div>
-    <div id="btn-sea" class="icon-btn" onclick="location.href='sea.html'">🚢</div>
+  <div id="btn-air" class="icon-btn active" onclick="updateIntel('AIR')">✈️</div>
+    <div id="btn-sea" class="icon-btn" onclick="updateIntel('SEA')">🚢</div>
     <div id="btn-rail" class="icon-btn" onclick="location.href='rail.html'">🚆</div>
     <div id="btn-sub" class="icon-btn" onclick="location.href='subway.html'">🚇</div>
 </div>
 <script>
+   function updateIntel(mode) {
+    const hubText = document.getElementById('guide-text');
+    const triggerLink = document.getElementById('intel-trigger-link');
+    const mLabel = document.getElementById('intel-mode');
+    const mNum = document.getElementById('intel-number');
+
+    // Reveals the golden link inside the bottom hub
+    triggerLink.style.display = 'block';
+
+    if (mode === 'AIR') {
+        hubText.innerHTML = "<strong>PARIS (107):</strong> GATE 12B - BOARDING 12:45";
+        mLabel.innerText = "LUGGAGE CAROUSEL"; mNum.innerText = "14";
+    } else if (mode === 'SEA') {
+        hubText.innerHTML = "<strong>PARIS (107):</strong> PORT DOCK 4 - GATES OPENING";
+        mLabel.innerText = "BOARDING DOCK"; mNum.innerText = "04";
+    }
+}
     const myMarker = "696305"    
         const geoMap = {
     "NYC": { 
