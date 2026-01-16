@@ -19,7 +19,7 @@
         #brand { position: absolute; top: 35px; width: 100%; text-align: center; letter-spacing: 12px; pointer-events: none; }
         #brand h1 { color: #FFD700 !important; font-weight: 900; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 5px #000; margin: 0; }
 
-        /* SECURITY HUB: Dynamic hidden state */
+        /* SECURITY HUB GATES */
         #security-hub-panel { display: none; position: absolute; bottom: 18%; left: 50%; transform: translateX(-50%); width: 95%; text-align: center; pointer-events: auto; }
         .gate-status { display: flex; justify-content: space-around; margin-top: 10px; }
         .gate-col { display: flex; flex-direction: column; align-items: center; }
@@ -59,9 +59,9 @@
     <div id="continent-hub">
         <button class="continent-btn" onclick="openGate('ASIA')">ASIA</button>
         <button class="continent-btn" onclick="openGate('EUROPE')">EUROPE</button>
-        <button class="continent-btn" onclick="openGate('AFRICA')">AFRICA</button>
-        <button class="continent-btn" onclick="openGate('NORTH AMERICA')">NORTH AMERICA</button>
-        <button class="continent-btn" onclick="openGate('SOUTH AMERICA')">SOUTH AMERICA</button>
+        <button class="continent-btn" onclick="window.open('https://www.klook.com/en-US/?aid=696305', '_blank')">AFRICA</button>
+        <button class="continent-btn" onclick="window.open('https://www.klook.com/en-US/?aid=696305', '_blank')">NORTH AMERICA</button>
+        <button class="continent-btn" onclick="window.open('https://www.klook.com/en-US/?aid=696305', '_blank')">SOUTH AMERICA</button>
     </div>
 
     <div id="security-hub-panel">
@@ -96,17 +96,13 @@
         document.getElementById('carousel-intel').style.display = 'block';
         document.getElementById('security-hub-panel').style.display = 'block';
         document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
-        
         const mNum = document.getElementById('intel-number');
         const mLabel = document.getElementById('intel-mode');
 
-        if (mode === 'AIR') {
-            document.getElementById('btn-air').classList.add('active');
-            mLabel.innerText = "LUGGAGE CAROUSEL"; mNum.innerText = "14";
-        } else if (mode === 'SEA') {
-            document.getElementById('btn-sea').classList.add('active');
-            mLabel.innerText = "BOARDING DOCK"; mNum.innerText = "04";
-        }
+        if (mode === 'AIR') { document.getElementById('btn-air').classList.add('active'); mLabel.innerText = "LUGGAGE CAROUSEL"; mNum.innerText = "14"; }
+        else if (mode === 'SEA') { document.getElementById('btn-sea').classList.add('active'); mLabel.innerText = "BOARDING DOCK"; mNum.innerText = "04"; }
+        else if (mode === 'RAIL') { document.getElementById('btn-rail').classList.add('active'); mLabel.innerText = "PLATFORM"; mNum.innerText = "07"; }
+        else if (mode === 'SUBWAY') { document.getElementById('btn-sub').classList.add('active'); mLabel.innerText = "EXIT GATE"; mNum.innerText = "B2"; }
     }
 </script>
 </body>
