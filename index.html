@@ -136,9 +136,7 @@
             <div style="color: #FFD700; font-size: 52px; font-weight: 900; text-shadow: 0 0 25px #FFD700; display: inline-block; animation: palpitates 1.5s ease-in-out infinite;">14</div>
             <div style="color: #FFF; font-size: 11px; margin-top: 5px; font-weight: bold;">ESTIMATED BAG DROP: <span style="color: #FFD700;">4 MIN</span></div>
         </div>
-    </div>
-</div>
-
+   
 <style>
 @keyframes palpitates {
     0% { transform: scale(1); filter: brightness(1); }
@@ -237,9 +235,9 @@ function openGate(region) {
 }
  function updateIntel(mode) {
     const intelBox = document.getElementById('carousel-intel');
-    const label = intelBox.querySelector('div div:nth-child(1)');
-const number = intelBox.querySelector('div div:nth-child(2)');
-const footer = intelBox.querySelector('div div:nth-child(3)');
+    const label = intelBox.querySelector('div div div:nth-child(1)');
+const number = intelBox.querySelector('div div div:nth-child(2)');
+const footer = intelBox.querySelector('div div div:nth-child(3)');
     const hubGuide = document.getElementById('travel-guides'); // The bottom box
 
     intelBox.style.display = 'block';
