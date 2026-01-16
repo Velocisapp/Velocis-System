@@ -159,17 +159,19 @@
     <div id="btn-sub" class="icon-btn" onclick="location.href='subway.html'">🚇</div>
 </div>
 <script>
-   function updateIntel(mode) {
+  function updateIntel(mode) {
     const hubText = document.getElementById('guide-text');
+    
+    // Safety check: If the hub isn't found, the icons won't work
+    if (!hubText) {
+        console.error("Security Hub not found!");
+        return;
+    }
 
     if (mode === 'AIR') {
         hubText.innerHTML = "<strong>PARIS (107):</strong> GATE 12B - BOARDING 12:45";
     } else if (mode === 'SEA') {
         hubText.innerHTML = "<strong>PARIS (107):</strong> PORT DOCK 4 - GATES OPENING";
-    } else if (mode === 'RAIL') {
-        hubText.innerHTML = "<strong>PARIS (107):</strong> GARE DU NORD - PLATFORM 07";
-    } else if (mode === 'SUBWAY') {
-        hubText.innerHTML = "<strong>PARIS (107):</strong> CHATELET EXIT - GATE B2";
     }
 }
     const myMarker = "696305"    
