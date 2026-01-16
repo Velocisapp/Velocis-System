@@ -235,37 +235,46 @@ function openGate(region) {
             window.open('https://www.klook.com/en-US/city/2-hong-kong-things-to-do/?aid=696305', '_blank');
         }
 }
- function interceptPort(city, displayId, inputId) {
-    const gateway = (geoMap[city] && geoMap[city][currentMode]) || city.toUpperCase() + " HUB";
-    document.getElementById(displayId).innerText = "IDENTIFIED: " + gateway;
-    document.getElementById(inputId).value = city;
-    function updateIntel(mode) {
+ function updateIntel(mode) {
     const intelBox = document.getElementById('carousel-intel');
     const label = intelBox.querySelector('div div:nth-child(1)');
     const number = intelBox.querySelector('div div:nth-child(2)');
     const footer = intelBox.querySelector('div div:nth-child(3)');
+    const hubGuide = document.getElementById('travel-guides'); // The bottom box
 
-    intelBox.style.display = 'block'; // Ensure it's visible when a button is tapped
+    intelBox.style.display = 'block';
 
     if (mode === 'AIR') {
         label.innerText = "LUGGAGE CAROUSEL";
         number.innerText = "14";
         footer.innerHTML = "ESTIMATED BAG DROP: <span style='color: #FFD700;'>4 MIN</span>";
+        hubGuide.innerHTML = `<h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase;">AIR INTELLIGENCE: 107 & 2</h3>
+                              <p><strong>PARIS (107):</strong> RER B is the 2026 speed-standard from CDG.</p>
+                              <p><strong>HONG KONG (2):</strong> Airport Express to Kowloon in 22 mins.</p>`;
     } else if (mode === 'SEA') {
         label.innerText = "BOARDING DOCK";
         number.innerText = "04";
         footer.innerHTML = "STATUS: <span style='color: #FFD700;'>GATES OPENING</span>";
+        hubGuide.innerHTML = `<h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase;">SEA INTELLIGENCE: 107 & 2</h3>
+                              <p><strong>PARIS (107):</strong> Port de la Bourdonnais for river transit.</p>
+                              <p><strong>HONG KONG (2):</strong> Star Ferry remains the high-efficiency cross-harbor choice.</p>`;
     } else if (mode === 'RAIL') {
         label.innerText = "PLATFORM";
         number.innerText = "07";
         footer.innerHTML = "COACH LOCATION: <span style='color: #FFD700;'>CENTER</span>";
+        hubGuide.innerHTML = `<h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase;">RAIL INTELLIGENCE: 107 & 2</h3>
+                              <p><strong>PARIS (107):</strong> Gare du Nord Eurostar terminal check-in: 60 min.</p>
+                              <p><strong>HONG KONG (2):</strong> High Speed Rail to Shenzhen via West Kowloon.</p>`;
     } else if (mode === 'SUBWAY') {
         label.innerText = "EXIT GATE";
         number.innerText = "B2";
         footer.innerHTML = "NEXT TRAIN: <span style='color: #FFD700;'>ARRIVING</span>";
+        hubGuide.innerHTML = `<h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase;">SUBWAY INTELLIGENCE: 107 & 2</h3>
+                              <p><strong>PARIS (107):</strong> Navigo Easy cards now digital via Velocis Link.</p>
+                              <p><strong>HONG KONG (2):</strong> MTR frequency is 1.2 mins during peak mobility.</p>`;
     }
 }
- }
+ 
    
  </script>
      <section id="travel-guides" style="position: absolute; top: 62%; left: 50%; transform: translate(-50%, -50%); width: 90%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); color: #fff; padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 212, 255, 0.3); font-family: sans-serif; font-size: 11px; z-index: 5; text-align: center; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);">
