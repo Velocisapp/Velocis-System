@@ -223,6 +223,21 @@ function showInstall() {
 }
     function closeCarousel() {
     document.getElementById('carousel-display').style.display = 'none';
+    } function triggerArrival(carouselNum) {
+    const alertBanner = document.getElementById('arrival-alert');
+    const baggageBox = document.getElementById('carousel-display');
+    const scrollWindow = document.getElementById('travel-guides');
+    const baggageText = document.getElementById('baggage-text');
+
+    // 1. Update text and reveal the hidden elements
+    baggageText.innerText = "CAROUSEL " + carouselNum;
+    alertBanner.style.display = 'block';
+    baggageBox.style.display = 'block';
+
+    // 2. Auto-scroll to the bottom so the passenger sees it immediately
+    setTimeout(() => {
+        scrollWindow.scrollTo({ top: scrollWindow.scrollHeight, behavior: 'smooth' });
+    }, 500);
 }
  </script>
     <section id="travel-guides" style="position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); width: 92%; height: 180px; max-height: 180px; overflow-y: scroll; -webkit-overflow-scrolling: touch; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); color: #fff; padding: 15px; border-radius: 12px; border: 1px solid rgba(0, 212, 255, 0.4); z-index: 2000; text-align: center; pointer-events: auto !important;">
@@ -230,14 +245,13 @@ function showInstall() {
     <p style="margin: 0 0 5px 0; line-height: 1.3;"><strong>PARIS (107):</strong> RER B is the 2026 speed-standard from CDG. Mobilis passes optimized for La Défense.</p>
     <p style="margin: 0 0 15px 0; line-height: 1.3;"><strong>HONG KONG (2):</strong> Octopus Card is essential for MTR. Punctuality defines respect in HK business.</p>
 
- <div style="margin-top: 10px; padding-top: 15px; padding-bottom: 25px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
-        <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Global OTA Intelligence</div>
-        
-        <a href="https://www.booking.com/index.html" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #0046ad;">Search Global Hotels (Booking.com)</a>
-        
-        <a href="https://www.klook.com/en-US/?aid=696305" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff7c33;">Search Global Experiences (Klook)</a>
+<div id="arrival-alert" style="display: none; background: #FF5B00; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: 900; margin-bottom: 15px; text-align: center; animation: pulse 2s infinite;">
+        ⚠️ ARRIVAL INTELLIGENCE ACTIVE: SCROLL FOR BAGGAGE CLAIM
+    </div>
 
-        <a href="https://www.trip.com/flights/" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; border: 1px solid #57a1ff;">Search Global Flights (Trip.com)</a>
+    <div id="carousel-display" style="display: none; margin-top: 20px; padding: 15px; background: rgba(255, 91, 0, 0.15); border: 1px solid #FF5B00; border-radius: 10px; text-align: center;">
+        <div style="font-size: 10px; color: #FF5B00; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Identified: Baggage Claim</div>
+        <p id="baggage-text" style="font-size: 24px; font-weight: bold; color: #fff; margin: 5px 0;">CAROUSEL 4</p>
     </div>
 
 
