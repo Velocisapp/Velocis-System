@@ -18,44 +18,44 @@
             border: 4px solid #007bff; border-radius: 20px; 
             background: rgba(0, 123, 255, 0.05); width: 96%; height: 98vh; 
             display: grid;
-            /* UPDATED RATIO: Gives much more space to the Briefing (2nd row) */
-            grid-template-rows: auto 1.5fr 1fr auto auto; 
-            gap: 8px; padding: 12px; box-sizing: border-box;
+            /* Balanced Grid: Header, Briefing, Map (flexible), Info, Buttons */
+            grid-template-rows: auto auto 1fr auto auto; 
+            gap: 10px; padding: 12px; box-sizing: border-box;
             box-shadow: 0 0 45px rgba(0, 123, 255, 0.5);
         }
 
         .live-tag { color: #39FF14; font-weight: 900; font-size: 1.2rem; }
-        h1 { color: #007bff; font-size: 2.2rem; margin: 0; text-transform: uppercase; font-weight: 900; }
+        h1 { color: #007bff; font-size: 2rem; margin: 0; text-transform: uppercase; font-weight: 900; }
 
-        /* THE LARGE YELLOW WINDOW */
+        /* THE LARGE YELLOW WINDOW (RESTORED TEXT SCALE) */
         #terminal-briefing {
             display: block; background: #ffcc00; color: #000; padding: 15px;
             border-radius: 15px; border: 6px solid #000; text-align: left;
             box-shadow: 0 0 25px #ffcc00;
         }
-        .brief-title { font-size: 1.6rem; font-weight: 900; border-bottom: 4px solid #000; margin-bottom: 10px; }
+        .brief-title { font-size: 1.5rem; font-weight: 900; border-bottom: 4px solid #000; margin-bottom: 10px; }
         .brief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        /* MASSIVE DATA TEXT */
-        .brief-item { font-size: 2.4rem; font-weight: 900; line-height: 1; }
-        .brief-label { font-size: 1.1rem; text-transform: uppercase; font-weight: 800; opacity: 0.9; }
+        /* MASSIVE DATA TEXT FOR STREET MODE VISIBILITY */
+        .brief-item { font-size: 2.2rem; font-weight: 900; line-height: 1; }
+        .brief-label { font-size: 1rem; text-transform: uppercase; font-weight: 800; opacity: 0.9; }
 
         #map { width: 100%; height: 100%; border-radius: 15px; border: 4px solid #1a1a1a; background: #222; z-index: 1; }
         
-        /* FIX: ENSURE CYAN DOT IS BRIGHT AND VISIBLE */
+        /* CYAN DOT VISIBILITY */
         .pulsating-dot { 
-            background: #00f2ff !important; width: 25px !important; height: 25px !important; 
+            background: #00f2ff !important; width: 22px !important; height: 22px !important; 
             border-radius: 50% !important; border: 3px solid white !important; 
             box-shadow: 0 0 20px #00f2ff; position: relative;
         }
         .pulsating-dot::after { 
-            content: ''; position: absolute; top: -3px; left: -3px; width: 25px; height: 25px; 
+            content: ''; position: absolute; top: -3px; left: -3px; width: 22px; height: 22px; 
             border-radius: 50%; border: 6px solid #00f2ff; animation: pulse-ring 2s infinite; 
         }
         @keyframes pulse-ring { 0% { transform: scale(1); opacity: 1; } 70% { transform: scale(3); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
 
         .leaflet-div-icon { background: transparent !important; border: none !important; }
         .status-verified { color: #39FF14; font-size: 2.4rem; font-weight: 900; }
-        .action-btn { flex: 1; padding: 22px 0; border-radius: 15px; font-size: 1.6rem; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; }
+        .action-btn { flex: 1; padding: 20px 0; border-radius: 15px; font-size: 1.5rem; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; }
         .call-btn { background: #39FF14; color: #000; }
         .back-btn { background: #1a1a1a; color: #fff; border: 3px solid #007bff; }
     </style>
@@ -80,7 +80,7 @@
         <div id="map"></div>
 
         <div style="background: rgba(0, 212, 255, 0.15); border-left: 12px solid #00d4ff; padding: 12px; border-radius: 10px;">
-            <span id="mission-text" style="color: #fff; font-size: 1.3rem; font-weight: 700;">Scanning global signatures...</span>
+            <span id="mission-text" style="color: #fff; font-size: 1.2rem; font-weight: 700;">Scanning global signatures...</span>
         </div>
 
         <div style="padding-bottom: 5px;">
@@ -104,14 +104,12 @@
         let airportIdentified = false;
 
         const targetMarker = L.marker([0,0], {
-            icon: L.divIcon({ className: 'pulsating-dot', iconSize: [25, 25], iconAnchor: [12, 12] })
+            icon: L.divIcon({ className: 'pulsating-dot', iconSize: [22, 22], iconAnchor: [11, 11] })
         }).addTo(map);
 
         const carMarker = L.marker([0,0], {
             icon: L.divIcon({ html: '<div style="font-size: 80px; background: transparent;">🚗</div>', iconSize: [80, 80], iconAnchor: [40, 40] })
         }).addTo(map);
-
-        const pathLine = L.polyline([], { color: '#39FF14', weight: 10 }).addTo(map);
 
         async function globalAirportSearch(lat, lng) {
             if (airportIdentified) return; 
@@ -119,33 +117,4 @@
                 const query = `[out:json];node["aeroway"="terminal"](around:5000,${lat},${lng});out;`;
                 const response = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query });
                 const data = await response.json();
-                if (data.elements && data.elements.length > 0) {
-                    const info = data.elements[0].tags;
-                    document.getElementById('air-val').innerText = "IDENTIFIED";
-                    document.getElementById('term-val').innerText = info.ref || "T-1";
-                    document.getElementById('count-val').innerText = "AISLE A"; 
-                    document.getElementById('bag-val').innerText = "BELT 1";
-                    document.getElementById('mission-text').innerText = "TARGET: " + (info.operator || info.name || "HUB").toUpperCase();
-                    airportIdentified = true;
-                }
-            } catch (e) { }
-        }
-
-        navigator.geolocation.watchPosition((pos) => {
-            myPos = [pos.coords.latitude, pos.coords.longitude];
-            targetMarker.setLatLng(myPos);
-            map.setView(myPos, 19); 
-        }, null, { enableHighAccuracy: true });
-
-        db.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && myPos) {
-                const herPos = [data.lat, data.lng];
-                carMarker.setLatLng(herPos);
-                pathLine.addLatLng(herPos);
-                const dist = map.distance(herPos, myPos);
-                globalAirportSearch(data.lat, data.lng);
-                document.getElementById('status-display').innerHTML = dist < 20 ? "ARRIVED • SECURE" : Math.round(dist) + "M AWAY";
-            }
-        });
-        setTimeout(() => { map.invalidateSize(); }, 10
+                if (data.elements && data.elements.
