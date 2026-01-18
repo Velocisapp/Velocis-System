@@ -14,12 +14,11 @@
             display: flex; align-items: center; justify-content: center; overflow: hidden; 
         }
 
-        /* GRID SYSTEM: LOCKS EVERY SECTION IN PLACE */
         .hub-box { 
             border: 4px solid #007bff; border-radius: 20px; 
             background: rgba(0, 123, 255, 0.05); width: 96%; height: 98vh; 
             display: grid;
-            grid-template-rows: auto auto 1fr auto auto; /* Header, Briefing, Map, Info, Buttons */
+            grid-template-rows: auto auto 1fr auto auto;
             gap: 5px; padding: 10px; box-sizing: border-box;
             box-shadow: 0 0 45px rgba(0, 123, 255, 0.5);
         }
@@ -27,7 +26,6 @@
         .live-tag { color: #39FF14; font-weight: 900; font-size: 1.2rem; text-shadow: 0 0 10px #39FF14; }
         h1 { color: #007bff; font-size: 2.2rem; margin: 0; text-transform: uppercase; font-weight: 900; }
 
-        /* THE YELLOW BRIEFING */
         #terminal-briefing {
             display: none; background: #ffcc00; color: #000; padding: 12px;
             border-radius: 15px; border: 6px solid #000; text-align: left;
@@ -37,10 +35,7 @@
         .brief-item { font-size: 2rem; font-weight: 900; line-height: 1; }
         .brief-label { font-size: 1rem; text-transform: uppercase; font-weight: 800; opacity: 0.9; }
 
-        /* THE MAP: NOW OCCUPIES ALL REMAINING SPACE */
         #map { width: 100%; height: 100%; border-radius: 15px; border: 4px solid #1a1a1a; background: #222; z-index: 1; }
-
-        /* FIX: REMOVE DEFAULT WHITE BACKGROUND FROM CAR MARKER BOX */
         .leaflet-div-icon { background: transparent !important; border: none !important; }
 
         .directions-box {
@@ -70,23 +65,23 @@
         </div>
         
         <div id="terminal-briefing">
-            <div class="brief-title">🛰️ TERMINAL BRIEFING</div>
+            <div class="brief-title">🛰️ AUTOMATIC MISSION BRIEF</div>
             <div class="brief-grid">
-                <div><div class="brief-label">Airline</div><div id="air-val" class="brief-item">EMIRATES</div></div>
-                <div><div class="brief-label">Terminal</div><div id="term-val" class="brief-item">T-3</div></div>
-                <div><div class="brief-label">Counter</div><div id="count-val" class="brief-item">AISLE 4</div></div>
-                <div><div class="brief-label">Baggage</div><div id="bag-val" class="brief-item">ZONE B</div></div>
+                <div><div class="brief-label">Airline</div><div id="air-val" class="brief-item">---</div></div>
+                <div><div class="brief-label">Terminal</div><div id="term-val" class="brief-item">---</div></div>
+                <div><div class="brief-label">Counter</div><div id="count-val" class="brief-item">---</div></div>
+                <div><div class="brief-label">Baggage</div><div id="bag-val" class="brief-item">---</div></div>
             </div>
         </div>
 
         <div id="map"></div>
 
         <div class="directions-box">
-            <span id="mission-text" class="dir-text">Follow instructions as provided.</span>
+            <span id="mission-text" class="dir-text">Scanning for airport arrival...</span>
         </div>
 
         <div style="padding-bottom: 5px;">
-            <span id="gate-label" class="gate-text">GATE 7 / LEVEL 1</span><br>
+            <span id="gate-label" class="gate-text">STREET MODE ACTIVE</span><br>
             <span id="status-display" class="status-verified">LOCATING...</span>
             <div class="btn-container">
                 <button class="action-btn call-btn" onclick="callProvider()">📞 CALL DRIVER</button>
@@ -99,7 +94,13 @@
         const firebaseConfig = { databaseURL: "https://velocis-terminal-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('car_location');
-        const configRef = firebase.database().ref('mission_config');
+
+        // GLOBAL AIRPORT DATABASE (ADDS AUTOMATION WITHOUT MANUAL UPDATES)
+        const AIRPORTS = [
+            { name: "DUBAI DXB", lat: 25.253, lng: 55.365, airline: "EMIRATES", term: "T-3", counter: "AISLE 4", baggage: "ZONE B" },
+            { name: "LONDON LHR", lat: 51.470, lng: -0.454, airline: "BRITISH", term: "T-5", counter: "ZONE G", baggage: "BELT 12" },
+            { name: "JFK NEW YORK", lat: 40.641, lng: -73.778, airline: "DELTA", term: "T-4", counter: "ROW 2", baggage: "BELT 5" }
+        ];
 
         var map = L.map('map', {zoomControl: false}).setView([0,0], 2); 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
@@ -107,39 +108,15 @@
         let myPos = null;
         let briefingActive = false;
 
-        var cyanPulseIcon = L.divIcon({ className: 'pulsating-dot', iconSize: [30, 30], iconAnchor: [15, 15] });
-        var targetMarker = L.marker([0,0], {icon: cyanPulseIcon}).addTo(map);
-        var targetPopup = L.popup({ autoClose: false, closeOnClick: false, offset: [0, -20] }).setLatLng([0,0]).setContent('<b style="color:#000; font-size: 1.5rem;">YOU ARE HERE</b>').openOn(map);
-
-        var carMarker = L.marker([0,0], {
-            icon: L.divIcon({ 
-                // FIX: Added background:transparent to ensure no white square
-                html: '<div style="font-size: 100px; background: transparent; filter: drop-shadow(0 0 20px rgba(0,0,0,0.7));">🚗</div>', 
-                iconSize: [100, 100], 
-                iconAnchor: [50, 50] 
-            })
-        }).addTo(map);
-        
-        var pathLine = L.polyline([], { color: '#39FF14', weight: 12, opacity: 0.9 }).addTo(map);
-
-        // SYNC COMMAND CENTER DATA
-        configRef.on('value', (snapshot) => {
-            const config = snapshot.val();
-            if (config) {
-                document.getElementById('air-val').innerText = config.airline || "---";
-                document.getElementById('term-val').innerText = config.terminal || "---";
-                document.getElementById('count-val').innerText = config.counter || "---";
-                document.getElementById('bag-val').innerText = config.baggage || "---";
-                document.getElementById('mission-text').innerText = config.instructions || "Follow instructions as provided.";
-            }
-        });
+        var targetMarker = L.marker([0,0], {icon: L.divIcon({ className: 'pulsating-dot', iconSize: [30, 30], iconAnchor: [15, 15] })}).addTo(map);
+        var carMarker = L.marker([0,0], {icon: L.divIcon({ html: '<div style="font-size: 100px; background: transparent;">🚗</div>', iconSize: [100, 100], iconAnchor: [50, 50] })}).addTo(map);
+        var pathLine = L.polyline([], { color: '#39FF14', weight: 12 }).addTo(map);
 
         navigator.geolocation.watchPosition((pos) => {
             myPos = [pos.coords.latitude, pos.coords.longitude];
             targetMarker.setLatLng(myPos);
-            targetPopup.setLatLng(myPos);
             if (!briefingActive) map.setView(myPos, 21);
-        }, (err) => { console.error(err); }, { enableHighAccuracy: true });
+        }, null, { enableHighAccuracy: true });
 
         db.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -149,10 +126,20 @@
                 pathLine.addLatLng(herPos);
                 const dist = map.distance(herPos, myPos);
                 
+                // AUTOMATION LOGIC: Find nearest airport automatically
+                AIRPORTS.forEach(apt => {
+                    if (map.distance(herPos, [apt.lat, apt.lng]) < 5000) {
+                        document.getElementById('air-val').innerText = apt.airline;
+                        document.getElementById('term-val').innerText = apt.term;
+                        document.getElementById('count-val').innerText = apt.counter;
+                        document.getElementById('bag-val').innerText = apt.baggage;
+                        document.getElementById('mission-text').innerText = "ARRIVING AT " + apt.name;
+                    }
+                });
+
                 if (dist < 300 && !briefingActive) {
                     document.getElementById('terminal-briefing').style.display = 'block';
                     map.invalidateSize(); 
-                    if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
                     briefingActive = true;
                 }
                 document.getElementById('status-display').innerHTML = dist < 20 ? "ARRIVED • SECURE" : Math.round(dist) + "M AWAY";
