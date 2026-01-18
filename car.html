@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,144 +14,115 @@ HTML
         }
 
         .hub-box { 
-            border: 2px solid #007bff; padding: 20px; border-radius: 15px; 
-            background: rgba(0, 123, 255, 0.05); width: 92%; height: 94vh; 
+            border: 2px solid #007bff; padding: 15px; border-radius: 15px; 
+            background: rgba(0, 123, 255, 0.05); width: 94%; height: 96vh; 
             display: flex; flex-direction: column; justify-content: space-between; 
             box-shadow: 0 0 35px rgba(0, 123, 255, 0.4); box-sizing: border-box;
         }
 
-        h1 { color: #007bff; font-size: 2.2rem; margin: 10px 0; text-transform: uppercase; }
+        h1 { color: #007bff; font-size: 1.8rem; margin: 5px 0; text-transform: uppercase; }
 
-        #map { height: 60%; width: 100%; border-radius: 12px; border: 1px solid #1a1a1a; z-index: 1; }
+        #map { height: 45%; width: 100%; border-radius: 12px; border: 1px solid #1a1a1a; z-index: 1; }
 
-        /* HUGE, HAPPY PICKUP TEXT */
-        .pickup-info {
-            font-size: 2.8rem; 
-            font-weight: 900;
-            margin: 15px 0;
-            line-height: 1.1;
+        /* HUGE TARGET TEXT */
+        .pickup-info { font-size: 2.4rem; font-weight: 900; line-height: 1.1; margin: 5px 0; }
+        .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 15px rgba(0, 212, 255, 0.7); }
+        .status-verified { color: #39FF14; font-size: 1.4rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+
+        /* NEW: GATE DIRECTIONS BLOCK */
+        .directions-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.4;
         }
 
-        .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 15px rgba(0, 212, 255, 0.7); }
-        .status-verified { color: #39FF14; font-size: 1.8rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); transition: color 0.3s; }
+        /* DUAL ACTION BUTTONS */
+        .btn-container { display: flex; gap: 10px; width: 100%; }
+        
+        .action-btn { 
+            flex: 1; padding: 18px 0; border-radius: 8px; font-size: 1.1rem; 
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
 
-        /* GUARANTEED PULSE ANIMATION */
+        .call-btn { background: #39FF14; color: #000; border: none; }
+        .back-btn { background: #1a1a1a; color: #fff; border: 2px solid #007bff; }
+
+        /* PULSE ANIMATION */
         @keyframes pulse-ring {
             0% { transform: scale(1); opacity: 1; }
             70% { transform: scale(3); opacity: 0; }
             100% { transform: scale(1); opacity: 0; }
         }
-
         .pulsating-dot {
-            background: #00d4ff !important;
-            width: 15px !important;
-            height: 15px !important;
-            border-radius: 50% !important;
-            border: 2px solid white !important;
-            position: relative;
+            background: #00d4ff !important; width: 15px !important; height: 15px !important;
+            border-radius: 50% !important; border: 2px solid white !important; position: relative;
         }
-
         .pulsating-dot::after {
-            content: '';
-            position: absolute;
-            top: -2px; left: -2px;
-            width: 15px; height: 15px;
-            border-radius: 50%;
-            border: 4px solid #00d4ff;
-            animation: pulse-ring 2s infinite;
-        }
-
-        .back-btn { 
-            background: #1a1a1a; color: #fff; border: 2px solid #007bff; 
-            padding: 20px 0; border-radius: 8px; font-size: 1.3rem; 
-            width: 100%; font-weight: bold; margin-bottom: 5px;
+            content: ''; position: absolute; top: -2px; left: -2px; width: 15px; height: 15px;
+            border-radius: 50%; border: 4px solid #00d4ff; animation: pulse-ring 2s infinite;
         }
     </style>
 </head>
 <body>
     <div class="hub-box">
         <div>
-            <div style="color: #39FF14; font-weight: bold; text-shadow: 0 0 8px #39FF14;">● LIVE TRACKING ACTIVE</div>
+            <div style="color: #39FF14; font-weight: bold; font-size: 0.9rem;">● LIVE TRACKING ACTIVE</div>
             <h1>🚗 CAR SECURITY HUB</h1>
         </div>
         
         <div id="map"></div>
+
+        <div class="directions-box">
+            <strong style="color:#00d4ff;">GATE DIRECTIONS:</strong><br>
+            Use Elevator Bank B. Descent to Level 1. Follow blue floor markings toward Gate 7.
+        </div>
 
         <div>
             <div class="pickup-info">
                 <span class="gate-text">GATE 7 / LEVEL 1</span>
                 <span class="status-verified">VERIFIED BY VELOCIS™</span>
             </div>
-            <button class="back-btn" onclick="window.history.back()">← RETURN TO TERMINAL</button>
+            
+            <div class="btn-container">
+                <button class="action-btn call-btn" onclick="callProvider()">📞 CALL DRIVER</button>
+                <button class="action-btn back-btn" onclick="window.history.back()">← TERMINAL</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // 1. INITIALIZE MAP
         var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([22.3080, 113.9185], 19); 
-
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // 2. PULSATING HUB
-        var cyanPulseIcon = L.divIcon({
-            className: 'pulsating-dot',
-            iconSize: [15, 15],
-            iconAnchor: [7, 7]
-        });
+        var cyanPulseIcon = L.divIcon({ className: 'pulsating-dot', iconSize: [15, 15], iconAnchor: [7, 7] });
         L.marker([22.3080, 113.9185], {icon: cyanPulseIcon, zIndexOffset: 1000}).addTo(map);
 
         L.popup({ autoClose: false, closeOnClick: false, offset: [0, -10] })
             .setLatLng([22.3080, 113.9185])
-            .setContent('<b style="font-size:1.4rem; color:#000;">GATE 7</b>')
-            .openOn(map);
+            .setContent('<b style="font-size:1.2rem; color:#000;">GATE 7</b>').openOn(map);
 
-        // 3. NEON PATH LOGIC
         var startPoint = [22.3088, 113.9205];
         var endPoint = [22.3081, 113.9188];
-        
-        var pathLine = L.polyline([startPoint], {
-            color: '#39FF14', 
-            weight: 6, 
-            opacity: 0.8,
-            dashArray: '10, 10', 
-            lineJoin: 'round'
-        }).addTo(map);
-
-        // 4. THE CAR MARKER
+        var pathLine = L.polyline([startPoint], { color: '#39FF14', weight: 6, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
         var carMarker = L.marker(startPoint, {
-            icon: L.divIcon({
-                html: '<div style="font-size: 60px; filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));">🚗</div>', 
-                iconSize: [60, 60], iconAnchor: [30, 30] 
-            })
+            icon: L.divIcon({ html: '<div style="font-size: 50px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));">🚗</div>', iconSize: [50, 50], iconAnchor: [25, 25] })
         }).addTo(map);
 
-        // 5. HAPTIC UNLOCKER: Essential for mobile browsers
-        var hapticUnlocked = false;
-        document.body.addEventListener('touchstart', function() {
-            if (!hapticUnlocked && window.navigator.vibrate) {
-                window.navigator.vibrate(10); // Tiny click to unlock the vibration engine
-                hapticUnlocked = true;
-            }
-        }, {passive: true});
+        function callProvider() {
+            if (window.navigator.vibrate) window.navigator.vibrate(100);
+            alert("SECURE LINE CONNECTING...");
+        }
 
-        // 6. ANIMATION: DRIVE, DRAW & NOTIFY
         setTimeout(() => {
             carMarker.setLatLng(endPoint);
             pathLine.setLatLngs([startPoint, endPoint]);
             map.panTo(endPoint);
-
-            // Trigger strong vibration on arrival
-            if (window.navigator.vibrate) {
-                window.navigator.vibrate([300, 100, 300]); 
-            }
-            
-            const statusEl = document.querySelector('.status-verified');
-            statusEl.innerHTML = "CAR HAS ARRIVED • SECURE";
-            statusEl.style.color = "#FFF"; 
-            setTimeout(() => { 
-                statusEl.style.color = "#39FF14"; 
-            }, 500);
-
+            if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
+            document.querySelector('.status-verified').innerHTML = "CAR HAS ARRIVED • SECURE";
         }, 2000);
 
         setTimeout(function(){ map.invalidateSize()}, 500);
