@@ -121,11 +121,19 @@
                 const data = await response.json();
                 if (data.elements && data.elements.length > 0) {
                     const info = data.elements[0].tags;
+                    
+                    // Update UI
                     document.getElementById('air-val').innerText = "IDENTIFIED";
                     document.getElementById('term-val').innerText = info.ref || "T-1";
                     document.getElementById('count-val').innerText = "AISLE A"; 
                     document.getElementById('bag-val').innerText = "BELT 1";
                     document.getElementById('mission-text').innerText = "TARGET: " + (info.operator || info.name || "HUB").toUpperCase();
+                    
+                    // VIBRATION ALERT (Long-Short-Long)
+                    if (window.navigator.vibrate) {
+                        window.navigator.vibrate([400, 200, 100, 200, 400]);
+                    }
+
                     airportIdentified = true;
                     setTimeout(() => { map.invalidateSize(); }, 500);
                 }
@@ -136,7 +144,7 @@
             myPos = [pos.coords.latitude, pos.coords.longitude];
             targetMarker.setLatLng(myPos);
             map.setView(myPos, 19); 
-            map.invalidateSize(); // Force map to check its height
+            map.invalidateSize(); 
         }, null, { enableHighAccuracy: true });
 
         db.on('value', (snapshot) => {
@@ -150,7 +158,6 @@
             }
         });
         
-        // Final fail-safe to wake up the map
         window.onload = () => { setTimeout(() => { map.invalidateSize(); }, 1500); };
     </script>
 </body>
