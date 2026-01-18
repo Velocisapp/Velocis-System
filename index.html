@@ -22,8 +22,6 @@
             margin: 0;
         } 
         
-        /* CONTINENT HUB CSS REMOVED AS REQUESTED */
-
         #transport-menu {
             position: fixed;
             bottom: 30px;
@@ -88,7 +86,6 @@
             img => { img.crossOrigin = 'anonymous'; }); 
         }
         function setup() {
-            // FIX: Forces the canvas into the background
             let canvas = createCanvas(windowWidth, windowHeight, WEBGL);
             canvas.style('position', 'fixed'); 
             canvas.style('top', '0'); 
@@ -102,10 +99,13 @@
             ambientLight(210);
             pointLight(255, 255, 255, 600, 200, 1000);
             push();
+            
+            // SURGICAL MOVE: Moves globe upward
+            translate(0, -50, 0); 
+            
             rotateY(frameCount * 0.005);
             noStroke();
             texture(earthImg);
-            // SURGICAL RESIZE: 100 maintains high data clearance
             sphere(100); 
             pop();
         }
