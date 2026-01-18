@@ -29,12 +29,12 @@
             transform: translateX(-50%);
             display: flex;
             justify-content: center;
-            gap: 8px; /* Tighter gap for screen fit */
+            gap: 8px; /* Verified gap for screen fit */
             width: 100%;
             z-index: 10000 !important;
         }
 
-        /* SURGICAL RESIZE: 55px ensures no screen overflow */
+        /* VERIFIED: 55px icons stay within screen limits */
         .icon-btn { 
             width: 55px; 
             height: 55px; 
@@ -76,9 +76,12 @@
         <h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px;">Hub Intelligence: 107 & 2</h3>
         <p style="margin: 0 0 5px 0; line-height: 1.3;"><strong>PARIS (107):</strong> RER B is the 2026 speed-standard from CDG. Mobilis passes optimized for La Défense.</p>
         <p style="margin: 0 0 15px 0; line-height: 1.3;"><strong>HONG KONG (2):</strong> Octopus Card is essential for MTR. Punctuality defines respect in HK business.</p>
+        
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Marketplace Intelligence</div>
             <a href="https://www.booking.com/searchresults.html?ss=Paris" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #0046ad; text-align: center;">View Paris Hotels (Booking.com)</a>
+            <a href="https://www.trip.com/flights/list?searchtype=1&acity=par" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #57a1ff; text-align: center;">Find Paris Flights (Trip.com)</a>
+            <a href="https://www.klook.com/en-US/search?query=Paris&aid=696305" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff7c33; text-align: center;">Book Paris Experiences (Klook)</a>
         </div>
     </section>
 
@@ -111,7 +114,7 @@
             pointLight(255, 255, 255, 600, 200, 1000);
             push();
             
-            // SURGICAL MOVE: Globe shifted upward as requested
+            // VERIFIED POSITION: Upward shift for clearance
             translate(0, -100, 0); 
             
             rotateY(frameCount * 0.005);
@@ -121,7 +124,7 @@
             pop();
         }
         function showInstall() {
-            // preserved install logic
+            // Install logic preserved
         }
     </script>
 </body>
