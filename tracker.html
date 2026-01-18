@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VELOCIS™ | LIVE TRACKING BEACON</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background: #000; color: #39FF14; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .status { font-size: 1.5rem; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🛰️ TRACKING BEACON ACTIVE</h1>
+    <div id="out" class="status">Waiting for GPS...</div>
+
+    <script>
+        // 1. Firebase Config (You'll get this from Firebase Console)
+        const firebaseConfig = { databaseURL: "YOUR_FIREBASE_URL_HERE" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database().ref('car_location');
+
+        // 2. Track Movement
+        navigator.geolocation.watchPosition((pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            // Send to Cloud
+            db.set({ lat: lat, lng: lng, timestamp: Date.now() });
+            
+            document.getElementById('out').innerHTML = `SENDING: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }, (err) => console.error(err), { enableHighAccuracy: true });
+    </script>
+</body>
+</html>
