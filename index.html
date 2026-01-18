@@ -29,7 +29,7 @@
             transform: translateX(-50%);
             display: flex;
             justify-content: center;
-            gap: 8px; /* Verified gap for screen fit */
+            gap: 8px; /* Verified for screen fit */
             width: 100%;
             z-index: 10000 !important;
         }
@@ -68,20 +68,23 @@
 
     <div id="beta-invite" style="position: absolute; top: 15%; width: 100%; text-align: center; z-index: 1001; pointer-events: auto;">
         <h2 style="margin: 0; color: white; font-family: sans-serif; font-size: 1.2rem; letter-spacing: 2px;">VELOCIS™ BETA</h2>
-        <p style="margin: 5px 0; color: white; font-family: sans-serif; font-size: 0.8rem; opacity: 0.8;">Testing Journey Timeline: Paris (107) & HK (2)</p>
-        <button onclick="showInstall()" style="background: white; color: black; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer;">Install VELOCIS (Free)</button>
+        <p style="margin: 5px 0; color: white; font-family: sans-serif; font-size: 0.8rem; opacity: 0.8;">Neutral Intelligence: Worldwide Deployment</p>
     </div>
 
     <section id="travel-guides" style="position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); width: 92%; height: 180px; max-height: 180px; overflow-y: scroll; -webkit-overflow-scrolling: touch; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); color: #fff; padding: 15px; border-radius: 12px; border: 1px solid rgba(0, 212, 255, 0.4); z-index: 2000; text-align: center; pointer-events: auto !important;">
-        <h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px;">Hub Intelligence: 107 & 2</h3>
-        <p style="margin: 0 0 5px 0; line-height: 1.3;"><strong>PARIS (107):</strong> RER B is the 2026 speed-standard from CDG. Mobilis passes optimized for La Défense.</p>
-        <p style="margin: 0 0 15px 0; line-height: 1.3;"><strong>HONG KONG (2):</strong> Octopus Card is essential for MTR. Punctuality defines respect in HK business.</p>
+        <h3 style="color: #00d4ff; font-size: 13px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px;">Universal Intelligence Active</h3>
+        <p style="margin: 0 0 15px 0; line-height: 1.3;">Select a protocol below to initiate search for any global hub (Brazil, Australia, Europe, Asia).</p>
         
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
-            <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Marketplace Intelligence</div>
-            <a href="https://www.booking.com/searchresults.html?ss=Paris" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #0046ad; text-align: center;">View Paris Hotels (Booking.com)</a>
-            <a href="https://www.trip.com/flights/list?searchtype=1&acity=par" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #57a1ff; text-align: center;">Find Paris Flights (Trip.com)</a>
-            <a href="https://www.klook.com/en-US/search?query=Paris&aid=696305" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff7c33; text-align: center;">Book Paris Experiences (Klook)</a>
+            <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Global Marketplace Intelligence</div>
+            
+            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ccc; text-align: center;">Expedia.com (Neutral Search)</a>
+            
+            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #0046ad; text-align: center;">Booking.com (Universal Hotels)</a>
+            
+            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #57a1ff; text-align: center;">Trip.com (Worldwide Flights)</a>
+            
+            <a href="https://www.klook.com/en-US/?aid=696305" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff7c33; text-align: center;">Klook (Global Experiences)</a>
         </div>
     </section>
 
@@ -122,9 +125,6 @@
             texture(earthImg);
             sphere(100); 
             pop();
-        }
-        function showInstall() {
-            // Install logic preserved
         }
     </script>
 </body>
