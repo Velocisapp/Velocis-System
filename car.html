@@ -22,7 +22,7 @@
         }
 
         .hub-box { 
-            border: 1px solid #007bff; 
+            border: 2px solid #007bff; 
             padding: 20px; 
             border-radius: 15px; 
             background: rgba(0, 123, 255, 0.05); 
@@ -31,20 +31,22 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between; 
-            box-shadow: 0 0 30px rgba(0, 123, 255, 0.3); 
+            box-shadow: 0 0 35px rgba(0, 123, 255, 0.4); 
             box-sizing: border-box;
         }
 
+        /* MASSIVE HEADER */
         h1 { 
             color: #007bff; 
-            font-size: 1.6rem; 
+            font-size: 2.2rem; 
             letter-spacing: 2px; 
-            margin: 5px 0;
+            margin: 10px 0;
             text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
         }
 
         #map { 
-            height: 65%; 
+            height: 60%; 
             width: 100%; 
             border-radius: 12px; 
             border: 1px solid #1a1a1a; 
@@ -52,26 +54,51 @@
         }
 
         .status-tag { 
-            color: #28a745; 
-            font-size: 1rem; 
+            color: #39FF14; 
+            font-size: 1.2rem; 
             font-weight: bold; 
-            text-shadow: 0 0 8px #28a745;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.6);
+        }
+
+        /* LARGE, HAPPY TEXTS */
+        .pickup-info {
+            font-size: 1.8rem; 
+            font-weight: bold;
+            margin: 15px 0;
+            line-height: 1.3;
+        }
+
+        .gate-text { 
+            color: #00d4ff; /* Electric Blue */
+            display: block;
+        }
+
+        .status-verified { 
+            color: #39FF14; /* Neon Green */
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+            display: block;
+            margin-top: 5px;
+            font-size: 1.5rem;
         }
 
         .back-btn { 
             background: #1a1a1a; 
             color: #fff; 
-            border: 1px solid #007bff; 
-            padding: 22px 0; 
+            border: 2px solid #007bff; 
+            padding: 20px 0; 
             border-radius: 8px; 
             cursor: pointer; 
-            font-size: 1.1rem; 
+            font-size: 1.3rem; 
             width: 100%; 
             font-weight: bold;
             margin-bottom: 5px;
+            transition: 0.3s;
         }
         
-        p { margin: 10px 0; line-height: 1.4; }
+        .back-btn:hover {
+            background: #007bff;
+            box-shadow: 0 0 15px #007bff;
+        }
     </style>
 </head>
 <body>
@@ -84,40 +111,38 @@
         <div id="map"></div>
 
         <div>
-            <p style="font-size: 1.1rem;">
-                <strong>PICKUP: GATE 7 / LEVEL 1</strong><br>
-                <span style="color: #007bff; font-size: 0.9rem;">SECURITY STATUS: VERIFIED</span>
-            </p>
+            <div class="pickup-info">
+                <span class="gate-text">PICKUP: GATE 7 / LEVEL 1</span>
+                <span class="status-verified">SECURITY STATUS: VERIFIED</span>
+            </div>
             
             <button class="back-btn" onclick="window.history.back()">← RETURN TO TERMINAL</button>
         </div>
     </div>
 
     <script>
-        // 1. ULTRA-CLOSE ZOOM: Set to 19 for maximum terminal road detail
+        // 1. ULTRA-CLOSE ZOOM
         var map = L.map('map', {
             tap: false, 
             touchZoom: true,
             scrollWheelZoom: true
         }).setView([22.3080, 113.9185], 19); 
 
-        // 2. HIGH-CONTRAST VOYAGER STYLE
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        // 2. VOYAGER STYLE
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // 3. TARGET GATE: Brighter marker for the Pickup Point
+        // 3. TARGET GATE
         L.circleMarker([22.3080, 113.9185], {
             color: '#00d4ff', 
             fillColor: '#00d4ff',
             fillOpacity: 0.8,
             radius: 15
-        }).addTo(map).bindPopup('<b>PICKUP GATE 7</b>').openPopup();
+        }).addTo(map).bindPopup('<b style="font-size:1.2rem;">GATE 7</b>').openPopup();
 
-        // 4. LARGE CAR ICON: Scaled to 60px with drop-shadow for visibility
+        // 4. LARGE CAR ICON (60px)
         var carMarker = L.marker([22.3084, 113.9192], {
             icon: L.divIcon({
-                html: '<div style="font-size: 60px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));">🚗</div>', 
+                html: '<div style="font-size: 60px; filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));">🚗</div>', 
                 className: 'car-icon', 
                 iconSize: [60, 60],
                 iconAnchor: [30, 30] 
@@ -129,7 +154,6 @@
             carMarker.setLatLng([22.3081, 113.9188]);
         }, 2000);
 
-        // Ensure the map fills the container correctly
         setTimeout(function(){ map.invalidateSize()}, 500);
     </script>
 </body>
