@@ -51,7 +51,6 @@
             position: relative;
         }
 
-        /* This creates the pulse that doesn't make the dot vanish */
         .pulsating-dot::after {
             content: '';
             position: absolute;
@@ -88,12 +87,12 @@
     </div>
 
     <script>
-        // High Precision Zoom
+        // 1. INITIALIZE MAP
         var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([22.3080, 113.9185], 19); 
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // Pulsating Cyan Dot with High Z-Index and Pseudo-element Fix
+        // 2. PULSATING HUB
         var cyanPulseIcon = L.divIcon({
             className: 'pulsating-dot',
             iconSize: [15, 15],
@@ -101,22 +100,38 @@
         });
         L.marker([22.3080, 113.9185], {icon: cyanPulseIcon, zIndexOffset: 1000}).addTo(map);
 
-        // Fixed Label for Gate 7
         L.popup({ autoClose: false, closeOnClick: false, offset: [0, -10] })
             .setLatLng([22.3080, 113.9185])
             .setContent('<b style="font-size:1.4rem; color:#000;">GATE 7</b>')
             .openOn(map);
 
-        // Massive Car Icon
-        var carMarker = L.marker([22.3084, 113.9192], {
+        // 3. NEON PATH LOGIC
+        var startPoint = [22.3088, 113.9205];
+        var endPoint = [22.3081, 113.9188];
+        
+        var pathLine = L.polyline([startPoint], {
+            color: '#39FF14', 
+            weight: 6, 
+            opacity: 0.8,
+            dashArray: '10, 10', 
+            lineJoin: 'round'
+        }).addTo(map);
+
+        // 4. THE CAR MARKER
+        var carMarker = L.marker(startPoint, {
             icon: L.divIcon({
                 html: '<div style="font-size: 60px; filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));">🚗</div>', 
                 iconSize: [60, 60], iconAnchor: [30, 30] 
             })
         }).addTo(map);
 
-        // Simulation
-        setTimeout(() => { carMarker.setLatLng([22.3081, 113.9188]); }, 2000);
+        // 5. ANIMATION: DRIVE & DRAW
+        setTimeout(() => {
+            carMarker.setLatLng(endPoint);
+            pathLine.setLatLngs([startPoint, endPoint]);
+            map.panTo(endPoint);
+        }, 2000);
+
         setTimeout(function(){ map.invalidateSize()}, 500);
     </script>
 </body>
