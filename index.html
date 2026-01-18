@@ -79,7 +79,7 @@
         <div id="btn-car" class="icon-btn" onclick="location.href='car.html'">🚗</div>
     </div>
 
-    <script>
+   <script>
         let earthImg;
         function preload() {
             earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', 
@@ -98,14 +98,16 @@
             if (!earthImg) return;
             ambientLight(210);
             pointLight(255, 255, 255, 600, 200, 1000);
-            push();
             
-            // SURGICAL MOVE: Moves globe upward
-            translate(0, -50, 0); 
+            push();
+            // SURGICAL MOVE: Increased upward shift from -50 to -100
+            translate(0, -100, 0); 
             
             rotateY(frameCount * 0.005);
             noStroke();
             texture(earthImg);
+            
+            // Keeps your verified compact size (sphere radius 100)
             sphere(100); 
             pop();
         }
