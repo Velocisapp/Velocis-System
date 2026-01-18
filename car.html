@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -24,28 +25,30 @@
 
         #map { height: 60%; width: 100%; border-radius: 12px; border: 1px solid #1a1a1a; z-index: 1; }
 
-        /* NEW: HUGE PICKUP TEXT */
+        /* HUGE, HAPPY PICKUP TEXT */
         .pickup-info {
-            font-size: 2.2rem; /* Increased size significantly */
+            font-size: 2.8rem; /* Dramatically increased for "Boss" visibility */
             font-weight: 900;
             margin: 15px 0;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
-        .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
-        .status-verified { color: #39FF14; font-size: 1.6rem; display: block; margin-top: 5px; }
+        .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 15px rgba(0, 212, 255, 0.7); }
+        .status-verified { color: #39FF14; font-size: 1.8rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
 
-        /* PULSE ANIMATION FOR CYAN DOT */
+        /* CORRECTED PULSE ANIMATION */
         @keyframes pulse-cyan {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.5); opacity: 0.4; }
-            100% { transform: scale(1); opacity: 0.8; }
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); }
+            70% { transform: scale(2); opacity: 0.3; box-shadow: 0 0 0 20px rgba(0, 212, 255, 0); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
         }
         .pulsating-dot {
             background: #00d4ff;
+            width: 20px !important;
+            height: 20px !important;
             border-radius: 50%;
-            box-shadow: 0 0 15px #00d4ff;
-            animation: pulse-cyan 1.5s infinite ease-in-out;
+            border: 2px solid white;
+            animation: pulse-cyan 2s infinite;
         }
 
         .back-btn { 
@@ -74,18 +77,26 @@
     </div>
 
     <script>
+        // High Precision Zoom
         var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([22.3080, 113.9185], 19); 
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // 3. PULSATING CYAN DOT: Using a custom divIcon for the animation
+        // Pulsating Cyan Dot with High Z-Index
         var cyanPulseIcon = L.divIcon({
             className: 'pulsating-dot',
-            iconSize: [20, 20]
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
         });
-        L.marker([22.3080, 113.9185], {icon: cyanPulseIcon}).addTo(map);
+        L.marker([22.3080, 113.9185], {icon: cyanPulseIcon, zIndexOffset: 1000}).addTo(map);
 
-        // 4. LARGE CAR ICON (60px)
+        // Fixed Label for Gate 7
+        L.popup({ autoClose: false, closeOnClick: false })
+            .setLatLng([22.3080, 113.9185])
+            .setContent('<b style="font-size:1.5rem; color:#000;">GATE 7</b>')
+            .openOn(map);
+
+        // Massive Car Icon
         var carMarker = L.marker([22.3084, 113.9192], {
             icon: L.divIcon({
                 html: '<div style="font-size: 60px; filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));">🚗</div>', 
@@ -93,6 +104,7 @@
             })
         }).addTo(map);
 
+        // Simulation
         setTimeout(() => { carMarker.setLatLng([22.3081, 113.9188]); }, 2000);
         setTimeout(function(){ map.invalidateSize()}, 500);
     </script>
