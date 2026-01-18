@@ -25,7 +25,6 @@
         .live-tag { color: #39FF14; font-weight: 900; font-size: 1.4rem; text-shadow: 0 0 10px #39FF14; }
         h1 { color: #007bff; font-size: 2.4rem; margin: 5px 0; text-transform: uppercase; font-weight: 900; }
 
-        /* FIXED TERMINAL BRIEFING */
         #terminal-briefing {
             display: none; background: #ffcc00; color: #000; padding: 15px;
             border-radius: 15px; margin-bottom: 10px; border: 6px solid #000;
@@ -36,7 +35,6 @@
         .brief-item { font-size: 2.2rem; font-weight: 900; line-height: 1; }
         .brief-label { font-size: 1.1rem; text-transform: uppercase; font-weight: 800; opacity: 0.9; }
 
-        /* STABILIZED MAP AREA */
         #map { flex-grow: 1; width: 100%; min-height: 30vh; border-radius: 15px; border: 4px solid #1a1a1a; background: #222; z-index: 1; }
 
         .directions-box {
@@ -66,19 +64,20 @@
         </div>
         
         <div id="terminal-briefing">
+            <div id="brief-mode-tag" style="font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">🛰️ MODE: STANDBY</div>
             <div class="brief-title">🛰️ TERMINAL BRIEFING</div>
             <div class="brief-grid">
-                <div><div class="brief-label">Airline</div><div class="brief-item">EMIRATES</div></div>
-                <div><div class="brief-label">Terminal</div><div class="brief-item">T-3</div></div>
-                <div><div class="brief-label">Counter</div><div class="brief-item">AISLE 4</div></div>
-                <div><div class="brief-label">Baggage</div><div class="brief-item">ZONE B</div></div>
+                <div><div class="brief-label">Airline</div><div id="air-val" class="brief-item">---</div></div>
+                <div><div class="brief-label">Terminal</div><div id="term-val" class="brief-item">---</div></div>
+                <div><div class="brief-label">Counter</div><div id="count-val" class="brief-item">---</div></div>
+                <div><div class="brief-label">Baggage</div><div id="bag-val" class="brief-item">---</div></div>
             </div>
         </div>
 
         <div id="map"></div>
 
         <div class="directions-box">
-            <span class="dir-text">Follow instructions as provided.</span>
+            <span id="mission-text" class="dir-text">Waiting for mission data...</span>
         </div>
 
         <div>
@@ -95,6 +94,7 @@
         const firebaseConfig = { databaseURL: "https://velocis-terminal-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('car_location');
+        const configRef = firebase.database().ref('mission_config');
 
         var map = L.map('map', {zoomControl: false}).setView([0,0], 2); 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
@@ -112,32 +112,12 @@
         
         var pathLine = L.polyline([], { color: '#39FF14', weight: 12, opacity: 0.9 }).addTo(map);
 
-        navigator.geolocation.watchPosition((pos) => {
-            myPos = [pos.coords.latitude, pos.coords.longitude];
-            targetMarker.setLatLng(myPos);
-            targetPopup.setLatLng(myPos);
-            if (!briefingActive) map.setView(myPos, 21);
-        }, (err) => { console.error(err); }, { enableHighAccuracy: true });
+        // --- HYBRID AUTOMATION ENGINE ---
+        configRef.on('value', (snapshot) => {
+            const config = snapshot.val();
+            if (!config) return;
 
-        db.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && myPos) {
-                const herPos = [data.lat, data.lng];
-                carMarker.setLatLng(herPos);
-                pathLine.addLatLng(herPos);
-                const dist = map.distance(herPos, myPos);
-                
-                if (dist < 300 && !briefingActive) {
-                    document.getElementById('terminal-briefing').style.display = 'block';
-                    map.invalidateSize(); 
-                    briefingActive = true;
-                }
-                document.getElementById('status-display').innerHTML = dist < 20 ? "ARRIVED • SECURE" : Math.round(dist) + "M AWAY";
-            }
-        });
-
-        function callProvider() { alert("CONNECTING..."); }
-        setTimeout(() => { map.invalidateSize(); }, 500);
-    </script>
-</body>
-</html>
+            document.getElementById('brief-mode-tag').innerText = "🛰️ MODE: " + config.mode;
+            
+            if (config.mode === "AUTO") {
+                // Future: Add
