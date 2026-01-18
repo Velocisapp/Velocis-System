@@ -47,14 +47,13 @@
             100% { transform: scale(1); opacity: 1; }
         }
         
-        /* LARGER PULSATING DOT */
         .pulsating-dot {
             background: #00d4ff !important; width: 25px !important; height: 25px !important;
             border-radius: 50% !important; border: 3px solid white !important; position: relative;
         }
         .pulsating-dot::after {
             content: ''; position: absolute; top: -3px; left: -3px; width: 25px; height: 25px;
-            border-radius: 50%; border: 6px solid #00d4ff; animation: pulse-ring 2s infinite;
+            border-radius: 50%; border: 4px solid #00d4ff; animation: pulse-ring 2s infinite;
         }
 
         .action-btn { flex: 1; padding: 15px 0; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; border: none; }
@@ -66,7 +65,7 @@
 <body>
     <div class="hub-box">
         <div>
-            <div style="color: #39FF14; font-weight: bold; font-size: 0.8rem; text-shadow: 0 0 8px #39FF14;">● LIVE TRACKING ACTIVE</div>
+            <div style="color: #39FF14; font-weight: bold; font-size: 0.8rem; text-shadow: 0 0 8px #39FF14;">● GLOBAL HUB ACTIVE</div>
             <h1>🚗 CAR SECURITY HUB</h1>
         </div>
         
@@ -74,13 +73,13 @@
 
         <div class="directions-box">
             <span class="dir-title">MISSION ROUTE:</span>
-            <span class="dir-text">Use <span style="color:#00d4ff; font-weight:900;">Elevator Bank B</span> ➔ Level 1 ➔ Gate 7.</span>
+            <span class="dir-text">Tracking relative to <span style="color:#00d4ff; font-weight:900;">Hub Position</span>.</span>
         </div>
 
         <div>
             <div class="pickup-info">
-                <span class="gate-text">GATE 7 / LEVEL 1</span>
-                <span id="status-display" class="status-verified">WAITING FOR DATA...</span>
+                <span id="gate-label" class="gate-text">CURRENT BASE</span>
+                <span id="status-display" class="status-verified">WAITING FOR HUB GPS...</span>
             </div>
             <div class="btn-container">
                 <button class="action-btn call-btn" onclick="callProvider()">📞 CALL DRIVER</button>
@@ -90,47 +89,53 @@
     </div>
 
     <script>
-        const firebaseConfig = { 
-            databaseURL: "https://velocis-terminal-default-rtdb.firebaseio.com/" 
-        };
+        const firebaseConfig = { databaseURL: "https://velocis-terminal-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('car_location');
 
-        var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([26.26634, -81.53021], 21); 
+        // Initial Map Setup (Global)
+        var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([0,0], 2); 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // TARGET DOT INCREASED TO 25px
+        let myPos = null;
+        let mapCentered = false;
+
+        // Target (Hub) Markers
         var cyanPulseIcon = L.divIcon({ className: 'pulsating-dot', iconSize: [25, 25], iconAnchor: [12, 12] });
-        L.marker([26.26634, -81.53021], {icon: cyanPulseIcon, zIndexOffset: 1000}).addTo(map);
+        var targetMarker = L.marker([0,0], {icon: cyanPulseIcon, zIndexOffset: 1000}).addTo(map);
+        var targetPopup = L.popup({ autoClose: false, closeOnClick: false, offset: [0, -15] }).setLatLng([0,0]).setContent('<b style="color:#000;">YOU ARE HERE</b>').openOn(map);
 
-        L.popup({ autoClose: false, closeOnClick: false, offset: [0, -15] })
-            .setLatLng([26.26634, -81.53021])
-            .setContent('<b style="font-size:1.2rem; color:#000;">GATE 7</b>').openOn(map);
-
-        // CAR ICON SIZE INCREASED TO 80px
+        // Car Marker
         var carMarker = L.marker([0,0], {
-            icon: L.divIcon({ 
-                html: '<div style="font-size: 80px; filter: drop-shadow(0 0 15px rgba(0,0,0,0.6));">🚗</div>', 
-                iconSize: [80, 80], 
-                iconAnchor: [40, 40] 
-            })
+            icon: L.divIcon({ html: '<div style="font-size: 80px; filter: drop-shadow(0 0 15px rgba(0,0,0,0.6));">🚗</div>', iconSize: [80, 80], iconAnchor: [40, 40] })
         }).addTo(map);
-        
         var pathLine = L.polyline([], { color: '#39FF14', weight: 8, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
 
+        // TRACK YOUR LOCATION (THE HUB)
+        navigator.geolocation.watchPosition((pos) => {
+            myPos = [pos.coords.latitude, pos.coords.longitude];
+            targetMarker.setLatLng(myPos);
+            targetPopup.setLatLng(myPos);
+            if (!mapCentered) {
+                map.setView(myPos, 21);
+                mapCentered = true;
+            }
+        }, (err) => console.error(err), { enableHighAccuracy: true });
+
+        // LISTEN FOR HER LOCATION (THE BEACON)
         db.on('value', (snapshot) => {
             const data = snapshot.val();
-            if (data) {
-                const newPos = [data.lat, data.lng];
-                carMarker.setLatLng(newPos);
-                pathLine.addLatLng(newPos);
-                map.panTo(newPos);
+            if (data && myPos) {
+                const herPos = [data.lat, data.lng];
+                carMarker.setLatLng(herPos);
+                pathLine.addLatLng(herPos);
                 
-                const dist = map.distance(newPos, [26.26634, -81.53021]);
+                const dist = map.distance(herPos, myPos);
                 const statusEl = document.getElementById('status-display');
                 
                 if (dist < 20) {
                     statusEl.innerHTML = "CAR HAS ARRIVED • SECURE";
+                    if (window.navigator.vibrate) window.navigator.vibrate([300, 100, 300]);
                 } else {
                     statusEl.innerHTML = "EN ROUTE • " + Math.round(dist) + "M AWAY";
                 }
