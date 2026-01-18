@@ -129,10 +129,18 @@
 </div>
 
 <div id="transport-menu" style="position: absolute; bottom: 3%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto;">
-   <div id="btn-air" class="icon-btn active" onclick="location.href='security.html'">✈️</div>
-    <div id="btn-sea" class="icon-btn" onclick="location.href='sea.html'">🚢</div>
-    <div id="btn-rail" class="icon-btn" onclick="location.href='rail.html'">🚆</div>
-    <div id="btn-sub" class="icon-btn" onclick="location.href='subway.html'">🚇</div>
+    <div class="icon-btn" onclick="showSecurityHub('Air')">✈️</div>
+    <div class="icon-btn" onclick="showSecurityHub('Sea')">🚢</div>
+    <div class="icon-btn" onclick="showSecurityHub('Train')">🚆</div>
+    <div class="icon-btn" onclick="showSecurityHub('Subway')">🚇</div>
+    <div class="icon-btn" onclick="triggerArrival('GATE 7', 'Car')">🚗</div>
+</div>
+
+<div id="scanner-hub" style="position: absolute; bottom: 15%; width: 100%; display: flex; gap: 10px; justify-content: center;">
+    <button onclick="startCameraScan()" style="background:#007bff; color:white; border:none; padding:8px 15px; border-radius:5px;">📸 SCAN</button>
+    <label style="background:#28a745; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">
+        📁 UPLOAD <input type="file" accept="image/*" onchange="handleImageUpload(event)" style="display:none;">
+    </label>
 </div>
 <script>
     const myMarker = "696305"    
