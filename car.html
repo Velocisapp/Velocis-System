@@ -16,42 +16,58 @@
         .hub-box { 
             border: 2px solid #007bff; padding: 15px; border-radius: 15px; 
             background: rgba(0, 123, 255, 0.05); width: 94%; height: 96vh; 
-            display: flex; flex-direction: column; justify-content: space-between; 
+            display: flex; flex-direction: column; 
+            justify-content: space-between; 
             box-shadow: 0 0 35px rgba(0, 123, 255, 0.4); box-sizing: border-box;
         }
 
         h1 { color: #007bff; font-size: 1.8rem; margin: 5px 0; text-transform: uppercase; }
 
-        #map { height: 45%; width: 100%; border-radius: 12px; border: 1px solid #1a1a1a; z-index: 1; }
+        /* INCREASED MAP SIZE: Balanced to fill the screen center */
+        #map { height: 48%; width: 100%; border-radius: 12px; border: 1px solid #1a1a1a; z-index: 1; }
 
         /* HUGE TARGET TEXT */
-        .pickup-info { font-size: 2.4rem; font-weight: 900; line-height: 1.1; margin: 5px 0; }
+        .pickup-info { font-size: 2.6rem; font-weight: 900; line-height: 1.1; margin: 5px 0; }
         .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 15px rgba(0, 212, 255, 0.7); }
-        .status-verified { color: #39FF14; font-size: 1.4rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+        .status-verified { color: #39FF14; font-size: 1.6rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
 
-        /* NEW: GATE DIRECTIONS BLOCK */
+        /* FIXED: MASSIVE GATE DIRECTIONS */
         .directions-box {
-            background: rgba(255, 255, 255, 0.1);
-            border-left: 4px solid #00d4ff;
-            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-left: 6px solid #00d4ff;
+            padding: 15px;
             margin: 10px 0;
             text-align: left;
-            font-size: 1rem;
+            border-radius: 8px;
+        }
+
+        .dir-title {
+            color: #00d4ff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .dir-text {
+            color: #fff; /* White for maximum contrast */
+            font-size: 1.2rem; /* Much larger than before */
             line-height: 1.4;
+            font-weight: 500;
         }
 
         /* DUAL ACTION BUTTONS */
-        .btn-container { display: flex; gap: 10px; width: 100%; }
+        .btn-container { display: flex; gap: 10px; width: 100%; margin-top: 5px; }
         
         .action-btn { 
-            flex: 1; padding: 18px 0; border-radius: 8px; font-size: 1.1rem; 
-            font-weight: bold; cursor: pointer; transition: 0.3s;
+            flex: 1; padding: 20px 0; border-radius: 8px; font-size: 1.1rem; 
+            font-weight: bold; cursor: pointer; border: none;
         }
 
-        .call-btn { background: #39FF14; color: #000; border: none; }
+        .call-btn { background: #39FF14; color: #000; box-shadow: 0 0 15px rgba(57, 255, 20, 0.4); }
         .back-btn { background: #1a1a1a; color: #fff; border: 2px solid #007bff; }
 
-        /* PULSE ANIMATION */
         @keyframes pulse-ring {
             0% { transform: scale(1); opacity: 1; }
             70% { transform: scale(3); opacity: 0; }
@@ -70,21 +86,21 @@
 <body>
     <div class="hub-box">
         <div>
-            <div style="color: #39FF14; font-weight: bold; font-size: 0.9rem;">● LIVE TRACKING ACTIVE</div>
+            <div style="color: #39FF14; font-weight: bold; font-size: 0.9rem; text-shadow: 0 0 8px #39FF14;">● LIVE TRACKING ACTIVE</div>
             <h1>🚗 CAR SECURITY HUB</h1>
         </div>
         
         <div id="map"></div>
 
         <div class="directions-box">
-            <strong style="color:#00d4ff;">GATE DIRECTIONS:</strong><br>
-            Use Elevator Bank B. Descent to Level 1. Follow blue floor markings toward Gate 7.
+            <span class="dir-title">GATE DIRECTIONS:</span>
+            <span class="dir-text">Elevator Bank B ➔ Level 1 ➔ Follow blue markings to Gate 7.</span>
         </div>
 
         <div>
             <div class="pickup-info">
                 <span class="gate-text">GATE 7 / LEVEL 1</span>
-                <span class="status-verified">VERIFIED BY VELOCIS™</span>
+                <span class="status-verified">CAR HAS ARRIVED • SECURE</span>
             </div>
             
             <div class="btn-container">
@@ -107,8 +123,8 @@
 
         var startPoint = [22.3088, 113.9205];
         var endPoint = [22.3081, 113.9188];
-        var pathLine = L.polyline([startPoint], { color: '#39FF14', weight: 6, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
-        var carMarker = L.marker(startPoint, {
+        var pathLine = L.polyline([startPoint, endPoint], { color: '#39FF14', weight: 6, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
+        var carMarker = L.marker(endPoint, {
             icon: L.divIcon({ html: '<div style="font-size: 50px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));">🚗</div>', iconSize: [50, 50], iconAnchor: [25, 25] })
         }).addTo(map);
 
@@ -116,14 +132,6 @@
             if (window.navigator.vibrate) window.navigator.vibrate(100);
             alert("SECURE LINE CONNECTING...");
         }
-
-        setTimeout(() => {
-            carMarker.setLatLng(endPoint);
-            pathLine.setLatLngs([startPoint, endPoint]);
-            map.panTo(endPoint);
-            if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
-            document.querySelector('.status-verified').innerHTML = "CAR HAS ARRIVED • SECURE";
-        }, 2000);
 
         setTimeout(function(){ map.invalidateSize()}, 500);
     </script>
