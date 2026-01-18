@@ -106,7 +106,7 @@
         const db = firebase.database().ref('car_location');
 
         // 2. INITIALIZE MAP
-        var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([22.3080, 113.9185], 19); 
+        var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([26.26634, -81.53021], 17) 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
 
         // 3. TARGET MARKERS
@@ -114,7 +114,7 @@
         L.marker([26.26634, -81.53021], {icon: cyanPulseIcon, zIndexOffset: 1000}).addTo(map);
 
         L.popup({ autoClose: false, closeOnClick: false, offset: [0, -10] })
-            .setLatLng([22.3080, 113.9185])
+            .setLatLng([26.26634, -81.53021])
             .setContent('<b style="font-size:1.2rem; color:#000;">GATE 7</b>').openOn(map);
 
         // 4. CAR & PATH ASSETS
@@ -135,7 +135,7 @@
                 map.panTo(newPos);
                 
                 // Geofence & Arrival Logic (Within 20 meters)
-                const dist = map.distance(newPos, [22.3080, 113.9185]);
+                const dist = map.distance(newPos, [26.26634, -81.53021]);
                 const statusEl = document.getElementById('status-display');
                 
                 if (dist < 20) {
