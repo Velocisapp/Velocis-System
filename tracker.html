@@ -5,30 +5,69 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { background: #000; color: #39FF14; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .status { font-size: 1.5rem; margin-top: 20px; }
+        body { 
+            background: #000; color: #39FF14; font-family: sans-serif; 
+            text-align: center; padding-top: 50px; 
+        }
+        .status { font-size: 1.5rem; margin-top: 20px; padding: 20px; }
+        .error-msg { color: #ff3b3b; font-weight: bold; border: 1px solid #ff3b3b; margin: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
     <h1>🛰️ TRACKING BEACON ACTIVE</h1>
-    <div id="out" class="status">Waiting for GPS...</div>
+    <div id="out" class="status">Initializing Mission...</div>
 
     <script>
-        // 1. Firebase Config (You'll get this from Firebase Console)
-        const firebaseConfig = { databaseURL: "YOUR_FIREBASE_URL_HERE" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database().ref('car_location');
+        // 1. MANDATORY: PASTE YOUR REAL FIREBASE URL INSIDE THE QUOTES BELOW
+        const firebaseConfig = { 
+            databaseURL: "YOUR_FIREBASE_URL_HERE" 
+        };
+        
+        try {
+            firebase.initializeApp(firebaseConfig);
+            var db = firebase.database().ref('car_location');
+            document.getElementById('out').innerHTML = "Waiting for GPS Lock...";
+        } catch (e) {
+            document.getElementById('out').innerHTML = `<div class="error-msg">CONFIG ERROR: Check your Firebase URL</div>`;
+        }
 
-        // 2. Track Movement
-        navigator.geolocation.watchPosition((pos) => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            
-            // Send to Cloud
-            db.set({ lat: lat, lng: lng, timestamp: Date.now() });
-            
-            document.getElementById('out').innerHTML = `SENDING: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        }, (err) => console.error(err), { enableHighAccuracy: true });
+        // 2. Track Movement with Error Reporting
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                
+                // Update Firebase Cloud
+                db.set({ 
+                    lat: lat, 
+                    lng: lng, 
+                    timestamp: Date.now() 
+                });
+                
+                // Update User Screen
+                document.getElementById('out').innerHTML = `
+                    <div style="color: #00d4ff">SIGNAL ACQUIRED</div>
+                    <div style="font-size: 0.9rem; margin-top: 10px;">
+                        LAT: ${lat.toFixed(5)}<br>LNG: ${lng.toFixed(5)}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #888; margin-top: 10px;">TRANSMITTING TO HUB...</div>
+                `;
+            }, (err) => {
+                let msg = "";
+                switch(err.code) {
+                    case err.PERMISSION_DENIED: msg = "PERMISSION DENIED: Reset browser location settings."; break;
+                    case err.POSITION_UNAVAILABLE: msg = "GPS UNAVAILABLE: Move near a window or outdoors."; break;
+                    case err.TIMEOUT: msg = "GPS TIMEOUT: Searching for satellites..."; break;
+                }
+                document.getElementById('out').innerHTML = `<div class="error-msg">${msg}</div>`;
+            }, { 
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 10000 
+            });
+        } else {
+            document.getElementById('out').innerHTML = `<div class="error-msg">HARDWARE ERROR: Phone does not support GPS tracking.</div>`;
+        }
     </script>
 </body>
 </html>
