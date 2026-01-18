@@ -13,25 +13,24 @@
             text-align: center; 
             padding: 0; 
             margin: 0; 
-            height: 100vh; /* Critical for mobile height */
+            height: 100vh; 
             width: 100vw;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* Prevents awkward scrolling */
+            overflow: hidden; 
         }
 
-        /* MOBILE OPTIMIZED BOX: Stretches to fill the phone screen */
         .hub-box { 
             border: 1px solid #007bff; 
             padding: 20px; 
             border-radius: 15px; 
             background: rgba(0, 123, 255, 0.05); 
-            width: 92%; /* Wide on mobile */
-            height: 94vh; /* Stretches almost to the very bottom */
+            width: 92%; 
+            height: 94vh; 
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Pushes button to bottom */
+            justify-content: space-between; 
             box-shadow: 0 0 30px rgba(0, 123, 255, 0.3); 
             box-sizing: border-box;
         }
@@ -44,9 +43,8 @@
             text-transform: uppercase;
         }
 
-        /* LARGE SCALE MOBILE MAP */
         #map { 
-            height: 65%; /* Map dominates the center of the phone */
+            height: 65%; 
             width: 100%; 
             border-radius: 12px; 
             border: 1px solid #1a1a1a; 
@@ -60,12 +58,11 @@
             text-shadow: 0 0 8px #28a745;
         }
 
-        /* EASY-TAP MOBILE BUTTON */
         .back-btn { 
             background: #1a1a1a; 
             color: #fff; 
             border: 1px solid #007bff; 
-            padding: 22px 0; /* Extra tall for thumb-tapping */
+            padding: 22px 0; 
             border-radius: 8px; 
             cursor: pointer; 
             font-size: 1.1rem; 
@@ -97,13 +94,25 @@
     </div>
 
     <script>
-        // Centered for the demo coordinates
-        var map = L.map('map', {zoomControl: false}).setView([22.3080, 113.9185], 16);
+        // 1. RE-ENABLED ZOOM: Removed 'zoomControl: false' so user can zoom with two fingers
+        var map = L.map('map', {
+            tap: false, // Recommended for mobile scroll performance
+            touchZoom: true,
+            scrollWheelZoom: true
+        }).setView([22.3080, 113.9185], 16);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        // 2. ATTRACTIVE MAP STYLE: Switched to Voyager for better contrast and visibility
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-        L.circleMarker([22.3080, 113.9185], {color: '#007bff', radius: 12, fillOpacity: 0.8}).addTo(map)
-            .bindPopup('<b>PICKUP GATE 7</b>').openPopup();
+        // 3. BRIGHTER MARKER: High-visibility blue for the Pickup Gate
+        L.circleMarker([22.3080, 113.9185], {
+            color: '#00d4ff', 
+            fillColor: '#00d4ff',
+            fillOpacity: 0.8,
+            radius: 12
+        }).addTo(map).bindPopup('<b>PICKUP GATE 7</b>').openPopup();
 
         var carMarker = L.marker([22.3095, 113.9220], {
             icon: L.divIcon({html: '🚗', className: 'car-icon', iconSize: [30, 30]})
@@ -113,7 +122,7 @@
             carMarker.setLatLng([22.3082, 113.9190]);
         }, 2000);
 
-        // This ensures the map fills the container correctly on mobile resize
+        // Ensures the map fills the large mobile container correctly
         setTimeout(function(){ map.invalidateSize()}, 500);
     </script>
 </body>
