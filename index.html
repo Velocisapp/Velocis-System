@@ -128,12 +128,12 @@
     <button class="continent-btn" onclick="window.open('https://www.klook.com/en-US/?aid=696305', '_blank')">SOUTH AMERICA</button>
 </div>
 
-<div id="transport-menu" style="position: absolute; bottom: 3%; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: auto;">
-    <div id="btn-air" class="icon-btn active" onclick="triggerArrival('12', 'Paris')">✈️</div>
-    <div id="btn-sea" class="icon-btn" onclick="triggerArrival('1', 'Sea')">🚢</div>
-    <div id="btn-rail" class="icon-btn" onclick="triggerArrival('5', 'Train')">🚆</div>
-    <div id="btn-sub" class="icon-btn" onclick="triggerArrival('M4', 'Subway')">🚇</div>
-    <div id="btn-car" class="icon-btn" onclick="triggerArrival('Gate 7', 'Car')">🚗</div>
+<div id="transport-menu">
+    <div class="icon-btn" onclick="showSecurityHub('Air')">✈️</div>
+    <div class="icon-btn" onclick="showSecurityHub('Sea')">🚢</div>
+    <div class="icon-btn" onclick="showSecurityHub('Train')">🚆</div>
+    <div class="icon-btn" onclick="showSecurityHub('Subway')">🚇</div>
+    <div class="icon-btn" onclick="console.log('Car Mission Pending')">🚗</div>
 </div>
 
 <div id="scanner-hub" style="position: absolute; bottom: 12%; width: 100%; display: flex; gap: 15px; justify-content: center; pointer-events: auto;">
