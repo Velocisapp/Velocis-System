@@ -1,38 +1,48 @@
 /**
- * VELOCIS™ GLOBAL MOBILITY COMMAND
- * Logic: Icons = Security Hub | GPS/Scanner = Baggage & OTAs
+ * VELOCIS™ MODULAR COMMAND - RESTORED SECURITY HUB
+ * Task A: Icons -> Security Hub (Passport & Customs)
+ * Task B: GPS/Scanner -> Baggage & OTAs
  */
 
-// 1. THIS IS FOR THE ICONS ONLY (The Security Hub)
+// --- TASK A: THE SECURITY HUB (Manual Control via Icons) ---
 function showSecurityHub(type) {
     const baggageBox = document.getElementById('carousel-display');
     const baggageText = document.getElementById('baggage-text');
-    
-    if (baggageBox && baggageText) {
+    const alertBanner = document.getElementById('arrival-alert');
+
+    // 1. Identify the specific security task based on the icon
+    let securityDetail = "";
+    if (type === 'Air') securityDetail = "PASSPORT CONTROL & CUSTOMS";
+    else if (type === 'Sea') securityDetail = "PORT SECURITY & IMMIGRATION";
+    else if (type === 'Train') securityDetail = "RAILWAY BORDER CHECK";
+    else if (type === 'Subway') securityDetail = "STATION SAFETY CLEARANCE";
+
+    // 2. Update the UI without touching the OTA links
+    if (baggageBox && baggageText && alertBanner) {
+        alertBanner.style.display = 'block';
         baggageBox.style.display = 'block';
-        baggageBox.style.borderColor = "#FFD700"; // Gold for Security
-        baggageText.innerText = type.toUpperCase() + " SECURITY HUB ACTIVE";
-        // Note: This does NOT trigger the OTA links
+        baggageBox.style.borderColor = "#FFD700"; // Gold for Security focus
+        baggageText.innerHTML = `<span style="color:#FFD700;">${type.toUpperCase()} SECURITY HUB</span><br><small>${securityDetail}</small>`;
     }
 }
 
-// 2. THIS IS FOR GPS/SCANNER ONLY (Baggage & OTAs)
+// --- TASK B: THE ARRIVAL HUB (Automated via GPS or Scanner) ---
 function triggerArrival(carouselNum, city) {
     const baggageBox = document.getElementById('carousel-display');
     const baggageText = document.getElementById('baggage-text');
     const booking = document.getElementById('booking-link');
     const trip = document.getElementById('trip-link');
 
-    // Marketplace Intelligence (OTAs)
+    // 1. Update Revenue Links (OTAs) 
     if (city === 'HK') {
         if (booking) booking.innerText = "View Hong Kong Hotels (Booking.com)";
         if (trip) trip.innerText = "Find Hong Kong Flights (Trip.com)";
-    } else {
+    } else if (city === 'Paris') {
         if (booking) booking.innerText = "View Paris Hotels (Booking.com)";
         if (trip) trip.innerText = "Find Paris Flights (Trip.com)";
     }
 
-    // Baggage Display
+    // 2. Update Baggage Info
     if (baggageBox && baggageText) {
         baggageBox.style.display = 'block';
         baggageBox.style.borderColor = "orange"; 
@@ -40,7 +50,7 @@ function triggerArrival(carouselNum, city) {
     }
 }
 
-// GPS Logic remains linked to triggerArrival
+// --- GPS INTELLIGENCE (Triggers Task B) ---
 const GLOBAL_PORTS = [
     { name: 'Paris CDG', lat: 49.0097, lon: 2.5479, carousel: '12', city: 'Paris' },
     { name: 'Hong Kong HKG', lat: 22.3080, lon: 113.9185, carousel: '2', city: 'HK' }
