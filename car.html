@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -125,21 +126,29 @@
             })
         }).addTo(map);
 
-        // 5. ANIMATION: DRIVE, DRAW & NOTIFY
+        // 5. HAPTIC UNLOCKER: Essential for mobile browsers
+        var hapticUnlocked = false;
+        document.body.addEventListener('touchstart', function() {
+            if (!hapticUnlocked && window.navigator.vibrate) {
+                window.navigator.vibrate(10); // Tiny click to unlock the vibration engine
+                hapticUnlocked = true;
+            }
+        }, {passive: true});
+
+        // 6. ANIMATION: DRIVE, DRAW & NOTIFY
         setTimeout(() => {
             carMarker.setLatLng(endPoint);
             pathLine.setLatLngs([startPoint, endPoint]);
             map.panTo(endPoint);
 
-            // Trigger haptic feedback for phone users
+            // Trigger strong vibration on arrival
             if (window.navigator.vibrate) {
-                window.navigator.vibrate([200, 100, 200]); 
+                window.navigator.vibrate([300, 100, 300]); 
             }
             
-            // Update "Happy" text to reflect Arrival
             const statusEl = document.querySelector('.status-verified');
             statusEl.innerHTML = "CAR HAS ARRIVED • SECURE";
-            statusEl.style.color = "#FFF"; // Flash white for impact
+            statusEl.style.color = "#FFF"; 
             setTimeout(() => { 
                 statusEl.style.color = "#39FF14"; 
             }, 500);
