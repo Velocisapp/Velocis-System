@@ -33,7 +33,7 @@
         }
 
         .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 15px rgba(0, 212, 255, 0.7); }
-        .status-verified { color: #39FF14; font-size: 1.8rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+        .status-verified { color: #39FF14; font-size: 1.8rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); transition: color 0.3s; }
 
         /* GUARANTEED PULSE ANIMATION */
         @keyframes pulse-ring {
@@ -125,11 +125,25 @@
             })
         }).addTo(map);
 
-        // 5. ANIMATION: DRIVE & DRAW
+        // 5. ANIMATION: DRIVE, DRAW & NOTIFY
         setTimeout(() => {
             carMarker.setLatLng(endPoint);
             pathLine.setLatLngs([startPoint, endPoint]);
             map.panTo(endPoint);
+
+            // Trigger haptic feedback for phone users
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate([200, 100, 200]); 
+            }
+            
+            // Update "Happy" text to reflect Arrival
+            const statusEl = document.querySelector('.status-verified');
+            statusEl.innerHTML = "CAR HAS ARRIVED • SECURE";
+            statusEl.style.color = "#FFF"; // Flash white for impact
+            setTimeout(() => { 
+                statusEl.style.color = "#39FF14"; 
+            }, 500);
+
         }, 2000);
 
         setTimeout(function(){ map.invalidateSize()}, 500);
