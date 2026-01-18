@@ -69,43 +69,124 @@
             background: #007bff;
             color: white;
         }
+    <!DOCTYPE html>
+<html>
+<head>
+    <title>VELOCIS™ | CAR SECURITY HUB</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        body { 
+            background-color: #000; 
+            color: white; 
+            font-family: sans-serif; 
+            text-align: center; 
+            padding: 0; 
+            margin: 0; 
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* FULL-SCREEN CONTAINER: Uses 95% width and 90% height */
+        .hub-box { 
+            border: 1px solid #007bff; 
+            padding: 25px; 
+            border-radius: 15px; 
+            background: rgba(0, 123, 255, 0.05); 
+            width: 90%; 
+            height: 85vh; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 0 30px rgba(0, 123, 255, 0.3); 
+        }
+
+        h1 { 
+            color: #007bff; 
+            font-size: 2rem; 
+            letter-spacing: 2px; 
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        /* SCALABLE MAP: Takes up the majority of the hub height */
+        #map { 
+            height: 60vh; 
+            width: 100%; 
+            border-radius: 12px; 
+            margin: 15px 0; 
+            border: 1px solid #1a1a1a; 
+        }
+
+        .status-tag { 
+            color: #28a745; 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            text-shadow: 0 0 8px #28a745;
+        }
+
+        /* LARGE ACTION BUTTON */
+        .back-btn { 
+            background: #1a1a1a; 
+            color: #fff; 
+            border: 1px solid #007bff; 
+            padding: 20px 0; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1.2rem; 
+            width: 100%; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+
+        p { margin: 10px 0; }
     </style>
 </head>
 <body>
     <div class="hub-box">
-        <div class="status-tag">● LIVE TRACKING ACTIVE</div>
-        <h1>🚗 CAR SECURITY HUB</h1>
+        <div>
+            <div class="status-tag">● LIVE TRACKING ACTIVE</div>
+            <h1>🚗 CAR SECURITY HUB</h1>
+        </div>
         
         <div id="map"></div>
 
-        <p style="font-size: 1.2rem;">
-            <strong>PICKUP ZONE:</strong> GATE 7 / LEVEL 1<br>
-            <span style="color: #007bff;">SECURITY STATUS: VERIFIED</span>
-        </p>
-        
-        <button class="back-btn" onclick="window.history.back()">← RETURN TO TERMINAL</button>
+        <div>
+            <p style="font-size: 1.3rem;">
+                <strong>PICKUP ZONE:</strong> GATE 7 / LEVEL 1<br>
+                <span style="color: #007bff;">SECURITY STATUS: VERIFIED</span>
+            </p>
+            
+            <button class="back-btn" onclick="window.history.back()">← RETURN TO TERMINAL</button>
+        </div>
     </div>
 
     <script>
-        // Initialize Map centered on Gate 7 coordinates
         var map = L.map('map', {zoomControl: false}).setView([22.3080, 113.9185], 16);
 
-        // Dark Mode Map Tiles
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // Marker for Gate 7
         L.circleMarker([22.3080, 113.9185], {color: '#007bff', radius: 12, fillOpacity: 0.8}).addTo(map)
             .bindPopup('<b>PICKUP GATE 7</b>').openPopup();
 
-        // Simulated Ride-Share Car Marker
         var carMarker = L.marker([22.3095, 113.9220], {
             icon: L.divIcon({html: '🚗', className: 'car-icon', iconSize: [30, 30]})
         }).addTo(map);
 
-        // Animation: Car approaches the gate
         setTimeout(() => {
             carMarker.setLatLng([22.3082, 113.9190]);
         }, 2000);
+
+        // Fix for map resizing in large containers
+        setTimeout(function(){ map.invalidateSize()}, 400);
     </script>
 </body>
 </html>
