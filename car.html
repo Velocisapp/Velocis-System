@@ -16,30 +16,34 @@
         }
 
         .hub-box { 
-            border: 2px solid #007bff; padding: 5px; border-radius: 15px; 
-            background: rgba(0, 123, 255, 0.05); width: 94%; height: 96vh; 
+            border: 4px solid #007bff; padding: 12px; border-radius: 20px; 
+            background: rgba(0, 123, 255, 0.05); width: 96%; height: 98vh; 
             display: flex; flex-direction: column; 
             justify-content: space-between; 
-            box-shadow: 0 0 35px rgba(0, 123, 255, 0.4); box-sizing: border-box;
+            box-shadow: 0 0 45px rgba(0, 123, 255, 0.5); box-sizing: border-box;
         }
 
-        h1 { color: #007bff; font-size: 1.6rem; margin: 5px 0; text-transform: uppercase; }
+        /* GIANT HEADER */
+        .live-tag { color: #39FF14; font-weight: 900; font-size: 1.5rem; text-shadow: 0 0 10px #39FF14; margin-bottom: 5px; }
+        h1 { color: #007bff; font-size: 2.8rem; margin: 5px 0; text-transform: uppercase; letter-spacing: 3px; font-weight: 900; }
 
-        #map { height: 65%; width: 100%; border-radius: 12px; border: 1px solid #1a1a1a; z-index: 1; }
+        #map { height: 50%; width: 100%; border-radius: 15px; border: 3px solid #1a1a1a; z-index: 1; }
 
-        .pickup-info { font-size: 2.2rem; font-weight: 900; line-height: 1.1; margin: 5px 0; }
-        .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 15px rgba(0, 212, 255, 0.7); }
-        .status-verified { color: #39FF14; font-size: 1.4rem; display: block; margin-top: 5px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+        /* GIANT STATUS TEXT */
+        .pickup-info { margin: 15px 0; }
+        .gate-text { color: #00d4ff; display: block; text-shadow: 0 0 15px rgba(0, 212, 255, 0.7); font-size: 3.5rem; font-weight: 900; }
+        .status-verified { color: #39FF14; font-size: 2.8rem; display: block; margin-top: 10px; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); font-weight: 800; }
 
+        /* GIANT MISSION BOX */
         .directions-box {
             background: rgba(0, 212, 255, 0.15);
-            border: 1px solid rgba(0, 212, 255, 0.4);
-            border-left: 8px solid #00d4ff;
-            padding: 12px; margin: 5px 0; text-align: left; border-radius: 10px;
+            border: 2px solid rgba(0, 212, 255, 0.4);
+            border-left: 15px solid #00d4ff;
+            padding: 20px; margin: 10px 0; text-align: left; border-radius: 12px;
         }
 
-        .dir-title { color: #00d4ff; font-size: 1.1rem; font-weight: 800; display: block; margin-bottom: 4px; letter-spacing: 1px; }
-        .dir-text { color: #fff; font-size: 1.2rem; line-height: 1.2; font-weight: 600; display: block; }
+        .dir-title { color: #00d4ff; font-size: 1.8rem; font-weight: 900; display: block; margin-bottom: 8px; letter-spacing: 1px; }
+        .dir-text { color: #fff; font-size: 2rem; line-height: 1.4; font-weight: 700; display: block; }
 
         @keyframes pulse-ring {
             0% { transform: scale(1); opacity: 1; }
@@ -48,42 +52,43 @@
         }
         
         .pulsating-dot {
-            background: #00d4ff !important; width: 25px !important; height: 25px !important;
-            border-radius: 50% !important; border: 3px solid white !important; position: relative;
+            background: #00d4ff !important; width: 35px !important; height: 35px !important;
+            border-radius: 50% !important; border: 5px solid white !important; position: relative;
         }
         .pulsating-dot::after {
-            content: ''; position: absolute; top: -3px; left: -3px; width: 25px; height: 25px;
-            border-radius: 50%; border: 4px solid #00d4ff; animation: pulse-ring 2s infinite;
+            content: ''; position: absolute; top: -5px; left: -5px; width: 35px; height: 35px;
+            border-radius: 50%; border: 10px solid #00d4ff; animation: pulse-ring 2s infinite;
         }
 
-        .action-btn { flex: 1; padding: 15px 0; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; border: none; }
-        .call-btn { background: #39FF14; color: #000; box-shadow: 0 0 15px rgba(57, 255, 20, 0.4); }
-        .back-btn { background: #1a1a1a; color: #fff; border: 2px solid #007bff; }
-        .btn-container { display: flex; gap: 8px; width: 100%; margin-top: 5px; }
+        /* GIANT BUTTONS */
+        .action-btn { flex: 1; padding: 30px 0; border-radius: 15px; font-size: 2rem; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; }
+        .call-btn { background: #39FF14; color: #000; box-shadow: 0 0 20px rgba(57, 255, 20, 0.5); }
+        .back-btn { background: #1a1a1a; color: #fff; border: 4px solid #007bff; }
+        .btn-container { display: flex; gap: 15px; width: 100%; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="hub-box">
         <div>
-            <div style="color: #39FF14; font-weight: bold; font-size: 0.8rem; text-shadow: 0 0 8px #39FF14;">● GLOBAL HUB ACTIVE</div>
-            <h1>🚗 CAR SECURITY HUB</h1>
+            <div class="live-tag">● GLOBAL HUB ACTIVE</div>
+            <h1>CAR SECURITY</h1>
         </div>
         
         <div id="map"></div>
 
         <div class="directions-box">
             <span class="dir-title">MISSION ROUTE:</span>
-            <span class="dir-text">Tracking relative to <span style="color:#00d4ff; font-weight:900;">Hub Position</span>.</span>
+            <span class="dir-text">Tracking relative to <span style="color:#00d4ff;">Your GPS</span>.</span>
         </div>
 
         <div>
             <div class="pickup-info">
                 <span id="gate-label" class="gate-text">CURRENT BASE</span>
-                <span id="status-display" class="status-verified">WAITING FOR HUB GPS...</span>
+                <span id="status-display" class="status-verified">LOCATING...</span>
             </div>
             <div class="btn-container">
-                <button class="action-btn call-btn" onclick="callProvider()">📞 CALL DRIVER</button>
-                <button class="action-btn back-btn" onclick="window.history.back()">← TERMINAL</button>
+                <button class="action-btn call-btn" onclick="callProvider()">📞 CALL</button>
+                <button class="action-btn back-btn" onclick="window.history.back()">← BACK</button>
             </div>
         </div>
     </div>
@@ -93,25 +98,22 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('car_location');
 
-        // Initial Map Setup (Global)
-        var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true}).setView([0,0], 2); 
+        var map = L.map('map', {tap: false, touchZoom: true, scrollWheelZoom: true, zoomControl: false}).setView([0,0], 2); 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
 
         let myPos = null;
         let mapCentered = false;
 
-        // Target (Hub) Markers
-        var cyanPulseIcon = L.divIcon({ className: 'pulsating-dot', iconSize: [25, 25], iconAnchor: [12, 12] });
+        var cyanPulseIcon = L.divIcon({ className: 'pulsating-dot', iconSize: [35, 35], iconAnchor: [17, 17] });
         var targetMarker = L.marker([0,0], {icon: cyanPulseIcon, zIndexOffset: 1000}).addTo(map);
-        var targetPopup = L.popup({ autoClose: false, closeOnClick: false, offset: [0, -15] }).setLatLng([0,0]).setContent('<b style="color:#000;">YOU ARE HERE</b>').openOn(map);
+        var targetPopup = L.popup({ autoClose: false, closeOnClick: false, offset: [0, -25] }).setLatLng([0,0]).setContent('<b style="color:#000; font-size: 1.8rem;">HOME</b>').openOn(map);
 
-        // Car Marker
         var carMarker = L.marker([0,0], {
-            icon: L.divIcon({ html: '<div style="font-size: 80px; filter: drop-shadow(0 0 15px rgba(0,0,0,0.6));">🚗</div>', iconSize: [80, 80], iconAnchor: [40, 40] })
+            icon: L.divIcon({ html: '<div style="font-size: 120px; filter: drop-shadow(0 0 20px rgba(0,0,0,0.7));">🚗</div>', iconSize: [120, 120], iconAnchor: [60, 60] })
         }).addTo(map);
-        var pathLine = L.polyline([], { color: '#39FF14', weight: 8, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
+        
+        var pathLine = L.polyline([], { color: '#39FF14', weight: 12, opacity: 0.9, dashArray: '20, 20' }).addTo(map);
 
-        // TRACK YOUR LOCATION (THE HUB)
         navigator.geolocation.watchPosition((pos) => {
             myPos = [pos.coords.latitude, pos.coords.longitude];
             targetMarker.setLatLng(myPos);
@@ -122,7 +124,6 @@
             }
         }, (err) => console.error(err), { enableHighAccuracy: true });
 
-        // LISTEN FOR HER LOCATION (THE BEACON)
         db.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && myPos) {
@@ -134,16 +135,6 @@
                 const statusEl = document.getElementById('status-display');
                 
                 if (dist < 20) {
-                    statusEl.innerHTML = "CAR HAS ARRIVED • SECURE";
-                    if (window.navigator.vibrate) window.navigator.vibrate([300, 100, 300]);
+                    statusEl.innerHTML = "ARRIVED • SECURE";
+                    if (window.navigator.vibrate) window.navigator.vibrate([500, 250, 500]);
                 } else {
-                    statusEl.innerHTML = "EN ROUTE • " + Math.round(dist) + "M AWAY";
-                }
-            }
-        });
-
-        function callProvider() { alert("SECURE LINE CONNECTING..."); }
-        setTimeout(function(){ map.invalidateSize()}, 500);
-    </script>
-</body>
-</html>
