@@ -94,35 +94,42 @@
     </div>
 
     <script>
-        // 1. RE-ENABLED ZOOM: Removed 'zoomControl: false' so user can zoom with two fingers
+        // 1. ULTRA-CLOSE ZOOM: Set to 19 for maximum terminal road detail
         var map = L.map('map', {
-            tap: false, // Recommended for mobile scroll performance
+            tap: false, 
             touchZoom: true,
             scrollWheelZoom: true
-        }).setView([22.3080, 113.9185], 16);
+        }).setView([22.3080, 113.9185], 19); 
 
-        // 2. ATTRACTIVE MAP STYLE: Switched to Voyager for better contrast and visibility
+        // 2. HIGH-CONTRAST VOYAGER STYLE
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // 3. BRIGHTER MARKER: High-visibility blue for the Pickup Gate
+        // 3. TARGET GATE: Brighter marker for the Pickup Point
         L.circleMarker([22.3080, 113.9185], {
             color: '#00d4ff', 
             fillColor: '#00d4ff',
             fillOpacity: 0.8,
-            radius: 12
+            radius: 15
         }).addTo(map).bindPopup('<b>PICKUP GATE 7</b>').openPopup();
 
-        var carMarker = L.marker([22.3095, 113.9220], {
-            icon: L.divIcon({html: '🚗', className: 'car-icon', iconSize: [30, 30]})
+        // 4. LARGE CAR ICON: Scaled to 60px with drop-shadow for visibility
+        var carMarker = L.marker([22.3084, 113.9192], {
+            icon: L.divIcon({
+                html: '<div style="font-size: 60px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));">🚗</div>', 
+                className: 'car-icon', 
+                iconSize: [60, 60],
+                iconAnchor: [30, 30] 
+            })
         }).addTo(map);
 
+        // 5. ANIMATED APPROACH
         setTimeout(() => {
-            carMarker.setLatLng([22.3082, 113.9190]);
+            carMarker.setLatLng([22.3081, 113.9188]);
         }, 2000);
 
-        // Ensures the map fills the large mobile container correctly
+        // Ensure the map fills the container correctly
         setTimeout(function(){ map.invalidateSize()}, 500);
     </script>
 </body>
