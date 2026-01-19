@@ -29,6 +29,14 @@
             z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(255, 91, 0, 0.5);
         }
 
+        /* NEW: GROUND TRANSPORT CTA - CYAN FOR CONTRAST */
+        .transport-btn {
+            display: block; background: #00ffff; color: #000; font-weight: 900;
+            padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0;
+            font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+        }
+
         #cta-status-banner {
             background: #00ffff; 
             color: #000; font-weight: 900; font-size: 11px; padding: 12px;
@@ -42,7 +50,6 @@
         }
         @keyframes pulse-black { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
-        /* UPDATED: SYMMETRICAL BOUNCING INDICATORS */
         .scroll-cta-container {
             display: flex; justify-content: center; align-items: center;
             gap: 15px; color: #FFA500; font-weight: 900; font-size: 11px;
@@ -98,8 +105,10 @@
         <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
             <p style="margin: 0; font-weight: 900; font-size: 1.8rem;">CAROUSEL 09</p>
         </div>
-        <p style="margin: 15px 0 0 0; font-size: 0.8rem; opacity: 0.9;">Follow signs for Baggage Claim.</p>
-        <button onclick="closeArrival()" style="margin-top: 20px; background: white; color: #FF5B00; border: none; padding: 12px 30px; font-weight: 900; border-radius: 5px; cursor: pointer; text-transform: uppercase;">Dismiss</button>
+
+        <a href="car.html" class="transport-btn">Find Ground Transport</a>
+
+        <button onclick="closeArrival()" style="margin-top: 10px; background: none; color: white; border: none; padding: 5px; font-weight: 400; font-size: 0.8rem; cursor: pointer; text-decoration: underline; text-transform: uppercase; opacity: 0.8;">Dismiss</button>
     </div>
 
     <div id="brand">
