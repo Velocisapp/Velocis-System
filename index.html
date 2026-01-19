@@ -9,9 +9,8 @@
     <title>Velocis™ High-Authority Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
     <style>
-        body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; height: 100vh; width: 100vw; }
         
-        /* TICKER SYNC */
         #status-ticker {
             position: fixed; top: 0; width: 100%; background: rgba(0, 255, 255, 0.15);
             color: #00ffff; font-size: 10px; font-weight: 900; padding: 6px 0;
@@ -20,68 +19,84 @@
         }
 
         #brand { position: fixed; top: 45px; width: 100%; text-align: center; letter-spacing: 12px; z-index: 9999; pointer-events: none; }
-        #brand h1 { color: #FFD700 !important; font-size: 1.8rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7); margin: 0; } 
-        
-        /* RECOVERED BETA WINDOW */
-        #beta-invite {
-            position: absolute; top: 15%; width: 100%; text-align: center; z-index: 1001;
-        }
-        .beta-box {
-            background: white; color: black; padding: 15px; border-radius: 10px;
-            display: inline-block; width: 80%; max-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        #brand h1 { color: #FFD700 !important; font-size: 1.8rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7); margin: 0; }
+
+        /* FIXED: COMPACT BETA WINDOW */
+        #beta-invite { position: absolute; top: 15%; width: 100%; text-align: center; z-index: 1001; }
+        .beta-box { 
+            background: white; color: black; padding: 12px; border-radius: 8px; 
+            display: inline-block; width: 70%; max-width: 260px; /* Force compact size */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
-        /* HIGH-AUTHORITY INSTALL OVERLAY */
         #install-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.98); z-index: 30000; color: white;
             flex-direction: column; align-items: center; justify-content: center; text-align: center;
         }
-        .install-step { margin: 15px; font-size: 1.1rem; font-weight: bold; }
-        #pointing-arrow {
-            position: absolute; bottom: 30px; font-size: 3.5rem; color: #00ffff;
-            animation: arrow-bounce 1s infinite;
-        }
+        #pointing-arrow { position: absolute; bottom: 30px; font-size: 3.5rem; color: #00ffff; animation: arrow-bounce 1s infinite; }
         @keyframes arrow-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(20px); } }
 
-        /* VANISHING HANDSHAKE */
         @media (display-mode: standalone) { #beta-invite { display: none !important; } }
 
         #arrival-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(20px);
-            color: white; padding: 25px; border-radius: 15px; border: 2px solid #fff; z-index: 20000;
+            color: white; padding: 25px; border-radius: 15px; border: 2px solid #fff; z-index: 20000; text-align: center;
         }
+        
+        #travel-guides { 
+            position: absolute; top: 72%; left: 50%; transform: translate(-50%, -50%); 
+            width: 92%; height: 180px; overflow-y: scroll; background: rgba(0, 0, 0, 0.85); 
+            padding: 15px; border-radius: 12px; border: 1px solid rgba(0, 212, 255, 0.4); z-index: 2000; text-align: center;
+        }
+
+        #transport-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10000; }
+        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; color: white; cursor: pointer; }
+        .guidance-label { position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); background: #00ffff; color: #000; font-size: 6.5px; font-weight: 900; padding: 2px 4px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
     </style>
 </head>
 <body>
-
     <div id="status-ticker">SYNCHRONIZING GLOBAL TIME...</div>
 
     <div id="install-overlay">
         <h2 style="color: #FFD700; letter-spacing: 5px;">INSTALL VELOCIS™</h2>
-        <div class="install-step">1. Tap the 'Share' icon below</div>
-        <div class="install-step">2. Select 'Add to Home Screen'</div>
+        <div style="margin: 15px; font-weight: bold;">1. Tap the 'Share' icon below</div>
+        <div style="margin: 15px; font-weight: bold;">2. Select 'Add to Home Screen'</div>
         <div id="pointing-arrow">↓</div>
-        <div onclick="toggleInstall(false)" style="margin-top: 40px; color: #FFD700; text-decoration: underline; font-weight: 900; cursor: pointer;">RETURN</div>
+        <div onclick="toggleInstall(false)" style="margin-top: 40px; color: #FFD700; text-decoration: underline; cursor: pointer;">RETURN</div>
     </div>
 
     <div id="beta-invite">
         <div class="beta-box">
-            <h2 style="margin: 0; font-size: 1rem;">VELOCIS™ BETA</h2>
-            <button onclick="toggleInstall(true)" style="background: #000; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%;">Install VELOCIS (Free)</button>
+            <h2 style="margin: 0; font-size: 0.9rem; letter-spacing: 1px;">VELOCIS™ BETA</h2>
+            <button onclick="toggleInstall(true)" style="background: #000; color: white; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 8px; width: 100%; font-size: 0.8rem;">Install (Free)</button>
         </div>
     </div>
 
     <div id="brand"><h1>VELOCIS™</h1><p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p></div>
 
     <div id="arrival-modal">
-        <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">SCANNING FOR FLIGHT...</h2>
-        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
-            <p id="carousel-number" style="margin: 0; font-weight: 900; font-size: 1.8rem;">UA54 IDENTIFIED</p>
-            <p id="terminal-id" style="font-size: 0.9rem; color: #00ffff; font-weight: bold; margin: 5px 0 0 0;">TERMINAL 1 | CAROUSEL 2</p>
+        <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">UNITED AIRLINES IDENTIFIED</h2>
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin: 15px 0;">
+            <p style="margin: 0; font-weight: 900; font-size: 1.8rem;">CAROUSEL 2</p>
+            <p style="font-size: 0.9rem; color: #00ffff; font-weight: bold; margin: 5px 0 0 0;">ARRIVAL TERMINAL: 1</p>
         </div>
-        <button onclick="this.parentElement.style.display='none'" style="background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; font-weight: bold;">Dismiss</button>
+        <button onclick="this.parentElement.style.display='none'" style="background: none; color: white; border: none; padding: 10px; text-decoration: underline; font-weight: bold;">Dismiss</button>
+    </div>
+
+    <section id="travel-guides">
+        <h3 style="color: #00d4ff; font-size: 13px; margin-bottom: 10px; text-transform: uppercase;">Hub Intelligence</h3>
+        <p style="font-size: 12px; color: white; margin: 5px 0;"><strong>PARIS:</strong> RER B standard from CDG.</p>
+        <p style="font-size: 12px; color: white; margin: 5px 0;"><strong>HONG KONG:</strong> Octopus Card essential for MTR.</p>
+        <div style="margin-top: 15px;">
+            <a href="https://www.uber.com" target="_blank" style="display: block; background: #000; color: #fff; padding: 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; border: 1px solid #333;">Uber Marketplace</a>
+        </div>
+    </section>
+
+    <div id="transport-menu">
+        <div style="position: relative;"><div class="guidance-label">Air Gate</div><div class="icon-btn" style="border-color: #00ffff;">✈️</div></div>
+        <div style="position: relative;"><div class="guidance-label" style="background: #FFD700;">Logistics</div><div class="icon-btn">🚗</div></div>
     </div>
 
     <script>
@@ -89,14 +104,11 @@
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); }
         function draw() { background(0); if (!earthImg) return; ambientLight(200); pointLight(255, 255, 255, 500, 0, 1000); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(120); }
-
         function toggleInstall(show) { document.getElementById('install-overlay').style.display = show ? 'flex' : 'none'; }
-        
         function updateTicker() {
             const now = new Date();
             const local = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const mission = new Date(now.getTime() + (6 * 60 * 60 * 1000)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('status-ticker').innerText = `LOCAL: ${local} | DESTINATION: ${mission} | COMMAND ACTIVE`;
+            document.getElementById('status-ticker').innerText = `LOCAL: ${local} | COMMAND ACTIVE`;
         }
         setInterval(updateTicker, 1000);
         window.addEventListener('load', () => { setTimeout(() => { document.getElementById('arrival-modal').style.display = 'block'; }, 3000); });
