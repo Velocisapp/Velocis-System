@@ -22,7 +22,7 @@
             margin: 0;
         } 
         
-        /* THE ARRIVAL MODAL (Triggered by Handshake Logic) */
+        /* UPDATED: PLAIN LANGUAGE BAGGAGE WINDOW */
         #arrival-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(20px);
@@ -30,9 +30,9 @@
             z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(255, 91, 0, 0.5);
         }
 
-        /* HIGH-VISIBILITY CTA BANNER */
+        /* UPDATED: LEADING CTA BANNER (CYAN) */
         #cta-status-banner {
-            background: #00ffff; /* High-Authority Cyan */
+            background: #00ffff; 
             color: #000; font-weight: 900; font-size: 11px; padding: 12px;
             border-radius: 8px; margin-bottom: 20px; letter-spacing: 1px;
             display: flex; justify-content: space-between; align-items: center;
@@ -75,12 +75,13 @@
 <body onload="initHandshake()" style="margin: 0; background: #000; overflow: hidden;">
 
     <div id="arrival-modal">
-        <h2 style="margin: 0; letter-spacing: 2px;">ARRIVAL INTELLIGENCE</h2>
-        <p style="font-size: 1.1rem; margin: 15px 0;">PORT STATUS: <strong>DISEMBARKED</strong></p>
-        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
-            <p style="margin: 0; font-weight: bold; font-size: 1.2rem;">BAGGAGE CAROUSEL: 09</p>
+        <h2 style="margin: 0; letter-spacing: 1px;">WELCOME TO YOUR PORT</h2>
+        <p style="font-size: 1rem; margin: 15px 0;">YOUR LUGGAGE IS AT:</p>
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
+            <p style="margin: 0; font-weight: 900; font-size: 1.8rem;">CAROUSEL 09</p>
         </div>
-        <button onclick="closeArrival()" style="margin-top: 20px; background: white; color: #FF5B00; border: none; padding: 10px 30px; font-weight: 900; border-radius: 5px; cursor: pointer;">CONFIRM HANDSHAKE</button>
+        <p style="margin: 15px 0 0 0; font-size: 0.8rem; opacity: 0.9;">Follow signs for Baggage Claim.</p>
+        <button onclick="closeArrival()" style="margin-top: 20px; background: white; color: #FF5B00; border: none; padding: 12px 30px; font-weight: 900; border-radius: 5px; cursor: pointer; text-transform: uppercase;">Dismiss</button>
     </div>
 
     <div id="brand">
@@ -96,7 +97,7 @@
 
     <section id="travel-guides">
         <div id="cta-status-banner">
-            <span>ARRIVAL INTEL: ARMED & ACTIVE</span>
+            <span>READY TO FIND YOUR LUGGAGE ON ARRIVAL</span>
             <div class="pulse-icon"></div>
         </div>
 
@@ -107,56 +108,4 @@
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
             <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ccc; text-align: center;">Expedia.com</a>
-            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #0046ad; text-align: center;">Booking.com</a>
-            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #57a1ff; text-align: center;">Trip.com</a>
-            <a href="https://www.klook.com/en-US/?aid=696305" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff7c33; text-align: center;">Klook</a>
-        </div>
-    </section>
-
-    <div id="transport-menu">
-        <div id="btn-air" class="icon-btn active" onclick="location.href='security.html'">✈️</div>
-        <div id="btn-sea" class="icon-btn" onclick="location.href='sea.html'">🚢</div>
-        <div id="btn-rail" class="icon-btn" onclick="location.href='rail.html'">🚆</div>
-        <div id="btn-sub" class="icon-btn" onclick="location.href='subway.html'">🚇</div>
-        <div id="btn-car" class="icon-btn" onclick="location.href='car.html'">🚗</div>
-    </div>
-
-    <script>
-        let earthImg;
-        function preload() {
-            earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', 
-            img => { img.crossOrigin = 'anonymous'; }); 
-        }
-        function setup() {
-            let canvas = createCanvas(windowWidth, windowHeight, WEBGL);
-            canvas.style('position', 'fixed'); 
-            canvas.style('top', '0'); 
-            canvas.style('left', '0'); 
-            canvas.style('z-index', '1');
-            perspective(PI/3.0, width/height, 0.1, 5000);
-        }
-        function draw() {
-            background(0); 
-            if (!earthImg) return;
-            ambientLight(210);
-            pointLight(255, 255, 255, 600, 200, 1000);
-            push();
-            translate(0, -100, 0); // Globe position verified
-            rotateY(frameCount * 0.005);
-            noStroke();
-            texture(earthImg);
-            sphere(100); 
-            pop();
-        }
-
-        // HANDSHAKE AUTOMATION
-        function initHandshake() {
-            setTimeout(() => {
-                document.getElementById('arrival-modal').style.display = 'block';
-            }, 3000); 
-        }
-        function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
-        function showInstall() { /* UI logic preserved */ }
-    </script>
-</body>
-</html>
+            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px
