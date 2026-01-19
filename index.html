@@ -150,4 +150,52 @@
 
     <div id="transport-menu">
         <div id="btn-air" class="icon-btn active" onclick="location.href='security.html'">✈️</div>
-        <div id="btn-sea" class="icon-btn" onclick="location.href
+        <div id="btn-sea" class="icon-btn" onclick="location.href='sea.html'">🚢</div>
+        <div id="btn-rail" class="icon-btn" onclick="location.href='rail.html'">🚆</div>
+        <div id="btn-sub" class="icon-btn" onclick="location.href='subway.html'">🚇</div>
+        <div id="btn-car" class="icon-btn" onclick="location.href='car.html'">🚗</div>
+    </div>
+
+    <script>
+        let earthImg;
+        function preload() {
+            earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', 
+            img => { img.crossOrigin = 'anonymous'; }); 
+        }
+        function setup() {
+            let canvas = createCanvas(windowWidth, windowHeight, WEBGL);
+            canvas.style('position', 'fixed'); 
+            canvas.style('top', '0'); 
+            canvas.style('left', '0'); 
+            canvas.style('z-index', '1');
+            perspective(PI/3.0, width/height, 0.1, 5000);
+        }
+        function draw() {
+            background(0); 
+            if (!earthImg) return;
+            ambientLight(210);
+            pointLight(255, 255, 255, 600, 200, 1000);
+            push();
+            translate(0, -100, 0); 
+            rotateY(frameCount * 0.005);
+            noStroke();
+            texture(earthImg);
+            sphere(100); 
+            pop();
+        }
+
+        /* NEW NAVIGATION HELPER */
+        function openTransportMarket() {
+            document.getElementById('arrival-modal').style.display = 'none';
+            // Scroll the Intelligence window to the transport database
+            const target = document.getElementById('ground-transport-market');
+            document.getElementById('travel-guides').scrollTop = target.offsetTop;
+        }
+
+        function initHandshake() {
+            setTimeout(() => { document.getElementById('arrival-modal').style.display = 'block'; }, 3000); 
+        }
+        function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
+    </script>
+</body>
+</html>
