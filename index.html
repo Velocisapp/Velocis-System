@@ -197,7 +197,7 @@
 
         async function fetchFlightData() {
             const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; 
-            const FLIGHT_IATA = 'UA54'; 
+            const FLIGHT_IATA = 'AF1049'; 
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`);
                 const result = await response.json();
