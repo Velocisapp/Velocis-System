@@ -31,29 +31,14 @@
             box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4); border: none; cursor: pointer; width: 100%;
         }
 
-        /* UPDATED: ISOLATED CAR-ONLY LABEL */
-        .mobility-anchor {
-            position: relative;
-            display: inline-block;
-        }
-
+        /* FAMILY GUIDANCE: ANCHORED TO CAR ICON */
+        .mobility-anchor { position: relative; display: inline-block; }
         .mobility-label {
-            position: absolute; 
-            bottom: 70px; /* Sits directly above the car */
-            left: 50%;
-            transform: translateX(-50%); /* Centers text precisely over the car icon */
-            background: #00ffff; 
-            color: #000;
-            font-size: 8px; 
-            font-weight: 900; 
-            padding: 4px 8px; 
-            border-radius: 4px;
-            white-space: nowrap; 
-            letter-spacing: 1px; 
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-            animation: label-pulse 2s infinite; 
-            pointer-events: none;
-            z-index: 10001;
+            position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
+            background: #00ffff; color: #000; font-size: 8px; font-weight: 900;
+            padding: 4px 8px; border-radius: 4px; white-space: nowrap; letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); animation: label-pulse 2s infinite;
+            pointer-events: none; z-index: 10001;
         }
         @keyframes label-pulse { 0%, 100% { opacity: 1; transform: translate(-50%, 0); } 50% { opacity: 0.7; transform: translate(-50%, -3px); } }
 
@@ -107,15 +92,19 @@
         
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
-            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
+            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ccc; text-align: center;">Expedia.com</a>
+            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #0046ad; text-align: center;">Booking.com</a>
             <a href="https://www.airbnb.com" target="_blank" style="display: block; background: #FF5A5F; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Airbnb</a>
             <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #00a680; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Rome2rio</a>
+            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #57a1ff; text-align: center;">Trip.com</a>
+            <a href="https://www.klook.com" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff7c33; text-align: center;">Klook</a>
         </div>
 
         <div id="ground-transport-market" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Ground Transport Database</div>
             <a href="https://www.uber.com" target="_blank" style="display: block; background: #000; color: #fff; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #333; text-align: center;">Uber / Ride-Hailing</a>
             <a href="https://www.hertz.com" target="_blank" style="display: block; background: #ffde00; color: #000; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Hertz Car Rental</a>
+            <a href="https://www.rentalcars.com" target="_blank" style="display: block; background: #1a73e8; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">RentalCars.com</a>
         </div>
     </section>
 
