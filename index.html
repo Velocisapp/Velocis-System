@@ -52,6 +52,11 @@
         .pulse-icon { width: 10px; height: 10px; background: #000; border-radius: 50%; animation: pulse-black 1.5s infinite; }
         @keyframes pulse-black { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
 
+        /* RESTORED GOLD STYLING */
+        .scroll-cta-container { display: flex; justify-content: center; align-items: center; gap: 15px; color: #FFA500; font-weight: 900; font-size: 11px; margin: 12px 0; }
+        .side-arrow { font-size: 18px; animation: bounce-down 1.5s infinite ease-in-out; }
+        @keyframes bounce-down { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(6px); opacity: 0.5; } }
+
         #transport-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000 !important; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
@@ -95,16 +100,24 @@
             </button>
         </p>
 
-        <div class="scroll-cta-container"><span class="side-arrow">▼</span><span>SCROLL FOR MARKETPLACE</span><span class="side-arrow">▼</span></div>
+        <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3);">
+            <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE: 107 & 2</h3>
+            <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>PARIS (107):</strong> RER B is the 2026 speed-standard from CDG. Mobilis passes optimized for La Défense.</p>
+            <p style="margin: 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>HONG KONG (2):</strong> Octopus Card is essential for MTR. Punctuality defines respect in HK business.</p>
+        </div>
+
+        <div class="scroll-cta-container">
+            <span class="side-arrow">▼</span><span>SCROLL FOR MARKETPLACE</span><span class="side-arrow">▼</span>
+        </div>
         
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
-            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
-            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Booking.com</a>
+            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ccc; text-align: center;">Expedia.com</a>
+            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #0046ad; text-align: center;">Booking.com</a>
             <a href="https://www.airbnb.com" target="_blank" style="display: block; background: #FF5A5F; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Airbnb</a>
             <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #00a680; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Rome2rio</a>
-            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Trip.com</a>
-            <a href="https://www.klook.com" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Klook</a>
+            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #57a1ff; text-align: center;">Trip.com</a>
+            <a href="https://www.klook.com" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff7c33; text-align: center;">Klook</a>
         </div>
 
         <div id="ground-transport-market" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
@@ -116,26 +129,11 @@
     </section>
 
     <div id="transport-menu">
-        <div class="icon-anchor">
-            <div class="guidance-label">AIR GATE</div>
-            <div class="icon-btn active" onclick="location.href='security.html'">✈️</div>
-        </div>
-        <div class="icon-anchor">
-            <div class="guidance-label">SEA GATE</div>
-            <div class="icon-btn" onclick="location.href='sea.html'">🚢</div>
-        </div>
-        <div class="icon-anchor">
-            <div class="guidance-label">RAIL GATE</div>
-            <div class="icon-btn" onclick="location.href='rail.html'">🚆</div>
-        </div>
-        <div class="icon-anchor">
-            <div class="guidance-label">METRO GATE</div>
-            <div class="icon-btn" onclick="location.href='subway.html'">🚇</div>
-        </div>
-        <div class="icon-anchor">
-            <div class="guidance-label logistics-label">PORT GUIDANCE</div>
-            <div id="btn-car" class="icon-btn" onclick="location.href='car.html'">🚗</div>
-        </div>
+        <div class="icon-anchor"><div class="guidance-label">AIR GATE</div><div class="icon-btn active" onclick="location.href='security.html'">✈️</div></div>
+        <div class="icon-anchor"><div class="guidance-label">SEA GATE</div><div class="icon-btn" onclick="location.href='sea.html'">🚢</div></div>
+        <div class="icon-anchor"><div class="guidance-label">RAIL GATE</div><div class="icon-btn" onclick="location.href='rail.html'">🚆</div></div>
+        <div class="icon-anchor"><div class="guidance-label">METRO GATE</div><div class="icon-btn" onclick="location.href='subway.html'">🚇</div></div>
+        <div class="icon-anchor"><div class="guidance-label logistics-label">PORT GUIDANCE</div><div id="btn-car" class="icon-btn" onclick="location.href='car.html'">🚗</div></div>
     </div>
 
     <script>
@@ -144,16 +142,7 @@
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
         function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
         function openTransportMarket() { document.getElementById('arrival-modal').style.display = 'none'; const target = document.getElementById('ground-transport-market'); document.getElementById('travel-guides').scrollTop = target.offsetTop; }
-        
-        /* RESTORED HANDSHAKE LOGIC */
-        function initHandshake() { 
-            const modal = document.getElementById('arrival-modal');
-            modal.style.display = 'block'; 
-        }
-        
-        function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
-        
-        /* Auto-trigger on load after 3 seconds */
+        function initHandshake() { document.getElementById('arrival-modal').style.display = 'block'; }
         setTimeout(initHandshake, 3000);
     </script>
 </body>
