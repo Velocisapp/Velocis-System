@@ -17,7 +17,7 @@
         #brand { position: fixed; top: 40px; width: 100%; text-align: center; letter-spacing: 12px; z-index: 9999 !important; pointer-events: none; }
         #brand h1 { color: #FFD700 !important; font-weight: 900 !important; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 5px #000; margin: 0; } 
         
-        /* UPDATED: Z-INDEX ENSURES BUTTONS ARE TAP-ABLE */
+        /* Z-INDEX & POINTER EVENTS FOR TOUCH ACCURACY */
         #arrival-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(20px);
@@ -56,7 +56,6 @@
 
         .scroll-cta-container { display: flex; justify-content: center; align-items: center; gap: 15px; color: #FFA500; font-weight: 900; font-size: 11px; margin: 12px 0; }
         .side-arrow { font-size: 18px; animation: bounce-down 1.5s infinite ease-in-out; }
-        @keyframes bounce-down { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(6px); opacity: 0.5; } }
 
         #transport-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000 !important; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
@@ -69,10 +68,12 @@
             backdrop-filter: blur(12px); color: #fff; padding: 15px; border-radius: 12px; 
             border: 1px solid rgba(0, 212, 255, 0.4); z-index: 2000; text-align: center;
         }
+        #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
+        #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
     </style>
 </head>
 
-<body onload="initHandshake()" style="margin: 0; background: #000; overflow: hidden;">
+<body style="margin: 0; background: #000; overflow: hidden;">
 
     <div id="arrival-modal">
         <h2 style="margin: 0;">WELCOME TO YOUR PORT</h2>
@@ -80,7 +81,7 @@
             <p style="margin: 0; font-weight: 900; font-size: 1.8rem;">CAROUSEL 09</p>
         </div>
         <button onclick="openTransportMarket()" class="transport-btn">Rentals & Ride-Hailing</button>
-        <button onclick="closeArrival()" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold; opacity: 1; z-index: 20001 !important;">Dismiss</button>
+        <button onclick="closeArrival()" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold; opacity: 1; z-index: 20001 !important; pointer-events: auto;">Dismiss</button>
     </div>
 
     <div id="brand"><h1>VELOCIS™</h1><p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p></div>
@@ -111,7 +112,7 @@
         
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
-            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
+            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ccc; text-align: center;">Expedia.com</a>
             <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Booking.com</a>
             <a href="https://www.airbnb.com" target="_blank" style="display: block; background: #FF5A5F; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Airbnb</a>
             <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #00a680; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Rome2rio</a>
@@ -141,12 +142,12 @@
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
         function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
         
-        /* FIX: MANUAL DISMISS LOGIC */
         function initHandshake() { document.getElementById('arrival-modal').style.display = 'block'; }
         function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
         function openTransportMarket() { closeArrival(); document.getElementById('travel-guides').scrollTop = document.getElementById('ground-transport-market').offsetTop; }
         
-        setTimeout(initHandshake, 3000);
+        /* 3-SECOND DELAY HANDSHAKE */
+        window.addEventListener('load', () => { setTimeout(initHandshake, 3000); });
     </script>
 </body>
 </html>
