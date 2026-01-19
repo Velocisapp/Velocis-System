@@ -15,7 +15,7 @@
     <style>
         body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
         
-        /* THE UNIVERSAL TICKER STYLE */
+        /* UNIVERSAL TICKER PROTOCOL */
         #status-ticker {
             position: fixed; top: 0; width: 100%; background: rgba(0, 255, 255, 0.15);
             color: #00ffff; font-size: 10px; font-weight: 900; padding: 6px 0;
@@ -55,6 +55,22 @@
 
         @keyframes label-pulse { 0%, 100% { opacity: 1; transform: translate(-50%, 0); } 50% { opacity: 0.7; transform: translate(-50%, -2px); } }
 
+        #cta-status-banner {
+            background: #00ffff; color: #000; font-weight: 900; font-size: 11px; padding: 12px;
+            border-radius: 8px; margin-bottom: 20px; letter-spacing: 1px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .pulse-icon { width: 10px; height: 10px; background: #000; border-radius: 50%; animation: pulse-black 1.5s infinite; }
+        @keyframes pulse-black { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+
+        .scroll-cta-container { display: flex; justify-content: center; align-items: center; gap: 15px; color: #FFA500; font-weight: 900; font-size: 11px; margin: 12px 0; letter-spacing: 1px; }
+        .side-arrow { font-size: 18px; animation: bounce-jump 1.2s infinite ease-in-out; }
+        @keyframes bounce-jump { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(8px); opacity: 0.6; } }
+
+        #transport-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000 !important; }
+        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
+        .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
+
         #travel-guides { 
             position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); 
             width: 92%; height: 210px; max-height: 210px; overflow-y: scroll; 
@@ -83,25 +99,70 @@
 
     <div id="brand"><h1>VELOCIS™</h1><p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p></div>
 
+    <div id="beta-invite" style="position: absolute; top: 15%; width: 100%; text-align: center; z-index: 1001; pointer-events: auto;">
+        <h2 style="margin: 0; color: white; font-family: sans-serif; font-size: 1.2rem; letter-spacing: 2px;">VELOCIS™ BETA</h2>
+        <button style="background: white; color: black; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px;">Install VELOCIS (Free)</button>
+    </div>
+
+    <section id="travel-guides">
+        <div id="cta-status-banner"><span>READY TO FIND YOUR LUGGAGE ON ARRIVAL</span><div class="pulse-icon"></div></div>
+        
+        <p style="margin: 0 0 10px 0;">
+            <button onclick="fetchFlightData()" style="background: none; border: none; color: #00ffff; font-size: 9px; font-weight: 900; text-decoration: underline; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                RE-SCAN ARRIVAL STATUS
+            </button>
+        </p>
+
+        <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3);">
+            <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE: 107 & 2</h3>
+            <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>PARIS (107):</strong> RER B standard from CDG.</p>
+            <p style="margin: 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>HONG KONG (2):</strong> Octopus Card essential for MTR.</p>
+        </div>
+
+        <div class="scroll-cta-container">
+            <span class="side-arrow">▼</span><span>SCROLL FOR MARKETPLACE</span><span class="side-arrow">▼</span>
+        </div>
+        
+        <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
+            <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
+            <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
+            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Booking.com</a>
+            <a href="https://www.airbnb.com" target="_blank" style="display: block; background: #FF5A5F; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Airbnb</a>
+            <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #00a680; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Rome2rio</a>
+            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Trip.com</a>
+            <a href="https://www.klook.com" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Klook</a>
+        </div>
+
+        <div id="ground-transport-market" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
+            <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Ground Transport Database</div>
+            <a href="https://www.uber.com" target="_blank" style="display: block; background: #000; color: #fff; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #333; text-align: center;">Uber</a>
+            <a href="https://www.hertz.com" target="_blank" style="display: block; background: #ffde00; color: #000; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Hertz</a>
+            <a href="https://www.rentalcars.com" target="_blank" style="display: block; background: #1a73e8; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">RentalCars</a>
+        </div>
+    </section>
+
     <div id="transport-menu">
         <div class="icon-anchor"><div class="guidance-label">AIR GATE</div><div class="icon-btn active" onclick="location.href='security.html'">✈️</div></div>
+        <div class="icon-anchor"><div class="guidance-label">SEA GATE</div><div class="icon-btn" onclick="location.href='sea.html'">🚢</div></div>
+        <div class="icon-anchor"><div class="guidance-label">RAIL GATE</div><div class="icon-btn" onclick="location.href='rail.html'">🚆</div></div>
+        <div class="icon-anchor"><div class="guidance-label">METRO GATE</div><div class="icon-btn" onclick="location.href='subway.html'">🚇</div></div>
         <div class="icon-anchor"><div class="guidance-label logistics-label">PORT GUIDANCE</div><div id="btn-car" class="icon-btn" onclick="location.href='car.html'">🚗</div></div>
     </div>
 
     <script>
         let earthImg;
-        let arrivalCityTime = ""; // Dynamic timezone anchor
+        let arrivalCityTime = "";
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
         function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
         
-        /* LIVE TICKER SYNC */
+        /* TICKER CLOCK LOGIC */
         function updateTicker() {
             const now = new Date();
             const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            // Syncs to Paris or the active live destination
+            // Default to Paris if no flight active, otherwise syncs to arrival
             const options = { hour: '2-digit', minute: '2-digit', timeZone: arrivalCityTime || 'Europe/Paris' };
             const missionTime = now.toLocaleTimeString([], options);
             const cityLabel = arrivalCityTime ? "DESTINATION" : "PARIS";
@@ -111,8 +172,8 @@
         setInterval(updateTicker, 1000);
 
         async function fetchFlightData() {
-            const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; //
-            const FLIGHT_IATA = 'UA54'; //
+            const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; 
+            const FLIGHT_IATA = 'UA54'; 
             
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`);
@@ -122,9 +183,9 @@
                     const flight = result.data[0];
                     const carousel = flight.arrival.baggage || "WAITING..."; 
                     const airline = flight.airline.name.toUpperCase();
-                    const terminal = flight.arrival.terminal || "1"; //
+                    const terminal = flight.arrival.terminal || "1"; 
                     
-                    // Automatically update ticker timezone
+                    // Update ticker timezone automatically
                     arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
 
                     document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
