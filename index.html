@@ -15,7 +15,7 @@
     <style>
         body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
         
-        /* UNIVERSAL TICKER STYLE */
+        /* THE UNIVERSAL TICKER STYLE */
         #status-ticker {
             position: fixed; top: 0; width: 100%; background: rgba(0, 255, 255, 0.15);
             color: #00ffff; font-size: 10px; font-weight: 900; padding: 6px 0;
@@ -90,7 +90,7 @@
 
     <script>
         let earthImg;
-        let arrivalCityTime = ""; // Dynamic anchor
+        let arrivalCityTime = ""; // Dynamic timezone anchor
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
@@ -100,9 +100,12 @@
         function updateTicker() {
             const now = new Date();
             const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Syncs to Paris or the active live destination
             const options = { hour: '2-digit', minute: '2-digit', timeZone: arrivalCityTime || 'Europe/Paris' };
             const missionTime = now.toLocaleTimeString([], options);
             const cityLabel = arrivalCityTime ? "DESTINATION" : "PARIS";
+
             document.getElementById('status-ticker').innerText = `LOCAL: ${localTime} | ${cityLabel}: ${missionTime} | COMMAND ACTIVE`;
         }
         setInterval(updateTicker, 1000);
@@ -121,6 +124,7 @@
                     const airline = flight.airline.name.toUpperCase();
                     const terminal = flight.arrival.terminal || "1"; //
                     
+                    // Automatically update ticker timezone
                     arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
 
                     document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
