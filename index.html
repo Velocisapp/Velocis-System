@@ -42,6 +42,19 @@
         }
         @keyframes pulse-black { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
+        /* NEW: PULSING ORANGE SCROLL CTA */
+        .scroll-cta {
+            color: #FFA500; font-weight: 900; font-size: 11px; letter-spacing: 2px;
+            margin: 10px 0; display: flex; flex-direction: column; align-items: center;
+            animation: pulse-orange 2s infinite;
+        }
+        .arrows { font-size: 16px; margin-top: -5px; }
+        @keyframes pulse-orange {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
         #transport-menu {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             display: flex; justify-content: center; gap: 12px; width: 95%; z-index: 10000 !important;
@@ -68,15 +81,8 @@
             z-index: 2000; text-align: center; pointer-events: auto !important;
         }
 
-        /* NEW: VISUAL SCROLLBAR FOR FAMILY CLARITY */
-        #travel-guides::-webkit-scrollbar {
-            width: 6px;
-            display: block !important;
-        }
-        #travel-guides::-webkit-scrollbar-thumb {
-            background: rgba(0, 255, 255, 0.3);
-            border-radius: 10px;
-        }
+        #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
+        #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
     </style>
 </head>
 
@@ -111,7 +117,10 @@
 
         <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Hub Intelligence: 107 & 2</h3>
         
-        <p style="font-size: 9px; color: rgba(0, 212, 255, 0.6); margin: 2px 0 10px 0;">↓ SCROLL FOR MARKETPLACE ↓</p>
+        <div class="scroll-cta">
+            <span>SCROLL FOR MARKETPLACE</span>
+            <span class="arrows">▼ ▼</span>
+        </div>
 
         <p style="margin: 0 0 5px 0; line-height: 1.3;"><strong>PARIS (107):</strong> RER B is the 2026 speed-standard from CDG. Mobilis passes optimized for La Défense.</p>
         <p style="margin: 0 0 15px 0; line-height: 1.3;"><strong>HONG KONG (2):</strong> Octopus Card is essential for MTR. Punctuality defines respect in HK business.</p>
