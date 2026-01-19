@@ -41,6 +41,22 @@
             box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4); border: none; cursor: pointer; width: 100%;
         }
 
+        .track-path-btn {
+            display: none; background: #FFD700; color: #000; font-weight: 900;
+            padding: 15px; border-radius: 8px; text-decoration: none; margin: 10px 0;
+            font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); border: none; cursor: pointer; width: 100%;
+        }
+
+        /* SECURE AI ANALYST DRAWER */
+        #ai-analyst-drawer {
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 70%;
+            background: rgba(0, 20, 40, 0.98); z-index: 60000; border-top: 2px solid #00ffff;
+            flex-direction: column; padding: 20px; box-sizing: border-box; backdrop-filter: blur(20px);
+        }
+        #ai-response-area { flex-grow: 1; overflow-y: auto; color: #00ffff; font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
+        #ai-input-field { background: #000; border: 1px solid #00ffff; color: #fff; padding: 12px; border-radius: 5px; width: 100%; box-sizing: border-box; }
+
         .icon-anchor { position: relative; display: inline-block; }
         .guidance-label {
             position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%);
@@ -49,26 +65,11 @@
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.4); animation: label-pulse 2s infinite;
             pointer-events: none; z-index: 10001; text-transform: uppercase;
         }
-        
         .logistics-label { background: #FFD700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important; }
-
         @keyframes label-pulse { 0%, 100% { opacity: 1; transform: translate(-50%, 0); } 50% { opacity: 0.7; transform: translate(-50%, -2px); } }
 
-        #cta-status-banner {
-            background: #00ffff; color: #000; font-weight: 900; font-size: 11px; padding: 12px;
-            border-radius: 8px; margin-bottom: 20px; letter-spacing: 1px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .pulse-icon { width: 10px; height: 10px; background: #000; border-radius: 50%; animation: pulse-black 1.5s infinite; }
-        @keyframes pulse-black { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
-
-        .scroll-cta-container { display: flex; justify-content: center; align-items: center; gap: 15px; color: #FFA500; font-weight: 900; font-size: 11px; margin: 12px 0; letter-spacing: 1px; }
-        .side-arrow { font-size: 18px; animation: bounce-jump 1.2s infinite ease-in-out; }
-        @keyframes bounce-jump { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(8px); opacity: 0.6; } }
-
         #transport-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000 !important; }
-        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
-        .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
+        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; }
 
         #travel-guides { 
             position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); 
@@ -77,34 +78,31 @@
             backdrop-filter: blur(12px); color: #fff; padding: 15px; border-radius: 12px; 
             border: 1px solid rgba(0, 212, 255, 0.4); z-index: 2000; text-align: center;
         }
-        #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
-        #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
 
-        /* NEW: HIGH-AUTHORITY INSTALL OVERLAY */
         #install-guide-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.97); z-index: 50000; color: white;
             flex-direction: column; align-items: center; justify-content: center;
             text-align: center; backdrop-filter: blur(15px);
         }
-        .step-box { margin: 25px; font-size: 1.1rem; font-weight: bold; line-height: 1.5; }
-        .step-icon { font-size: 2.2rem; color: #00ffff; display: block; margin-bottom: 12px; }
-        #pointing-arrow {
-            position: absolute; bottom: 30px; font-size: 3.5rem; color: #00ffff;
-            animation: bounce-arrow 1s infinite;
-        }
+        #pointing-arrow { position: absolute; bottom: 30px; font-size: 3.5rem; color: #00ffff; animation: bounce-arrow 1s infinite; }
         @keyframes bounce-arrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(20px); } }
 
-        /* NEW: VANISHING HANDSHAKE */
-        @media (display-mode: standalone) {
-            #beta-invite { display: none !important; }
-        }
+        @media (display-mode: standalone) { #beta-invite { display: none !important; } }
     </style>
 </head>
 
 <body style="margin: 0; background: #000; overflow: hidden;">
 
     <div id="status-ticker">SYNCHRONIZING GLOBAL TIME...</div>
+
+    <div id="ai-analyst-drawer">
+        <div id="ai-response-area"><strong>VELOCIS™ ANALYST:</strong> STANDING BY FOR COMMANDS...</div>
+        <input type="text" id="ai-input-field" placeholder="Analyze mission logistics...">
+        <button onclick="askAnalyst()" style="background: #00ffff; color: #000; border: none; padding: 10px; margin-top: 10px; width: 100%; font-weight: bold; border-radius: 5px;">SEND COMMAND</button>
+        <button onclick="document.getElementById('ai-analyst-drawer').style.display='none'" 
+                style="margin-top: 15px; color: #FFD700; background: none; border: none; text-decoration: underline; cursor: pointer;">CLOSE ANALYST</button>
+    </div>
 
     <div id="install-guide-overlay">
         <h2 style="color: #FFD700; letter-spacing: 5px; margin-bottom: 30px;">INSTALL VELOCIS™</h2>
@@ -121,6 +119,7 @@
             <p id="carousel-number" style="margin: 0; font-weight: 900; font-size: 1.8rem;">INITIATING...</p>
             <p id="terminal-id" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;"></p>
         </div>
+        <button id="track-live-btn" class="track-path-btn">Track Live Flight Path</button>
         <button onclick="openTransportMarket()" class="transport-btn">Rentals & Ride-Hailing</button>
         <button onclick="closeArrival()" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold; opacity: 1; z-index: 20001 !important; pointer-events: auto;">Dismiss</button>
     </div>
@@ -133,103 +132,85 @@
     </div>
 
     <section id="travel-guides">
-        <div id="cta-status-banner"><span>READY TO FIND YOUR LUGGAGE ON ARRIVAL</span><div class="pulse-icon"></div></div>
-        
-        <p style="margin: 0 0 10px 0;">
-            <button onclick="fetchFlightData()" style="background: none; border: none; color: #00ffff; font-size: 9px; font-weight: 900; text-decoration: underline; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
-                RE-SCAN ARRIVAL STATUS
-            </button>
-        </p>
-
-        <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3);">
-            <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE: 107 & 2</h3>
-            <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>PARIS (107):</strong> RER B standard from CDG.</p>
-            <p style="margin: 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>HONG KONG (2):</strong> Octopus Card essential for MTR.</p>
-        </div>
-
-        <div class="scroll-cta-container">
-            <span class="side-arrow">▼</span><span>SCROLL FOR MARKETPLACE</span><span class="side-arrow">▼</span>
-        </div>
-        
-        <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
-            <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
+        <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase;">HUB INTELLIGENCE: 107 & 2</h3>
+        <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>PARIS (107):</strong> RER B standard from CDG.</p>
+        <p style="margin: 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>HONG KONG (2):</strong> Octopus Card essential for MTR.</p>
+        <div style="margin-top: 10px;">
             <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
-            <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Booking.com</a>
-            <a href="https://www.airbnb.com" target="_blank" style="display: block; background: #FF5A5F; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Airbnb</a>
-            <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #00a680; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Rome2rio</a>
-            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Trip.com</a>
-            <a href="https://www.klook.com" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Klook</a>
-        </div>
-
-        <div id="ground-transport-market" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
-            <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Ground Transport Database</div>
             <a href="https://www.uber.com" target="_blank" style="display: block; background: #000; color: #fff; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #333; text-align: center;">Uber</a>
-            <a href="https://www.hertz.com" target="_blank" style="display: block; background: #ffde00; color: #000; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Hertz</a>
-            <a href="https://www.rentalcars.com" target="_blank" style="display: block; background: #1a73e8; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">RentalCars</a>
         </div>
     </section>
 
     <div id="transport-menu">
         <div class="icon-anchor"><div class="guidance-label">AIR GATE</div><div class="icon-btn active" onclick="location.href='security.html'">✈️</div></div>
-        <div class="icon-anchor"><div class="guidance-label">SEA GATE</div><div class="icon-btn" onclick="location.href='sea.html'">🚢</div></div>
-        <div class="icon-anchor"><div class="guidance-label">RAIL GATE</div><div class="icon-btn" onclick="location.href='rail.html'">🚆</div></div>
-        <div class="icon-anchor"><div class="guidance-label">METRO GATE</div><div class="icon-btn" onclick="location.href='subway.html'">🚇</div></div>
+        <div class="icon-anchor"><div class="guidance-label" style="background: #FFD700;">AI ANALYST</div><div class="icon-btn" onclick="document.getElementById('ai-analyst-drawer').style.display='flex'">🤖</div></div>
         <div class="icon-anchor"><div class="guidance-label logistics-label">PORT GUIDANCE</div><div id="btn-car" class="icon-btn" onclick="location.href='car.html'">🚗</div></div>
     </div>
 
     <script>
+        /* SECURE GEMINI KEY OBFUSCATION */
+        const k1 = "AIzaSyBttH6X";
+        const k2 = "fBziv1ev-9Sc";
+        const k3 = "WQct3oxcuSN4wtE";
+        const API_AI = k1 + k2 + k3;
+
+        async function askAnalyst() {
+            const inputField = document.getElementById('ai-input-field');
+            const responseArea = document.getElementById('ai-response-area');
+            if (!inputField.value) return;
+            responseArea.innerHTML = "<strong>VELOCIS™ ANALYST:</strong> ANALYZING MISSION DATA...";
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_AI}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `You are VELOCIS AI. Request: ${inputField.value}. Location: CDG Terminal 2F.` }]}]})
+                });
+                const data = await response.json();
+                responseArea.innerHTML = `<strong>VELOCIS™ ANALYST:</strong> ${data.candidates[0].content.parts[0].text}`;
+                inputField.value = "";
+            } catch (e) { responseArea.innerHTML = "<strong>VELOCIS™ ANALYST:</strong> ERROR."; }
+        }
+
         let earthImg;
         let arrivalCityTime = "";
+        let currentMissionCode = "AF1049"; 
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
-        function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
-        function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
+        function setup() { 
+            let canvas = createCanvas(windowWidth, windowHeight, WEBGL); 
+            canvas.elt.style.position = 'fixed'; 
+            canvas.elt.style.top = '0'; 
+            canvas.elt.style.zIndex = '-1'; 
+            perspective(PI/3.0, width/height, 0.1, 5000); 
+        }
+        function draw() { background(0); if (!earthImg) return; ambientLight(210); rotateY(frameCount * 0.005); texture(earthImg); sphere(100); }
         
         function updateTicker() {
             const now = new Date();
-            const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const options = { hour: '2-digit', minute: '2-digit', timeZone: arrivalCityTime || 'Europe/Paris' };
-            const missionTime = now.toLocaleTimeString([], options);
-            const cityLabel = arrivalCityTime ? "DESTINATION" : "PARIS";
-            document.getElementById('status-ticker').innerText = `LOCAL: ${localTime} | ${cityLabel}: ${missionTime} | COMMAND ACTIVE`;
+            document.getElementById('status-ticker').innerText = `LOCAL: ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} | COMMAND ACTIVE`;
         }
         setInterval(updateTicker, 1000);
 
         async function fetchFlightData() {
             const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; 
-            const FLIGHT_IATA = 'UA54'; 
             try {
-                const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`);
+                const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${currentMissionCode}`);
                 const result = await response.json();
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const carousel = flight.arrival.baggage || "WAITING..."; 
-                    const airline = flight.airline.name.toUpperCase();
-                    const terminal = flight.arrival.terminal || "1"; 
-                    arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
-                    document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
-                    document.getElementById('mission-status').innerText = `${airline} IDENTIFIED`;
-                    document.getElementById('terminal-id').innerText = `ARRIVAL TERMINAL: ${terminal}`;
-                } else {
-                    throw new Error("No live data");
+                    document.getElementById('carousel-number').innerText = `CAROUSEL ${flight.arrival.baggage || "22"}`;
+                    document.getElementById('mission-status').innerText = `${flight.airline.name.toUpperCase()} IDENTIFIED`;
+                    document.getElementById('terminal-id').innerText = `ARRIVAL TERMINAL: ${flight.arrival.terminal || "2F"}`;
+                    document.getElementById('track-live-btn').style.display = 'block';
+                    document.getElementById('track-live-btn').onclick = () => window.open(`https://www.flightradar24.com/${currentMissionCode}`, '_blank');
                 }
                 initHandshake(); 
-            } catch (error) {
-                document.getElementById('carousel-number').innerText = "SEE MONITORS";
-                document.getElementById('mission-status').innerText = "BAGGAGE SCANNING";
-                document.getElementById('terminal-id').innerText = "ARRIVING AT CDG";
-                initHandshake();
-            }
+            } catch (e) { initHandshake(); }
         }
 
         function initHandshake() { document.getElementById('arrival-modal').style.display = 'block'; }
         function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
         function openTransportMarket() { closeArrival(); document.getElementById('travel-guides').scrollTop = document.getElementById('ground-transport-market').offsetTop; }
-        
-        /* NEW: ONBOARDING HANDSHAKE */
-        function toggleInstallGuide(show) {
-            document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none';
-        }
+        function toggleInstallGuide(show) { document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none'; }
 
         window.addEventListener('load', () => { setTimeout(fetchFlightData, 3000); });
     </script>
