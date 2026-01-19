@@ -89,6 +89,14 @@
     <section id="travel-guides">
         <div id="cta-status-banner"><span>READY TO FIND YOUR LUGGAGE ON ARRIVAL</span><div class="pulse-icon"></div></div>
         
+        <p style="margin: 0 0 10px 0;">
+            <button onclick="initHandshake()" style="background: none; border: none; color: #00ffff; font-size: 9px; font-weight: 900; text-decoration: underline; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                RE-SCAN ARRIVAL STATUS
+            </button>
+        </p>
+
+        <div class="scroll-cta-container"><span class="side-arrow">▼</span><span>SCROLL FOR MARKETPLACE</span><span class="side-arrow">▼</span></div>
+        
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
             <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
@@ -136,8 +144,17 @@
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
         function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
         function openTransportMarket() { document.getElementById('arrival-modal').style.display = 'none'; const target = document.getElementById('ground-transport-market'); document.getElementById('travel-guides').scrollTop = target.offsetTop; }
-        function initHandshake() { setTimeout(() => { document.getElementById('arrival-modal').style.display = 'block'; }, 3000); }
+        
+        /* RESTORED HANDSHAKE LOGIC */
+        function initHandshake() { 
+            const modal = document.getElementById('arrival-modal');
+            modal.style.display = 'block'; 
+        }
+        
         function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
+        
+        /* Auto-trigger on load after 3 seconds */
+        setTimeout(initHandshake, 3000);
     </script>
 </body>
 </html>
