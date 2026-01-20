@@ -67,25 +67,25 @@
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
 
         /* FIXED SECURITY HUB POSITIONING */
-        #travel-guides { 
-            position: absolute; 
-            bottom: 85px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            width: 92%; 
-            height: 220px; 
-            max-height: 220px; 
-            overflow-y: scroll; 
-            -webkit-overflow-scrolling: touch; 
-            background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(12px); 
-            color: #fff; 
-            padding: 15px; 
-            border-radius: 12px; 
-            border: 1px solid rgba(0, 212, 255, 0.4); 
-            z-index: 5000; 
-            text-align: center;
-        }
+#travel-guides { 
+    position: absolute; 
+    bottom: 95px; /* Pulls the hub up to reveal icon names below it */
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 92%; 
+    height: 230px; /* Locked height to prevent vertical drift */
+    max-height: 230px; 
+    overflow-y: scroll; 
+    -webkit-overflow-scrolling: touch; 
+    background: rgba(0, 0, 0, 0.85); 
+    backdrop-filter: blur(12px); 
+    color: #fff; 
+    padding: 15px; 
+    border-radius: 12px; 
+    border: 1px solid rgba(0, 212, 255, 0.4); 
+    z-index: 5000; /* Keeps hub above the globe but behind modals */
+    text-align: center;
+}
         #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
         #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
 
@@ -174,7 +174,19 @@
         let earthImg;
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); }
-        function draw() { background(0); if (!earthImg) return; ambientLight(210); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); }
+function draw() { 
+    background(0); 
+    if (!earthImg) return; 
+    ambientLight(210); 
+    pointLight(255, 255, 255, 600, 200, 1000); 
+    push(); 
+    translate(0, -50, 0); /* Move globe UP by 50 pixels to clear the hub */
+    rotateY(frameCount * 0.005); 
+    noStroke(); 
+    texture(earthImg); 
+    sphere(100); 
+    pop(); 
+}
         
         function initHandshake() { document.getElementById('arrival-modal').style.display = 'block'; }
         function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
