@@ -26,8 +26,8 @@
         #brand h1 { color: #FFD700 !important; font-weight: 900 !important; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 5px #000; margin: 0; } 
         
         #arrival-modal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(20px);
+            display: none; position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; background: rgba(255, 91, 0, 0.95); backdrop-filter: blur(5px);
             color: white; padding: 25px; border-radius: 15px; border: 2px solid #fff;
             z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(255, 91, 0, 0.5);
             pointer-events: auto !important;
@@ -69,13 +69,13 @@
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
             display: flex; justify-content: center; gap: 10px; width: 98%; 
             z-index: 10000 !important;
-            pointer-events: auto !important; /* CRITICAL FIX: ENABLE TOUCH */
+            pointer-events: auto !important;
         }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
 
         #travel-guides { 
-            position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); 
+            position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); 
             width: 92%; height: 210px; max-height: 210px; overflow-y: scroll; 
             -webkit-overflow-scrolling: touch; background: rgba(0, 0, 0, 0.85); 
             backdrop-filter: blur(12px); color: #fff; padding: 15px; border-radius: 12px; 
