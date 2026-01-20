@@ -229,11 +229,12 @@ async function fetchFlightData() {
         }
         initHandshake(); 
     } catch (error) {
-        document.getElementById('carousel-number').innerText = "SEE MONITORS";
-        document.getElementById('mission-status').innerText = `${FLIGHT_IATA} NOT FOUND`;
-        document.getElementById('terminal-id').innerText = "CHECK TERMINAL DISPLAY";
-        initHandshake();
-    }
+    // This removes "SEE MONITORS" and replaces it with your guidance
+    document.getElementById('mission-status').innerText = "MISSION DATA PENDING";
+    document.getElementById('carousel-number').innerText = "LOGISTICS PORTAL";
+    document.getElementById('terminal-id').innerText = "CAROUSEL AND TERMINAL DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW UPON MISSION IDENTIFICATION";
+    initHandshake();
+}
 }
 
         function initHandshake() { document.getElementById('arrival-modal').style.display = 'block'; }
