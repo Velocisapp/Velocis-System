@@ -16,7 +16,6 @@
         #brand-title { color: #FFD700; font-size: 14px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
 
-        /* NEON METRO MODAL: Purple theme for local transit authority */
         #arrival-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: rgba(80, 0, 80, 0.96); backdrop-filter: blur(20px);
@@ -147,7 +146,22 @@
     }
     draw();
 
-    // NEW: METRO LOGISTICS BRAIN
+    // NEW: SUBWAY STATION GPS SCANNER
+    async function identifyNearestStation(lat, lng) {
+        try {
+            const query = `[out:json];node["railway"="station"]["subway"="yes"](around:2000,${lat},${lng});out;`;
+            const response = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query });
+            const data = await response.json();
+            
+            if (data.elements && data.elements.length > 0) {
+                const stationName = data.elements[0].tags.name || "ACTIVE METRO HUB";
+                document.getElementById('mission-status').innerText = "STATION IDENTIFIED";
+                document.getElementById('metro-info').innerText = stationName.toUpperCase();
+                document.getElementById('metro-status-text').innerText = "MISSION SECURED: TRANSIT DATA ACTIVE";
+            }
+        } catch (e) { console.log("Station scan pending..."); }
+    }
+
     async function fetchMetroData() {
         const inputVal = document.getElementById('metro-query')?.value;
         const LINE_ID = inputVal ? inputVal.trim().toUpperCase() : 'AUTO_DETECT';
@@ -157,10 +171,13 @@
             if(LINE_ID !== 'AUTO_DETECT') {
                 document.getElementById('mission-status').innerText = "LINE IDENTIFIED";
                 document.getElementById('metro-info').innerText = "LINE 1 / WESTBOUND";
-                document.getElementById('metro-status-text').innerText = "STATION: LA DÉFENSE SECURED";
+                document.getElementById('metro-status-text').innerText = "STATION: MISSION SECURED";
             } else {
                 document.getElementById('mission-status').innerText = "METRO DATA PENDING";
                 document.getElementById('arrival-modal').style.display = 'block';
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    identifyNearestStation(pos.coords.latitude, pos.coords.longitude);
+                }, null, { enableHighAccuracy: true });
             }
         }, 1200);
     }
