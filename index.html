@@ -65,12 +65,7 @@
         .side-arrow { font-size: 18px; animation: bounce-jump 1.2s infinite ease-in-out; }
         @keyframes bounce-jump { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(8px); opacity: 0.6; } }
 
-        #transport-menu { 
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
-            display: flex; justify-content: center; gap: 10px; width: 98%; 
-            z-index: 10000 !important;
-            pointer-events: auto !important; /* CRITICAL FIX: ENABLE TOUCH */
-        }
+        #transport-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000 !important; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
 
@@ -184,7 +179,7 @@
     </section>
 
     <div id="transport-menu">
-        <div class="icon-anchor"><div class="guidance-label">AIR GATE</div><div class="icon-btn active" onclick="location.href='index.html'">✈️</div></div>
+        <div class="icon-anchor"><div class="guidance-label">AIR GATE</div><div class="icon-btn active" onclick="location.href='security.html'">✈️</div></div>
         <div class="icon-anchor"><div class="guidance-label">SEA GATE</div><div class="icon-btn" onclick="location.href='sea.html'">🚢</div></div>
         <div class="icon-anchor"><div class="guidance-label">RAIL GATE</div><div class="icon-btn" onclick="location.href='rail.html'">🚆</div></div>
         <div class="icon-anchor"><div class="guidance-label">METRO GATE</div><div class="icon-btn" onclick="location.href='subway.html'">🚇</div></div>
