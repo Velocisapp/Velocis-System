@@ -69,7 +69,7 @@
         /* FIXED SECURITY HUB POSITIONING */
 #travel-guides { 
     position: absolute; 
-    bottom: 95px; /* Pulls the hub up to reveal icon names below it */
+    bottom: 110px; /* Pulls the hub up to reveal icon names below it */
     left: 50%; 
     transform: translateX(-50%); 
     width: 92%; 
@@ -97,8 +97,16 @@
             text-align: center; backdrop-filter: blur(15px);
         }
         .step-box { margin: 25px; font-size: 1.1rem; font-weight: bold; line-height: 1.5; color: #000; }
-        .step-icon { font-size: 2.2rem; color: #0088ff; display: block; margin-bottom: 12px; }
+        .step-icon { font-size: 2.2rem; color: #0088ff; display: block; margin-bottom: 12px; } @keyframes bounce-jump { 
+    0%, 100% { transform: translateY(0); opacity: 1; } 
+    50% { transform: translateY(10px); opacity: 0.5; } 
+}
+.side-arrow { 
+    display: inline-block;
+    animation: bounce-jump 1.2s infinite ease-in-out; 
+}
     </style>
+   
 </head>
 
 <body style="margin: 0; background: #000; overflow: hidden;">
@@ -180,11 +188,11 @@ function draw() {
     ambientLight(210); 
     pointLight(255, 255, 255, 600, 200, 1000); 
     push(); 
-    translate(0, -50, 0); /* Move globe UP by 50 pixels to clear the hub */
+    translate(0, -145, 0); /* Forces the globe up into the black space below the brand */
     rotateY(frameCount * 0.005); 
     noStroke(); 
     texture(earthImg); 
-    sphere(100); 
+    sphere(115); /* Slightly larger sphere for better authority */
     pop(); 
 }
         
