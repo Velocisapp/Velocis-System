@@ -11,6 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Velocis™ High-Authority Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
         
@@ -121,9 +122,16 @@
         <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">MISSION DATA PENDING</h2>
         
         <div style="margin: 15px 0;">
+            <div id="scanner-container" style="display:none; margin-bottom:10px; border:2px solid #00ffff; border-radius:8px; overflow:hidden;">
+                <video id="video" style="width:100%; height:auto;"></video>
+                <canvas id="canvas" hidden></canvas>
+            </div>
+            
             <input type="text" id="flight-query" placeholder="OPTIONAL: MANUAL MISSION #" 
                    oninput="if(this.value.length >= 4) fetchFlightData()"
-                   style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #00ffff; background: #000; color: #00ffff; font-weight: 900; text-align: center; text-transform: uppercase; outline: none;">
+                   style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #00ffff; background: #000; color: #00ffff; font-weight: 900; text-align: center; text-transform: uppercase; outline: none; margin-bottom:10px;">
+            
+            <button onclick="startScanner()" style="width:100%; padding:10px; background:#00ffff; color:#000; font-weight:900; border-radius:8px; border:none; cursor:pointer;">📷 SCAN EXTRACTION TICKET</button>
         </div>
 
         <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
@@ -208,6 +216,41 @@
             document.getElementById('status-ticker').innerText = `LOCAL: ${localTime} | ${cityLabel}: ${missionTime} | COMMAND ACTIVE`;
         }
         setInterval(updateTicker, 1000);
+
+        // SCANNER LOGICS
+        function startScanner() {
+            const video = document.getElementById('video');
+            const container = document.getElementById('scanner-container');
+            container.style.display = 'block';
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true);
+                video.play();
+                requestAnimationFrame(tick);
+            });
+
+            function tick() {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    const canvasElement = document.getElementById('canvas');
+                    const canvas = canvasElement.getContext('2d');
+                    canvasElement.height = video.videoHeight;
+                    canvasElement.width = video.videoWidth;
+                    canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+                    const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                    if (code) {
+                        document.getElementById('flight-query').value = code.data;
+                        container.style.display = 'none';
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                        fetchFlightData(); // Instant Handshake
+                        return;
+                    }
+                }
+                requestAnimationFrame(tick);
+            }
+        }
 
         async function fetchFlightData() {
             const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; 
