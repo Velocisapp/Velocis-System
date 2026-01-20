@@ -136,7 +136,30 @@
     }
     draw();
 
-    // NEW: PORT IDENTIFICATION ENGINE
+    // NEW: VESSEL TRACKER & PORT IDENTIFICATION
+    let arrivalMinutes = 5;
+    let arrivalSeconds = 0;
+
+    function startVesselTracker(portName) {
+        const timerElement = document.getElementById('port-status-text');
+        const countdown = setInterval(() => {
+            if (arrivalSeconds === 0) {
+                if (arrivalMinutes === 0) {
+                    clearInterval(countdown);
+                    timerElement.innerText = "VESSEL STATUS: DOCKED • SECURE";
+                    timerElement.style.color = "#39FF14"; 
+                    return;
+                }
+                arrivalMinutes--;
+                arrivalSeconds = 59;
+            } else {
+                arrivalSeconds--;
+            }
+            const displaySec = arrivalSeconds < 10 ? '0' + arrivalSeconds : arrivalSeconds;
+            timerElement.innerText = `VESSEL ARRIVAL: 0${arrivalMinutes}:${displaySec} | APPROACHING ${portName.toUpperCase()}`;
+        }, 1000);
+    }
+
     async function identifyNearestPort(lat, lng) {
         try {
             const query = `[out:json];node["harbour"="yes"](around:10000,${lat},${lng});out;`;
@@ -147,7 +170,7 @@
                 const portName = data.elements[0].tags.name || "ACTIVE HARBOR";
                 document.getElementById('mission-status').innerText = "PORT IDENTIFIED";
                 document.getElementById('dock-info').innerText = portName.toUpperCase();
-                document.getElementById('port-status-text').innerText = "MISSION SECURED: DOCKING DATA ACTIVE";
+                startVesselTracker(portName);
             }
         } catch (e) { console.log("Port scan pending..."); }
     }
