@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <meta name="apple-mobile-web-app-title" content="VELOCIS">
     <link rel="manifest" href="manifest.json?v=4">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Velocis™ High-Authority Terminal</title>
@@ -69,25 +68,25 @@
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
 
-       #travel-guides { 
-    position: absolute; 
-    bottom: 85px; /* Pinned above the transport menu */
-    left: 50%; 
-    transform: translateX(-50%); 
-    width: 92%; 
-    height: 210px; 
-    max-height: 210px; 
-    overflow-y: scroll; 
-    -webkit-overflow-scrolling: touch; 
-    background: rgba(0, 0, 0, 0.85); 
-    backdrop-filter: blur(12px); 
-    color: #fff; 
-    padding: 15px; 
-    border-radius: 12px; 
-    border: 1px solid rgba(0, 212, 255, 0.4); 
-    z-index: 5000; /* Increased to stay above the 3D globe */
-    text-align: center;
-}
+        #travel-guides { 
+            position: absolute; 
+            bottom: 85px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 92%; 
+            height: 210px; 
+            max-height: 210px; 
+            overflow-y: scroll; 
+            -webkit-overflow-scrolling: touch; 
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(12px); 
+            color: #fff; 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(0, 212, 255, 0.4); 
+            z-index: 5000; 
+            text-align: center;
+        }
         #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
         #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
 
@@ -126,13 +125,11 @@
 
     <div id="arrival-modal">
         <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">MISSION DATA PENDING</h2>
-        
         <div style="margin: 15px 0;">
             <input type="text" id="flight-query" placeholder="OPTIONAL: MANUAL MISSION #" 
                    oninput="if(this.value.length >= 4) fetchFlightData()"
                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #00ffff; background: #000; color: #00ffff; font-weight: 900; text-align: center; text-transform: uppercase; outline: none;">
         </div>
-
         <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
             <p id="carousel-number" style="margin: 0; font-weight: 900; font-size: 1.8rem;">LOGISTICS PORTAL</p>
             <p id="terminal-id" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
@@ -144,24 +141,7 @@
     </div>
 
     <div id="brand"><h1>VELOCIS™</h1><p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p></div>
-<section id="travel-guides">
-    <div id="cta-status-banner"><span>READY TO FIND YOUR LUGGAGE ON ARRIVAL</span><div class="pulse-icon"></div></div>
-    
-    <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3); max-height: 80px; overflow-y: auto;">
-        <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE</h3>
-        <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>PARIS (107):</strong> RER B standard from CDG.</p>
-        <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>HONG KONG (2):</strong> Octopus Card essential for MTR.</p>
-        <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>LONDON (44):</strong> Use Contactless or Oyster for the Underground.</p>
-        <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>NEW YORK (1):</strong> OMNY tap-to-pay active.</p>
-        <p style="margin: 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>TOKYO (81):</strong> Suica or Pasmo cards essential.</p>
-    </div>
 
-    <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
-        <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
-        <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
-        <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Booking.com</a>
-    </div>
-</section>
     <div id="beta-invite" style="position: absolute; top: 15%; width: 100%; text-align: center; z-index: 1001; pointer-events: auto;">
         <h2 style="margin: 0; color: white; font-family: sans-serif; font-size: 1.2rem; letter-spacing: 2px;">VELOCIS™ BETA</h2>
         <button onclick="toggleInstallGuide(true)" style="background: white; color: black; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px;">Install VELOCIS (Free)</button>
@@ -176,7 +156,7 @@
             </button>
         </p>
 
-       <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3); max-height: 80px; overflow-y: auto;">
+        <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3); max-height: 80px; overflow-y: auto;">
             <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE</h3>
             <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>PARIS (107):</strong> RER B standard from CDG.</p>
             <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>HONG KONG (2):</strong> Octopus Card essential for MTR.</p>
@@ -185,10 +165,18 @@
             <p style="margin: 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>TOKYO (81):</strong> Suica or Pasmo cards essential.</p>
         </div>
 
+        <div class="scroll-cta-container">
+            <span class="side-arrow">▼</span><span>SCROLL FOR MARKETPLACE</span><span class="side-arrow">▼</span>
+        </div>
+
         <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Universal Marketplace</div>
             <a href="https://www.expedia.com" target="_blank" style="display: block; background: #f0f0f0; color: #00355f; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Expedia.com</a>
             <a href="https://www.booking.com" target="_blank" style="display: block; background: #003580; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Booking.com</a>
+            <a href="https://www.airbnb.com" target="_blank" style="display: block; background: #FF5A5F; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Airbnb</a>
+            <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #00a680; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Rome2rio</a>
+            <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Trip.com</a>
+            <a href="https://www.klook.com" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Klook</a>
         </div>
 
         <div id="ground-transport-market" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
@@ -265,8 +253,6 @@
         function toggleInstallGuide(show) {
             document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none';
         }
-
-       
     </script>
 </body>
 </html>
