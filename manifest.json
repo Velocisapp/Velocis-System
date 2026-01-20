@@ -1,13 +1,13 @@
 {
-  "name": "VELOCIS Terminal",
-  "short_name": "VELOCIS",
+  "name": "Velocis-System",
+  "short_name": "Velocis-System",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#010406",
   "theme_color": "#00FFFF",
   "icons": [
     {
-      "src": "icon.png?v=3",
+      "src": "apple-touch-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
