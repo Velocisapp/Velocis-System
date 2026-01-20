@@ -48,8 +48,6 @@
             pointer-events: none; z-index: 10001; text-transform: uppercase;
         }
         
-        .logistics-label { background: #FFD700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important; }
-
         @keyframes label-pulse { 0%, 100% { opacity: 1; transform: translate(-50%, 0); } 50% { opacity: 0.7; transform: translate(-50%, -2px); } }
 
         #cta-status-banner {
@@ -68,14 +66,15 @@
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
 
+        /* FIXED AIR SECURITY HUB CSS */
         #travel-guides { 
             position: absolute; 
             bottom: 85px; 
             left: 50%; 
             transform: translateX(-50%); 
             width: 92%; 
-            height: 210px; 
-            max-height: 210px; 
+            height: 220px; 
+            max-height: 220px; 
             overflow-y: scroll; 
             -webkit-overflow-scrolling: touch; 
             background: rgba(0, 0, 0, 0.85); 
@@ -103,10 +102,6 @@
             animation: bounce-arrow 1s infinite;
         }
         @keyframes bounce-arrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(20px); } }
-
-        @media (display-mode: standalone) {
-            #beta-invite { display: none !important; }
-        }
     </style>
 </head>
 
@@ -132,35 +127,26 @@
         </div>
         <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
             <p id="carousel-number" style="margin: 0; font-weight: 900; font-size: 1.8rem;">LOGISTICS PORTAL</p>
-            <p id="terminal-id" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
-                SYSTEM IS SCANNING. CAROUSEL DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.
-            </p>
+            <p id="terminal-id" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">SCANNING FOR LIVE MISSION DATA...</p>
         </div>
         <button onclick="openTransportMarket()" class="transport-btn">Rentals & Ride-Hailing</button>
-        <button onclick="closeArrival()" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold; opacity: 1; z-index: 20001 !important; pointer-events: auto;">Dismiss</button>
+        <button onclick="closeArrival()" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold; opacity: 1;">Dismiss</button>
     </div>
 
     <div id="brand"><h1>VELOCIS™</h1><p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p></div>
-
-    <div id="beta-invite" style="position: absolute; top: 15%; width: 100%; text-align: center; z-index: 1001; pointer-events: auto;">
-        <h2 style="margin: 0; color: white; font-family: sans-serif; font-size: 1.2rem; letter-spacing: 2px;">VELOCIS™ BETA</h2>
-        <button onclick="toggleInstallGuide(true)" style="background: white; color: black; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px;">Install VELOCIS (Free)</button>
-    </div>
 
     <section id="travel-guides">
         <div id="cta-status-banner"><span>READY TO FIND YOUR LUGGAGE ON ARRIVAL</span><div class="pulse-icon"></div></div>
         
         <p style="margin: 0 0 10px 0;">
-            <button onclick="fetchFlightData()" style="background: none; border: none; color: #00ffff; font-size: 9px; font-weight: 900; text-decoration: underline; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
-                RE-SCAN ARRIVAL STATUS
-            </button>
+            <button onclick="fetchFlightData()" style="background: none; border: none; color: #00ffff; font-size: 9px; font-weight: 900; text-decoration: underline; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">RE-SCAN ARRIVAL STATUS</button>
         </p>
 
         <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3); max-height: 80px; overflow-y: auto;">
             <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE</h3>
             <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>PARIS (107):</strong> RER B standard from CDG.</p>
             <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>HONG KONG (2):</strong> Octopus Card essential for MTR.</p>
-            <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>LONDON (44):</strong> Use Contactless or Oyster for the Underground.</p>
+            <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>LONDON (44):</strong> Contactless or Oyster for the Underground.</p>
             <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>NEW YORK (1):</strong> OMNY tap-to-pay active.</p>
             <p style="margin: 0; line-height: 1.3; font-size: 12px; color: #fff; text-align: left;"><strong>TOKYO (81):</strong> Suica or Pasmo cards essential.</p>
         </div>
@@ -176,14 +162,12 @@
             <a href="https://www.airbnb.com" target="_blank" style="display: block; background: #FF5A5F; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Airbnb</a>
             <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #00a680; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Rome2rio</a>
             <a href="https://www.trip.com" target="_blank" style="display: block; background: #287dfa; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Trip.com</a>
-            <a href="https://www.klook.com" target="_blank" style="display: block; background: #FF5B00; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Klook</a>
         </div>
 
         <div id="ground-transport-market" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
             <div style="font-size: 10px; color: #FFA500; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">Ground Transport Database</div>
             <a href="https://www.uber.com" target="_blank" style="display: block; background: #000; color: #fff; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; border: 1px solid #333; text-align: center;">Uber</a>
             <a href="https://www.hertz.com" target="_blank" style="display: block; background: #ffde00; color: #000; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">Hertz</a>
-            <a href="https://www.rentalcars.com" target="_blank" style="display: block; background: #1a73e8; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;">RentalCars</a>
         </div>
     </section>
 
@@ -217,42 +201,23 @@
             const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; 
             const inputVal = document.getElementById('flight-query')?.value;
             const FLIGHT_IATA = inputVal ? inputVal.trim().toUpperCase() : 'UA54'; 
-            
-            document.getElementById('mission-status').innerText = `IDENTIFYING ${FLIGHT_IATA}...`;
-            
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`);
                 const result = await response.json();
-                
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const carousel = flight.arrival.baggage || "WAITING..."; 
-                    const airline = flight.airline.name.toUpperCase();
-                    const terminal = flight.arrival.terminal || "1"; 
+                    document.getElementById('carousel-number').innerText = `CAROUSEL ${flight.arrival.baggage || "WAITING..."}`;
+                    document.getElementById('mission-status').innerText = `${flight.airline.name.toUpperCase()} DETECTED`;
                     arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
-                    
-                    document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
-                    document.getElementById('mission-status').innerText = `${airline} DETECTED`;
-                    document.getElementById('terminal-id').innerText = `ARRIVAL TERMINAL: ${terminal}`;
-                } else {
-                    throw new Error("No live data found");
                 }
                 initHandshake(); 
-            } catch (error) {
-                document.getElementById('mission-status').innerText = "MISSION DATA PENDING";
-                document.getElementById('carousel-number').innerText = "LOGISTICS PORTAL";
-                document.getElementById('terminal-id').innerText = "SYSTEM IS SCANNING. CAROUSEL DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.";
-                initHandshake();
-            }
+            } catch (error) { initHandshake(); }
         }
 
         function initHandshake() { document.getElementById('arrival-modal').style.display = 'block'; }
         function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
         function openTransportMarket() { closeArrival(); document.getElementById('travel-guides').scrollTop = document.getElementById('ground-transport-market').offsetTop; }
-        
-        function toggleInstallGuide(show) {
-            document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none';
-        }
+        function toggleInstallGuide(show) { document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none'; }
     </script>
 </body>
 </html>
