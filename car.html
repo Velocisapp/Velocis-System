@@ -116,7 +116,7 @@
         async function globalAirportSearch(lat, lng) {
             if (airportIdentified) return; 
             try {
-                const query = `[out:json];node["aeroway"="terminal"](around:5000,${lat},${lng});out;`;
+const query = `[out:json];(node["aeroway"="terminal"](around:5000,${lat},${lng});node["harbour"="yes"](around:5000,${lat},${lng}););out;`;
                 const response = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query });
                 const data = await response.json();
                 if (data.elements && data.elements.length > 0) {
