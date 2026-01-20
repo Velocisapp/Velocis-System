@@ -69,13 +69,25 @@
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
 
-        #travel-guides { 
-            position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); 
-            width: 92%; height: 210px; max-height: 210px; overflow-y: scroll; 
-            -webkit-overflow-scrolling: touch; background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(12px); color: #fff; padding: 15px; border-radius: 12px; 
-            border: 1px solid rgba(0, 212, 255, 0.4); z-index: 2000; text-align: center;
-        }
+       #travel-guides { 
+    position: absolute; 
+    bottom: 85px; /* Pinned above the transport menu */
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 92%; 
+    height: 210px; 
+    max-height: 210px; 
+    overflow-y: scroll; 
+    -webkit-overflow-scrolling: touch; 
+    background: rgba(0, 0, 0, 0.85); 
+    backdrop-filter: blur(12px); 
+    color: #fff; 
+    padding: 15px; 
+    border-radius: 12px; 
+    border: 1px solid rgba(0, 212, 255, 0.4); 
+    z-index: 5000; /* Increased to stay above the 3D globe */
+    text-align: center;
+}
         #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
         #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
 
@@ -179,7 +191,7 @@
     </section>
 
     <div id="transport-menu">
-        <div class="icon-anchor"><div class="guidance-label">AIR GATE</div><div class="icon-btn active" onclick="location.href='security.html'">✈️</div></div>
+      <div class="icon-anchor"><div class="guidance-label">AIR GATE</div><div class="icon-btn active" onclick="initHandshake()">✈️</div></div>
         <div class="icon-anchor"><div class="guidance-label">SEA GATE</div><div class="icon-btn" onclick="location.href='sea.html'">🚢</div></div>
         <div class="icon-anchor"><div class="guidance-label">RAIL GATE</div><div class="icon-btn" onclick="location.href='rail.html'">🚆</div></div>
         <div class="icon-anchor"><div class="guidance-label">METRO GATE</div><div class="icon-btn" onclick="location.href='subway.html'">🚇</div></div>
