@@ -15,7 +15,6 @@
         #brand-title { color: #FFD700; font-size: 14px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
         
-        /* NEW: HIGH-AUTHORITY MODAL STYLES */
         #arrival-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: rgba(0, 70, 180, 0.96); backdrop-filter: blur(20px);
@@ -55,7 +54,7 @@
             </div>
             <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
                 <p id="dock-info" style="margin: 0; font-weight: 900; font-size: 1.8rem;">PIER LOGISTICS</p>
-                <p id="port-status" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
+                <p id="port-status-text" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
                     SYSTEM IS SCANNING. DOCK AND PIER DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.
                 </p>
             </div>
@@ -79,7 +78,6 @@
     </div>
 
 <script>
-    // PRESERVED ENGINE LOGIC
     const canvas = document.getElementById('engine');
     const ctx = canvas.getContext('2d');
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -138,7 +136,22 @@
     }
     draw();
 
-    // NEW: MARITIME MISSION BRAIN
+    // NEW: PORT IDENTIFICATION ENGINE
+    async function identifyNearestPort(lat, lng) {
+        try {
+            const query = `[out:json];node["harbour"="yes"](around:10000,${lat},${lng});out;`;
+            const response = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query });
+            const data = await response.json();
+            
+            if (data.elements && data.elements.length > 0) {
+                const portName = data.elements[0].tags.name || "ACTIVE HARBOR";
+                document.getElementById('mission-status').innerText = "PORT IDENTIFIED";
+                document.getElementById('dock-info').innerText = portName.toUpperCase();
+                document.getElementById('port-status-text').innerText = "MISSION SECURED: DOCKING DATA ACTIVE";
+            }
+        } catch (e) { console.log("Port scan pending..."); }
+    }
+
     async function fetchVesselData() {
         const inputVal = document.getElementById('vessel-query')?.value;
         const VOYAGE_ID = inputVal ? inputVal.trim().toUpperCase() : 'AUTO_DETECT';
@@ -148,10 +161,13 @@
             if(VOYAGE_ID !== 'AUTO_DETECT') {
                 document.getElementById('mission-status').innerText = "VOYAGE IDENTIFIED";
                 document.getElementById('dock-info').innerText = "DOCK B / PIER 7";
-                document.getElementById('port-status').innerText = "REAL-TIME LOGISTICS SECURED";
+                document.getElementById('port-status-text').innerText = "REAL-TIME LOGISTICS SECURED";
             } else {
                 document.getElementById('mission-status').innerText = "MISSION DATA PENDING";
                 document.getElementById('arrival-modal').style.display = 'block';
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    identifyNearestPort(pos.coords.latitude, pos.coords.longitude);
+                }, null, { enableHighAccuracy: true });
             }
         }, 1500);
     }
