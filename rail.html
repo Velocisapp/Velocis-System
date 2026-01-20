@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VELOCIS™ Rail Gate Authority</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
         #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
         
-        /* RESTORED: The Time/Header Window */
         #header-box { 
             position: absolute; top: 20px; left: 5%; width: 90%; 
             border: 2px solid #FFD700; padding: 10px; background: rgba(0,20,20,0.9); 
@@ -16,17 +16,27 @@
         #brand-title { color: #FFD700; font-size: 14px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
 
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .ticker-wrap {
-            position: absolute; bottom: 0; width: 100%; height: 50px; 
-            background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; 
-            display: flex; align-items: center; overflow: hidden;
+        /* HIGH-AUTHORITY RAIL MODAL: Teal/Steel theme for Rail Gate */
+        #arrival-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; background: rgba(0, 80, 80, 0.96); backdrop-filter: blur(20px);
+            color: white; padding: 25px; border-radius: 15px; border: 2px solid #fff;
+            z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+            pointer-events: auto !important;
         }
-   @keyframes alertBoxPulse { 
-    0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 
-    50% { border-width: 6px; box-shadow: 0 0 25px #FF3131; transform: scale(1.02); } 
-    100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 
-} </style>
+        .transport-btn {
+            display: block; background: #00ffff; color: #000; font-weight: 900;
+            padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0;
+            font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none;
+        }
+        #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
+        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
+        .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
+
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .ticker-wrap { position: absolute; bottom: 0; width: 100%; height: 50px; background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
+        @keyframes alertBoxPulse { 0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 50% { border-width: 6px; box-shadow: 0 0 25px #FF3131; transform: scale(1.02); } 100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } }
+    </style>
 </head>
 <body>
     <canvas id="engine"></canvas>
@@ -36,6 +46,32 @@
             <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
             <div id="clock">TIME: --:--:--</div>
         </div>
+
+        <div id="arrival-modal">
+            <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">TRAIN DATA PENDING</h2>
+            <div style="margin: 15px 0;">
+                <input type="text" id="rail-query" placeholder="OPTIONAL: MANUAL MISSION #" 
+                       oninput="if(this.value.length >= 3) fetchRailData()"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #00ffff; background: #000; color: #00ffff; font-weight: 900; text-align: center; text-transform: uppercase; outline: none; box-sizing: border-box;">
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
+                <p id="platform-info" style="margin: 0; font-weight: 900; font-size: 1.8rem;">PLATFORM LOGISTICS</p>
+                <p id="track-status" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
+                    SYSTEM IS SCANNING. TRACK AND PLATFORM DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.
+                </p>
+            </div>
+            <button onclick="location.href='index.html'" class="transport-btn">Return to Air Gate</button>
+            <button onclick="document.getElementById('arrival-modal').style.display='none'" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold;">Dismiss</button>
+        </div>
+
+        <div id="transport-menu">
+            <a href="index.html" class="icon-btn">✈️</a>
+            <a href="sea.html" class="icon-btn">🚢</a>
+            <a href="rail.html" class="icon-btn active">🚆</a>
+            <a href="subway.html" class="icon-btn">🚇</a>
+            <a href="car.html" class="icon-btn">🚗</a>
+        </div>
+
         <div class="ticker-wrap">
             <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 12s linear infinite;">
                 HUB 107 | PARIS RER B ACTIVE | HUB 2 | HK MTR ACTIVE | SCANNING TRACKS
@@ -49,7 +85,6 @@
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    // SPACING ADJUSTED: Reduced positions to prevent overlap
     const gates = [
         { id: "P1", pos: 0.16, status: "ON TIME" }, 
         { id: "P4", pos: 0.38, status: "BOARDING" },
@@ -63,56 +98,43 @@
         targetGate: Math.floor(Math.random() * gates.length)
     }));
 
-    function drawSleekArrow(x, y, color, dark) {
-    ctx.save(); ctx.translate(x, y);
-    
-    // INCREASED GLOW: Doubled the pulse range for maximum brightness
-    const pulse = Math.abs(Math.sin(Date.now() / 300)) * 30;
-    ctx.shadowBlur = 20 + pulse; 
-    ctx.shadowColor = color;
-    
-    // BRIGHTER FILL: Swapped 'dark' for 'color' to prevent the dark center
-    ctx.fillStyle = color; 
-    ctx.beginPath();
-    ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); 
-    ctx.lineTo(12, 5); ctx.lineTo(12, 40); ctx.lineTo(-12, 40); 
-    ctx.lineTo(-12, 5); ctx.fill();
-
-    // GLOSS LAYER: Added a white overlay to make the arrow look neon
-    ctx.globalAlpha = 0.4;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); ctx.fill();
-    
-    ctx.restore();
-}
+    function drawSleekArrow(x, y, color) {
+        ctx.save(); ctx.translate(x, y);
+        const pulse = Math.abs(Math.sin(Date.now() / 300)) * 30;
+        ctx.shadowBlur = 20 + pulse; 
+        ctx.shadowColor = color;
+        ctx.fillStyle = color; 
+        ctx.beginPath();
+        ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); 
+        ctx.lineTo(12, 5); ctx.lineTo(12, 40); ctx.lineTo(-12, 40); 
+        ctx.lineTo(-12, 5); ctx.fill();
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); ctx.fill();
+        ctx.restore();
+    }
 
     function draw() {
         ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
-const hb = document.getElementById('header-box');
-const clk = document.getElementById('clock');
+        const hb = document.getElementById('header-box');
+        const clk = document.getElementById('clock');
 
-if (hasFinalCall) {
-    hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out';
-    hb.style.borderColor = '#FF3131';
-    clk.style.color = '#FF3131';
-} else {
-    hb.style.animation = 'none';
-    hb.style.borderColor = '#FFD700';
-    clk.style.color = '#FFD700';
-}
+        if (hasFinalCall) {
+            hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out';
+            hb.style.borderColor = '#FF3131'; clk.style.color = '#FF3131';
+        } else {
+            hb.style.animation = 'none'; hb.style.borderColor = '#FFD700'; clk.style.color = '#FFD700';
+        }
+
         gates.forEach((g) => {
             const gx = canvas.width * g.pos; const gy = canvas.height * 0.68; 
             let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
-            let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
-            
             const pGrd = ctx.createLinearGradient(gx-30, 0, gx+30, 0);
             pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.3)'); pGrd.addColorStop(1, 'transparent');
             ctx.fillStyle = pGrd; ctx.fillRect(gx-30, 0, 60, gy);
-
-            drawSleekArrow(gx, gy + 70 + Math.sin(Date.now()/400)*8, color, dark);
-
+            drawSleekArrow(gx, gy + 70 + Math.sin(Date.now()/400)*8, color);
             ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 11px Courier New';
             ctx.fillText("TRACK", gx, gy - 60); 
             ctx.fillStyle = color; ctx.font = '900 28px Courier New';
@@ -129,7 +151,27 @@ if (hasFinalCall) {
         requestAnimationFrame(draw);
     }
     draw();
+
+    // RAIL MISSION LOGIC
+    async function fetchRailData() {
+        const inputVal = document.getElementById('rail-query')?.value;
+        const TRAIN_ID = inputVal ? inputVal.trim().toUpperCase() : 'AUTO_DETECT';
+        document.getElementById('mission-status').innerText = `IDENTIFYING ${TRAIN_ID}...`;
+        
+        setTimeout(() => {
+            if(TRAIN_ID !== 'AUTO_DETECT') {
+                document.getElementById('mission-status').innerText = "TRAIN IDENTIFIED";
+                document.getElementById('platform-info').innerText = "TRACK 12 / PLATFORM B";
+                document.getElementById('track-status').innerText = "MISSION SECURED: GARE DU NORD";
+            } else {
+                document.getElementById('mission-status').innerText = "TRAIN DATA PENDING";
+                document.getElementById('arrival-modal').style.display = 'block';
+            }
+        }, 1500);
+    }
+
     setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
+    window.addEventListener('load', () => { setTimeout(fetchRailData, 1000); });
 </script>
 </body>
 </html>
