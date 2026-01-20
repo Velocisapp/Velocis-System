@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VELOCIS™ Sea Gate Authority</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -13,17 +14,27 @@
         }
         #brand-title { color: #FFD700; font-size: 14px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
-        @keyframes alertBoxPulse { 
-            0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 
-            50% { border-width: 6px; box-shadow: 0 0 25px #FF3131; transform: scale(1.02); } 
-            100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 
+        
+        /* NEW: HIGH-AUTHORITY MODAL STYLES */
+        #arrival-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; background: rgba(0, 70, 180, 0.96); backdrop-filter: blur(20px);
+            color: white; padding: 25px; border-radius: 15px; border: 2px solid #fff;
+            z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(0, 110, 255, 0.5);
+            pointer-events: auto !important;
         }
+        .transport-btn {
+            display: block; background: #00ffff; color: #000; font-weight: 900;
+            padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0;
+            font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none;
+        }
+        #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
+        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
+        .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
+
+        @keyframes alertBoxPulse { 0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 50% { border-width: 6px; box-shadow: 0 0 25px #FF3131; transform: scale(1.02); } 100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .ticker-wrap {
-            position: absolute; bottom: 0; width: 100%; height: 50px; 
-            background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; 
-            display: flex; align-items: center; overflow: hidden;
-        }
+        .ticker-wrap { position: absolute; bottom: 0; width: 100%; height: 50px; background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
     </style>
 </head>
 <body>
@@ -34,13 +45,41 @@
             <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
             <div id="clock">TIME: --:--:--</div>
         </div>
+
+        <div id="arrival-modal">
+            <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">VESSEL DATA PENDING</h2>
+            <div style="margin: 15px 0;">
+                <input type="text" id="vessel-query" placeholder="OPTIONAL: MANUAL VOYAGE #" 
+                       oninput="if(this.value.length >= 4) fetchVesselData()"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #00ffff; background: #000; color: #00ffff; font-weight: 900; text-align: center; text-transform: uppercase; outline: none; box-sizing: border-box;">
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
+                <p id="dock-info" style="margin: 0; font-weight: 900; font-size: 1.8rem;">PIER LOGISTICS</p>
+                <p id="port-status" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
+                    SYSTEM IS SCANNING. DOCK AND PIER DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.
+                </p>
+            </div>
+            <button onclick="location.href='index.html'" class="transport-btn">Switch to Air Gate</button>
+            <button onclick="document.getElementById('arrival-modal').style.display='none'" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold;">Dismiss</button>
+        </div>
+
+        <div id="transport-menu">
+            <a href="index.html" class="icon-btn">✈️</a>
+            <a href="sea.html" class="icon-btn active">🚢</a>
+            <a href="rail.html" class="icon-btn">🚆</a>
+            <a href="subway.html" class="icon-btn">🚇</a>
+            <a href="car.html" class="icon-btn">🚗</a>
+        </div>
+
         <div class="ticker-wrap">
             <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 12s linear infinite;">
                 MARITIME HUB ACTIVE | HK FERRY PIER 7 | CANNES CRUISE TERM | SCANNING DOCKS
             </div>
         </div>
     </div>
+
 <script>
+    // PRESERVED ENGINE LOGIC
     const canvas = document.getElementById('engine');
     const ctx = canvas.getContext('2d');
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -73,12 +112,9 @@
         const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
         const hb = document.getElementById('header-box');
         const clk = document.getElementById('clock');
-        if (hasFinalCall) {
-            hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out';
-            hb.style.borderColor = '#FF3131'; clk.style.color = '#FF3131';
-        } else {
-            hb.style.animation = 'none'; hb.style.borderColor = '#FFD700'; clk.style.color = '#FFD700';
-        }
+        if (hasFinalCall) { hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out'; hb.style.borderColor = '#FF3131'; clk.style.color = '#FF3131'; } 
+        else { hb.style.animation = 'none'; hb.style.borderColor = '#FFD700'; clk.style.color = '#FFD700'; }
+        
         gates.forEach((g) => {
             const gx = canvas.width * g.pos; const gy = canvas.height * 0.68; 
             let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
@@ -101,7 +137,27 @@
         requestAnimationFrame(draw);
     }
     draw();
+
+    // NEW: MARITIME MISSION BRAIN
+    async function fetchVesselData() {
+        const inputVal = document.getElementById('vessel-query')?.value;
+        const VOYAGE_ID = inputVal ? inputVal.trim().toUpperCase() : 'AUTO_DETECT';
+        document.getElementById('mission-status').innerText = `IDENTIFYING ${VOYAGE_ID}...`;
+        
+        setTimeout(() => {
+            if(VOYAGE_ID !== 'AUTO_DETECT') {
+                document.getElementById('mission-status').innerText = "VOYAGE IDENTIFIED";
+                document.getElementById('dock-info').innerText = "DOCK B / PIER 7";
+                document.getElementById('port-status').innerText = "REAL-TIME LOGISTICS SECURED";
+            } else {
+                document.getElementById('mission-status').innerText = "MISSION DATA PENDING";
+                document.getElementById('arrival-modal').style.display = 'block';
+            }
+        }, 1500);
+    }
+
     setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
+    window.addEventListener('load', () => { setTimeout(fetchVesselData, 1000); });
 </script>
 </body>
 </html>
