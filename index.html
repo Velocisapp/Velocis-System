@@ -71,15 +71,15 @@
 
 #travel-guides { 
     position: fixed; 
-    bottom: 115px; /* Pulls it up so you can see the Marketplace scroll */
+    bottom: 125px; /* Pulls it up so you can see the Marketplace scroll */
     left: 50%; 
     transform: translateX(-50%); 
     width: 92%; 
-    height: 230px; /* Forces a fixed height so it doesn't push downward */
-    max-height: 230px; 
+    height: 210px; /* Forces a fixed height so it doesn't push downward */
+    max-height: 210px; 
     overflow-y: scroll; 
     background: rgba(0, 0, 0, 0.9); 
-    z-index: 5000;
+    z-index: 1000;
 }
         #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
         #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
@@ -212,7 +212,7 @@ function openTransportMarket() {
     }
 }
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
-        function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
+        function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '2'); perspective(PI/3.0, width/height, 0.1, 5000); }
         function draw() { 
     background(0); 
     if (!earthImg) return; 
@@ -220,11 +220,11 @@ function openTransportMarket() {
     pointLight(255, 255, 255, 600, 200, 1000); 
     push(); 
     // This pulls the globe back from the "downward" vanished state
-    translate(0, -150, 0); 
+    translate(0, -175, 0); 
     rotateY(frameCount * 0.005); 
     noStroke(); 
     texture(earthImg); 
-    sphere(110); 
+    sphere(105); 
     pop(); 
 }
         
