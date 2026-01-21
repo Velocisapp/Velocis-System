@@ -69,13 +69,18 @@
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
 
-        #travel-guides { 
-            position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); 
-            width: 92%; height: 210px; max-height: 210px; overflow-y: scroll; 
-            -webkit-overflow-scrolling: touch; background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(12px); color: #fff; padding: 15px; border-radius: 12px; 
-            border: 1px solid rgba(0, 212, 255, 0.4); z-index: 2000; text-align: center;
-        }
+#travel-guides { 
+    position: fixed; 
+    bottom: 115px; /* Pulls it up so you can see the Marketplace scroll */
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 92%; 
+    height: 230px; /* Forces a fixed height so it doesn't push downward */
+    max-height: 230px; 
+    overflow-y: scroll; 
+    background: rgba(0, 0, 0, 0.9); 
+    z-index: 5000;
+}
         #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
         #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
 
@@ -196,10 +201,32 @@
     <script>
         let earthImg;
         let arrivalCityTime = "";
-
+function openTransportMarket() { 
+    const market = document.getElementById('ground-transport-market');
+    const container = document.getElementById('travel-guides');
+    if (market && container) {
+        container.scrollTo({
+            top: market.offsetTop - container.offsetTop,
+            behavior: 'smooth'
+        });
+    }
+}
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
-        function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
+        function draw() { 
+    background(0); 
+    if (!earthImg) return; 
+    ambientLight(210); 
+    pointLight(255, 255, 255, 600, 200, 1000); 
+    push(); 
+    // This pulls the globe back from the "downward" vanished state
+    translate(0, -150, 0); 
+    rotateY(frameCount * 0.005); 
+    noStroke(); 
+    texture(earthImg); 
+    sphere(110); 
+    pop(); 
+}
         
         function updateTicker() {
             const now = new Date();
