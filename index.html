@@ -205,16 +205,16 @@ body {
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
 function draw() { 
-    clear(); // This lets the 3D globe sit on top of the CSS black background
+    background(0); // Restore black background to see if size was the only issue
     if (!earthImg) return; 
     ambientLight(210); 
     pointLight(255, 255, 255, 600, 200, 1000); 
     push(); 
-    translate(0, -100, 0); 
+    translate(0, -150, 0); // MOVED UP: Changed -100 to -150 to pull it away from the Hub
     rotateY(frameCount * 0.005); 
     noStroke(); 
     texture(earthImg); 
-    sphere(100); 
+    sphere(80); // RESIZED: Changed 100 to 80 to make the globe smaller
     pop(); 
 }
         
