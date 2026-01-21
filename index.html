@@ -139,13 +139,20 @@
     </div>
 
     <section id="travel-guides">
-        <div id="cta-status-banner"><span>READY TO FIND YOUR LUGGAGE ON ARRIVAL</span><div class="pulse-icon"></div></div>
-        
-        <p style="margin: 0 0 10px 0;">
-            <button onclick="fetchFlightData()" style="background: none; border: none; color: #00ffff; font-size: 9px; font-weight: 900; text-decoration: underline; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
-                RE-SCAN ARRIVAL STATUS
-            </button>
-        </p>
+       <div id="live-mission-feed" style="background: rgba(255, 91, 0, 0.95); color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span id="hub-mission-status" style="font-weight: 900; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;">SCANNING FOR LIVE DATA...</span>
+                <div style="width: 8px; height: 8px; background: #fff; border-radius: 50%;"></div>
+            </div>
+            <div id="hub-logistics-data" style="display: flex; justify-content: space-around; font-size: 16px; font-weight: 900;">
+                <span id="hub-carousel">CAROUSEL: --</span>
+                <span id="hub-terminal">TERM: --</span>
+            </div>
+        </div>
+
+        <button onclick="fetchFlightData()" style="width: 100%; background: #00ffff; color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: 900; font-size: 11px; margin-bottom: 15px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+            Manual Mission Re-Scan
+        </button>
 
         <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3); max-height: 80px; overflow-y: auto;">
             <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE</h3>
@@ -215,25 +222,27 @@
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`);
                 const result = await response.json();
                 
-                if (result.data && result.data.length > 0) {
+               if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
                     const carousel = flight.arrival.baggage || "WAITING..."; 
                     const airline = flight.airline.name.toUpperCase();
                     const terminal = flight.arrival.terminal || "1"; 
                     arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
                     
-                    document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
-                    document.getElementById('mission-status').innerText = `${airline} DETECTED`;
-                    document.getElementById('terminal-id').innerText = `ARRIVAL TERMINAL: ${terminal}`;
+                    // UPDATE THE HUB DIRECTLY (NO POPUP)
+                    document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carousel}`;
+                    document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`;
+                }
                 } else {
                     throw new Error("No live data found");
                 }
-                initHandshake(); 
+                
             } catch (error) {
                 document.getElementById('mission-status').innerText = "MISSION DATA PENDING";
                 document.getElementById('carousel-number').innerText = "LOGISTICS PORTAL";
                 document.getElementById('terminal-id').innerText = "SYSTEM IS SCANNING. CAROUSEL DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.";
-                initHandshake();
+                
             }
         }
 
@@ -245,7 +254,7 @@
             document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none';
         }
 
-        window.addEventListener('load', () => { setTimeout(fetchFlightData, 3000); });
+       
     </script>
 </body>
 </html>
