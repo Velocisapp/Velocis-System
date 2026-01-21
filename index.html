@@ -12,12 +12,7 @@
     <title>Velocis™ High-Authority Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
     <style>
-body {
-    margin: 0;
-    background-color: #000 !important; /* This creates the black void safely */
-    overflow: hidden;
-    font-family: sans-serif;
-}
+        body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
         
         #status-ticker {
             position: fixed; top: 0; width: 100%; background: rgba(0, 255, 255, 0.15);
@@ -143,23 +138,23 @@ body {
         <button onclick="toggleInstallGuide(true)" style="background: white; color: black; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px;">Install VELOCIS (Free)</button>
     </div>
 
-<section id="travel-guides">
-    <div id="live-mission-feed" style="background: rgba(255, 91, 0, 0.85); color: #fff; padding: 6px 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.4); position: relative; z-index: 10;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-            <span id="hub-mission-status" style="font-weight: 900; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;">SCANNING...</span>
-            <div style="width: 6px; height: 6px; background: #fff; border-radius: 50%;"></div>
+    <section id="travel-guides">
+       <div id="live-mission-feed" style="background: rgba(255, 91, 0, 0.9); color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span id="hub-mission-status" style="font-weight: 900; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">SCANNING FOR LIVE DATA...</span>
+                <div class="pulse-icon" style="background: #fff; width: 10px; height: 10px; border-radius: 50%;"></div>
+            </div>
+            <div id="hub-logistics-data" style="display: flex; justify-content: space-around; font-size: 14px; font-weight: 900;">
+                <span id="hub-carousel">CAROUSEL: --</span>
+                <span id="hub-terminal">TERM: --</span>
+            </div>
         </div>
-        <div style="display: flex; justify-content: space-around; font-size: 13px; font-weight: 900;">
-            <span id="hub-carousel">CAROUSEL: --</span>
-            <span id="hub-terminal">TERM: --</span>
-        </div>
-    </div>
 
-<button onclick="fetchFlightData()" style="width: 100%; background: #00ffff; color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: 900; font-size: 10px; margin-bottom: 6px; cursor: pointer; text-transform: uppercase;">
-    Manual Mission Re-Scan
-</button>
+        <button onclick="fetchFlightData()" style="width: 100%; background: #00ffff; color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: 900; font-size: 11px; margin-bottom: 15px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+            Manual Mission Re-Scan
+        </button>
 
-        <div style="padding-top: 0px; padding-bottom: 5px; border-bottom: 1px solid rgba(0, 212, 255, 0.3); max-height: 55px; overflow-y: auto;">
+        <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.3); max-height: 80px; overflow-y: auto;">
             <h3 style="color: #00d4ff; font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">HUB INTELLIGENCE</h3>
             <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>PARIS (107):</strong> RER B standard from CDG.</p>
             <p style="margin: 8px 0; line-height: 1.3; font-size: 12px; color: #fff;"><strong>HONG KONG (2):</strong> Octopus Card essential for MTR.</p>
@@ -204,19 +199,7 @@ body {
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
-function draw() { 
-    background(0); // Restore black background to see if size was the only issue
-    if (!earthImg) return; 
-    ambientLight(210); 
-    pointLight(255, 255, 255, 600, 200, 1000); 
-    push(); 
-    translate(0, -150, 0); // MOVED UP: Changed -100 to -150 to pull it away from the Hub
-    rotateY(frameCount * 0.005); 
-    noStroke(); 
-    texture(earthImg); 
-    sphere(80); // RESIZED: Changed 100 to 80 to make the globe smaller
-    pop(); 
-}
+        function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
         
         function updateTicker() {
             const now = new Date();
@@ -239,19 +222,16 @@ function draw() {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`);
                 const result = await response.json();
                 
-if (result.data && result.data.length > 0) {
-    const flight = result.data[0];
-    const carousel = flight.arrival.baggage || "TBD"; 
-    const airline = flight.airline.name.toUpperCase();
-    const terminal = flight.arrival.terminal || "1"; 
-    
-    // UPDATES THE ORANGE BOX INSIDE THE HUB
-    document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
-    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carousel}`;
-    document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`;
-} else {
-    document.getElementById('hub-mission-status').innerText = "NO ACTIVE MISSION";
-}
+                if (result.data && result.data.length > 0) {
+                    const flight = result.data[0];
+                    const carousel = flight.arrival.baggage || "WAITING..."; 
+                    const airline = flight.airline.name.toUpperCase();
+                    const terminal = flight.arrival.terminal || "1"; 
+                    arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
+                    
+                    document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
+                    document.getElementById('mission-status').innerText = `${airline} DETECTED`;
+                    document.getElementById('terminal-id').innerText = `ARRIVAL TERMINAL: ${terminal}`;
                 } else {
                     throw new Error("No live data found");
                 }
@@ -272,6 +252,7 @@ if (result.data && result.data.length > 0) {
             document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none';
         }
 
+        window.addEventListener('load', () => { setTimeout(fetchFlightData, 3000); });
     </script>
 </body>
 </html>
