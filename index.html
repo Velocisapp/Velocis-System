@@ -245,7 +245,10 @@
             }
         }
 
-        function initHandshake() { document.getElementById('arrival-modal').style.display = 'block'; }
+        function initHandshake() {
+    document.getElementById('arrival-modal').style.display = 'block';
+    fetchFlightData();
+}
         function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
         function openTransportMarket() { closeArrival(); document.getElementById('travel-guides').scrollTop = document.getElementById('ground-transport-market').offsetTop; }
         
