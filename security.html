@@ -37,7 +37,7 @@
             <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
             <div id="clock">TIME: --:--:--</div>
         </div>
-<div style="background: rgba(20, 10, 0, 0.98); border: 2px solid #ff5b00; border-radius: 15px; margin: 155px auto 20px auto; width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 30px rgba(255, 91, 0, 0.4); position: relative; z-index: 999999; font-family: 'Courier New', monospace;">
+<div id="mission-popup" style="display: none; background: rgba(20, 10, 0, 0.98); border: 2px solid #ff5b00; border-radius: 15px; margin: 155px auto 20px auto; width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 30px rgba(255, 91, 0, 0.4); position: relative; z-index: 999999; font-family: 'Courier New', monospace;">
     
     <h2 style="color: #ffffff; font-size: 20px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">
         MISSION: <span id="hub-mission-status" style="color: #ff5b00;">SCANNING...</span>
@@ -58,10 +58,6 @@
             <span id="hub-terminal" style="color: #ff5b00; font-weight: bold; font-size: 13px;">TERM: --</span>
         </div>
     </div>
-
-    <button onclick="fetchFlightData()" style="background: #ff5b00; color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; text-transform: uppercase; cursor: pointer; font-size: 13px; margin-bottom: 15px;">
-        MANUAL MISSION RE-SCAN
-    </button>
 
     <div style="margin-top: 5px;">
         <a href="index.html" style="color: #ffffff; text-decoration: underline; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">DISMISS</a>
@@ -155,6 +151,20 @@
     }
     draw();
     setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
+// This runs the moment the Security Hub is opened
+window.onload = function() {
+    console.log("Security Scan Initiated...");
+    
+    // Wait 3 seconds (3000 milliseconds) then show the window
+    setTimeout(function() {
+        const popup = document.getElementById('mission-popup');
+        if(popup) {
+            popup.style.display = 'block';
+            // Optional: trigger the data fill here
+            if(typeof fetchFlightData === 'function') fetchFlightData();
+        }
+    }, 3000);
+};
 </script>
 </body>
 </html>
