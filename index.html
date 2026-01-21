@@ -139,7 +139,7 @@
     </div>
 
 <section id="travel-guides">
-    <div style="background: rgba(255, 91, 0, 0.95); color: #fff; padding: 10px; border-radius: 8px; margin: 10px auto; border: 2px solid #fff; width: 94%; text-align: center; box-shadow: 0 0 15px rgba(255, 91, 0, 0.6);">
+    <div style="background: rgba(255, 91, 0, 0.95); color: #fff; padding: 10px; border-radius: 8px; margin: 10px auto; border: 2px solid #fff; width: 92%; text-align: center; box-shadow: 0 0 15px rgba(255, 91, 0, 0.6);">
         <div style="font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">
             MISSION: <span id="hub-mission-status" style="text-shadow: 1px 1px 2px #000;">STANDBY</span>
         </div>
@@ -149,8 +149,7 @@
         </div>
     </div>
 
-
-    <button onclick="fetchFlightData()" style="width: 100%; background: #00ffff; color: #000; ...">
+    <button onclick="fetchFlightData()" style="width: 94%; background: #00ffff; color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: 900; font-size: 11px; margin: 5px auto 15px auto; display: block; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
         Manual Mission Re-Scan
     </button>
        
@@ -260,13 +259,13 @@
 }
 
 function initHandshake() {
-    // 1. Open the Security Hub
+    // 1. Force the Security Hub to appear
     document.getElementById('travel-guides').style.display = 'block';
     
-    // 2. Hide the old "Main Page" orange popup so it doesn't freeze the screen
+    // 2. Ensure the "Main Page" popup stays hidden
     document.getElementById('arrival-modal').style.display = 'none';
     
-    // 3. Start the scan for the Hub's internal orange box
+    // 3. Immediately run the scan to fill the orange window
     fetchFlightData();
 }
 
