@@ -223,11 +223,18 @@
                 const result = await response.json();
                 
                 if (result.data && result.data.length > 0) {
-                    const flight = result.data[0];
-                    const carousel = flight.arrival.baggage || "WAITING..."; 
-                    const airline = flight.airline.name.toUpperCase();
-                    const terminal = flight.arrival.terminal || "1"; 
-                    arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
+        const flight = result.data[0];
+        const carousel = flight.arrival.baggage || "WAITING...";
+        const terminal = flight.arrival.terminal || "1";
+        const airline = flight.airline.name.toUpperCase();
+
+        // THIS CAPTURES THE DATA INSIDE THE HUB (No Popup Needed)
+        document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
+        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carousel}`;
+        document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`;
+        
+        arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
+    }
                     
                     document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
                     document.getElementById('mission-status').innerText = `${airline} DETECTED`;
@@ -252,7 +259,6 @@
             document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none';
         }
 
-        window.addEventListener('load', () => { setTimeout(fetchFlightData, 3000); });
     </script>
 </body>
 </html>
