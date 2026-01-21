@@ -138,17 +138,17 @@
         <button onclick="toggleInstallGuide(true)" style="background: white; color: black; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px;">Install VELOCIS (Free)</button>
     </div>
 
-    <section id="travel-guides">
-<div id="live-mission-feed" style="background: rgba(255, 91, 0, 0.95); color: #fff; padding: 6px 10px; border-radius: 8px; margin-bottom: 6px; border: 1px solid #fff;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span id="hub-mission-status" style="font-weight: 900; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">SCANNING FOR LIVE DATA...</span>
-                <div class="pulse-icon" style="background: #fff; width: 10px; height: 10px; border-radius: 50%;"></div>
-            </div>
-            <div id="hub-logistics-data" style="display: flex; justify-content: space-around; font-size: 14px; font-weight: 900;">
-                <span id="hub-carousel">CAROUSEL: --</span>
-                <span id="hub-terminal">TERM: --</span>
-            </div>
+<section id="travel-guides">
+    <div id="live-mission-feed" style="background: rgba(255, 91, 0, 0.95); color: #fff; padding: 6px 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #fff; font-family: monospace;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+            <span id="hub-mission-status" style="font-weight: 900; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;">SCANNING...</span>
+            <div style="width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
         </div>
+        <div style="display: flex; justify-content: space-around; font-size: 13px; font-weight: 900;">
+            <span id="hub-carousel">CAROUSEL: --</span>
+            <span id="hub-terminal">TERM: --</span>
+        </div>
+    </div>
 
 <button onclick="fetchFlightData()" style="width: 100%; background: #00ffff; color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: 900; font-size: 10px; margin-bottom: 6px; cursor: pointer; text-transform: uppercase;">
     Manual Mission Re-Scan
@@ -222,16 +222,19 @@
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`);
                 const result = await response.json();
                 
-                if (result.data && result.data.length > 0) {
-                    const flight = result.data[0];
-                    const carousel = flight.arrival.baggage || "WAITING..."; 
-                    const airline = flight.airline.name.toUpperCase();
-                    const terminal = flight.arrival.terminal || "1"; 
-                    arrivalCityTime = flight.arrival.timezone || 'Europe/Paris';
-                    
-                    document.getElementById('carousel-number').innerText = `CAROUSEL ${carousel}`;
-                    document.getElementById('mission-status').innerText = `${airline} DETECTED`;
-                    document.getElementById('terminal-id').innerText = `ARRIVAL TERMINAL: ${terminal}`;
+if (result.data && result.data.length > 0) {
+    const flight = result.data[0];
+    const carousel = flight.arrival.baggage || "TBD"; 
+    const airline = flight.airline.name.toUpperCase();
+    const terminal = flight.arrival.terminal || "1"; 
+    
+    // UPDATES THE ORANGE BOX INSIDE THE HUB
+    document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
+    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carousel}`;
+    document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`;
+} else {
+    document.getElementById('hub-mission-status').innerText = "NO ACTIVE MISSION";
+}
                 } else {
                     throw new Error("No live data found");
                 }
