@@ -139,10 +139,10 @@
     </div>
 
 <section id="travel-guides">
-    <div id="live-mission-feed" style="background: rgba(255, 91, 0, 0.95); color: #fff; padding: 6px 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #fff; font-family: monospace;">
+    <div id="live-mission-feed" style="background: rgba(255, 91, 0, 0.85); color: #fff; padding: 6px 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.4); position: relative; z-index: 10;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
             <span id="hub-mission-status" style="font-weight: 900; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;">SCANNING...</span>
-            <div style="width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+            <div style="width: 6px; height: 6px; background: #fff; border-radius: 50%;"></div>
         </div>
         <div style="display: flex; justify-content: space-around; font-size: 13px; font-weight: 900;">
             <span id="hub-carousel">CAROUSEL: --</span>
@@ -199,7 +199,19 @@
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
-        function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
+      function draw() { 
+    clear(); // REPLACES background(0) to make the canvas transparent
+    if (!earthImg) return; 
+    ambientLight(210); 
+    pointLight(255, 255, 255, 600, 200, 1000); 
+    push(); 
+    translate(0, -100, 0); 
+    rotateY(frameCount * 0.005); 
+    noStroke(); 
+    texture(earthImg); 
+    sphere(100); 
+    pop(); 
+}
         
         function updateTicker() {
             const now = new Date();
