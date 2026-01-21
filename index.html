@@ -101,7 +101,8 @@
 
 <body style="margin: 0; background: #000; overflow: hidden;">
 
-    <div id="status-ticker">SYNCHRONIZING GLOBAL TIME...</div>
+   <div id="globe-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;"></div>
+<div id="status-ticker">SYNCHRONIZING GLOBAL TIME...</div>
 
     <div id="install-guide-overlay">
         <h2 style="color: #FFD700; letter-spacing: 5px; margin-bottom: 30px;">INSTALL VELOCIS™</h2>
@@ -198,8 +199,11 @@
         let arrivalCityTime = "";
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
-       function setup() { 
+function setup() { 
     let canvas = createCanvas(windowWidth, windowHeight, WEBGL); 
+    canvas.parent('globe-container'); // DIRECTS DRAWING TO THE NEW CONTAINER
+    canvas.style('display', 'block');
+}
     
     // ATOMIC FIX: Force alpha channel and reset renderer depth
     setAttributes('alpha', true); 
