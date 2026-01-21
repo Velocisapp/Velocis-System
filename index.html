@@ -198,7 +198,16 @@
         let arrivalCityTime = "";
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
-        function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '2'); perspective(PI/3.0, width/height, 0.1, 5000); }
+       function setup() { 
+    let canvas = createCanvas(windowWidth, windowHeight, WEBGL); 
+    
+    // ATOMIC FIX: Force alpha channel and reset renderer depth
+    setAttributes('alpha', true); 
+    
+    canvas.style('position', 'fixed'); 
+    canvas.style('top', '0'); 
+    canvas.style('z-index', '2'); // Sitting perfectly above the void
+}
         function draw() { 
     clear(); // REPLACES background(0) to allow the globe to pierce the black void
     if (!earthImg) return; 
