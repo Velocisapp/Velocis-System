@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VELOCIS™ Security Hub</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -15,6 +16,7 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
+        /* SUBWAY BLUEPRINT ANIMATIONS */
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         @keyframes alertBoxPulse { 
             0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
@@ -22,179 +24,128 @@
             100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
         }
 
-        .ticker-wrap {
-            position: absolute; bottom: 0; width: 100%; height: 50px; 
-            background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; 
-            display: flex; align-items: center; overflow: hidden;
-        }
+        /* SUBWAY BLUEPRINT MENU & TICKER */
+        #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
+        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
+        .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
+        
+        .ticker-wrap { position: fixed; bottom: 0; width: 100%; height: 50px; background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
     </style>
 </head>
 <body>
     <canvas id="engine"></canvas>
+    
     <div id="ui">
         <div id="header-box">
             <div id="brand-title">VELOCIS™ SECURITY HUB</div>
             <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
             <div id="clock">TIME: --:--:--</div>
         </div>
-<div id="mission-popup" style="display: none; background: rgba(20, 10, 0, 0.98); border: 2px solid #ff5b00; border-radius: 15px; margin: 155px auto 20px auto; width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 30px rgba(255, 91, 0, 0.4); position: relative; z-index: 999999; font-family: 'Courier New', monospace;">
-    
-    <h2 style="color: #ffffff; font-size: 20px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">
-        MISSION: <span id="hub-mission-status" style="color: #ff5b00;">SCANNING...</span>
-    </h2>
 
-    <div style="margin-bottom: 18px;">
-        <input type="text" id="manual-mission-input" placeholder="OPTIONAL: MANUAL MISSION #" 
-               style="width: 90%; background: #000; border: 1px solid #ff5b00; border-radius: 8px; color: #ff5b00; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 11px; outline: none; text-transform: uppercase;">
-    </div>
+        <div id="mission-popup" style="display: none; background: rgba(20, 10, 0, 0.98); border: 2px solid #ff5b00; border-radius: 15px; margin: 155px auto 20px auto; width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 30px rgba(255, 91, 0, 0.4); position: relative; z-index: 9999; font-family: 'Courier New', monospace; pointer-events: auto;">
+            <h2 style="color: #ffffff; font-size: 20px; margin: 0 0 15px 0; text-transform: uppercase;">MISSION: <span id="hub-mission-status" style="color: #ff5b00;">SCANNING...</span></h2>
+            <div style="margin-bottom: 18px;">
+                <input type="text" id="manual-mission-input" placeholder="OPTIONAL: MANUAL MISSION #" style="width: 90%; background: #000; border: 1px solid #ff5b00; border-radius: 8px; color: #ff5b00; padding: 12px; text-align: center; font-family: 'Courier New', monospace; outline: none; text-transform: uppercase;">
+            </div>
+            <div style="background: rgba(40, 20, 0, 0.6); border-radius: 10px; padding: 15px; border: 1px solid rgba(255, 91, 0, 0.3); margin-bottom: 15px;">
+                <h3 style="color: #ff5b00; font-size: 16px; margin: 0 0 8px 0;">FLIGHT LOGISTICS</h3>
+                <p style="color: #ffffff; font-size: 10px; text-transform: uppercase; margin-bottom: 12px;">SYSTEM IS SCANNING. CAROUSEL AND TERMINAL DATA WILL AUTOMATICALLY POPULATE.</p>
+                <div style="display: flex; justify-content: space-around; border-top: 1px solid rgba(255, 91, 0, 0.5); padding-top: 12px;">
+                    <span id="hub-carousel" style="color: #ff5b00; font-weight: bold; font-size: 13px;">CAROUSEL: --</span>
+                    <span id="hub-terminal" style="color: #ff5b00; font-weight: bold; font-size: 13px;">TERM: --</span>
+                </div>
+            </div>
+            <span onclick="document.getElementById('mission-popup').style.display='none'" style="color: #ffffff; text-decoration: underline; font-size: 14px; font-weight: 900; text-transform: uppercase; cursor: pointer;">DISMISS</span>
+        </div>
 
-    <div style="background: rgba(40, 20, 0, 0.6); border-radius: 10px; padding: 15px; border: 1px solid rgba(255, 91, 0, 0.3); margin-bottom: 15px;">
-        <h3 style="color: #ff5b00; font-size: 16px; margin: 0 0 8px 0; text-transform: uppercase;">FLIGHT LOGISTICS</h3>
-        <p style="color: #ffffff; font-size: 10px; line-height: 1.4; text-transform: uppercase; margin-bottom: 12px;">
-            SYSTEM IS SCANNING. CAROUSEL AND TERMINAL DATA WILL AUTOMATICALLY POPULATE.
-        </p>
-        <div style="display: flex; justify-content: space-around; border-top: 1px solid rgba(255, 91, 0, 0.5); padding-top: 12px;">
-            <span id="hub-carousel" style="color: #ff5b00; font-weight: bold; font-size: 13px;">CAROUSEL: --</span>
-            <span id="hub-terminal" style="color: #ff5b00; font-weight: bold; font-size: 13px;">TERM: --</span>
+        <div id="transport-menu">
+            <a href="security.html" class="icon-btn active">✈️</a>
+            <a href="sea.html" class="icon-btn">🚢</a>
+            <a href="rail.html" class="icon-btn">🚆</a>
+            <a href="metro.html" class="icon-btn">🚇</a>
+            <a href="port.html" class="icon-btn">🚗</a>
+        </div>
+
+        <div class="ticker-wrap">
+            <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite;">
+                AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...
+            </div>
         </div>
     </div>
-<div style="margin-top: 15px; position: relative; z-index: 9999999 !important;">
-    <span onclick="document.getElementById('mission-popup').style.display='none'" 
-          style="color: #ffffff; text-decoration: underline; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; display: inline-block; padding: 15px; cursor: pointer; pointer-events: auto !important;">
-        DISMISS
-    </span>
-</div>
-<div style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 18px; width: 90%; z-index: 10000;">
-    <a href="security.html"><img src="air-icon.png" style="width: 48px; border: 2px solid #ff5b00; border-radius: 50%; padding: 5px; background: rgba(0,0,0,0.5);"></a>
-    <a href="sea.html"><img src="sea-icon.png" style="width: 48px; opacity: 0.6;"></a>
-    <a href="rail.html"><img src="rail-icon.png" style="width: 48px; opacity: 0.6;"></a>
-    <a href="metro.html"><img src="metro-icon.png" style="width: 48px; opacity: 0.6;"></a>
-    <a href="port.html"><img src="port-icon.png" style="width: 48px; opacity: 0.6;"></a>
-</div>
 
-<div class="ticker-wrap" style="position: fixed; bottom: 0; width: 100%; height: 55px; background: rgba(20, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001;">
-    <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite; font-family: 'Courier New', monospace; padding-left: 100%;">
-        AIR GATE TERMINAL 3 | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...
-    </div>
-</div>
-</div>
+    <script>
+        const canvas = document.getElementById('engine');
+        const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
 
-<script>
-    const canvas = document.getElementById('engine');
-    const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize); resize();
+        const gates = [
+            { id: "B12", pos: 0.18, status: "BOARDING" }, 
+            { id: "B14", pos: 0.39, status: "BOARDING" },
+            { id: "A05", pos: 0.61, status: "ON TIME" }, 
+            { id: "A07", pos: 0.83, status: "FINAL CALL" }
+        ];
 
-    const gates = [
-        { id: "B12", pos: 0.18, status: "BOARDING" }, 
-        { id: "B14", pos: 0.39, status: "BOARDING" },
-        { id: "A05", pos: 0.61, status: "ON TIME" }, 
-        { id: "A07", pos: 0.83, status: "FINAL CALL" }
-    ];
+        const dots = Array.from({ length: 35 }, () => ({
+            x: Math.random() * canvas.width, y: canvas.height + 20,
+            speed: 0.4 + Math.random() * 0.8, 
+            targetGate: Math.floor(Math.random() * gates.length)
+        }));
 
-    const dots = Array.from({ length: 35 }, () => ({
-        x: Math.random() * canvas.width, y: canvas.height + 20,
-        speed: 0.4 + Math.random() * 0.8, 
-        targetGate: Math.floor(Math.random() * gates.length)
-    }));
-
-    // RESTORED: Original Sleek Arrow with Palpitation Math
-    function drawSleekArrow(x, y, color, dark) {
-        ctx.save(); ctx.translate(x, y);
-        const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
-        ctx.shadowBlur = 10 + pulse; 
-        ctx.shadowColor = color;
-        
-        ctx.fillStyle = dark; 
-        ctx.beginPath();
-        ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-        ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); 
-        ctx.lineTo(-17, 7); ctx.fill();
-
-        let faceGrd = ctx.createLinearGradient(0, -40, 0, 50);
-        faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
-        ctx.fillStyle = faceGrd; 
-        ctx.beginPath();
-        ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-        ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); 
-        ctx.lineTo(-17, 7); ctx.fill();
-        ctx.restore();
-    }
-
-    function draw() {
-        ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
-        const hb = document.getElementById('header-box');
-        if (hasFinalCall) {
-            hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out';
-            hb.style.borderColor = '#FF3131';
+        function drawSleekArrow(x, y, color, dark) {
+            ctx.save(); ctx.translate(x, y);
+            const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
+            ctx.shadowBlur = 10 + pulse; ctx.shadowColor = color;
+            ctx.fillStyle = dark; ctx.beginPath();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
+            ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); 
+            ctx.lineTo(-17, 7); ctx.fill();
+            let faceGrd = ctx.createLinearGradient(0, -40, 0, 50);
+            faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
+            ctx.fillStyle = faceGrd; ctx.beginPath();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
+            ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); 
+            ctx.lineTo(-17, 7); ctx.fill();
+            ctx.restore();
         }
 
-        gates.forEach((g) => {
-            const gx = canvas.width * g.pos; 
-            // Moved the base height (gy) up to 65% to make room for arrows
-            const gy = canvas.height * 0.65; 
-            let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
-            let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
+        function draw() {
+            ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
+            if (hasFinalCall) document.getElementById('header-box').style.animation = 'alertBoxPulse 1s infinite ease-in-out';
             
-            // Pulsating Hub Beams
-            const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
-            pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.35)'); pGrd.addColorStop(1, 'transparent');
-            ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
+            gates.forEach((g) => {
+                const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
+                let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
+                let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
+                const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
+                pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.35)'); pGrd.addColorStop(1, 'transparent');
+                ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
+                drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
+                ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
+                ctx.fillText("GATE", gx, gy - 60);
+                ctx.fillStyle = color; ctx.font = '900 42px Courier New';
+                ctx.fillText(g.id, gx, gy - 20);
+                ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
+            });
 
-            // Re-anchored Original Arrow - Positioned lower than text
-            drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
-
-            // MOVED UP: Gate Data (Higher Y values mean lower on screen, so we subtract)
-            ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
-            ctx.fillText("GATE", gx, gy - 60); // Shifted up from original
-            ctx.fillStyle = color; ctx.font = '900 42px Courier New';
-            ctx.fillText(g.id, gx, gy - 20); // Shifted up from original
-            ctx.font = 'bold 15px monospace';
-            ctx.fillText(g.status, gx, gy + 15);
-        });
-
-        dots.forEach(d => {
-            const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.65;
-            d.x += (gx - d.x) * 0.015; d.y -= d.speed;
-            if (d.y < gy) d.y = canvas.height + 20;
-            ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
-        });
-        requestAnimationFrame(draw);
-    }
-    draw();
-    setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
-// This runs the moment the Security Hub is opened
-window.onload = function() {
-    console.log("Security Scan Initiated...");
-    
-    // Wait 3 seconds (3000 milliseconds) then show the window
-    setTimeout(function() {
-        const popup = document.getElementById('mission-popup');
-        if(popup) {
-            popup.style.display = 'block';
-            // Optional: trigger the data fill here
-            if(typeof fetchFlightData === 'function') fetchFlightData();
+            dots.forEach(d => {
+                const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.65;
+                d.x += (gx - d.x) * 0.015; d.y -= d.speed;
+                if (d.y < gy) d.y = canvas.height + 20;
+                ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
         }
-    }, 3000);
-};
-</script>
-<div id="permanent-footer" style="position: fixed; bottom: 0; left: 0; width: 100%; z-index: 9999999; pointer-events: none;">
-    
-  <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 12px; pointer-events: auto;">
-    <a href="security.html"><img src="air-gate-icon.png" style="width: 50px; height: 50px; border: 2px solid #00ffff; border-radius: 50%; background: rgba(0, 255, 255, 0.2); padding: 5px; box-shadow: 0 0 15px #00ffff;"></a>
-    <a href="sea.html"><img src="sea-gate-icon.png" style="width: 45px; height: 45px; opacity: 0.6;"></a>
-    <a href="rail.html"><img src="rail-gate-icon.png" style="width: 45px; height: 45px; opacity: 0.6;"></a>
-    <a href="metro.html"><img src="metro-gate-icon.png" style="width: 45px; height: 45px; opacity: 0.6;"></a>
-    <a href="port.html"><img src="port-gate-icon.png" style="width: 45px; height: 45px; opacity: 0.6;"></a>
-</div>
+        draw();
+        setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
 
-    <div class="ticker-wrap" style="width: 100%; height: 55px; background: rgba(20, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; pointer-events: auto;">
-        <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; font-family: 'Courier New', monospace; display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite;">
-            VELOCIS™ AIR GATE | SECURITY STATUS: ALPHA | GLOBAL MOBILITY COMMAND ACTIVE | SCANNING FLIGHT LOGISTICS...
-        </div>
-    </div>
-</div>
+        window.onload = function() {
+            setTimeout(function() {
+                const popup = document.getElementById('mission-popup');
+                if(popup) popup.style.display = 'block';
+            }, 3000);
+        };
+    </script>
 </body>
 </html>
