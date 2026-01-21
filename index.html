@@ -12,7 +12,12 @@
     <title>Velocis™ High-Authority Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
     <style>
-        body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
+body {
+    margin: 0;
+    background-color: #000 !important; /* This creates the black void safely */
+    overflow: hidden;
+    font-family: sans-serif;
+}
         
         #status-ticker {
             position: fixed; top: 0; width: 100%; background: rgba(0, 255, 255, 0.15);
@@ -199,8 +204,8 @@
 
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
-      function draw() { 
-    clear(); // REPLACES background(0) to make the canvas transparent
+function draw() { 
+    clear(); // This lets the 3D globe sit on top of the CSS black background
     if (!earthImg) return; 
     ambientLight(210); 
     pointLight(255, 255, 255, 600, 200, 1000); 
