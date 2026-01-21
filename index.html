@@ -256,9 +256,13 @@
 }
 
 function initHandshake() {
-    // ONLY open the Hub, NOT the old modal
+    // 1. Open the Security Hub (the view with the beams)
     document.getElementById('travel-guides').style.display = 'block';
+    
+    // 2. Hide the old modal that was causing the freeze
     document.getElementById('arrival-modal').style.display = 'none';
+    
+    // 3. Trigger the data scan immediately
     fetchFlightData();
 }
 
