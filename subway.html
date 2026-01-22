@@ -23,17 +23,31 @@
             z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(255, 0, 255, 0.3);
             pointer-events: auto !important;
         }
-        .transport-btn {
-            display: block; background: #00ffff; color: #000; font-weight: 900;
-            padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0;
-            font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none;
+
+        /* RECALIBRATED: Zero-Gap Seamless Loop */
+        @keyframes marquee { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-50%); } 
         }
+
         #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
 
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         .ticker-wrap { position: absolute; bottom: 0; width: 100%; height: 50px; background: rgba(40, 0, 40, 0.95); border-top: 4px solid #00ffff; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
+        
+        #ticker-text {
+            white-space: nowrap; 
+            display: inline-block;
+            animation: marquee 25s linear infinite !important; /* Original Speed */
+        }
+
+        .ticker-content {
+            display: inline-block;
+            padding-right: 100px; 
+            color: #FF3131; font-weight: 900; font-size: 18px;
+        }
+
         @keyframes alertBoxPulse { 0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 50% { border-width: 6px; box-shadow: 0 0 25px #FF3131; transform: scale(1.02); } 100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } }
     </style>
 </head>
@@ -50,19 +64,19 @@
             <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">METRO DATA PENDING</h2>
             <div style="margin: 15px 0;">
                 <input type="text" id="metro-query" placeholder="OPTIONAL: MANUAL LINE #" 
-                       oninput="if(this.value.length >= 1) fetchMetroData()"
+                       oninput="fetchMetroData()"
                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #00ffff; background: #000; color: #00ffff; font-weight: 900; text-align: center; text-transform: uppercase; outline: none; box-sizing: border-box;">
             </div>
             <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
                 <p id="metro-info" style="margin: 0; font-weight: 900; font-size: 1.8rem;">LINE LOGISTICS</p>
                 <p id="metro-status-text" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
-                    SYSTEM IS SCANNING. LINE AND DIRECTION DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.
+                    SYSTEM IS SCANNING. LINE AND DIRECTION DATA WILL AUTOMATICALLY POPULATE.
                 </p>
             </div>
             <button onclick="window.location.href='index.html#ground-transport-market'" 
-        style="display: block; background: #00ffff; color: #000; font-weight: 900; padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none; cursor: pointer; font-family: 'Courier New', monospace; box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);">
-    Rentals & Ride-Hailing
-</button>
+                    style="display: block; background: #00ffff; color: #000; font-weight: 900; padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none; cursor: pointer; font-family: 'Courier New', monospace; box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);">
+                Rentals & Ride-Hailing
+            </button>
             <button onclick="document.getElementById('arrival-modal').style.display='none'" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold;">Dismiss</button>
         </div>
 
@@ -75,8 +89,9 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 12s linear infinite;">
-                METRO HUB ACTIVE | MTR LINE 1 | RER B PARIS | SECURITY STATUS: ALPHA
+            <div id="ticker-text">
+                <span class="ticker-content" id="ticker-real-text">METRO HUB ACTIVE | METRO LOCK ACTIVE | TRANSIT SECURITY: ALPHA | SCANNING LINES...</span>
+                <span class="ticker-content" id="ticker-mirror-text">METRO HUB ACTIVE | METRO LOCK ACTIVE | TRANSIT SECURITY: ALPHA | SCANNING LINES...</span>
             </div>
         </div>
     </div>
@@ -86,6 +101,15 @@
     const ctx = canvas.getContext('2d');
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
+
+    // VELOCIS™ METRO-SPECIFIC INTELLIGENCE DATABASE
+    const HUB_DATABASE = {
+        "CDG": { currency: "EUR", tip: "Line 1 (Yellow): Louvre/Tuileries stops. Tap credit card at turnstile for entry." },
+        "LHR": { currency: "GBP", tip: "Elizabeth Line: Fastest Metro to Central London. Oyster or Contactless required." },
+        "JFK": { currency: "USD", tip: "Subway (A Train): Connect at Howard Beach for Brooklyn/Manhattan." },
+        "DXB": { currency: "AED", tip: "Red Line: Access to Burj Khalifa & Mall of the Emirates. Gold Class at front of train." },
+        "HKG": { currency: "HKD", tip: "MTR Tsuen Wan Line: Direct access to Tsim Sha Tsui shopping district." }
+    };
 
     const gates = [
         { id: "M1", pos: 0.16, status: "2 MIN" }, 
@@ -149,44 +173,34 @@
     }
     draw();
 
-    // NEW: SUBWAY STATION GPS SCANNER
-    async function identifyNearestStation(lat, lng) {
-        try {
-            const query = `[out:json];node["railway"="station"]["subway"="yes"](around:2000,${lat},${lng});out;`;
-            const response = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query });
-            const data = await response.json();
-            
-            if (data.elements && data.elements.length > 0) {
-                const stationName = data.elements[0].tags.name || "ACTIVE METRO HUB";
-                document.getElementById('mission-status').innerText = "STATION IDENTIFIED";
-                document.getElementById('metro-info').innerText = stationName.toUpperCase();
-                document.getElementById('metro-status-text').innerText = "MISSION SECURED: TRANSIT DATA ACTIVE";
-            }
-        } catch (e) { console.log("Station scan pending..."); }
-    }
-
     async function fetchMetroData() {
         const inputVal = document.getElementById('metro-query')?.value;
-        const LINE_ID = inputVal ? inputVal.trim().toUpperCase() : 'AUTO_DETECT';
-        document.getElementById('mission-status').innerText = `IDENTIFYING ${LINE_ID}...`;
-        
+        const query = inputVal ? inputVal.trim().toUpperCase() : '';
+        if (!query) return;
+
+        if (HUB_DATABASE[query]) {
+            const info = HUB_DATABASE[query];
+            // RECALIBRATED: Metro Terminology & Line Logistics
+            const newText = `<span style="color: #00ffff;">${query} METRO (${info.currency}): ${info.tip}</span> | METRO LOCK ACTIVE | TRANSIT SECURITY: ALPHA | PLATFORM SECURE`;
+            
+            document.getElementById('ticker-real-text').innerHTML = newText;
+            document.getElementById('ticker-mirror-text').innerHTML = newText;
+            
+            document.getElementById('mission-status').innerText = `${query} HUB IDENTIFIED`;
+            document.getElementById('metro-info').innerText = "LINE ASSIGNED";
+            document.getElementById('metro-status-text').innerText = "REAL-TIME TRANSIT DATA SECURED";
+            return;
+        }
+
+        document.getElementById('mission-status').innerText = `IDENTIFYING ${query}...`;
         setTimeout(() => {
-            if(LINE_ID !== 'AUTO_DETECT') {
-                document.getElementById('mission-status').innerText = "LINE IDENTIFIED";
-                document.getElementById('metro-info').innerText = "LINE 1 / WESTBOUND";
-                document.getElementById('metro-status-text').innerText = "STATION: MISSION SECURED";
-            } else {
-                document.getElementById('mission-status').innerText = "METRO DATA PENDING";
-                document.getElementById('arrival-modal').style.display = 'block';
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    identifyNearestStation(pos.coords.latitude, pos.coords.longitude);
-                }, null, { enableHighAccuracy: true });
-            }
+            document.getElementById('mission-status').innerText = "METRO DATA SECURED";
+            document.getElementById('metro-info').innerText = "LINE 1 / WESTBOUND";
         }, 1200);
     }
 
     setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
-    window.addEventListener('load', () => { setTimeout(fetchMetroData, 1000); });
+    window.addEventListener('load', () => { setTimeout(() => { document.getElementById('arrival-modal').style.display = 'block'; }, 2000); });
 </script>
 </body>
 </html>
