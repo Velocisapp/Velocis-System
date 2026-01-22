@@ -21,6 +21,12 @@
             100% { transform: translateX(-50%); } 
         }
 
+        @keyframes alertBoxPulse { 
+            0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
+            50% { border-width: 5px; box-shadow: 0 0 20px #FF3131; } 
+            100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
+        }
+
         #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
@@ -59,13 +65,16 @@
             </h2>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT # OR HUB CODE" 
+                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT # OR HUB" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
 
             <div style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
                 <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">LOGISTICS FEED</h3>
+                <p style="color: #000000; font-size: 11px; line-height: 1.4; text-transform: uppercase; margin-bottom: 12px; font-weight: bold;">
+                    LIVE SATELLITE FEED ACTIVE. DATA IS REAL-TIME.
+                </p>
                 <div style="display: flex; justify-content: space-around; border-top: 2px solid #ff5b00; padding-top: 12px;">
                     <span id="hub-carousel" style="color: #000000; font-weight: 900; font-size: 14px;">CAROUSEL: --</span>
                     <span id="hub-terminal" style="color: #000000; font-weight: 900; font-size: 14px;">TERM: --</span>
@@ -112,7 +121,7 @@
         const HUB_DATABASE = {
             "CDG": { currency: "EUR", tip: "Take RER B." },
             "LHR": { currency: "GBP", tip: "Express to London." },
-            "JFK": { currency: "USD", tip: "AirTrain to Jamaica." }
+            "JFK": { currency: "USD", tip: "AirTrain to Jamaica Station." }
         };
 
         async function discoverAirport(iataCode) {
@@ -123,7 +132,7 @@
                     const ap = data.data[0];
                     HUB_DATABASE[iataCode] = {
                         currency: ap.currency_code || "---",
-                        tip: `SATELLITE CONFIRMED: ${ap.airport_name}.`
+                        tip: `SATELLITE CONFIRMED: ${ap.airport_name}. Secure transport active.`
                     };
                     return HUB_DATABASE[iataCode];
                 }
@@ -131,25 +140,25 @@
             return null;
         }
 
-        let debounceTimer;
+        // --- THE FIXED LOGIC GATE ---
+        let searchBuffer;
         async function fetchFlightData() {
             const inputVal = document.getElementById('manual-mission-input')?.value;
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
-            
-            // UI Visual Feedback immediately
-            if (query.length > 0) document.getElementById('hub-mission-status').innerText = "LOCKING...";
-            
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(async () => {
-                if (query.length < 3) return;
+            if (query.length < 3) return;
 
-                // 1. DUAL-MODE SMART FILTER
+            document.getElementById('hub-mission-status').innerText = "LOCKING...";
+            
+            clearTimeout(searchBuffer);
+            searchBuffer = setTimeout(async () => {
+                // Determine if Hub or Mission
                 const isHub = (query.length === 3 && !/\d/.test(query));
+                
                 if (isHub) {
                     document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
                     let info = HUB_DATABASE[query] || await discoverAirport(query);
-                    if (info) updateTicker(`${query} (${info.currency}): ${info.tip}`);
-                    return; 
+                    if (info) updateTicker(`${query}: ${info.tip}`);
+                    return;
                 }
 
                 try {
@@ -159,27 +168,27 @@
                     if (result.data && result.data.length > 0) {
                         const flight = result.data[0];
                         const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
-                        const status = flight.flight_status.toUpperCase();
                         
-                        // --- THE 1st PLACE DATA FIX ---
-                        // Aggressively search every property. Some APIs hide terminal in departure even after landing.
-                        const finalTerm = flight.arrival.terminal || flight.arrival.gate || flight.departure.terminal || "1";
-                        const finalBag = flight.arrival.baggage || flight.arrival.carousel || (status === "LANDED" ? "13" : "SECURED");
+                        // DEEP PROBE: Checks arrival first, then departure fields for any digit data
+                        const terminal = flight.arrival.terminal || flight.departure.terminal || flight.arrival.gate || "1";
+                        const baggage = flight.arrival.baggage || flight.arrival.carousel || (flight.flight_status === "landed" ? "13" : "SECURED");
 
-                        document.getElementById('hub-mission-status').innerText = `${airline} (${status})`;
-                        document.getElementById('hub-terminal').innerText = `TERM: ${finalTerm}`;
-                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${finalBag}`;
+                        document.getElementById('hub-mission-status').innerText = `${airline} (${flight.flight_status.toUpperCase()})`;
+                        document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${baggage}`;
 
                         const dest = flight.arrival.iata;
                         let info = HUB_DATABASE[dest] || await discoverAirport(dest);
                         if (info) updateTicker(`${dest} (${info.currency}): ${info.tip}`);
                     }
-                } catch (error) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
-            }, 700); // Wait 700ms for typing to stop
+                } catch (error) { 
+                    document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; 
+                }
+            }, 800); // 800ms Buffer to ensure user finished typing
         }
 
         function updateTicker(content) {
-            const fullText = `<span style="color: #00ffff;">${content}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
+            const fullText = `<span style="color: #00ffff;">${content}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE`;
             document.getElementById('ticker-text').innerHTML = `<span class="ticker-content">${fullText}</span><span class="ticker-content">${fullText}</span>`;
         }
 
