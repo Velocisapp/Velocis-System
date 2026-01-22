@@ -16,7 +16,7 @@
         #brand-title { color: #FFD700; font-size: 14px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
 
-        /* HIGH-AUTHORITY RAIL MODAL: Teal/Steel theme for Rail Gate */
+        /* HIGH-AUTHORITY RAIL MODAL */
         #arrival-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: rgba(0, 80, 80, 0.96); backdrop-filter: blur(20px);
@@ -24,17 +24,31 @@
             z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
             pointer-events: auto !important;
         }
-        .transport-btn {
-            display: block; background: #00ffff; color: #000; font-weight: 900;
-            padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0;
-            font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none;
+
+        /* RECALIBRATED: Zero-Gap Seamless Loop */
+        @keyframes marquee { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-50%); } 
         }
+
         #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
 
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         .ticker-wrap { position: absolute; bottom: 0; width: 100%; height: 50px; background: rgba(60, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
+        
+        #ticker-text {
+            white-space: nowrap; 
+            display: inline-block;
+            animation: marquee 25s linear infinite !important; /* Original Speed */
+        }
+
+        .ticker-content {
+            display: inline-block;
+            padding-right: 100px; 
+            color: #FF3131; font-weight: 900; font-size: 18px;
+        }
+
         @keyframes alertBoxPulse { 0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } 50% { border-width: 6px; box-shadow: 0 0 25px #FF3131; transform: scale(1.02); } 100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; transform: scale(1); } }
     </style>
 </head>
@@ -51,19 +65,19 @@
             <h2 id="mission-status" style="margin: 0; text-transform: uppercase;">TRAIN DATA PENDING</h2>
             <div style="margin: 15px 0;">
                 <input type="text" id="rail-query" placeholder="OPTIONAL: MANUAL MISSION #" 
-                       oninput="if(this.value.length >= 3) fetchRailData()"
+                       oninput="fetchRailData()"
                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #00ffff; background: #000; color: #00ffff; font-weight: 900; text-align: center; text-transform: uppercase; outline: none; box-sizing: border-box;">
             </div>
             <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
                 <p id="platform-info" style="margin: 0; font-weight: 900; font-size: 1.8rem;">PLATFORM LOGISTICS</p>
                 <p id="track-status" style="margin: 5px 0 0 0; font-size: 0.9rem; color: #00ffff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
-                    SYSTEM IS SCANNING. TRACK AND PLATFORM DATA WILL AUTOMATICALLY POPULATE IN THIS WINDOW.
+                    SYSTEM IS SCANNING. TRACK AND PLATFORM DATA WILL AUTOMATICALLY POPULATE.
                 </p>
             </div>
-         <button onclick="window.location.href='index.html#ground-transport-market'" 
-        style="display: block; background: #00ffff; color: #000; font-weight: 900; padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none; cursor: pointer; font-family: 'Courier New', monospace; box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);">
-    Rentals & Ride-Hailing
-</button>
+            <button onclick="window.location.href='index.html#ground-transport-market'" 
+                    style="display: block; background: #00ffff; color: #000; font-weight: 900; padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; width: 100%; border: none; cursor: pointer; font-family: 'Courier New', monospace; box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);">
+                Rentals & Ride-Hailing
+            </button>
             <button onclick="document.getElementById('arrival-modal').style.display='none'" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold;">Dismiss</button>
         </div>
 
@@ -76,8 +90,9 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 12s linear infinite;">
-                HUB 107 | PARIS RER B ACTIVE | HUB 2 | HK MTR ACTIVE | SCANNING TRACKS
+            <div id="ticker-text">
+                <span class="ticker-content" id="ticker-real-text">RAIL HUB ACTIVE | TRACK LOCK ACTIVE | STATION SECURITY: ALPHA | SCANNING TRACKS...</span>
+                <span class="ticker-content" id="ticker-mirror-text">RAIL HUB ACTIVE | TRACK LOCK ACTIVE | STATION SECURITY: ALPHA | SCANNING TRACKS...</span>
             </div>
         </div>
     </div>
@@ -87,6 +102,15 @@
     const ctx = canvas.getContext('2d');
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
+
+    // VELOCIS™ RAIL-SPECIFIC INTELLIGENCE DATABASE
+    const HUB_DATABASE = {
+        "CDG": { currency: "EUR", tip: "Gare du Nord: Eurostar/Thalys platform 17-22. Easy access to RER Metro." },
+        "LHR": { currency: "GBP", tip: "St Pancras Int: Connection to Piccadilly Line & King's Cross National Rail." },
+        "JFK": { currency: "USD", tip: "Grand Central Terminal: Use the 42nd St exit for Metro-North & Shuttle to Times Sq." },
+        "DXB": { currency: "AED", tip: "Union Station: Major transfer point for Red & Green Metro lines." },
+        "HKG": { currency: "HKD", tip: "West Kowloon Station: High-speed link to mainland. Use Austin MTR for local travel." }
+    };
 
     const gates = [
         { id: "P1", pos: 0.16, status: "ON TIME" }, 
@@ -104,16 +128,12 @@
     function drawSleekArrow(x, y, color) {
         ctx.save(); ctx.translate(x, y);
         const pulse = Math.abs(Math.sin(Date.now() / 300)) * 30;
-        ctx.shadowBlur = 20 + pulse; 
-        ctx.shadowColor = color;
-        ctx.fillStyle = color; 
-        ctx.beginPath();
+        ctx.shadowBlur = 20 + pulse; ctx.shadowColor = color;
+        ctx.fillStyle = color; ctx.beginPath();
         ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); 
         ctx.lineTo(12, 5); ctx.lineTo(12, 40); ctx.lineTo(-12, 40); 
         ctx.lineTo(-12, 5); ctx.fill();
-        ctx.globalAlpha = 0.4;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath();
+        ctx.globalAlpha = 0.4; ctx.fillStyle = '#FFFFFF'; ctx.beginPath();
         ctx.moveTo(-25, 5); ctx.lineTo(0, -35); ctx.lineTo(25, 5); ctx.fill();
         ctx.restore();
     }
@@ -123,13 +143,8 @@
         const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
         const hb = document.getElementById('header-box');
         const clk = document.getElementById('clock');
-
-        if (hasFinalCall) {
-            hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out';
-            hb.style.borderColor = '#FF3131'; clk.style.color = '#FF3131';
-        } else {
-            hb.style.animation = 'none'; hb.style.borderColor = '#FFD700'; clk.style.color = '#FFD700';
-        }
+        if (hasFinalCall) { hb.style.animation = 'alertBoxPulse 1s infinite ease-in-out'; hb.style.borderColor = '#FF3131'; clk.style.color = '#FF3131'; } 
+        else { hb.style.animation = 'none'; hb.style.borderColor = '#FFD700'; clk.style.color = '#FFD700'; }
 
         gates.forEach((g) => {
             const gx = canvas.width * g.pos; const gy = canvas.height * 0.68; 
@@ -144,7 +159,6 @@
             ctx.fillText(g.id, gx, gy - 30);
             ctx.font = 'bold 12px monospace'; ctx.fillText(g.status, gx, gy - 5);
         });
-
         dots.forEach(d => {
             const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.68;
             d.x += (gx - d.x) * 0.015; d.y -= d.speed;
@@ -155,26 +169,34 @@
     }
     draw();
 
-    // RAIL MISSION LOGIC
     async function fetchRailData() {
         const inputVal = document.getElementById('rail-query')?.value;
-        const TRAIN_ID = inputVal ? inputVal.trim().toUpperCase() : 'AUTO_DETECT';
-        document.getElementById('mission-status').innerText = `IDENTIFYING ${TRAIN_ID}...`;
-        
+        const query = inputVal ? inputVal.trim().toUpperCase() : '';
+        if (!query) return;
+
+        if (HUB_DATABASE[query]) {
+            const info = HUB_DATABASE[query];
+            // RECALIBRATED: Rail Terminology & Station Logistics
+            const newText = `<span style="color: #00ffff;">${query} STATION (${info.currency}): ${info.tip}</span> | TRACK LOCK ACTIVE | STATION SECURITY: ALPHA | PLATFORM SECURE`;
+            
+            document.getElementById('ticker-real-text').innerHTML = newText;
+            document.getElementById('ticker-mirror-text').innerHTML = newText;
+            
+            document.getElementById('mission-status').innerText = `${query} STATION IDENTIFIED`;
+            document.getElementById('platform-info').innerText = "TRACK ASSIGNED";
+            document.getElementById('track-status').innerText = "REAL-TIME LOGISTICS SECURED";
+            return;
+        }
+
+        document.getElementById('mission-status').innerText = `IDENTIFYING ${query}...`;
         setTimeout(() => {
-            if(TRAIN_ID !== 'AUTO_DETECT') {
-                document.getElementById('mission-status').innerText = "TRAIN IDENTIFIED";
-                document.getElementById('platform-info').innerText = "TRACK 12 / PLATFORM B";
-                document.getElementById('track-status').innerText = "MISSION SECURED: GARE DU NORD";
-            } else {
-                document.getElementById('mission-status').innerText = "TRAIN DATA PENDING";
-                document.getElementById('arrival-modal').style.display = 'block';
-            }
+            document.getElementById('mission-status').innerText = "TRAIN DATA SECURED";
+            document.getElementById('platform-info').innerText = "TRACK 12 / PLATFORM B";
         }, 1500);
     }
 
     setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
-    window.addEventListener('load', () => { setTimeout(fetchRailData, 1000); });
+    window.addEventListener('load', () => { setTimeout(() => { document.getElementById('arrival-modal').style.display = 'block'; }, 2000); });
 </script>
 </body>
 </html>
