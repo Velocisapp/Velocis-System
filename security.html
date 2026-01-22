@@ -148,8 +148,10 @@
             if (HUB_DATABASE[query]) {
                 const info = HUB_DATABASE[query];
                 const intelText = `<span style="color: #00ffff;">${query} HUB (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
-                document.getElementById('ticker-real-text').innerHTML = intelText;
-                document.getElementById('ticker-mirror-text').innerHTML = intelText;
+                document.getElementById('ticker-text').innerHTML = `
+                    <span class="ticker-content">${intelText}</span>
+                    <span class="ticker-content">${intelText}</span>
+                `;
                 document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
                 return; 
             }
@@ -174,8 +176,10 @@
                     if (HUB_DATABASE[arrivalCode]) {
                         const info = HUB_DATABASE[arrivalCode];
                         const intelText = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
-                        document.getElementById('ticker-real-text').innerHTML = intelText;
-                        document.getElementById('ticker-mirror-text').innerHTML = intelText;
+                        document.getElementById('ticker-text').innerHTML = `
+                            <span class="ticker-content">${intelText}</span>
+                            <span class="ticker-content">${intelText}</span>
+                        `;
                     }
                 } else {
                     document.getElementById('hub-mission-status').innerText = "MISSION OFFLINE";
