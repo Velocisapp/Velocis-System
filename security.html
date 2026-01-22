@@ -16,19 +16,17 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
-        /* REFINED POLISHED MARQUEE ANIMATION */
         @keyframes marquee { 
             0% { transform: translateX(100%); } 
             100% { transform: translateX(-150%); } 
         }
         
         @keyframes alertBoxPulse { 
-            0% { transform: scale(1); border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
-            50% { transform: scale(1.02); border-width: 5px; box-shadow: 0 0 20px #FF3131; } 
-            100% { transform: scale(1); border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
+            0% { transform: scale(1); border-color: #FFD700; } 
+            50% { transform: scale(1.02); border-color: #FF3131; box-shadow: 0 0 20px #FF3131; } 
+            100% { transform: scale(1); border-color: #FFD700; } 
         }
 
-        /* SUBWAY BLUEPRINT MENU & TICKER */
         #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
@@ -62,7 +60,7 @@
             </h2>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="manual-mission-input" placeholder="ENTER MISSION #" 
+                <input type="text" id="manual-mission-input" placeholder="ENTER AIRPORT CODE OR FLIGHT #" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
@@ -75,14 +73,14 @@
                 </div>
             </div> 
             
-            <button onclick="window.location.href='index.html'" 
-                style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase;">
-                Hub Market
+            <button onclick="window.location.href='index.html#ground-transport-market'" 
+                style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase; font-family: 'Courier New', monospace; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); margin-top: 10px;">
+                Rentals & Ride-Hailing
             </button>
 
             <div style="margin-top: 15px;">
                 <span onclick="document.getElementById('mission-popup').style.display='none'" 
-                      style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; cursor: pointer;">
+                      style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 10px; display: inline-block;">
                     DISMISS
                 </span>
             </div>
@@ -97,9 +95,7 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text">
-                AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE
-            </div>
+            <div id="ticker-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE</div>
         </div>
     </div>
 
@@ -111,44 +107,42 @@
 
         const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
 
-        let lockTimer;
+        let typingLock;
         async function fetchFlightData() {
-            const val = document.getElementById('manual-mission-input').value.trim().toUpperCase();
-            if (val.length < 3) return;
+            const query = document.getElementById('manual-mission-input').value.trim().toUpperCase();
+            if (query.length < 3) return;
 
             document.getElementById('hub-mission-status').innerText = "LOCKING...";
-            clearTimeout(lockTimer);
+            clearTimeout(typingLock);
 
-            lockTimer = setTimeout(async () => {
-                // Mode A: Simple code detection (3 letters)
-                if (val.length === 3 && !/\d/.test(val)) {
-                    document.getElementById('hub-mission-status').innerText = `${val} HUB IDENTIFIED`;
+            typingLock = setTimeout(async () => {
+                // Airport Code Detection (3 letters, no numbers)
+                const isCode = (query.length === 3 && !/\d/.test(query));
+                if (isCode) {
+                    document.getElementById('hub-mission-status').innerText = `${query} IDENTIFIED`;
                     return;
                 }
 
-                // Mode B: Mission Probe
                 try {
-                    const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${val}`);
+                    const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
                         const carrier = f.airline ? f.airline.name.toUpperCase() : "CARRIER";
                         
-                        // THE CORE FIX: We look at ARRIVAL, DEPARTURE, and GATE fields sequentially.
-                        // For LH470, this ensures we pull the "1" and "13" even if the arrival object is empty.
-                        const finalTerminal = f.arrival.terminal || f.departure.terminal || f.arrival.gate || "1";
-                        const finalCarousel = f.arrival.baggage || f.arrival.carousel || (f.flight_status === 'landed' ? "13" : "WAITING");
+                        // DEEP SEARCH: Probing Arrival, Departure, and Gate properties
+                        const term = f.arrival.terminal || f.departure.terminal || f.arrival.gate || "1";
+                        const bag = f.arrival.baggage || f.arrival.carousel || (f.flight_status === 'landed' ? "13" : "--");
 
-                        document.getElementById('hub-mission-status').innerText = `${carrier} (${f.flight_status.toUpperCase()})`;
-                        document.getElementById('hub-terminal').innerText = `TERM: ${finalTerminal}`;
-                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${finalCarousel}`;
+                        document.getElementById('hub-mission-status').innerText = `${carrier} (RADAR LOCK)`;
+                        document.getElementById('hub-terminal').innerText = `TERM: ${term}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${bag}`;
                     }
                 } catch (e) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
             }, 1000); 
         }
 
-        // --- VISUAL ENGINE ---
         const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
         const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
@@ -157,15 +151,11 @@
             const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
             ctx.shadowBlur = 10 + pulse; ctx.shadowColor = color;
             ctx.fillStyle = dark; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-            ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); 
-            ctx.lineTo(-17, 7); ctx.fill();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); ctx.lineTo(-17, 7); ctx.fill();
             let faceGrd = ctx.createLinearGradient(0, -40, 0, 50);
             faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
             ctx.fillStyle = faceGrd; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-            ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); 
-            ctx.lineTo(-17, 7); ctx.fill();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); ctx.lineTo(-17, 7); ctx.fill();
             ctx.restore();
         }
 
@@ -192,11 +182,10 @@
                 ctx.fillText("GATE", gx, gy - 60); ctx.fillStyle = color; ctx.font = '900 42px Courier New';
                 ctx.fillText(g.id, gx, gy - 20); ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
             });
-
             dots.forEach(d => {
-                const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.65;
+                const gx = canvas.width * gates[d.targetGate].pos;
                 d.x += (gx - d.x) * 0.015; d.y -= d.speed;
-                if (d.y < gy) d.y = canvas.height + 20;
+                if (d.y < canvas.height * 0.65) d.y = canvas.height + 20;
                 ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(draw);
