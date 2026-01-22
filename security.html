@@ -116,12 +116,11 @@
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
-                // Airport Code Detection
+                // Airport Code Logic (Fixed: No early return)
                 const isIata = (query.length === 3 && !/\d/.test(query));
                 if (isIata) {
                     document.getElementById('hub-mission-status').innerText = `${query} IDENTIFIED`;
-                    document.getElementById('ticker-text').innerText = `${query} AIRPORT SECURED | LOGISTICS LOGGED`;
-                    return;
+                    document.getElementById('ticker-text').innerText = `AIRPORT ${query} SECURED | SCANNING SATELLITE...`;
                 }
 
                 try {
@@ -196,7 +195,10 @@
             requestAnimationFrame(draw);
         }
         draw();
-        setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
+        setInterval(() => { 
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; 
+        }, 1000);
         window.onload = function() { setTimeout(function() { document.getElementById('mission-popup').style.display = 'block'; }, 2000); };
     </script>
 </body>
