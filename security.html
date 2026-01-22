@@ -16,19 +16,18 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
-        /* REFINED POLISHED MARQUEE ANIMATION */
+        /* RECALIBRATED: Zero-Gap Seamless Loop */
         @keyframes marquee { 
-            0% { transform: translateX(100%); } 
-            100% { transform: translateX(-150%); } 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-50%); } 
         }
-        
+
         @keyframes alertBoxPulse { 
             0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
             50% { border-width: 5px; box-shadow: 0 0 20px #FF3131; } 
             100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
         }
 
-        /* SUBWAY BLUEPRINT MENU & TICKER */
         #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
@@ -36,13 +35,19 @@
         .ticker-wrap { 
             position: fixed; bottom: 0; width: 100%; height: 50px; 
             background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; 
-            display: flex; align-items: center; overflow: hidden; z-index: 10001; 
+            overflow: hidden; z-index: 10001; display: flex; align-items: center;
         }
 
         #ticker-text {
-            white-space: nowrap; color: #FF3131; font-weight: 900; 
-            font-size: 18px; display: inline-block; padding-left: 20px;
-            animation: marquee 10s linear infinite !important; /* SPEED UP: 10s repeat */
+            white-space: nowrap; 
+            display: inline-block;
+            animation: marquee 25s linear infinite !important; /* Original Speed preserved */
+        }
+
+        .ticker-content {
+            display: inline-block;
+            padding-right: 100px; /* Space between repeating info */
+            color: #FF3131; font-weight: 900; font-size: 18px;
         }
     </style>
 </head>
@@ -101,7 +106,8 @@
 
         <div class="ticker-wrap">
             <div id="ticker-text">
-                AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...
+                <span class="ticker-content" id="ticker-real-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...</span>
+                <span class="ticker-content" id="ticker-mirror-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...</span>
             </div>
         </div>
     </div>
@@ -112,7 +118,6 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // VELOCIS™ GLOBAL INTELLIGENCE DATABASE
         const HUB_DATABASE = {
             "CDG": { currency: "EUR", tip: "Take RER B for City Center." },
             "LHR": { currency: "GBP", tip: "Heathrow Express is fastest to London." },
@@ -139,16 +144,18 @@
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
-            // 1. CHECK LOCAL DATABASE FIRST (Instant Response)
             if (HUB_DATABASE[query]) {
                 const info = HUB_DATABASE[query];
-                const ticker = document.getElementById('ticker-text');
-                ticker.innerHTML = `<span style="color: #00ffff;">${query} (${info.currency}): ${info.tip}</span> | ${ticker.innerText}`;
+                const newText = `<span style="color: #00ffff;">${query} (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
+                
+                // Update BOTH spans for seamless loop
+                document.getElementById('ticker-real-text').innerHTML = newText;
+                document.getElementById('ticker-mirror-text').innerHTML = newText;
+                
                 document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
                 return; 
             }
 
-            // 2. SATELLITE LINK (For Flight Numbers)
             const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
@@ -156,22 +163,20 @@
                 
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const airline = flight.airline.name.toUpperCase();
                     const arrivalCode = flight.arrival.iata; 
                     
-                    document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
+                    document.getElementById('hub-mission-status').innerText = `${flight.airline.name.toUpperCase()} DETECTED`;
                     document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "WAITING..."}`;
                     document.getElementById('hub-terminal').innerText = `TERM: ${flight.arrival.terminal || "1"}`;
                 
                     if (HUB_DATABASE[arrivalCode]) {
                         const info = HUB_DATABASE[arrivalCode];
-                        const ticker = document.getElementById('ticker-text');
-                        ticker.innerHTML = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}): ${info.tip}</span> | ${ticker.innerText}`;
+                        const newText = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
+                        document.getElementById('ticker-real-text').innerHTML = newText;
+                        document.getElementById('ticker-mirror-text').innerHTML = newText;
                     }
                 }
-            } catch (error) { 
-                console.log("Mission Data Error:", error); 
-            }
+            } catch (error) { console.log("Data Error:", error); }
         }
 
         function drawSleekArrow(x, y, color, dark) {
