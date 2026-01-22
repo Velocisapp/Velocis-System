@@ -118,14 +118,12 @@
 
         const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
 
-        // 1. DYNAMIC DATABASE
         const HUB_DATABASE = {
             "CDG": { currency: "EUR", tip: "Take RER B for City Center." },
             "LHR": { currency: "GBP", tip: "Heathrow Express is fastest to London." },
             "JFK": { currency: "USD", tip: "AirTrain connects to Jamaica Station." }
         };
 
-        // 2. AUTO-DISCOVERY ENGINE
         async function discoverAirport(iataCode) {
             try {
                 const res = await fetch(`https://api.aviationstack.com/v1/airports?access_key=${ACCESS_KEY}&iata_code=${iataCode}`);
@@ -147,54 +145,46 @@
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
-            // Direct Hub/Airport Detection
-            if (HUB_DATABASE[query] && query.length === 3) {
-                const info = HUB_DATABASE[query];
-                document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
-                updateTicker(`${query} (${info.currency}): ${info.tip}`);
-                return; 
-            }
-
-            document.getElementById('hub-mission-status').innerText = "ENCRYPTED RADAR SCANNING...";
+            document.getElementById('hub-mission-status').innerText = "LOCKING SATELLITE SIGNAL...";
 
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
                 const result = await response.json();
                 
-                console.log("SATELLITE FEED [" + query + "]:", result);
+                // DIAGNOSTIC LOG
+                console.log("SATELLITE DATA RECEIVED:", result);
 
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const status = flight.flight_status.toUpperCase();
                     const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
-                    const dest = flight.arrival.iata;
+                    const status = flight.flight_status.toUpperCase();
+                    
+                    // AGGRESSIVE DATA RETRIEVAL
+                    const term = flight.arrival.terminal;
+                    const bag = flight.arrival.baggage;
 
                     document.getElementById('hub-mission-status').innerText = `${airline} (${status})`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "SCANNING"}`;
-                    document.getElementById('hub-terminal').innerText = `TERM: ${flight.arrival.terminal || "1"}`;
-                
-                    let info = HUB_DATABASE[dest];
-                    if (!info && dest) {
-                        info = await discoverAirport(dest);
-                    }
+                    
+                    // FORCED DISPLAY OF REAL NUMBERS
+                    document.getElementById('hub-terminal').innerText = `TERM: ${term ? term : "--"}`;
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${bag ? bag : "--"}`;
+
+                    const dest = flight.arrival.iata;
+                    let info = HUB_DATABASE[dest] || await discoverAirport(dest);
                     if (info) updateTicker(`${dest} (${info.currency}): ${info.tip}`);
-                } 
-                // FALLBACK: Brand Recognition if Transponder is Silent
-                else {
+                } else {
+                    // Fail-safe logic
                     const carriers = {'SU': 'AEROFLOT', 'LH': 'LUFTHANSA', 'AA': 'AMERICAN', 'AF': 'AIR FRANCE', 'UA': 'UNITED', 'DL': 'DELTA'};
                     const prefix = query.substring(0, 2);
                     if (carriers[prefix]) {
                         document.getElementById('hub-mission-status').innerText = `${carriers[prefix]} (RADAR ACTIVE)`;
+                        document.getElementById('hub-terminal').innerText = "TERM: 1";
                         document.getElementById('hub-carousel').innerText = "CAROUSEL: SCANNING";
-                        document.getElementById('hub-terminal').innerText = "TERM: SECURED";
-                        updateTicker(`MISSION DETECTED | SIGNAL LOCKED ON ${carriers[prefix]}`);
                     } else {
                         document.getElementById('hub-mission-status').innerText = "MISSION: NO SIGNAL FOUND";
                     }
                 }
-            } catch (error) { 
-                document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
-            }
+            } catch (error) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
         }
 
         function updateTicker(content) {
