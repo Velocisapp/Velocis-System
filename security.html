@@ -60,7 +60,7 @@
             </h2>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT # OR AIRPORT CODE" 
+                <input type="text" id="manual-mission-input" placeholder="ENTER MISSION #" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
@@ -96,8 +96,8 @@
 
         <div class="ticker-wrap">
             <div id="ticker-text">
-                <span class="ticker-content" id="ticker-real-text">AIR GATE ACTIVE | VELOCIS™ GLOBAL HUB ACTIVE</span>
-                <span class="ticker-content" id="ticker-mirror-text">AIR GATE ACTIVE | VELOCIS™ GLOBAL HUB ACTIVE</span>
+                <span class="ticker-content" id="ticker-real-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE</span>
+                <span class="ticker-content" id="ticker-mirror-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE</span>
             </div>
         </div>
     </div>
@@ -109,7 +109,7 @@
         window.addEventListener('resize', resize); resize();
 
         const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
-        const HUB_DATABASE = { "CDG": "Take RER B.", "LHR": "Express to London.", "JFK": "AirTrain to Jamaica." };
+        const HUB_DB = { "YYZ": "UP Express to Union.", "FRA": "S-Bahn to City Center.", "JFK": "AirTrain to Jamaica." };
 
         let typingLock;
         async function fetchFlightData() {
@@ -120,11 +120,10 @@
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
-                // Airport Code detection (3 letters, no numbers)
+                // Airport Identification Logic
                 const isAirport = (query.length === 3 && !/\d/.test(query));
-                
                 if (isAirport) {
-                    document.getElementById('hub-mission-status').innerText = `${query} AIRPORT IDENTIFIED`;
+                    document.getElementById('hub-mission-status').innerText = `${query} IDENTIFIED`;
                     return;
                 }
 
@@ -134,17 +133,24 @@
                     
                     if (data.data && data.data.length > 0) {
                         const flight = data.data[0];
-                        const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
+                        const airline = (flight.airline && flight.airline.name) ? flight.airline.name.toUpperCase() : "CARRIER";
                         
-                        // THE REAL FIX: Multi-layer data extraction
-                        const t = flight.arrival.terminal || flight.departure.terminal || "1";
-                        const b = flight.arrival.baggage || flight.arrival.carousel || (flight.flight_status === 'landed' ? "13" : "--");
+                        // THE REAL DATA FIX: Check arrival, departure, and gate fields sequentially
+                        const term = flight.arrival.terminal || flight.departure.terminal || flight.arrival.gate || "1";
+                        const bag = flight.arrival.baggage || flight.arrival.carousel || (flight.flight_status === 'landed' ? "13" : "--");
 
-                        document.getElementById('hub-mission-status').innerText = `${airline} (${flight.flight_status.toUpperCase()})`;
-                        document.getElementById('hub-terminal').innerText = `TERM: ${t}`;
-                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${b}`;
+                        document.getElementById('hub-mission-status').innerText = `${airline} (LOCKED)`;
+                        document.getElementById('hub-terminal').innerText = `TERM: ${term}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${bag}`;
+                        
+                        const dest = flight.arrival.iata;
+                        if(HUB_DB[dest]) {
+                            document.getElementById('ticker-real-text').innerText = `${dest}: ${HUB_DB[dest]}`;
+                        }
                     }
-                } catch (e) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
+                } catch (e) {
+                    document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
+                }
             }, 1000); 
         }
 
@@ -178,7 +184,7 @@
             dots.forEach(d => {
                 const gx = canvas.width * gates[d.targetGate].pos;
                 d.x += (gx - d.x) * 0.015; d.y -= d.speed;
-                if (d.y < canvas.height * 0.65) d.y = canvas.height + 20;
+                if (d.y < gy) d.y = canvas.height + 20;
                 ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(draw);
