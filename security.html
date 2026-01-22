@@ -16,8 +16,12 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
-        /* SUBWAY BLUEPRINT ANIMATIONS */
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        /* REFINED POLISHED MARQUEE ANIMATION */
+        @keyframes marquee { 
+            0% { transform: translateX(100%); } 
+            100% { transform: translateX(-150%); } 
+        }
+        
         @keyframes alertBoxPulse { 
             0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
             50% { border-width: 5px; box-shadow: 0 0 20px #FF3131; } 
@@ -29,7 +33,17 @@
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
         
-        .ticker-wrap { position: fixed; bottom: 0; width: 100%; height: 50px; background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
+        .ticker-wrap { 
+            position: fixed; bottom: 0; width: 100%; height: 50px; 
+            background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; 
+            display: flex; align-items: center; overflow: hidden; z-index: 10001; 
+        }
+
+        #ticker-text {
+            white-space: nowrap; color: #FF3131; font-weight: 900; 
+            font-size: 18px; display: inline-block; padding-left: 20px;
+            animation: marquee 10s linear infinite !important; /* SPEED UP: 10s repeat */
+        }
     </style>
 </head>
 <body>
@@ -86,7 +100,7 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite;">
+            <div id="ticker-text">
                 AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...
             </div>
         </div>
@@ -125,7 +139,7 @@
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
-            // 1. CHECK LOCAL DATABASE FIRST (Instant for DXB, LHR, etc.)
+            // 1. CHECK LOCAL DATABASE FIRST (Instant Response)
             if (HUB_DATABASE[query]) {
                 const info = HUB_DATABASE[query];
                 const ticker = document.getElementById('ticker-text');
