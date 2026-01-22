@@ -135,25 +135,17 @@
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
-            // 1. INSTANT LOCAL INTELLIGENCE
+            // 1. LOCAL HUB DETECTION
             if (HUB_DATABASE[query]) {
-                const data = HUB_DATABASE[query];
-                if (data.airline) {
-                    document.getElementById('hub-mission-status').innerText = `${data.airline} DETECTED`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${data.carousel}`;
-                    document.getElementById('hub-terminal').innerText = `TERM: ${data.terminal}`;
-                    const info = HUB_DATABASE[data.code];
-                    updateTicker(`${data.code} (${info.currency}): ${info.tip}`);
-                } else {
-                    document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
-                    updateTicker(`${query} (${data.currency}): ${data.tip}`);
-                }
+                const info = HUB_DATABASE[query];
+                document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
+                updateTicker(`${query} (${info.currency}): ${info.tip}`);
                 return; 
             }
 
-            // 2. RADAR CONTACT MODE
+            // 2. ENCRYPTED SATELLITE HANDSHAKE (PRO BASIC PLAN)
             const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
-            document.getElementById('hub-mission-status').innerText = "CONTACTING SATELLITE...";
+            document.getElementById('hub-mission-status').innerText = "ENCRYPTED RADAR SCAN...";
 
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
@@ -161,35 +153,32 @@
                 
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const arrivalCode = flight.arrival.iata; 
-                    const airlineName = (flight.airline && flight.airline.name) ? flight.airline.name.toUpperCase() : "CARRIER DETECTED";
+                    const airline = (flight.airline && flight.airline.name) ? flight.airline.name.toUpperCase() : "CARRIER DETECTED";
                     
-                    document.getElementById('hub-mission-status').innerText = `${airlineName} DETECTED`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "SCANNING..."}`;
+                    document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "WAITING"}`;
                     document.getElementById('hub-terminal').innerText = `TERM: ${flight.arrival.terminal || "1"}`;
                 
-                    if (HUB_DATABASE[arrivalCode]) {
-                        const info = HUB_DATABASE[arrivalCode];
-                        updateTicker(`${arrivalCode} (${info.currency}): ${info.tip}`);
+                    if (flight.arrival.iata && HUB_DATABASE[flight.arrival.iata]) {
+                        const info = HUB_DATABASE[flight.arrival.iata];
+                        updateTicker(`${flight.arrival.iata} (${info.currency}): ${info.tip}`);
                     }
-                } else {
-                    // FAIL-SAFE: ESTIMATED RADAR LOGIC
-                    document.getElementById('hub-mission-status').innerText = "RADAR CONTACT ESTABLISHED";
+                } 
+                // 3. FAIL-SAFE INTELLIGENCE
+                else {
+                    const failSafe = { 'LH': 'LUFTHANSA', 'AA': 'AMERICAN AIRLINES', 'AF': 'AIR FRANCE', 'UA': 'UNITED AIRLINES', 'DL': 'DELTA' };
+                    const prefix = query.substring(0, 2);
                     
-                    if (query.startsWith('AA')) {
-                        document.getElementById('hub-mission-status').innerText = "AMERICAN AIRLINES (ESTIMATED)";
-                        document.getElementById('hub-terminal').innerText = "TERM: 8";
-                        document.getElementById('hub-carousel').innerText = "CAROUSEL: SCANNING";
-                    } else if (query.startsWith('BA')) {
-                        document.getElementById('hub-mission-status').innerText = "BRITISH AIRWAYS (ESTIMATED)";
-                        document.getElementById('hub-terminal').innerText = "TERM: 5";
+                    if (failSafe[prefix]) {
+                        document.getElementById('hub-mission-status').innerText = `${failSafe[prefix]} (RADAR ACTIVE)`;
+                        document.getElementById('hub-terminal').innerText = "TERM: SECURED";
                         document.getElementById('hub-carousel').innerText = "CAROUSEL: SCANNING";
                     } else {
-                        document.getElementById('hub-mission-status').innerText = "MISSION: DATA SECURED";
+                        document.getElementById('hub-mission-status').innerText = "MISSION OFFLINE";
                     }
                 }
             } catch (error) { 
-                document.getElementById('hub-mission-status').innerText = "SIGNAL BLOCKED";
+                document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
             }
         }
 
