@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,12 +20,6 @@
         @keyframes marquee { 
             0% { transform: translateX(0); } 
             100% { transform: translateX(-50%); } 
-        }
-
-        @keyframes alertBoxPulse { 
-            0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
-            50% { border-width: 5px; box-shadow: 0 0 20px #FF3131; } 
-            100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
         }
 
         #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
@@ -104,8 +99,8 @@
 
         <div class="ticker-wrap">
             <div id="ticker-text">
-                <span class="ticker-content" id="ticker-real-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...</span>
-                <span class="ticker-content" id="ticker-mirror-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...</span>
+                <span class="ticker-content" id="ticker-real-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE</span>
+                <span class="ticker-content" id="ticker-mirror-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE</span>
             </div>
         </div>
     </div>
@@ -145,46 +140,61 @@
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
+            // Direct Hub/Airport Detection
+            if (HUB_DATABASE[query] && query.length === 3) {
+                const info = HUB_DATABASE[query];
+                document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
+                updateTicker(`${query} (${info.currency}): ${info.tip}`);
+                return; 
+            }
+
             document.getElementById('hub-mission-status').innerText = "LOCKING SATELLITE SIGNAL...";
 
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
                 const result = await response.json();
                 
-                // DIAGNOSTIC LOG
-                console.log("SATELLITE DATA RECEIVED:", result);
+                // DIAGNOSTIC LOG FOR F12 CONSOLE
+                console.log("SATELLITE FEED [" + query + "]:", result);
 
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
                     const status = flight.flight_status.toUpperCase();
-                    
-                    // AGGRESSIVE DATA RETRIEVAL
+                    const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
+                    const dest = flight.arrival.iata;
+
+                    // REAL-TIME DATA EXTRACTION
                     const term = flight.arrival.terminal;
                     const bag = flight.arrival.baggage;
 
                     document.getElementById('hub-mission-status').innerText = `${airline} (${status})`;
                     
-                    // FORCED DISPLAY OF REAL NUMBERS
+                    // FORCED DISPLAY OF REAL NUMBERS OR PLACEHOLDER
                     document.getElementById('hub-terminal').innerText = `TERM: ${term ? term : "--"}`;
                     document.getElementById('hub-carousel').innerText = `CAROUSEL: ${bag ? bag : "--"}`;
 
-                    const dest = flight.arrival.iata;
-                    let info = HUB_DATABASE[dest] || await discoverAirport(dest);
+                    let info = HUB_DATABASE[dest];
+                    if (!info && dest) {
+                        info = await discoverAirport(dest);
+                    }
                     if (info) updateTicker(`${dest} (${info.currency}): ${info.tip}`);
-                } else {
-                    // Fail-safe logic
+                } 
+                else {
+                    // Fail-safe logic for specific carriers
                     const carriers = {'SU': 'AEROFLOT', 'LH': 'LUFTHANSA', 'AA': 'AMERICAN', 'AF': 'AIR FRANCE', 'UA': 'UNITED', 'DL': 'DELTA'};
                     const prefix = query.substring(0, 2);
                     if (carriers[prefix]) {
                         document.getElementById('hub-mission-status').innerText = `${carriers[prefix]} (RADAR ACTIVE)`;
-                        document.getElementById('hub-terminal').innerText = "TERM: 1";
+                        document.getElementById('hub-terminal').innerText = "TERM: SECURED";
                         document.getElementById('hub-carousel').innerText = "CAROUSEL: SCANNING";
+                        updateTicker(`MISSION DETECTED | SIGNAL LOCKED ON ${carriers[prefix]}`);
                     } else {
                         document.getElementById('hub-mission-status').innerText = "MISSION: NO SIGNAL FOUND";
                     }
                 }
-            } catch (error) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
+            } catch (error) { 
+                document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
+            }
         }
 
         function updateTicker(content) {
