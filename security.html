@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -146,7 +145,7 @@ HTML
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
-            // Priority Check for 3-letter Airport Codes
+            // Direct Airport Check
             if (HUB_DATABASE[query] && query.length === 3) {
                 const info = HUB_DATABASE[query];
                 document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
@@ -154,32 +153,36 @@ HTML
                 return; 
             }
 
-            document.getElementById('hub-mission-status').innerText = "LIVE RADAR SCANNING...";
+            document.getElementById('hub-mission-status').innerText = "QUERYING GLOBAL SATELLITE...";
 
             try {
+                // Fetching all statuses for full transparency
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
                 const result = await response.json();
                 
+                // --- DEBUG TOOL: Verify raw satellite feed in browser console ---
+                console.log("SATELLITE FEED [" + query + "]:", result);
+
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
                     const status = flight.flight_status.toUpperCase();
                     const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
-                    
+                    const dest = flight.arrival.iata;
+
                     document.getElementById('hub-mission-status').innerText = `${airline} (${status})`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "WAITING"}`;
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "SCANNING"}`;
                     document.getElementById('hub-terminal').innerText = `TERM: ${flight.arrival.terminal || "1"}`;
                 
-                    const arrivalIata = flight.arrival.iata;
-                    let info = HUB_DATABASE[arrivalIata];
-                    if (!info && arrivalIata) {
-                        info = await discoverAirport(arrivalIata);
+                    let info = HUB_DATABASE[dest];
+                    if (!info && dest) {
+                        info = await discoverAirport(dest);
                     }
                     
                     if (info) {
-                        updateTicker(`${arrivalIata} (${info.currency}): ${info.tip}`);
+                        updateTicker(`${dest} (${info.currency}): ${info.tip}`);
                     }
                 } else {
-                    document.getElementById('hub-mission-status').innerText = "RADAR: NO ACTIVE SIGNAL";
+                    document.getElementById('hub-mission-status').innerText = "MISSION: NO SIGNAL FOUND";
                     document.getElementById('hub-carousel').innerText = "CAROUSEL: --";
                     document.getElementById('hub-terminal').innerText = "TERM: --";
                 }
