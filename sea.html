@@ -50,7 +50,7 @@
         #ticker-text {
             white-space: nowrap; 
             display: inline-block;
-            animation: marquee 25s linear infinite !important; /* Original Speed */
+            animation: marquee 25s linear infinite !important;
         }
 
         .ticker-content {
@@ -104,8 +104,8 @@
 
         <div class="ticker-wrap">
             <div id="ticker-text">
-                <span class="ticker-content" id="ticker-real-text">MARITIME HUB ACTIVE | HK FERRY PIER 7 | CANNES CRUISE TERM | SCANNING DOCKS...</span>
-                <span class="ticker-content" id="ticker-mirror-text">MARITIME HUB ACTIVE | HK FERRY PIER 7 | CANNES CRUISE TERM | SCANNING DOCKS...</span>
+                <span class="ticker-content" id="ticker-real-text">MARITIME HUB ACTIVE | VESSEL LOCK ACTIVE | PORT SECURITY: ALPHA | SCANNING DOCKS...</span>
+                <span class="ticker-content" id="ticker-mirror-text">MARITIME HUB ACTIVE | VESSEL LOCK ACTIVE | PORT SECURITY: ALPHA | SCANNING DOCKS...</span>
             </div>
         </div>
     </div>
@@ -116,7 +116,6 @@
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    // VELOCIS™ GLOBAL INTELLIGENCE DATABASE
     const HUB_DATABASE = {
         "CDG": { currency: "EUR", tip: "Take RER B for City Center." },
         "LHR": { currency: "GBP", tip: "Heathrow Express is fastest to London." },
@@ -183,37 +182,26 @@
         const query = inputVal ? inputVal.trim().toUpperCase() : '';
         if (!query) return;
 
-        // 1. CHECK LOCAL DATABASE (Instant Hub Detection)
         if (HUB_DATABASE[query]) {
             const info = HUB_DATABASE[query];
-            const newText = `<span style="color: #00ffff;">${query} (${info.currency}): ${info.tip}</span> | MARITIME HUB ACTIVE | SCANNING DOCKS`;
+            // UPDATED: Nautical Terminology
+            const newText = `<span style="color: #00ffff;">${query} HUB (${info.currency}): ${info.tip}</span> | VESSEL LOCK ACTIVE | PORT SECURITY: ALPHA | MARITIME HUB ACTIVE`;
             
             document.getElementById('ticker-real-text').innerHTML = newText;
             document.getElementById('ticker-mirror-text').innerHTML = newText;
             
-            document.getElementById('mission-status').innerText = `${query} HUB DETECTED`;
+            document.getElementById('mission-status').innerText = `${query} PORT IDENTIFIED`;
             document.getElementById('dock-info').innerText = "BERTH ASSIGNED";
             document.getElementById('port-status-text').innerText = "REAL-TIME LOGISTICS SECURED";
             return;
         }
 
-        // 2. SATELLITE FALLBACK
         document.getElementById('mission-status').innerText = `IDENTIFYING ${query}...`;
         setTimeout(() => {
             document.getElementById('mission-status').innerText = "VOYAGE DATA SECURED";
             document.getElementById('dock-info').innerText = "DOCK B / PIER 7";
         }, 1500);
     }
-
-    // Compass and Timer logic preserved
-    window.addEventListener('deviceorientation', (event) => {
-        const needle = document.getElementById('compass-needle');
-        if (needle && (event.webkitCompassHeading || event.alpha !== null)) {
-            const heading = event.webkitCompassHeading || (360 - event.alpha);
-            const needleRotation = 45 - heading;
-            needle.style.transform = `rotate(${needleRotation}deg)`;
-        }
-    });
 
     setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
     window.addEventListener('load', () => { 
