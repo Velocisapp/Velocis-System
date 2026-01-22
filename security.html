@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,7 +66,7 @@
             </h2>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="manual-mission-input" placeholder="OPTIONAL: MANUAL MISSION #" 
+                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT #" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
@@ -73,7 +74,7 @@
             <div style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
                 <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">FLIGHT LOGISTICS</h3>
                 <p style="color: #000000; font-size: 11px; line-height: 1.4; text-transform: uppercase; margin-bottom: 12px; font-weight: bold;">
-                    SYSTEM IS SCANNING. CAROUSEL AND TERMINAL DATA WILL AUTOMATICALLY POPULATE.
+                    LIVE SATELLITE FEED ACTIVE. TERMINAL AND CAROUSEL DATA IS REAL-TIME.
                 </p>
                 <div style="display: flex; justify-content: space-around; border-top: 2px solid #ff5b00; padding-top: 12px;">
                     <span id="hub-carousel" style="color: #000000; font-weight: 900; font-size: 14px;">CAROUSEL: --</span>
@@ -116,18 +117,14 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // 1. DYNAMIC DATABASE (Automatically populated via Auto-Discovery)
         const HUB_DATABASE = {
             "CDG": { currency: "EUR", tip: "Take RER B for City Center." },
             "LHR": { currency: "GBP", tip: "Heathrow Express is fastest to London." },
-            "JFK": { currency: "USD", tip: "AirTrain connects to Jamaica Station." },
-            "UA20": { code: "CDG", airline: "UNITED AIRLINES", carousel: "5", terminal: "1" },
-            "AF15": { code: "CDG", airline: "AIR FRANCE", carousel: "9", terminal: "2E" }
+            "JFK": { currency: "USD", tip: "AirTrain connects to Jamaica Station." }
         };
 
         const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
 
-        // 2. AUTO-DISCOVERY ENGINE (Learns about thousands of airports)
         async function discoverAirport(iataCode) {
             try {
                 const res = await fetch(`https://api.aviationstack.com/v1/airports?access_key=${ACCESS_KEY}&iata_code=${iataCode}`);
@@ -144,30 +141,20 @@
             return null;
         }
 
-        const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
-        const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
-
         async function fetchFlightData() {
             const inputVal = document.getElementById('manual-mission-input')?.value;
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
-            // 3. PRIORITY CACHE CHECK
-            if (HUB_DATABASE[query]) {
-                const data = HUB_DATABASE[query];
-                if (data.airline) {
-                    document.getElementById('hub-mission-status').innerText = `${data.airline} DETECTED`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${data.carousel}`;
-                    document.getElementById('hub-terminal').innerText = `TERM: ${data.terminal}`;
-                    updateTicker(`${data.code} (${HUB_DATABASE[data.code].currency}): ${HUB_DATABASE[data.code].tip}`);
-                } else {
-                    document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
-                    updateTicker(`${query} (${data.currency}): ${data.tip}`);
-                }
+            // Priority Check for 3-letter Airport Codes
+            if (HUB_DATABASE[query] && query.length === 3) {
+                const info = HUB_DATABASE[query];
+                document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
+                updateTicker(`${query} (${info.currency}): ${info.tip}`);
                 return; 
             }
 
-            document.getElementById('hub-mission-status').innerText = "ENCRYPTED RADAR SCAN...";
+            document.getElementById('hub-mission-status').innerText = "LIVE RADAR SCANNING...";
 
             try {
                 const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
@@ -175,40 +162,40 @@
                 
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const arrivalCode = flight.arrival.iata; 
-                    const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER DETECTED";
+                    const status = flight.flight_status.toUpperCase();
+                    const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
                     
-                    document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "SCANNING"}`;
+                    document.getElementById('hub-mission-status').innerText = `${airline} (${status})`;
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "WAITING"}`;
                     document.getElementById('hub-terminal').innerText = `TERM: ${flight.arrival.terminal || "1"}`;
                 
-                    // AUTO-DISCOVERY TRIGGER
-                    let info = HUB_DATABASE[arrivalCode];
-                    if (!info && arrivalCode) {
-                        info = await discoverAirport(arrivalCode);
+                    const arrivalIata = flight.arrival.iata;
+                    let info = HUB_DATABASE[arrivalIata];
+                    if (!info && arrivalIata) {
+                        info = await discoverAirport(arrivalIata);
                     }
                     
                     if (info) {
-                        updateTicker(`${arrivalCode} (${info.currency}): ${info.tip}`);
+                        updateTicker(`${arrivalIata} (${info.currency}): ${info.tip}`);
                     }
                 } else {
-                    // FAIL-SAFE (Carrier Recognition)
-                    const carriers = { 'LH': 'LUFTHANSA', 'AA': 'AMERICAN', 'AF': 'AIR FRANCE', 'UA': 'UNITED', 'DL': 'DELTA' };
-                    const prefix = query.substring(0, 2);
-                    if (carriers[prefix]) {
-                        document.getElementById('hub-mission-status').innerText = `${carriers[prefix]} (RADAR ACTIVE)`;
-                        updateTicker(`SATELLITE ACTIVE | SCANNING LOGISTICS FOR ${carriers[prefix]}`);
-                    } else {
-                        document.getElementById('hub-mission-status').innerText = "MISSION OFFLINE";
-                    }
+                    document.getElementById('hub-mission-status').innerText = "RADAR: NO ACTIVE SIGNAL";
+                    document.getElementById('hub-carousel').innerText = "CAROUSEL: --";
+                    document.getElementById('hub-terminal').innerText = "TERM: --";
                 }
-            } catch (error) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
+            } catch (error) { 
+                document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
+            }
         }
 
         function updateTicker(content) {
             const fullText = `<span style="color: #00ffff;">${content}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE`;
             document.getElementById('ticker-text').innerHTML = `<span class="ticker-content">${fullText}</span><span class="ticker-content">${fullText}</span>`;
         }
+
+        // --- Visual Engine Logic ---
+        const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
+        const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
         function drawSleekArrow(x, y, color, dark) {
             ctx.save(); ctx.translate(x, y);
