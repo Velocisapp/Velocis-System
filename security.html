@@ -59,7 +59,7 @@
             </h2>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="manual-mission-input" placeholder="ENTER MISSION # OR HUB CODE" 
+                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT # OR HUB CODE" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
@@ -131,48 +131,51 @@
             return null;
         }
 
+        let debounceTimer;
         async function fetchFlightData() {
+            clearTimeout(debounceTimer);
             const inputVal = document.getElementById('manual-mission-input')?.value;
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
-            if (!query) return;
+            if (query.length < 3) return;
 
-            // SMART HUB vs MISSION Detection
-            const isHub = (query.length === 3 && !/\d/.test(query));
-
-            if (isHub) {
-                document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
-                document.getElementById('hub-carousel').innerText = "CAROUSEL: HUB";
-                document.getElementById('hub-terminal').innerText = "TERM: HUB";
-                let info = HUB_DATABASE[query] || await discoverAirport(query);
-                if (info) updateTicker(`${query} (${info.currency}): ${info.tip}`);
-                return; 
-            }
-
-            document.getElementById('hub-mission-status').innerText = "SCANNING MISSION PACKETS...";
-
-            try {
-                const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
-                const result = await response.json();
-                
-                if (result.data && result.data.length > 0) {
-                    const flight = result.data[0];
-                    const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
-                    const status = flight.flight_status.toUpperCase();
-                    
-                    // --- THE 1st PLACE DATA FIX ---
-                    // Aggressively check live AND estimated ground data
-                    const term = flight.arrival.terminal || flight.arrival.gate || "1";
-                    const bag = flight.arrival.baggage || flight.arrival.carousel || "13";
-
-                    document.getElementById('hub-mission-status').innerText = `${airline} (${status})`;
-                    document.getElementById('hub-terminal').innerText = `TERM: ${term}`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${bag}`;
-
-                    const dest = flight.arrival.iata;
-                    let info = HUB_DATABASE[dest] || await discoverAirport(dest);
-                    if (info) updateTicker(`${dest} (${info.currency}): ${info.tip}`);
+            debounceTimer = setTimeout(async () => {
+                // 1. SMART DUAL-MODE SCANNER
+                const isHub = (query.length === 3 && !/\d/.test(query));
+                if (isHub) {
+                    document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
+                    document.getElementById('hub-carousel').innerText = "CAROUSEL: HUB";
+                    document.getElementById('hub-terminal').innerText = "TERM: HUB";
+                    let info = HUB_DATABASE[query] || await discoverAirport(query);
+                    if (info) updateTicker(`${query} (${info.currency}): ${info.tip}`);
+                    return; 
                 }
-            } catch (error) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
+
+                document.getElementById('hub-mission-status').innerText = "SCANNING MISSION LOGS...";
+
+                try {
+                    const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
+                    const result = await response.json();
+                    
+                    if (result.data && result.data.length > 0) {
+                        const flight = result.data[0];
+                        const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER";
+                        const status = flight.flight_status.toUpperCase();
+                        
+                        // --- THE 1st PLACE FIX: AGGRESSIVE DATA RETRIEVAL ---
+                        // We check every potential data field for numbers before falling back
+                        const terminalValue = flight.arrival.terminal || flight.arrival.gate || flight.departure.terminal || "--";
+                        const carouselValue = flight.arrival.baggage || flight.arrival.carousel || (status === "LANDED" ? "LOGGED" : "--");
+
+                        document.getElementById('hub-mission-status').innerText = `${airline} (${status})`;
+                        document.getElementById('hub-terminal').innerText = `TERM: ${terminalValue}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carouselValue}`;
+
+                        const dest = flight.arrival.iata;
+                        let info = HUB_DATABASE[dest] || await discoverAirport(dest);
+                        if (info) updateTicker(`${dest} (${info.currency}): ${info.tip}`);
+                    }
+                } catch (error) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
+            }, 600); // Waits 600ms for user to finish typing
         }
 
         function updateTicker(content) {
