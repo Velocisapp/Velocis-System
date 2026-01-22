@@ -41,12 +41,12 @@
         #ticker-text {
             white-space: nowrap; 
             display: inline-block;
-            animation: marquee 25s linear infinite !important; /* Original Speed preserved */
+            animation: marquee 25s linear infinite !important;
         }
 
         .ticker-content {
             display: inline-block;
-            padding-right: 100px; /* Space between repeating info */
+            padding-right: 100px; 
             color: #FF3131; font-weight: 900; font-size: 18px;
         }
     </style>
@@ -141,17 +141,15 @@
 
         async function fetchFlightData() {
             const inputVal = document.getElementById('manual-mission-input')?.value;
-            const query = inputVal ? inputVal.trim().toUpperCase() : '';
+            // RECALIBRATED: Auto-trigger UA54 if empty
+            const query = inputVal ? inputVal.trim().toUpperCase() : 'UA54';
             if (!query) return;
 
             if (HUB_DATABASE[query]) {
                 const info = HUB_DATABASE[query];
-                const newText = `<span style="color: #00ffff;">${query} (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
-                
-                // Update BOTH spans for seamless loop
-                document.getElementById('ticker-real-text').innerHTML = newText;
-                document.getElementById('ticker-mirror-text').innerHTML = newText;
-                
+                const intelText = `<span style="color: #00ffff;">${query} (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
+                document.getElementById('ticker-real-text').innerHTML = intelText;
+                document.getElementById('ticker-mirror-text').innerHTML = intelText;
                 document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
                 return; 
             }
@@ -171,10 +169,12 @@
                 
                     if (HUB_DATABASE[arrivalCode]) {
                         const info = HUB_DATABASE[arrivalCode];
-                        const newText = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
-                        document.getElementById('ticker-real-text').innerHTML = newText;
-                        document.getElementById('ticker-mirror-text').innerHTML = newText;
+                        const intelText = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}): ${info.tip}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
+                        document.getElementById('ticker-real-text').innerHTML = intelText;
+                        document.getElementById('ticker-mirror-text').innerHTML = intelText;
                     }
+                } else {
+                    document.getElementById('hub-mission-status').innerText = "MISSION OFFLINE";
                 }
             } catch (error) { console.log("Data Error:", error); }
         }
@@ -231,6 +231,8 @@
             setTimeout(function() {
                 const popup = document.getElementById('mission-popup');
                 if(popup) popup.style.display = 'block';
+                // Trigger auto-scan on load
+                fetchFlightData();
             }, 3000);
         };
     </script>
