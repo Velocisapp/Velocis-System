@@ -116,16 +116,33 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
+        // 1. DYNAMIC DATABASE (Automatically populated via Auto-Discovery)
         const HUB_DATABASE = {
             "CDG": { currency: "EUR", tip: "Take RER B for City Center." },
             "LHR": { currency: "GBP", tip: "Heathrow Express is fastest to London." },
             "JFK": { currency: "USD", tip: "AirTrain connects to Jamaica Station." },
-            "DXB": { currency: "AED", tip: "Metro runs from Terminals 1 & 3." },
-            "HKG": { currency: "HKD", tip: "Airport Express takes 24 mins to Central." },
             "UA20": { code: "CDG", airline: "UNITED AIRLINES", carousel: "5", terminal: "1" },
-            "AF15": { code: "CDG", airline: "AIR FRANCE", carousel: "9", terminal: "2E" },
-            "UA54": { code: "CDG", airline: "UNITED AIRLINES", carousel: "3", terminal: "1" }
+            "AF15": { code: "CDG", airline: "AIR FRANCE", carousel: "9", terminal: "2E" }
         };
+
+        const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
+
+        // 2. AUTO-DISCOVERY ENGINE (Learns about thousands of airports)
+        async function discoverAirport(iataCode) {
+            try {
+                const res = await fetch(`https://api.aviationstack.com/v1/airports?access_key=${ACCESS_KEY}&iata_code=${iataCode}`);
+                const data = await res.json();
+                if (data.data && data.data.length > 0) {
+                    const ap = data.data[0];
+                    HUB_DATABASE[iataCode] = {
+                        currency: ap.currency_code || "---",
+                        tip: `SATELLITE CONFIRMED: ${ap.airport_name}. Secure transport active.`
+                    };
+                    return HUB_DATABASE[iataCode];
+                }
+            } catch (e) { console.error("Discovery Offline"); }
+            return null;
+        }
 
         const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
         const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
@@ -135,16 +152,21 @@
             const query = inputVal ? inputVal.trim().toUpperCase() : '';
             if (!query) return;
 
-            // 1. LOCAL HUB DETECTION
+            // 3. PRIORITY CACHE CHECK
             if (HUB_DATABASE[query]) {
-                const info = HUB_DATABASE[query];
-                document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
-                updateTicker(`${query} (${info.currency}): ${info.tip}`);
+                const data = HUB_DATABASE[query];
+                if (data.airline) {
+                    document.getElementById('hub-mission-status').innerText = `${data.airline} DETECTED`;
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${data.carousel}`;
+                    document.getElementById('hub-terminal').innerText = `TERM: ${data.terminal}`;
+                    updateTicker(`${data.code} (${HUB_DATABASE[data.code].currency}): ${HUB_DATABASE[data.code].tip}`);
+                } else {
+                    document.getElementById('hub-mission-status').innerText = `${query} HUB DETECTED`;
+                    updateTicker(`${query} (${data.currency}): ${data.tip}`);
+                }
                 return; 
             }
 
-            // 2. ENCRYPTED SATELLITE HANDSHAKE (PRO BASIC PLAN)
-            const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
             document.getElementById('hub-mission-status').innerText = "ENCRYPTED RADAR SCAN...";
 
             try {
@@ -153,41 +175,39 @@
                 
                 if (result.data && result.data.length > 0) {
                     const flight = result.data[0];
-                    const airline = (flight.airline && flight.airline.name) ? flight.airline.name.toUpperCase() : "CARRIER DETECTED";
+                    const arrivalCode = flight.arrival.iata; 
+                    const airline = flight.airline ? flight.airline.name.toUpperCase() : "CARRIER DETECTED";
                     
                     document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`;
-                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "WAITING"}`;
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${flight.arrival.baggage || "SCANNING"}`;
                     document.getElementById('hub-terminal').innerText = `TERM: ${flight.arrival.terminal || "1"}`;
                 
-                    if (flight.arrival.iata && HUB_DATABASE[flight.arrival.iata]) {
-                        const info = HUB_DATABASE[flight.arrival.iata];
-                        updateTicker(`${flight.arrival.iata} (${info.currency}): ${info.tip}`);
+                    // AUTO-DISCOVERY TRIGGER
+                    let info = HUB_DATABASE[arrivalCode];
+                    if (!info && arrivalCode) {
+                        info = await discoverAirport(arrivalCode);
                     }
-                } 
-                // 3. FAIL-SAFE INTELLIGENCE
-                else {
-                    const failSafe = { 'LH': 'LUFTHANSA', 'AA': 'AMERICAN AIRLINES', 'AF': 'AIR FRANCE', 'UA': 'UNITED AIRLINES', 'DL': 'DELTA' };
-                    const prefix = query.substring(0, 2);
                     
-                    if (failSafe[prefix]) {
-                        document.getElementById('hub-mission-status').innerText = `${failSafe[prefix]} (RADAR ACTIVE)`;
-                        document.getElementById('hub-terminal').innerText = "TERM: SECURED";
-                        document.getElementById('hub-carousel').innerText = "CAROUSEL: SCANNING";
+                    if (info) {
+                        updateTicker(`${arrivalCode} (${info.currency}): ${info.tip}`);
+                    }
+                } else {
+                    // FAIL-SAFE (Carrier Recognition)
+                    const carriers = { 'LH': 'LUFTHANSA', 'AA': 'AMERICAN', 'AF': 'AIR FRANCE', 'UA': 'UNITED', 'DL': 'DELTA' };
+                    const prefix = query.substring(0, 2);
+                    if (carriers[prefix]) {
+                        document.getElementById('hub-mission-status').innerText = `${carriers[prefix]} (RADAR ACTIVE)`;
+                        updateTicker(`SATELLITE ACTIVE | SCANNING LOGISTICS FOR ${carriers[prefix]}`);
                     } else {
                         document.getElementById('hub-mission-status').innerText = "MISSION OFFLINE";
                     }
                 }
-            } catch (error) { 
-                document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
-            }
+            } catch (error) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
         }
 
         function updateTicker(content) {
-            const fullText = `<span style="color: #00ffff;">${content}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA`;
-            document.getElementById('ticker-text').innerHTML = `
-                <span class="ticker-content">${fullText}</span>
-                <span class="ticker-content">${fullText}</span>
-            `;
+            const fullText = `<span style="color: #00ffff;">${content}</span> | AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE`;
+            document.getElementById('ticker-text').innerHTML = `<span class="ticker-content">${fullText}</span><span class="ticker-content">${fullText}</span>`;
         }
 
         function drawSleekArrow(x, y, color, dark) {
@@ -205,15 +225,10 @@
 
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
-            if (hasFinalCall) document.getElementById('header-box').style.animation = 'alertBoxPulse 1s infinite ease-in-out';
             gates.forEach((g) => {
                 const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
                 let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
                 let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
-                const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
-                pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.35)'); pGrd.addColorStop(1, 'transparent');
-                ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
                 drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
                 ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
                 ctx.fillText("GATE", gx, gy - 60); ctx.fillStyle = color; ctx.font = '900 42px Courier New';
