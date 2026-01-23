@@ -88,10 +88,9 @@
         const API_KEY = '6973cc1546ac0bf801777b1e';
         let activeGate = "--";
 
-        // Commerce Points (Gold Nodes)
         const shops = [
-            { name: "PREMIUM LOUNGE", y: 0.2, side: -1 },
-            { name: "SINDANCE CAFE", y: 0.5, side: 1 },
+            { name: "SINDANCE CAFE", y: 0.2, side: -1 },
+            { name: "PREMIUM LOUNGE", y: 0.5, side: 1 },
             { name: "DUTY FREE LUXE", y: 0.8, side: -1 }
         ];
 
@@ -124,46 +123,64 @@
             const themeColor = scrollRatio < 0.5 ? '57, 255, 20' : '255, 91, 0';
             const time = Date.now() * 0.001;
 
-            // 1. 3D ARCHITECTURAL GRID
-            ctx.lineWidth = 0.5;
+            // 1. FLOOR SHADING (Adds substance)
+            let grad = ctx.createLinearGradient(0, canvas.height * 0.4, 0, canvas.height);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, `rgba(${themeColor}, 0.08)`);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7);
+
+            // 2. LUMINOUS GRID
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = `rgba(${themeColor}, 0.5)`;
+            ctx.lineWidth = 1.5;
             for (let i = 0; i < 12; i++) {
-                let opacity = (1 - i / 12) * 0.2;
+                let opacity = (1 - i / 12) * 0.4;
                 ctx.strokeStyle = `rgba(${themeColor}, ${opacity})`;
                 ctx.beginPath();
                 ctx.moveTo(canvas.width / 2, canvas.height * 0.3);
-                ctx.lineTo((i - 5.5) * (canvas.width / 2) + (canvas.width / 2), canvas.height);
+                ctx.lineTo((i - 5.5) * (canvas.width / 1.8) + (canvas.width / 2), canvas.height);
                 ctx.stroke();
             }
 
-            // 2. COMMERCE NODES (Gold)
+            // 3. RADAR PULSE
+            let pulse = (time * 0.5) % 1;
+            ctx.strokeStyle = `rgba(${themeColor}, ${0.2 * (1 - pulse)})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(canvas.width / 2, canvas.height * 0.8, 200 * pulse, 100 * pulse, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 4. GOLD COMMERCE NODES
             shops.forEach(s => {
-                let speed = time * 60;
-                let y = (s.y * canvas.height + speed) % canvas.height;
-                if (y > canvas.height * 0.4) {
-                    let alpha = (y / canvas.height) * 0.4;
-                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.35));
-                    
+                let y = (s.y * canvas.height + (time * 80)) % canvas.height;
+                if (y > canvas.height * 0.35) {
+                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.38));
+                    let alpha = Math.min(0.8, (y / canvas.height));
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
                     ctx.strokeStyle = `rgba(255, 215, 0, ${alpha})`;
-                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 30); ctx.stroke();
-                    
+                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 50); ctx.stroke();
                     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                    ctx.font = '900 8px monospace';
+                    ctx.font = '900 10px monospace';
                     ctx.textAlign = s.side === 1 ? 'left' : 'right';
-                    ctx.fillText(s.name, x + (s.side * 10), y - 25);
+                    ctx.fillText(s.name, x + (s.side * 12), y - 45);
+                    ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+                    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
                 }
             });
 
-            // 3. THE LEAD CHEVRON
+            // 5. THE LEAD CHEVRON
             const cx = canvas.width / 2;
             const cy = canvas.height * 0.8;
-            ctx.shadowBlur = 15; ctx.shadowColor = `rgba(${themeColor}, 0.8)`;
+            ctx.shadowBlur = 20; ctx.shadowColor = `rgba(${themeColor}, 1)`;
             ctx.fillStyle = `rgba(${themeColor}, 1)`;
             ctx.beginPath();
-            ctx.moveTo(cx, cy - 20); ctx.lineTo(cx - 15, cy + 5);
-            ctx.lineTo(cx, cy - 2); ctx.lineTo(cx + 15, cy + 5);
+            ctx.moveTo(cx, cy - 25); ctx.lineTo(cx - 18, cy + 8);
+            ctx.lineTo(cx, cy); ctx.lineTo(cx + 18, cy + 8);
             ctx.closePath(); ctx.fill();
-            ctx.shadowBlur = 0;
 
+            ctx.shadowBlur = 0;
             requestAnimationFrame(draw);
         }
         draw();
