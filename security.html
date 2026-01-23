@@ -116,18 +116,19 @@
 
             typingLock = setTimeout(async () => {
                 try {
-                    // Global Ghost Query: Forces Google to find live airport board text
-                    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+status+arrival+gate+baggage+claim`;
+                    // Force Global Logic: Forces the search to find arrival boards across the web
+                    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+arrival+gate+baggage+claim`;
                     
                     const res = await fetch(url);
                     const data = await res.json();
                     
                     if (!data.items || data.items.length === 0) throw new Error("Seeking...");
                     
+                    // We scan the snippet of the top result for baggage/gate digits
                     const snippet = data.items[0].snippet; 
 
-                    // Invisible Scraper: Extracting Global digits from the text snippet
-                    const bMatch = snippet.match(/Baggage\s*Claim\s*([0-9]+)/i) || snippet.match(/Carousel\s*([0-9]+)/i);
+                    // Invisible Scraper: Logic to pull digits directly from Google's snippet
+                    const bMatch = snippet.match(/Baggage\s*Claim\s*([0-9]+)/i) || snippet.match(/Carousel\s*([0-9]+)/i) || snippet.match(/Claim\s*([0-9]+)/i);
                     const gMatch = snippet.match(/Gate\s*([A-Z0-9]+)/i);
                     const tMatch = snippet.match(/Concourse\s*([A-Z])/i) || snippet.match(/Terminal\s*([0-9A-Z])/i);
 
