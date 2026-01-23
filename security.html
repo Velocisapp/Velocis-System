@@ -4,59 +4,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ Journey Hub</title>
     <style>
-        /* Base Setup */
         body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow-x: hidden; }
         
-        /* 1. SCROLL CONTAINER (Task 1) */
+        /* 1. MASTER SCROLL CONTAINER */
         #scroll-wrapper { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        section { height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        section { min-height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 80px; }
 
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-        
+        /* 2. PERSISTENT HEADER */
         #header-box { 
             position: fixed; top: 20px; left: 5%; width: 90%; z-index: 1000;
             border: 2px solid #FFD700; padding: 10px; background: rgba(0,20,20,0.9); 
             box-sizing: border-box; text-align: center;
         }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
+        @keyframes clockJump { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .active-clock { animation: clockJump 0.5s ease-in-out; }
 
         /* 3. PERSISTENT 5-EMOJI NAV (Task 3) */
         #persistent-nav {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; background: rgba(0, 255, 255, 0.2);
+            display: flex; gap: 15px; background: rgba(20, 40, 60, 0.8);
             backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 50px;
-            border: 1px solid rgba(0, 255, 255, 0.5); z-index: 9999; pointer-events: auto;
+            border: 1px solid #00ffff; z-index: 9999; pointer-events: auto;
         }
         .nav-item { font-size: 24px; text-decoration: none; cursor: pointer; }
 
-        /* DEPARTURE WINDOW (Task 4) */
+        /* 4. DEPARTURE WINDOW (Green Phase) */
         #departure-window {
             background: rgba(0, 40, 0, 0.9); border: 3px solid #39FF14; border-radius: 15px;
             width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(57, 255, 20, 0.4);
-            position: relative; z-index: 10; pointer-events: auto;
+            z-index: 10; margin-top: 100px;
         }
 
-        /* ARRIVAL WINDOW (Task 4) */
+        /* 5. ARRIVAL WINDOW (Orange Phase) */
         #arrival-window {
             background: rgba(255, 91, 0, 0.98); border: 3px solid #ffffff; border-radius: 15px;
-            width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8);
-            position: relative; z-index: 10; pointer-events: auto; color: black;
+            width: 92%; padding: 18px; text-align: center; color: black; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8);
+            z-index: 10; margin-bottom: 30px;
+        }
+
+        /* 6. UNIVERSAL MARKETPLACE (Task 2 Restoration) */
+        .market-container {
+            width: 92%; background: rgba(0,0,0,0.9); border: 1px solid #FFD700;
+            border-radius: 10px; padding: 15px; box-sizing: border-box; margin-bottom: 20px;
+        }
+        .market-title { color: #FFD700; font-size: 10px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
+        .ota-btn { 
+            display: block; width: 100%; background: #fff; color: #003580; 
+            padding: 10px; border-radius: 6px; font-weight: 900; text-decoration: none; 
+            margin-bottom: 8px; font-size: 14px; border: none;
         }
 
         input { width: 90%; background: #ffffff; border: 2px solid #000; border-radius: 8px; color: #000; padding: 12px; text-align: center; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; outline: none; }
-
-        /* MARKETPLACE (Task 2) */
-        #ota-market { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; 
-            background: white; padding: 10px; border-radius: 10px; border: 2px solid black;
-        }
-        .ota-link { color: #ff5b00; font-weight: 900; font-size: 11px; text-decoration: none; text-transform: uppercase; border: 1px solid #ff5b00; padding: 4px; border-radius: 4px; }
-
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid rgba(0,0,0,0.1); padding-top: 12px; font-weight: 900; }
-        
-        @keyframes clockJump { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .active-clock { animation: clockJump 0.5s ease-in-out; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -91,16 +92,20 @@
                     <div>CAROUSEL: <span id="a-bag" style="color: #ff5b00;">--</span></div>
                     <div>STATUS: <span id="a-status" style="color: #ff5b00;">--</span></div>
                 </div>
+            </div>
 
-                <div id="ota-market">
-                    <a href="https://www.klook.com" target="_blank" class="ota-link">KLOOK</a>
-                    <a href="https://www.rome2rio.com" target="_blank" class="ota-link">ROME2RIO</a>
-                    <a href="https://www.travelocity.com" target="_blank" class="ota-link">TRAVELOCITY</a>
-                    <a href="https://www.kayak.com" target="_blank" class="ota-link">KAYAK</a>
-                </div>
-                
+            <div class="market-container">
+                <div class="market-title">UNIVERSAL MARKETPLACE</div>
+                <a href="https://www.klook.com" class="ota-btn" style="color:#ff5b00">KLOOK.COM</a>
+                <a href="https://www.rome2rio.com" class="ota-btn" style="color:#000">ROME2RIO</a>
+                <a href="https://www.travelocity.com" class="ota-btn" style="color:#003580">TRAVELOCITY</a>
+                <a href="https://www.kayak.com" class="ota-btn" style="color:#ff5b00">KAYAK</a>
+            </div>
+
+            <div class="market-container">
+                <div class="market-title">GROUND TRANSPORT DATABASE</div>
                 <button onclick="window.location.href='index.html#ground-transport-market'" 
-                    style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; margin-top: 10px; cursor: pointer;">
+                    style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase;">
                     RENTALS & RIDE-HAILING
                 </button>
             </div>
@@ -122,7 +127,6 @@
         window.addEventListener('resize', resize); resize();
 
         const API_KEY = '6973cc1546ac0bf801777b1e';
-        let flightData = null;
         let activeGate = "TBD";
 
         async function syncData() {
@@ -136,18 +140,16 @@
                 const res = await fetch(`https://api.flightapi.io/airline/${API_KEY}?num=${num}&name=${airline}&date=${today}`);
                 const data = await res.json();
                 if (data && data.length > 0) {
-                    flightData = data[0];
-                    // Update Departure Path
-                    document.getElementById('d-term').innerText = flightData.departure?.terminal || "TBD";
-                    document.getElementById('d-gate').innerText = flightData.departure?.gate || "TBD";
-                    document.getElementById('d-status').innerText = flightData.status || "ACTIVE";
-                    activeGate = flightData.departure?.gate || "TBD";
+                    const f = data[0];
+                    document.getElementById('d-term').innerText = f.departure?.terminal || "TBD";
+                    document.getElementById('d-gate').innerText = f.departure?.gate || "TBD";
+                    document.getElementById('d-status').innerText = f.status || "ACTIVE";
+                    activeGate = f.departure?.gate || "TBD";
                     
-                    // Update Arrival Mode
-                    document.getElementById('a-term').innerText = flightData.arrival?.terminal || "TBD";
-                    document.getElementById('a-gate').innerText = flightData.arrival?.gate || "TBD";
-                    document.getElementById('a-bag').innerText = flightData.arrival?.baggage || "WAIT";
-                    document.getElementById('a-status').innerText = flightData.status || "SYNCED";
+                    document.getElementById('a-term').innerText = f.arrival?.terminal || "TBD";
+                    document.getElementById('a-gate').innerText = f.arrival?.gate || "TBD";
+                    document.getElementById('a-bag').innerText = f.arrival?.baggage || "WAIT";
+                    document.getElementById('a-status').innerText = f.status || "SYNCED";
                 }
             } catch (e) { console.error(e); }
         }
@@ -155,19 +157,15 @@
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const gx = canvas.width * 0.5; const gy = canvas.height * 0.65;
-            
-            // Single Departure Pillar
             const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
             ctx.shadowBlur = 10 + pulse; ctx.shadowColor = '#39FF14';
             ctx.fillStyle = '#39FF14';
             ctx.beginPath();
             ctx.moveTo(gx-35, gy); ctx.lineTo(gx, gy-50); ctx.lineTo(gx+35, gy); ctx.fill();
-            
             ctx.textAlign = "center"; ctx.fillStyle = '#fff'; ctx.font = '900 14px Courier New';
             ctx.fillText("BOARDING GATE", gx, gy - 85);
             ctx.font = '900 48px Courier New'; ctx.fillStyle = '#39FF14';
             ctx.fillText(activeGate, gx, gy - 35);
-            
             requestAnimationFrame(draw);
         }
         draw();
