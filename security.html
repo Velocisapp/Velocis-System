@@ -101,8 +101,8 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // MASTER GHOST CREDENTIALS - V12.0 GLOBAL SYNC
-        const GOOGLE_API_KEY = 'AlzaSyApXZ4OmsDr6WipkGovm-HQqUBSFqkgq0U'; 
+        // MASTER GHOST CREDENTIALS - V13.0 ACTIVATED
+        const GOOGLE_API_KEY = 'AIzaSyApXZ4OmsDr6WipkGovm-HQqUBSFqkgq0U'; 
         const SEARCH_ENGINE_ID = 'd4b35e404e4e64e64'; 
 
         let typingLock;
@@ -116,15 +116,20 @@
 
             typingLock = setTimeout(async () => {
                 try {
-                    // Optimized Web Query: Leverages the Unlocked Global Toggle
+                    // Global Search URL construction
                     const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+arrival+gate+baggage+claim+miami`;
                     
                     const res = await fetch(url);
                     const data = await res.json();
                     
+                    if (data.error) {
+                        console.error("API Error: ", data.error.message);
+                        document.getElementById('hub-mission-status').innerText = "SYNC OFFLINE";
+                        return;
+                    }
+
                     if (!data.items || data.items.length === 0) throw new Error("Seeking...");
                     
-                    // Scrape logic: scan the top snippets for live arrival board digits
                     const combinedSnippet = data.items.slice(0, 3).map(i => i.snippet).join(" "); 
 
                     const bMatch = combinedSnippet.match(/Baggage\s*Claim\s*([0-9]+)/i) || combinedSnippet.match(/Carousel\s*([0-9]+)/i) || combinedSnippet.match(/Claim\s*([0-9]+)/i);
