@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VELOCIS™ Flight Terminal</title>
+    <title>VELOCIS™ Flight Information Hub</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -16,12 +16,7 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
-        /* The Jumping Clock Animation */
-        @keyframes clockJump {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        @keyframes clockJump { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .active-clock { animation: clockJump 0.5s ease-in-out; }
 
         #mission-popup { 
@@ -112,6 +107,14 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let typingLock;
 
+        // --- Visual Background Pillars Logic ---
+        let gates = [
+            { id: "G1", pos: 0.18, status: "NEARBY", active: false }, 
+            { id: "G2", pos: 0.39, status: "NEARBY", active: false }, 
+            { id: "G3", pos: 0.61, status: "READY", active: false }, 
+            { id: "G4", pos: 0.83, status: "NEARBY", active: false }
+        ];
+
         function playAirportChime() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
@@ -137,10 +140,9 @@
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
             if (!airlineCode || !flightNum) return;
-
             document.getElementById('hub-mission-status').innerText = "UPDATING...";
-            clearTimeout(typingLock);
 
+            clearTimeout(typingLock);
             typingLock = setTimeout(async () => {
                 try {
                     const url = `https://api.flightapi.io/airline/${FLIGHT_API_KEY}?num=${flightNum}&name=${airlineCode}&date=${today}`;
@@ -149,16 +151,18 @@
 
                     if (data && data.length > 0) {
                         const flightInfo = data[0]; 
+                        const terminal = flightInfo.arrival?.terminal || "D";
+                        const gate = flightInfo.arrival?.gate || "PENDING";
+                        
                         updateDisplay(
-                            flightInfo.arrival?.terminal || "D",
-                            flightInfo.arrival?.gate || "ASSIGNING",
+                            terminal,
+                            gate,
                             flightInfo.arrival?.baggage || "PENDING",
                             flightInfo.status?.toUpperCase() || "ACTIVE",
                             input
                         );
                     } else {
                         document.getElementById('hub-mission-status').innerText = "NOT FOUND";
-                        resetDisplay();
                     }
                 } catch (e) {
                     document.getElementById('hub-mission-status').innerText = "OFFLINE";
@@ -174,15 +178,20 @@
             document.getElementById('hub-action').innerText = s;
             document.getElementById('hub-mission-status').innerText = "FLIGHT INFORMATION AVAILABLE";
             
+            // Sync Pillars to REAL Airport Data
+            const gateName = (g === "PENDING") ? t + "10" : g;
+            const gateBase = parseInt(gateName.replace(/[^0-9]/g, '')) || 10;
+            const termChar = gateName.match(/[A-Z]/) ? gateName.match(/[A-Z]/)[0] : t;
+
+            gates[0].id = termChar + (gateBase - 2);
+            gates[1].id = termChar + (gateBase - 1);
+            gates[2].id = gateName; // The passenger's real gate
+            gates[2].status = "THIS IS YOUR GATE";
+            gates[2].active = true; // Set pulsating flag
+            gates[3].id = termChar + (gateBase + 1);
+
             const ticker = document.getElementById('ticker-text');
             ticker.innerHTML = `FLIGHT: ${flight} | TERMINAL: ${t} | GATE: ${g} | STATUS: ${s}`;
-        }
-
-        function resetDisplay() {
-            document.getElementById('hub-terminal').innerText = "--";
-            document.getElementById('hub-gate').innerText = "--";
-            document.getElementById('hub-carousel').innerText = "--";
-            document.getElementById('hub-action').innerText = "--";
         }
 
         function openRadar() {
@@ -190,38 +199,39 @@
             if (flight) window.open(`https://www.flightradar24.com/data/flights/${flight}`, '_blank');
         }
 
-        // --- RESTORED PILLARS (D10, D14, D22, D25) ---
-        const gates = [
-            { id: "D10", pos: 0.18, status: "BOARDING" }, 
-            { id: "D14", pos: 0.39, status: "ON TIME" }, 
-            { id: "D22", pos: 0.61, status: "ARRIVED" }, 
-            { id: "D25", pos: 0.83, status: "FINAL CALL" }
-        ];
-        const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
-
-        function drawSleekArrow(x, y, color, dark) {
+        function drawSleekArrow(x, y, color, dark, active) {
             ctx.save(); ctx.translate(x, y);
-            const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
-            ctx.shadowBlur = 10 + pulse; ctx.shadowColor = color;
+            const pulse = active ? Math.abs(Math.sin(Date.now() / 250)) * 20 : 0;
+            const hover = Math.sin(Date.now()/400)*10;
+            
+            ctx.shadowBlur = 10 + pulse; 
+            ctx.shadowColor = color;
             ctx.fillStyle = dark; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); ctx.lineTo(-17, 7); ctx.fill();
-            let faceGrd = ctx.createLinearGradient(0, -40, 0, 50);
+            ctx.moveTo(-35, 7 + hover); ctx.lineTo(0, -45 + hover); ctx.lineTo(35, 7 + hover); ctx.lineTo(17, 7 + hover); ctx.lineTo(17, 50 + hover); ctx.lineTo(-17, 50 + hover); ctx.lineTo(-17, 7 + hover); ctx.fill();
+            
+            let faceGrd = ctx.createLinearGradient(0, -40 + hover, 0, 50 + hover);
             faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
             ctx.fillStyle = faceGrd; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); ctx.lineTo(-17, 7); ctx.fill();
+            ctx.moveTo(-35, 7 + hover); ctx.lineTo(0, -45 + hover); ctx.lineTo(35, 7 + hover); ctx.lineTo(17, 7 + hover); ctx.lineTo(17, 45 + hover); ctx.lineTo(-17, 45 + hover); ctx.lineTo(-17, 7 + hover); ctx.fill();
             ctx.restore();
         }
+
+        const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             gates.forEach((g) => {
                 const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
-                let color = (g.status === "ARRIVED") ? '#00ffff' : '#FFD700';
-                let dark = (g.status === "ARRIVED") ? '#008b8b' : '#8B6B00';
-                drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
+                let color = g.active ? '#39FF14' : '#FFD700'; // Green if active
+                let dark = g.active ? '#006400' : '#8B6B00';
+                drawSleekArrow(gx, gy, color, dark, g.active);
+                
                 ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
-                ctx.fillText("GATE", gx, gy - 60); ctx.fillStyle = color; ctx.font = '900 42px Courier New';
-                ctx.fillText(g.id, gx, gy - 20); ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
+                ctx.fillText("GATE", gx, gy - 60 + Math.sin(Date.now()/400)*10);
+                ctx.fillStyle = color; ctx.font = '900 42px Courier New';
+                ctx.fillText(g.id, gx, gy - 20 + Math.sin(Date.now()/400)*10);
+                ctx.font = 'bold 13px monospace'; 
+                ctx.fillText(g.status, gx, gy + 15 + Math.sin(Date.now()/400)*10);
             });
             dots.forEach(d => {
                 const gx = canvas.width * gates[d.targetGate].pos;
@@ -233,12 +243,11 @@
         }
         draw();
 
-        // --- CLOCK WITH JUMPING EFFECT ---
         setInterval(() => { 
             const clock = document.getElementById('clock');
             clock.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; 
             clock.classList.remove('active-clock');
-            void clock.offsetWidth; // Trigger reflow for animation
+            void clock.offsetWidth; 
             clock.classList.add('active-clock');
         }, 1000);
     </script>
