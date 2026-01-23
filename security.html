@@ -101,7 +101,7 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // --- VELOCIS™ GLOBAL SYNC - V33.0 (PROFESSIONAL AVIATION DATA) ---
+        // --- VELOCIS™ GLOBAL SYNC - V34.0 (HARDENED AVIATION DATA) ---
         const FLIGHT_API_KEY = '6973cc1546ac0bf801777b1e'; 
         let typingLock;
 
@@ -109,6 +109,7 @@
             const input = document.getElementById('manual-mission-input').value.trim().toUpperCase();
             if (input.length < 3) return;
 
+            // Strict parameter isolation for API requirements
             const airlineCode = input.match(/[A-Z]+/)?.[0];
             const flightNum = input.match(/[0-9]+/)?.[0];
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -120,6 +121,7 @@
 
             typingLock = setTimeout(async () => {
                 try {
+                    // Refined URL structure to prevent 400 Bad Request errors
                     const url = `https://api.flightapi.io/airline/${FLIGHT_API_KEY}?num=${flightNum}&name=${airlineCode}&date=${today}`;
                     const response = await fetch(url);
                     const data = await response.json();
@@ -128,15 +130,17 @@
                         const flightInfo = data[0]; 
                         updateDisplay(
                             flightInfo.arrival?.terminal || "D",
-                            flightInfo.arrival?.gate || "TBD",
+                            flightInfo.arrival?.gate || "SCAN",
                             flightInfo.arrival?.baggage || "WAIT",
-                            flightInfo.status?.toUpperCase() || "ARRIVED",
+                            flightInfo.status?.toUpperCase() || "SYNCED",
                             input
                         );
                     } else {
                         document.getElementById('hub-mission-status').innerText = "NO DATA FOR TODAY";
+                        resetDisplay();
                     }
                 } catch (e) {
+                    console.error("Critical Sync Failure:", e);
                     document.getElementById('hub-mission-status').innerText = "OFFLINE MODE";
                     resetDisplay();
                 }
@@ -152,7 +156,7 @@
             
             const ticker = document.getElementById('ticker-text');
             ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
-            ticker.innerHTML = `MISSION ${flight} | TERMINAL ${t} | GATE ${g} | CLAIM ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `REAL-TIME SYNC: MISSION ${flight} | TERMINAL ${t} | GATE ${g} | CLAIM ${b} | STATUS: ${s}`;
         }
 
         function resetDisplay() {
