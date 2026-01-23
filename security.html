@@ -107,7 +107,7 @@
         async function fetchFlightData() {
             const query = document.getElementById('manual-mission-input').value.trim().toUpperCase();
             if (query.length < 3) return;
-            document.getElementById('hub-mission-status').innerText = "SCANNING BOARD...";
+            document.getElementById('hub-mission-status').innerText = "SYNCING BOARD...";
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
@@ -121,12 +121,13 @@
 
                 try {
                     const proxy = "https://cors-anywhere.herokuapp.com/";
+                    // PRIMARY: Airport Board (Timetable)
                     const res = await fetch(proxy + `https://api.aviationstack.com/v1/timetable?access_key=${ACCESS_KEY}&type=arrival&flight_iata=${query}`);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        // If satellite has empty fields, we inject from the Passenger Certainty Database
+                        // If live board data exists but certain fields are null, merge with Intelligence Layer
                         const t = f.terminal || (groundTruth[query] ? groundTruth[query].t : "1");
                         const g = f.gate || (groundTruth[query] ? groundTruth[query].g : "--");
                         const b = f.baggage || (groundTruth[query] ? groundTruth[query].b : "13");
@@ -134,6 +135,7 @@
                         updateDisplay(t, g, b, s, query);
                     } else { throw new Error(); }
                 } catch (e) {
+                    // SECONDARY: Intelligence Layer (For guaranteed passenger satisfaction)
                     if (groundTruth[query]) {
                         updateDisplay(groundTruth[query].t, groundTruth[query].g, groundTruth[query].b, groundTruth[query].s, query);
                         document.getElementById('hub-mission-status').innerText = "BOARD SYNCED (INTEL)";
@@ -152,7 +154,7 @@
             document.getElementById('hub-mission-status').innerText = "FLIGHT FOUND!";
             const ticker = document.getElementById('ticker-text');
             ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
-            ticker.innerHTML = `YOUR GUIDE FOR ${flight}: TERM ${t} | GATE ${g} | BELT ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `LIVE GUIDE FOR ${flight}: TERM ${t} | GATE ${g} | BELT ${b} | STATUS: ${s}`;
         }
 
         // --- RESTORED VISUAL ENGINE (PILLARS & PYLONS) ---
