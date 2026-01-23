@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VELOCIS™ Flight Information Hub</title>
+    <title>VELOCIS™ Journey Hub</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -16,6 +16,14 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
+        /* Journey Mode Switcher */
+        #mode-toggle { pointer-events: auto; display: flex; gap: 5px; margin-top: 10px; }
+        .mode-btn {
+            flex: 1; padding: 8px; font-size: 10px; font-weight: 900; border: 1px solid #FFD700;
+            background: rgba(0,0,0,0.5); color: #FFD700; cursor: pointer; text-transform: uppercase;
+        }
+        .mode-btn.active { background: #FFD700; color: #000; }
+
         @keyframes clockJump { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .active-clock { animation: clockJump 0.5s ease-in-out; }
 
@@ -28,7 +36,6 @@
 
         #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
-        .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
         
         .ticker-wrap { position: fixed; bottom: 0; width: 100%; height: 50px; background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
         #ticker-text { white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite; display: inline-block; padding-left: 10px; }
@@ -40,29 +47,30 @@
     
     <div id="ui">
         <div id="header-box">
-            <div id="brand-title">VELOCIS™ FLIGHT TERMINAL</div>
-            <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
-            <div id="clock">TIME: --:--:--</div>
+            <div id="brand-title">VELOCIS™ TRAVEL ASSISTANT</div>
+            <div id="mode-toggle">
+                <button class="mode-btn active" id="btn-dep" onclick="setMode('DEPARTURE')">Departure Path</button>
+                <button class="mode-btn" id="btn-arr" onclick="setMode('ARRIVAL')">Arrival Mode</button>
+            </div>
+            <div id="clock" style="margin-top:10px;">TIME: --:--:--</div>
         </div>
 
         <div id="mission-popup">
-            <h2 style="color: #000000; font-size: 18px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 900;">
-                STATUS: <span id="hub-mission-status" style="color: #ffffff; text-shadow: 1px 1px 2px #000;">SEARCHING...</span>
-            </h2>
+            <h2 id="hub-mode-title" style="color: #000; font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 900;">READY FOR FLIGHT</h2>
 
-            <div style="margin-bottom: 18px;">
+            <div style="margin-bottom: 15px;">
                 <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT NUMBER" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
 
-            <div style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
-                <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">ARRIVAL INFORMATION</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid #ff5b00; padding-top: 12px;">
-                    <div style="color: #000000; font-weight: 900; font-size: 14px;">TERMINAL: <span id="hub-terminal" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000000; font-weight: 900; font-size: 14px;">GATE: <span id="hub-gate" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000000; font-weight: 900; font-size: 14px;">BAGGAGE: <span id="hub-carousel" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000000; font-weight: 900; font-size: 14px;">FLIGHT STATUS: <span id="hub-action" style="color: #ff5b00;">--</span></div>
+            <div id="info-box" style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
+                <h3 id="info-header" style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">ARRIVAL INFORMATION</h3>
+                <div id="arrival-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid #ff5b00; padding-top: 12px;">
+                    <div style="color: #000; font-weight: 900; font-size: 14px;">TERMINAL: <span id="hub-terminal" style="color: #ff5b00;">--</span></div>
+                    <div style="color: #000; font-weight: 900; font-size: 14px;">GATE: <span id="hub-gate" style="color: #ff5b00;">--</span></div>
+                    <div style="color: #000; font-weight: 900; font-size: 14px;">CAROUSEL: <span id="hub-carousel" style="color: #ff5b00;">--</span></div>
+                    <div style="color: #000; font-weight: 900; font-size: 14px;">STATUS: <span id="hub-action" style="color: #ff5b00;">--</span></div>
                 </div>
             </div> 
 
@@ -92,9 +100,7 @@
             <a href="port.html" class="icon-btn">🚗</a>
         </div>
 
-        <div class="ticker-wrap">
-            <div id="ticker-text">MONITORING ARRIVALS...</div>
-        </div>
+        <div class="ticker-wrap"><div id="ticker-text">MONITORING ARRIVALS AND DEPARTURES...</div></div>
     </div>
 
     <script>
@@ -105,9 +111,8 @@
 
         const FLIGHT_API_KEY = '6973cc1546ac0bf801777b1e'; 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let typingLock;
+        let typingLock, flightStore = null, currentMode = 'DEPARTURE';
 
-        // --- Visual Background Pillars Logic ---
         let gates = [
             { id: "G1", pos: 0.18, status: "NEARBY", active: false }, 
             { id: "G2", pos: 0.39, status: "NEARBY", active: false }, 
@@ -115,7 +120,15 @@
             { id: "G4", pos: 0.83, status: "NEARBY", active: false }
         ];
 
-        function playAirportChime() {
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-dep').classList.toggle('active', mode === 'DEPARTURE');
+            document.getElementById('btn-arr').classList.toggle('active', mode === 'ARRIVAL');
+            document.getElementById('info-header').innerText = mode + " INFORMATION";
+            if (flightStore) updateUI();
+        }
+
+        function playChime() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -125,22 +138,16 @@
             osc.frequency.exponentialRampToValueAtTime(440.00, now + 0.5); 
             gain.gain.setValueAtTime(0.1, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(now + 1.5);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(now + 1.5);
         }
 
         async function fetchFlightData() {
             const input = document.getElementById('manual-mission-input').value.trim().toUpperCase();
             if (input.length < 3) return;
-
             const airlineCode = input.match(/[A-Z]+/)?.[0];
             const flightNum = input.match(/[0-9]+/)?.[0];
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-
-            if (!airlineCode || !flightNum) return;
-            document.getElementById('hub-mission-status').innerText = "UPDATING...";
 
             clearTimeout(typingLock);
             typingLock = setTimeout(async () => {
@@ -148,50 +155,37 @@
                     const url = `https://api.flightapi.io/airline/${FLIGHT_API_KEY}?num=${flightNum}&name=${airlineCode}&date=${today}`;
                     const response = await fetch(url);
                     const data = await response.json();
-
                     if (data && data.length > 0) {
-                        const flightInfo = data[0]; 
-                        const terminal = flightInfo.arrival?.terminal || "D";
-                        const gate = flightInfo.arrival?.gate || "PENDING";
-                        
-                        updateDisplay(
-                            terminal,
-                            gate,
-                            flightInfo.arrival?.baggage || "PENDING",
-                            flightInfo.status?.toUpperCase() || "ACTIVE",
-                            input
-                        );
-                    } else {
-                        document.getElementById('hub-mission-status').innerText = "NOT FOUND";
+                        flightStore = data[0];
+                        const status = flightStore.status?.toUpperCase();
+                        if (status === "ARRIVED" || status === "LANDED") setMode('ARRIVAL');
+                        else setMode('DEPARTURE');
+                        updateUI();
                     }
-                } catch (e) {
-                    document.getElementById('hub-mission-status').innerText = "OFFLINE";
-                }
+                } catch (e) { console.error(e); }
             }, 1000);
         }
 
-        function updateDisplay(t, g, b, s, flight) {
-            playAirportChime();
-            document.getElementById('hub-terminal').innerText = t;
-            document.getElementById('hub-gate').innerText = g;
-            document.getElementById('hub-carousel').innerText = b;
-            document.getElementById('hub-action').innerText = s;
-            document.getElementById('hub-mission-status').innerText = "FLIGHT INFORMATION AVAILABLE";
-            
-            // Sync Pillars to REAL Airport Data
-            const gateName = (g === "PENDING") ? t + "10" : g;
-            const gateBase = parseInt(gateName.replace(/[^0-9]/g, '')) || 10;
-            const termChar = gateName.match(/[A-Z]/) ? gateName.match(/[A-Z]/)[0] : t;
+        function updateUI() {
+            playChime();
+            const info = flightStore;
+            document.getElementById('hub-terminal').innerText = info.arrival?.terminal || "TBD";
+            document.getElementById('hub-gate').innerText = info.arrival?.gate || "PENDING";
+            document.getElementById('hub-carousel').innerText = info.arrival?.baggage || "WAIT";
+            document.getElementById('hub-action').innerText = info.status || "ACTIVE";
+            document.getElementById('hub-mode-title').innerText = "FLIGHT DATA SYNCED";
+
+            // Sync Background Pillars to REAL Departure Airport Data
+            const depGate = info.departure?.gate || "G-10";
+            const gateBase = parseInt(depGate.replace(/[^0-9]/g, '')) || 10;
+            const termChar = depGate.match(/[A-Z]/) ? depGate.match(/[A-Z]/)[0] : (info.departure?.terminal || "G");
 
             gates[0].id = termChar + (gateBase - 2);
             gates[1].id = termChar + (gateBase - 1);
-            gates[2].id = gateName; // The passenger's real gate
-            gates[2].status = "THIS IS YOUR GATE";
-            gates[2].active = true; // Set pulsating flag
+            gates[2].id = depGate; 
+            gates[2].status = "BOARDING GATE";
+            gates[2].active = true; 
             gates[3].id = termChar + (gateBase + 1);
-
-            const ticker = document.getElementById('ticker-text');
-            ticker.innerHTML = `FLIGHT: ${flight} | TERMINAL: ${t} | GATE: ${g} | STATUS: ${s}`;
         }
 
         function openRadar() {
@@ -203,12 +197,9 @@
             ctx.save(); ctx.translate(x, y);
             const pulse = active ? Math.abs(Math.sin(Date.now() / 250)) * 20 : 0;
             const hover = Math.sin(Date.now()/400)*10;
-            
-            ctx.shadowBlur = 10 + pulse; 
-            ctx.shadowColor = color;
+            ctx.shadowBlur = 15 + pulse; ctx.shadowColor = color;
             ctx.fillStyle = dark; ctx.beginPath();
             ctx.moveTo(-35, 7 + hover); ctx.lineTo(0, -45 + hover); ctx.lineTo(35, 7 + hover); ctx.lineTo(17, 7 + hover); ctx.lineTo(17, 50 + hover); ctx.lineTo(-17, 50 + hover); ctx.lineTo(-17, 7 + hover); ctx.fill();
-            
             let faceGrd = ctx.createLinearGradient(0, -40 + hover, 0, 50 + hover);
             faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
             ctx.fillStyle = faceGrd; ctx.beginPath();
@@ -216,28 +207,18 @@
             ctx.restore();
         }
 
-        const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
-
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const color = (currentMode === 'DEPARTURE') ? '#39FF14' : '#00ffff';
+            const dark = (currentMode === 'DEPARTURE') ? '#006400' : '#008b8b';
             gates.forEach((g) => {
                 const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
-                let color = g.active ? '#39FF14' : '#FFD700'; // Green if active
-                let dark = g.active ? '#006400' : '#8B6B00';
-                drawSleekArrow(gx, gy, color, dark, g.active);
-                
+                drawSleekArrow(gx, gy, g.active ? color : '#FFD700', g.active ? dark : '#8B6B00', g.active);
                 ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
                 ctx.fillText("GATE", gx, gy - 60 + Math.sin(Date.now()/400)*10);
-                ctx.fillStyle = color; ctx.font = '900 42px Courier New';
+                ctx.fillStyle = g.active ? color : '#FFD700'; ctx.font = '900 42px Courier New';
                 ctx.fillText(g.id, gx, gy - 20 + Math.sin(Date.now()/400)*10);
-                ctx.font = 'bold 13px monospace'; 
-                ctx.fillText(g.status, gx, gy + 15 + Math.sin(Date.now()/400)*10);
-            });
-            dots.forEach(d => {
-                const gx = canvas.width * gates[d.targetGate].pos;
-                d.x += (gx - d.x) * 0.015; d.y -= d.speed;
-                if (d.y < canvas.height * 0.65) d.y = canvas.height + 20;
-                ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
+                ctx.font = 'bold 12px monospace'; ctx.fillText(g.status, gx, gy + 15 + Math.sin(Date.now()/400)*10);
             });
             requestAnimationFrame(draw);
         }
@@ -246,9 +227,7 @@
         setInterval(() => { 
             const clock = document.getElementById('clock');
             clock.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; 
-            clock.classList.remove('active-clock');
-            void clock.offsetWidth; 
-            clock.classList.add('active-clock');
+            clock.classList.remove('active-clock'); void clock.offsetWidth; clock.classList.add('active-clock');
         }, 1000);
     </script>
 </body>
