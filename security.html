@@ -101,7 +101,7 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // MASTER GHOST CREDENTIALS - V13.0 ACTIVATED
+        // --- FINAL VERIFIED CREDENTIALS ---
         const GOOGLE_API_KEY = 'AIzaSyApXZ4OmsDr6WipkGovm-HQqUBSFqkgq0U'; 
         const SEARCH_ENGINE_ID = 'd4b35e404e4e64e64'; 
 
@@ -116,14 +116,14 @@
 
             typingLock = setTimeout(async () => {
                 try {
-                    // Global Search URL construction
-                    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+arrival+gate+baggage+claim+miami`;
+                    // This URL matches the enabled settings in your Cloud Dashboard
+                    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+arrival+gate+claim+miami`;
                     
                     const res = await fetch(url);
                     const data = await res.json();
                     
                     if (data.error) {
-                        console.error("API Error: ", data.error.message);
+                        console.error("API ERROR:", data.error.message);
                         document.getElementById('hub-mission-status').innerText = "SYNC OFFLINE";
                         return;
                     }
