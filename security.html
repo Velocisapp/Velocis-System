@@ -62,7 +62,7 @@
             <div style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
                 <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">LIVE TERMINAL BOARD</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid #ff5b00; padding-top: 12px;">
-                    <div style="color: #000000; font-weight: 900; font-size: 14px;">CONCOURSE: <span id="hub-terminal" style="color: #ff5b00;">--</span></div>
+                    <div style="color: #000000; font-weight: 900; font-size: 14px;">TERMINAL: <span id="hub-terminal" style="color: #ff5b00;">--</span></div>
                     <div style="color: #000000; font-weight: 900; font-size: 14px;">GATE: <span id="hub-gate" style="color: #ff5b00;">--</span></div>
                     <div style="color: #000000; font-weight: 900; font-size: 14px;">CLAIM: <span id="hub-carousel" style="color: #ff5b00;">--</span></div>
                     <div style="color: #000000; font-weight: 900; font-size: 14px;">STATUS: <span id="hub-action" style="color: #ff5b00;">--</span></div>
@@ -91,7 +91,7 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text">AIDX BOARD SYNC ACTIVE | ENTER MISSION CODE FOR LIVE RECLAIM DATA...</div>
+            <div id="ticker-text">GLOBAL HUB ACTIVE | HARVESTING TERMINAL TRUTH...</div>
         </div>
     </div>
 
@@ -101,47 +101,49 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
+        // MASTER GHOST CREDENTIALS
+        const GOOGLE_API_KEY = 'AlzaSyApXZ4OmsDr6WipkGovm-HQqUBSFqkgq0U'; 
+        const SEARCH_ENGINE_ID = '316a07607946a45af'; 
+
         let typingLock;
 
         async function fetchFlightData() {
             const query = document.getElementById('manual-mission-input').value.trim().toUpperCase();
             if (query.length < 3) return;
-            document.getElementById('hub-mission-status').innerText = "HARVESTING FIDS BOARD...";
+            
+            document.getElementById('hub-mission-status').innerText = "HARVESTING TERMINAL TRUTH...";
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
                 try {
-                    const proxy = "https://cors-anywhere.herokuapp.com/";
-                    // PRIMARY PULSE: Timetable board (Direct Airport Board Sync)
-                    const res = await fetch(proxy + `https://api.aviationstack.com/v1/timetable?access_key=${ACCESS_KEY}&type=arrival&flight_iata=${query}`);
+                    // Global Ghost Query: Forces Google to find live airport board text
+                    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+status+arrival+gate+baggage+claim`;
+                    
+                    const res = await fetch(url);
                     const data = await res.json();
                     
-                    if (data.data && data.data.length > 0) {
-                        const f = data.data[0];
-                        // Prioritizing the exact fields from the Miami Board: Concourse, Gate, and Claim
-                        updateDisplay(
-                            f.terminal || "TBD", 
-                            f.gate || "TBD", 
-                            f.baggage || f.carousel || "WAITING", 
-                            (f.status || "ACTIVE").toUpperCase(), 
-                            query, 
-                            "FIDS LIVE"
-                        );
-                    } else {
-                        // SECONDARY PULSE: Radar Deep-Scan fallback
-                        const backupRes = await fetch(proxy + `https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
-                        const backupData = await backupRes.json();
-                        if (backupData.data && backupData.data.length > 0) {
-                            const bf = backupData.data[0].arrival;
-                            updateDisplay(bf.terminal || "TBD", bf.gate || "SCANNING", bf.baggage || "WAITING", "TRACKING", query, "RADAR LOCK");
-                        } else { throw new Error(); }
-                    }
+                    if (!data.items || data.items.length === 0) throw new Error("Seeking...");
+                    
+                    const snippet = data.items[0].snippet; 
+
+                    // Invisible Scraper: Extracting Global digits from the text snippet
+                    const bMatch = snippet.match(/Baggage\s*Claim\s*([0-9]+)/i) || snippet.match(/Carousel\s*([0-9]+)/i);
+                    const gMatch = snippet.match(/Gate\s*([A-Z0-9]+)/i);
+                    const tMatch = snippet.match(/Concourse\s*([A-Z])/i) || snippet.match(/Terminal\s*([0-9A-Z])/i);
+
+                    updateDisplay(
+                        tMatch ? tMatch[1] : "SCAN", 
+                        gMatch ? gMatch[1] : "TBD", 
+                        bMatch ? bMatch[1] : "WAITING", 
+                        "ARRIVED", 
+                        query, 
+                        "GLOBAL SYNC"
+                    );
                 } catch (e) {
-                    document.getElementById('hub-mission-status').innerText = "DATA PENDING";
+                    document.getElementById('hub-mission-status').innerText = "SYNC OFFLINE";
                     resetDisplay();
                 }
-            }, 800);
+            }, 1000);
         }
 
         function updateDisplay(t, g, b, s, flight, source) {
@@ -152,7 +154,7 @@
             document.getElementById('hub-mission-status').innerText = "BOARD SYNCED";
             const ticker = document.getElementById('ticker-text');
             ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
-            ticker.innerHTML = `[${source}] MISSION ${flight} | CONCOURSE ${t} | GATE ${g} | CLAIM ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `[${source}] MISSION ${flight} | TERMINAL ${t} | GATE ${g} | CLAIM ${b} | STATUS: ${s}`;
         }
 
         function resetDisplay() {
