@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VELOCIS™ Travel Hub</title>
+    <title>VELOCIS™ Security Hub</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -50,7 +50,7 @@
 
         <div id="mission-popup">
             <h2 style="color: #000000; font-size: 22px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 900;">
-                MISSION: <span id="hub-mission-status" style="color: #ffffff; text-shadow: 1px 1px 2px #000;">SYNCING BOARD...</span>
+                MISSION: <span id="hub-mission-status" style="color: #ffffff; text-shadow: 1px 1px 2px #000;">SYNCING...</span>
             </h2>
 
             <div style="margin-bottom: 18px;">
@@ -107,35 +107,29 @@
         async function fetchFlightData() {
             const query = document.getElementById('manual-mission-input').value.trim().toUpperCase();
             if (query.length < 3) return;
-            document.getElementById('hub-mission-status').innerText = "SYNCING BOARD...";
+            document.getElementById('hub-mission-status').innerText = "QUERYING AIRPORT...";
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
-                // Verified Test Intelligence
-                const intel = {
-                    "LH470": { t: "1", g: "B12", b: "13", s: "LANDED" },
-                    "DL412": { t: "4", g: "B2", b: "5", s: "ON TIME" },
-                    "AF006": { t: "1", g: "E4", b: "7", s: "ARRIVED" },
-                    "AA100": { t: "8", g: "42", b: "22", s: "LANDED" }
-                };
-
                 try {
                     const proxy = "https://cors-anywhere.herokuapp.com/";
-                    // PRIMARY: Airport Board Handshake (Timetable)
+                    // This targets the Live Airport Arrival/Departure Board specifically
                     const res = await fetch(proxy + `https://api.aviationstack.com/v1/timetable?access_key=${ACCESS_KEY}&type=arrival&flight_iata=${query}`);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        updateDisplay(f.terminal || "1", f.gate || "--", f.baggage || "--", (f.status || "ACTIVE").toUpperCase(), query);
+                        updateDisplay(
+                            f.terminal || "TBD", 
+                            f.gate || "SCANNING", 
+                            f.baggage || "WAITING", 
+                            (f.status || "ACTIVE").toUpperCase(), 
+                            query
+                        );
                     } else { throw new Error(); }
                 } catch (e) {
-                    if (intel[query]) {
-                        updateDisplay(intel[query].t, intel[query].g, intel[query].b, intel[query].s, query);
-                        document.getElementById('hub-mission-status').innerText = "BOARD SYNCED (LOCAL)";
-                    } else {
-                        document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
-                    }
+                    document.getElementById('hub-mission-status').innerText = "NO LIVE DATA FOUND";
+                    resetDisplay();
                 }
             }, 1000);
         }
@@ -145,25 +139,22 @@
             document.getElementById('hub-gate').innerText = g;
             document.getElementById('hub-carousel').innerText = b;
             document.getElementById('hub-action').innerText = s;
-            document.getElementById('hub-mission-status').innerText = "FLIGHT FOUND!";
+            document.getElementById('hub-mission-status').innerText = "BOARD SYNCED";
             const ticker = document.getElementById('ticker-text');
             ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
-            ticker.innerHTML = `YOUR GUIDE FOR ${flight}: TERM ${t} | GATE ${g} | BELT ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `LIVE GUIDE FOR ${flight}: TERM ${t} | GATE ${g} | BELT ${b} | STATUS: ${s}`;
         }
 
-        // --- RESTORED VISUAL ENGINE ---
-        const gates = [
-            { id: "B12", pos: 0.18, status: "BOARDING" }, 
-            { id: "B14", pos: 0.39, status: "BOARDING" }, 
-            { id: "A05", pos: 0.61, status: "ON TIME" }, 
-            { id: "A07", pos: 0.83, status: "FINAL CALL" }
-        ];
-        const dots = Array.from({ length: 35 }, () => ({ 
-            x: Math.random() * canvas.width, 
-            y: canvas.height + 20, 
-            speed: 0.4 + Math.random() * 0.8, 
-            targetGate: Math.floor(Math.random() * gates.length) 
-        }));
+        function resetDisplay() {
+            document.getElementById('hub-terminal').innerText = "--";
+            document.getElementById('hub-gate').innerText = "--";
+            document.getElementById('hub-carousel').innerText = "--";
+            document.getElementById('hub-action').innerText = "--";
+        }
+
+        // --- VISUAL ENGINE (PILLARS & PYLONS) ---
+        const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
+        const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
         function drawSleekArrow(x, y, color, dark) {
             ctx.save(); ctx.translate(x, y);
@@ -182,7 +173,6 @@
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
             if (hasFinalCall) document.getElementById('header-box').style.animation = 'alertBoxPulse 1s infinite ease-in-out';
-            
             gates.forEach((g) => {
                 const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
                 let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
