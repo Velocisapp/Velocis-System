@@ -116,78 +116,75 @@
         }
 
         function draw() {
-            ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#010406'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             const scrollY = scrollBox.scrollTop;
             const scrollRatio = scrollY / canvas.height;
             const themeColor = scrollRatio < 0.5 ? '57, 255, 20' : '255, 91, 0';
             const time = Date.now() * 0.001;
 
-            // 1. AMBIENT BUILDING GLOW
-            let envGrad = ctx.createRadialGradient(canvas.width/2, canvas.height, 50, canvas.width/2, canvas.height, canvas.height * 0.8);
-            envGrad.addColorStop(0, `rgba(${themeColor}, 0.15)`);
-            envGrad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = envGrad;
-            ctx.fillRect(0, canvas.height * 0.2, canvas.width, canvas.height * 0.8);
+            // 1. CONCOURSE AMBIANCE (Floor Glow)
+            let floorGrad = ctx.createLinearGradient(0, canvas.height * 0.4, 0, canvas.height);
+            floorGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            floorGrad.addColorStop(1, `rgba(${themeColor}, 0.1)`);
+            ctx.fillStyle = floorGrad;
+            ctx.fillRect(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7);
 
-            // 2. ARCHITECTURAL SKELETON (Building Skeleton)
-            ctx.lineWidth = 1.5;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = `rgba(${themeColor}, 0.5)`;
-            
-            for (let i = 0; i < 5; i++) {
-                let zPos = (i * 200 + (time * 60) % 200);
-                let opacity = (1 - zPos / 1000) * 0.4;
+            // 2. ARCHITECTURAL RIBS (Elegant Quadratic Arches)
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 6; i++) {
+                let zPos = (i * 180 + (time * 50) % 180);
+                let opacity = (1 - zPos / 1000) * 0.3;
                 ctx.strokeStyle = `rgba(${themeColor}, ${opacity})`;
                 
-                // Portal Arch (Structural Portal)
+                let w = (zPos / canvas.height) * canvas.width * 2.2;
+                let x = canvas.width/2 - w/2;
+                let y = canvas.height - zPos;
+
                 ctx.beginPath();
-                let archWidth = (zPos / canvas.height) * canvas.width * 2.5;
-                let archX = canvas.width / 2 - archWidth / 2;
-                let archY = canvas.height - zPos;
-                ctx.strokeRect(archX, archY, archWidth, zPos);
+                ctx.moveTo(x, canvas.height);
+                ctx.quadraticCurveTo(x, y, canvas.width/2, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, canvas.height);
+                ctx.stroke();
             }
 
-            // 3. CENTRAL CONCOURSE PATH (Modern Blueprint)
-            ctx.setLineDash([10, 15]);
-            ctx.strokeStyle = `rgba(${themeColor}, 0.3)`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(canvas.width/2 - 60, canvas.height * 0.3);
-            ctx.lineTo(canvas.width/2 - 200, canvas.height);
-            ctx.moveTo(canvas.width/2 + 60, canvas.height * 0.3);
-            ctx.lineTo(canvas.width/2 + 200, canvas.height);
-            ctx.stroke();
-            ctx.setLineDash([]); // Reset
+            // 3. RECESSED PATHWAY LIGHTS (LED Floor Studs)
+            for (let k = 0; k < 15; k++) {
+                let dotY = (k * 60 + (time * 50) % 60) + (canvas.height * 0.3);
+                if (dotY < canvas.height) {
+                    let dotAlpha = (dotY / canvas.height) * 0.4;
+                    ctx.fillStyle = `rgba(${themeColor}, ${dotAlpha})`;
+                    ctx.beginPath(); ctx.arc(canvas.width/2 - 80, dotY, 2, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(canvas.width/2 + 80, dotY, 2, 0, Math.PI*2); ctx.fill();
+                }
+            }
 
-            // 4. THE LEAD CHEVRON (Mission Objective)
+            // 4. THE LEAD (Geometric Prism)
             const cx = canvas.width / 2;
-            const cy = canvas.height * 0.85;
-            ctx.shadowBlur = 30; ctx.shadowColor = `rgba(${themeColor}, 1)`;
+            const cy = canvas.height * 0.82;
+            ctx.shadowBlur = 20; ctx.shadowColor = `rgba(${themeColor}, 1)`;
             ctx.fillStyle = `rgba(${themeColor}, 1)`;
             ctx.beginPath();
-            ctx.moveTo(cx, cy - 25); ctx.lineTo(cx - 15, cy + 5);
-            ctx.lineTo(cx, cy - 2); ctx.lineTo(cx + 15, cy + 5);
+            ctx.moveTo(cx, cy - 22);
+            ctx.lineTo(cx - 14, cy + 6);
+            ctx.lineTo(cx, cy);
+            ctx.lineTo(cx + 14, cy + 6);
             ctx.closePath(); ctx.fill();
             ctx.shadowBlur = 0;
 
-            // 5. COMMERCE ANNOTATIONS (Gold Nodes)
+            // 5. COMMERCE NODES (Minimalist Gold Annotations)
             shops.forEach(s => {
-                let y = (s.y * canvas.height + (time * 50)) % canvas.height;
-                if (y > canvas.height * 0.4) {
-                    let alpha = Math.min(0.8, (y / canvas.height));
-                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.42));
-                    
-                    ctx.strokeStyle = `rgba(255, 215, 0, ${alpha})`;
-                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 50); ctx.stroke();
-                    
+                let y = (s.y * canvas.height + (time * 40)) % canvas.height;
+                if (y > canvas.height * 0.45) {
+                    let alpha = Math.min(0.7, (y / canvas.height));
+                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.35));
+                    ctx.strokeStyle = `rgba(255, 215, 0, ${alpha * 0.5})`;
+                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 40); ctx.stroke();
                     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                    ctx.font = '900 11px Courier New';
+                    ctx.font = '900 10px sans-serif';
                     ctx.textAlign = s.side === 1 ? 'left' : 'right';
-                    ctx.fillText(s.name, x + (s.side * 12), y - 45);
-                    
-                    ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
-                    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillText(s.name, x + (s.side * 10), y - 35);
                 }
             });
 
