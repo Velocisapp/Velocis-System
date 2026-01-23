@@ -123,64 +123,74 @@
             const themeColor = scrollRatio < 0.5 ? '57, 255, 20' : '255, 91, 0';
             const time = Date.now() * 0.001;
 
-            // 1. FLOOR SHADING (Adds substance)
-            let grad = ctx.createLinearGradient(0, canvas.height * 0.4, 0, canvas.height);
-            grad.addColorStop(0, 'rgba(0,0,0,0)');
-            grad.addColorStop(1, `rgba(${themeColor}, 0.08)`);
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7);
+            // 1. AMBIENT BUILDING GLOW
+            let envGrad = ctx.createRadialGradient(canvas.width/2, canvas.height, 50, canvas.width/2, canvas.height, canvas.height * 0.8);
+            envGrad.addColorStop(0, `rgba(${themeColor}, 0.15)`);
+            envGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = envGrad;
+            ctx.fillRect(0, canvas.height * 0.2, canvas.width, canvas.height * 0.8);
 
-            // 2. LUMINOUS GRID
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = `rgba(${themeColor}, 0.5)`;
+            // 2. ARCHITECTURAL SKELETON (Building Skeleton)
             ctx.lineWidth = 1.5;
-            for (let i = 0; i < 12; i++) {
-                let opacity = (1 - i / 12) * 0.4;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = `rgba(${themeColor}, 0.5)`;
+            
+            for (let i = 0; i < 5; i++) {
+                let zPos = (i * 200 + (time * 60) % 200);
+                let opacity = (1 - zPos / 1000) * 0.4;
                 ctx.strokeStyle = `rgba(${themeColor}, ${opacity})`;
+                
+                // Portal Arch (Structural Portal)
                 ctx.beginPath();
-                ctx.moveTo(canvas.width / 2, canvas.height * 0.3);
-                ctx.lineTo((i - 5.5) * (canvas.width / 1.8) + (canvas.width / 2), canvas.height);
-                ctx.stroke();
+                let archWidth = (zPos / canvas.height) * canvas.width * 2.5;
+                let archX = canvas.width / 2 - archWidth / 2;
+                let archY = canvas.height - zPos;
+                ctx.strokeRect(archX, archY, archWidth, zPos);
             }
 
-            // 3. RADAR PULSE
-            let pulse = (time * 0.5) % 1;
-            ctx.strokeStyle = `rgba(${themeColor}, ${0.2 * (1 - pulse)})`;
+            // 3. CENTRAL CONCOURSE PATH (Modern Blueprint)
+            ctx.setLineDash([10, 15]);
+            ctx.strokeStyle = `rgba(${themeColor}, 0.3)`;
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.ellipse(canvas.width / 2, canvas.height * 0.8, 200 * pulse, 100 * pulse, 0, 0, Math.PI * 2);
+            ctx.moveTo(canvas.width/2 - 60, canvas.height * 0.3);
+            ctx.lineTo(canvas.width/2 - 200, canvas.height);
+            ctx.moveTo(canvas.width/2 + 60, canvas.height * 0.3);
+            ctx.lineTo(canvas.width/2 + 200, canvas.height);
             ctx.stroke();
+            ctx.setLineDash([]); // Reset
 
-            // 4. GOLD COMMERCE NODES
+            // 4. THE LEAD CHEVRON (Mission Objective)
+            const cx = canvas.width / 2;
+            const cy = canvas.height * 0.85;
+            ctx.shadowBlur = 30; ctx.shadowColor = `rgba(${themeColor}, 1)`;
+            ctx.fillStyle = `rgba(${themeColor}, 1)`;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 25); ctx.lineTo(cx - 15, cy + 5);
+            ctx.lineTo(cx, cy - 2); ctx.lineTo(cx + 15, cy + 5);
+            ctx.closePath(); ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // 5. COMMERCE ANNOTATIONS (Gold Nodes)
             shops.forEach(s => {
-                let y = (s.y * canvas.height + (time * 80)) % canvas.height;
-                if (y > canvas.height * 0.35) {
-                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.38));
+                let y = (s.y * canvas.height + (time * 50)) % canvas.height;
+                if (y > canvas.height * 0.4) {
                     let alpha = Math.min(0.8, (y / canvas.height));
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.42));
+                    
                     ctx.strokeStyle = `rgba(255, 215, 0, ${alpha})`;
                     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 50); ctx.stroke();
+                    
                     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                    ctx.font = '900 10px monospace';
+                    ctx.font = '900 11px Courier New';
                     ctx.textAlign = s.side === 1 ? 'left' : 'right';
                     ctx.fillText(s.name, x + (s.side * 12), y - 45);
+                    
                     ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
                     ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
                 }
             });
 
-            // 5. THE LEAD CHEVRON
-            const cx = canvas.width / 2;
-            const cy = canvas.height * 0.8;
-            ctx.shadowBlur = 20; ctx.shadowColor = `rgba(${themeColor}, 1)`;
-            ctx.fillStyle = `rgba(${themeColor}, 1)`;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 25); ctx.lineTo(cx - 18, cy + 8);
-            ctx.lineTo(cx, cy); ctx.lineTo(cx + 18, cy + 8);
-            ctx.closePath(); ctx.fill();
-
-            ctx.shadowBlur = 0;
             requestAnimationFrame(draw);
         }
         draw();
