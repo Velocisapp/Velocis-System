@@ -113,12 +113,13 @@
             typingLock = setTimeout(async () => {
                 try {
                     const proxy = "https://cors-anywhere.herokuapp.com/";
-                    // PRIMARY PULSE: Timetable board (AIDX Sync)
+                    // PRIMARY PULSE: Timetable board (AIDX/FIDS Protocol)
                     const res = await fetch(proxy + `https://api.aviationstack.com/v1/timetable?access_key=${ACCESS_KEY}&type=arrival&flight_iata=${query}`);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
+                        // High-Priority Data Mapping (Concourse/Gate/Claim)
                         updateDisplay(
                             f.terminal || "TBD", 
                             f.gate || "TBD", 
@@ -128,7 +129,7 @@
                             "FIDS LIVE"
                         );
                     } else {
-                        // SECONDARY PULSE: Radar Deep-Scan
+                        // SECONDARY PULSE: Radar Tracking Sync
                         const backupRes = await fetch(proxy + `https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
                         const backupData = await backupRes.json();
                         if (backupData.data && backupData.data.length > 0) {
@@ -137,7 +138,7 @@
                         } else { throw new Error(); }
                     }
                 } catch (e) {
-                    document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
+                    document.getElementById('hub-mission-status').innerText = "DATA PENDING";
                     resetDisplay();
                 }
             }, 800);
@@ -151,7 +152,7 @@
             document.getElementById('hub-mission-status').innerText = "BOARD SYNCED";
             const ticker = document.getElementById('ticker-text');
             ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
-            ticker.innerHTML = `[${source}] ${flight} | CONCOURSE ${t} | GATE ${g} | CLAIM ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `[${source}] MISSION ${flight} | CONCOURSE ${t} | GATE ${g} | CLAIM ${b} | STATUS: ${s}`;
         }
 
         function resetDisplay() {
