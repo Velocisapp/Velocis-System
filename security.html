@@ -82,7 +82,7 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text">AIR GATE ACTIVE | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING SATELLITE...</div>
+            <div id="ticker-text">AIR GATE ACTIVE | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING LOGISTICS...</div>
         </div>
     </div>
 
@@ -105,28 +105,36 @@
             typingLock = setTimeout(async () => {
                 if (query.length === 3 && !/\d/.test(query)) {
                     document.getElementById('hub-mission-status').innerText = `${query} IDENTIFIED`;
-                    document.getElementById('ticker-text').innerText = `AIRPORT ${query} SECURED | READY FOR TRANSPORT`;
+                    document.getElementById('ticker-text').innerHTML = `<span style="color: #00ffff;">AIRPORT ${query} SECURED</span> | STANDBY FOR LOGISTICS`;
                     return;
                 }
 
                 try {
-                    const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
+                    // EMERGENCY HANDSHAKE: Using a protocol bypass
+                    const url = `https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`;
+                    const res = await fetch(url);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        const airline = f.airline ? f.airline.name.toUpperCase() : "CARRIER";
+                        const carrier = f.airline ? f.airline.name.toUpperCase() : "CARRIER";
                         
-                        // THE DEEP DATA PROBE: Search all layers including .live and .gate
+                        // DEEP LOG SEARCH
                         const t = f.arrival.terminal || f.departure.terminal || (f.live && f.live.gate_number) || "1";
                         const b = f.arrival.baggage || f.arrival.carousel || (f.flight_status === 'landed' ? "13" : "--");
 
-                        document.getElementById('hub-mission-status').innerText = `${airline} (LOCKED)`;
+                        document.getElementById('hub-mission-status').innerText = `${carrier} (RADAR LOCK)`;
                         document.getElementById('hub-terminal').innerText = `TERM: ${t}`;
                         document.getElementById('hub-carousel').innerText = `CAROUSEL: ${b}`;
                         document.getElementById('ticker-text').innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERMINAL ${t} | CAROUSEL ${b}`;
+                    } else {
+                        // Fallback attempt
+                        document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
                     }
-                } catch (e) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
+                } catch (e) { 
+                    console.error("Satellite Handshake Failed:", e);
+                    document.getElementById('hub-mission-status').innerText = "CONNECTION DEAD";
+                }
             }, 1000); 
         }
 
@@ -156,9 +164,8 @@
                 let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
                 let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
                 
-                // PILLARS RESTORED
                 const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
-                pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, (g.status === "ON TIME") ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 49, 49, 0.15)'); pGrd.addColorStop(1, 'transparent');
+                pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(255, 215, 0, 0.15)'); pGrd.addColorStop(1, 'transparent');
                 ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
 
                 drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
