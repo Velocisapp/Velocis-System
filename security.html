@@ -7,81 +7,66 @@
         body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow-x: hidden; }
         
         /* MASTER SCROLL CONTAINER */
-        #scroll-wrapper { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        section { min-height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 120px; }
+        #scroll-wrapper { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
+        section { min-height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
         /* PERSISTENT HEADER */
         #header-box { 
             position: fixed; top: 20px; left: 5%; width: 90%; z-index: 1000;
-            border: 2px solid #FFD700; padding: 10px; background: rgba(0,20,20,0.9); 
-            box-sizing: border-box; text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.4); padding: 10px; background: rgba(0,20,20,0.85); 
+            backdrop-filter: blur(10px); text-align: center;
         }
-        #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
-        @keyframes clockJump { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .active-clock { animation: clockJump 0.5s ease-in-out; }
+        #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
 
-        /* PERSISTENT 5-EMOJI NAV (Ready to tap) */
+        /* DISCREET TOP WINDOWS */
+        .discreet-window {
+            position: absolute; top: 110px; left: 5%; width: 85%; 
+            background: rgba(0, 10, 15, 0.7); backdrop-filter: blur(15px);
+            border-left: 4px solid #39FF14; padding: 12px; z-index: 100;
+            text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .arr-window { border-left-color: #ff5b00; }
+        
+        .label-tiny { font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1.5px; }
+        .objective-text { font-size: 13px; color: #fff; margin-top: 4px; text-transform: uppercase; }
+
+        /* PERSISTENT 5-EMOJI NAV */
         #persistent-nav {
             position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; background: rgba(20, 40, 60, 0.8);
+            display: flex; gap: 15px; background: rgba(20, 40, 60, 0.6);
             backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 50px;
-            border: 1px solid #00ffff; z-index: 9999; pointer-events: auto;
+            border: 1px solid rgba(0, 255, 255, 0.3); z-index: 9999;
         }
-        .nav-item { font-size: 24px; text-decoration: none; cursor: pointer; }
+        .nav-item { font-size: 24px; text-decoration: none; }
 
-        /* DEPARTURE WINDOW (Green Phase) */
-        #departure-window {
-            background: rgba(0, 40, 0, 0.9); border: 3px solid #39FF14; border-radius: 15px;
-            width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(57, 255, 20, 0.4);
-            z-index: 10; margin-top: 100px;
-        }
-
-        /* ARRIVAL WINDOW (Orange Phase) */
-        #arrival-window {
-            background: rgba(255, 91, 0, 0.98); border: 3px solid #ffffff; border-radius: 15px;
-            width: 92%; padding: 18px; text-align: center; color: black; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8);
-            z-index: 10; margin-bottom: 30px;
-        }
-
-        input { width: 90%; background: #ffffff; border: 2px solid #000; border-radius: 8px; color: #000; padding: 12px; text-align: center; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; outline: none; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid rgba(0,0,0,0.1); padding-top: 12px; font-weight: 900; }
         canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+
+        input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(57, 255, 20, 0.3); border-radius: 4px; color: #39FF14; padding: 8px; font-family: monospace; font-size: 12px; margin-top: 10px; outline: none; }
     </style>
 </head>
 <body>
 
     <div id="header-box">
-        <div style="color: #FFD700; font-size: 12px; font-weight: 900;">VELOCIS™ JOURNEY HUB</div>
+        <div style="color: #FFD700; font-size: 10px; font-weight: 900; letter-spacing: 3px;">VELOCIS™ GLOBAL SECURITY</div>
         <div id="clock">TIME: --:--:--</div>
     </div>
 
     <div id="scroll-wrapper">
         <section id="dep-section">
-            <canvas id="engine"></canvas>
-            <div id="departure-window">
-                <h2 style="color: #39FF14; font-size: 18px; margin: 0 0 10px 0;">DEPARTURE PATH</h2>
-                <input type="text" id="flight-input" placeholder="ENTER FLIGHT #" oninput="syncData()">
-                <div class="info-grid" style="color: white;">
-                    <div>TERM: <span id="d-term" style="color: #39FF14;">--</span></div>
-                    <div>GATE: <span id="d-gate" style="color: #39FF14;">--</span></div>
-                    <div>COUNTER: <span style="color: #39FF14;">READY</span></div>
-                    <div>STATUS: <span id="d-status" style="color: #39FF14;">--</span></div>
-                </div>
-                <p style="font-size: 10px; color: #39FF14; margin-top: 15px; font-weight: bold;">SCROLL DOWN FOR ARRIVAL INFO</p>
+            <div class="discreet-window">
+                <div class="label-tiny">Terminal Guidance: Departure</div>
+                <div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">TBD</span> | Status: <span id="d-status-ui">SCANNING</span></div>
+                <input type="text" id="flight-input" placeholder="INPUT FLIGHT #" oninput="syncData()">
             </div>
+            <canvas id="blueprint-canvas"></canvas>
         </section>
 
         <section id="arr-section">
-            <div id="arrival-window">
-                <h2 style="margin: 0 0 10px 0;">ARRIVAL INFORMATION</h2>
-                <div class="info-grid">
-                    <div>TERM: <span id="a-term" style="color: #ff5b00;">--</span></div>
-                    <div>GATE: <span id="a-gate" style="color: #ff5b00;">--</span></div>
-                    <div>CAROUSEL: <span id="a-bag" style="color: #ff5b00;">--</span></div>
-                    <div>STATUS: <span id="a-status" style="color: #ff5b00;">--</span></div>
-                </div>
+            <div class="discreet-window arr-window">
+                <div class="label-tiny">Terminal Guidance: Arrival</div>
+                <div class="objective-text">Carousel: <span id="a-bag-ui" style="color:#ff5b00; font-weight:900;">WAIT</span> | Gate: <span id="a-gate-ui">--</span></div>
             </div>
-            </section>
+        </section>
     </div>
 
     <div id="persistent-nav">
@@ -93,53 +78,92 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('engine');
+        const canvas = document.getElementById('blueprint-canvas');
         const ctx = canvas.getContext('2d');
+        const scrollBox = document.getElementById('scroll-wrapper');
+        
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
         const API_KEY = '6973cc1546ac0bf801777b1e';
-        let activeGate = "TBD";
+        let activeGate = "--";
+
+        // Commerce Points (Gold Nodes)
+        const shops = [
+            { name: "PREMIUM LOUNGE", y: 0.2, side: -1 },
+            { name: "SINDANCE CAFE", y: 0.5, side: 1 },
+            { name: "DUTY FREE LUXE", y: 0.8, side: -1 }
+        ];
 
         async function syncData() {
-            const input = document.getElementById('flight-input').value.toUpperCase();
-            if (input.length < 3) return;
-            const airline = input.match(/[A-Z]+/)?.[0];
-            const num = input.match(/[0-9]+/)?.[0];
+            const val = document.getElementById('flight-input').value.toUpperCase();
+            if (val.length < 3) return;
+            const airline = val.match(/[A-Z]+/)?.[0];
+            const num = val.match(/[0-9]+/)?.[0];
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
             try {
                 const res = await fetch(`https://api.flightapi.io/airline/${API_KEY}?num=${num}&name=${airline}&date=${today}`);
                 const data = await res.json();
-                if (data && data.length > 0) {
+                if (data && data[0]) {
                     const f = data[0];
-                    // Departure Data
-                    document.getElementById('d-term').innerText = f.departure?.terminal || "TBD";
-                    document.getElementById('d-gate').innerText = f.departure?.gate || "TBD";
-                    document.getElementById('d-status').innerText = f.status || "ACTIVE";
                     activeGate = f.departure?.gate || "TBD";
-                    
-                    // Arrival Data
-                    document.getElementById('a-term').innerText = f.arrival?.terminal || "TBD";
-                    document.getElementById('a-gate').innerText = f.arrival?.gate || "TBD";
-                    document.getElementById('a-bag').innerText = f.arrival?.baggage || "WAIT";
-                    document.getElementById('a-status').innerText = f.status || "SYNCED";
+                    document.getElementById('d-gate-ui').innerText = activeGate;
+                    document.getElementById('d-status-ui').innerText = f.status || "ACTIVE";
+                    document.getElementById('a-bag-ui').innerText = f.arrival?.baggage || "READY";
+                    document.getElementById('a-gate-ui').innerText = f.arrival?.gate || "--";
                 }
             } catch (e) { console.error(e); }
         }
 
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const gx = canvas.width * 0.5; const gy = canvas.height * 0.65;
-            const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
-            ctx.shadowBlur = 10 + pulse; ctx.shadowColor = '#39FF14';
-            ctx.fillStyle = '#39FF14';
+            
+            const scrollY = scrollBox.scrollTop;
+            const scrollRatio = scrollY / canvas.height;
+            const themeColor = scrollRatio < 0.5 ? '57, 255, 20' : '255, 91, 0';
+            const time = Date.now() * 0.001;
+
+            // 1. 3D ARCHITECTURAL GRID
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < 12; i++) {
+                let opacity = (1 - i / 12) * 0.2;
+                ctx.strokeStyle = `rgba(${themeColor}, ${opacity})`;
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, canvas.height * 0.3);
+                ctx.lineTo((i - 5.5) * (canvas.width / 2) + (canvas.width / 2), canvas.height);
+                ctx.stroke();
+            }
+
+            // 2. COMMERCE NODES (Gold)
+            shops.forEach(s => {
+                let speed = time * 60;
+                let y = (s.y * canvas.height + speed) % canvas.height;
+                if (y > canvas.height * 0.4) {
+                    let alpha = (y / canvas.height) * 0.4;
+                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.35));
+                    
+                    ctx.strokeStyle = `rgba(255, 215, 0, ${alpha})`;
+                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 30); ctx.stroke();
+                    
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.font = '900 8px monospace';
+                    ctx.textAlign = s.side === 1 ? 'left' : 'right';
+                    ctx.fillText(s.name, x + (s.side * 10), y - 25);
+                }
+            });
+
+            // 3. THE LEAD CHEVRON
+            const cx = canvas.width / 2;
+            const cy = canvas.height * 0.8;
+            ctx.shadowBlur = 15; ctx.shadowColor = `rgba(${themeColor}, 0.8)`;
+            ctx.fillStyle = `rgba(${themeColor}, 1)`;
             ctx.beginPath();
-            ctx.moveTo(gx-35, gy); ctx.lineTo(gx, gy-50); ctx.lineTo(gx+35, gy); ctx.fill();
-            ctx.textAlign = "center"; ctx.fillStyle = '#fff'; ctx.font = '900 14px Courier New';
-            ctx.fillText("BOARDING GATE", gx, gy - 85);
-            ctx.font = '900 48px Courier New'; ctx.fillStyle = '#39FF14';
-            ctx.fillText(activeGate, gx, gy - 35);
+            ctx.moveTo(cx, cy - 20); ctx.lineTo(cx - 15, cy + 5);
+            ctx.lineTo(cx, cy - 2); ctx.lineTo(cx + 15, cy + 5);
+            ctx.closePath(); ctx.fill();
+            ctx.shadowBlur = 0;
+
             requestAnimationFrame(draw);
         }
         draw();
@@ -147,7 +171,6 @@
         setInterval(() => {
             const c = document.getElementById('clock');
             c.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
-            c.classList.remove('active-clock'); void c.offsetWidth; c.classList.add('active-clock');
         }, 1000);
     </script>
 </body>
