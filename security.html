@@ -101,32 +101,44 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // --- VELOCIS™ GLOBAL HARVESTER - V25.0 (NON-API BYPASS) ---
+        // --- VELOCIS™ GLOBAL SYNC - V33.0 (PROFESSIONAL AVIATION DATA) ---
+        const FLIGHT_API_KEY = '6973cc1546ac0bf801777b1e'; 
         let typingLock;
 
         async function fetchFlightData() {
-            const flight = document.getElementById('manual-mission-input').value.trim().toUpperCase();
-            if (flight.length < 3) return;
+            const input = document.getElementById('manual-mission-input').value.trim().toUpperCase();
+            if (input.length < 3) return;
 
-            document.getElementById('hub-mission-status').innerText = "BYPASSING CLOUD BLOCKS...";
+            const airlineCode = input.match(/[A-Z]+/)?.[0];
+            const flightNum = input.match(/[0-9]+/)?.[0];
+            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+            if (!airlineCode || !flightNum) return;
+
+            document.getElementById('hub-mission-status').innerText = "HARVESTING TERMINAL TRUTH...";
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
                 try {
-                    // This bypasses Google entirely to avoid 403 Forbidden errors
-                    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.google.com/search?q=${flight}+flight+arrival+gate+claim+miami`)}`);
+                    const url = `https://api.flightapi.io/airline/${FLIGHT_API_KEY}?num=${flightNum}&name=${airlineCode}&date=${today}`;
+                    const response = await fetch(url);
                     const data = await response.json();
-                    const html = data.contents;
 
-                    // Scrape logic to extract terminal, gate, and carousel
-                    const terminal = html.match(/Terminal\s*([A-Z0-9]+)/i)?.[1] || "D";
-                    const gate = html.match(/Gate\s*([A-Z0-9]+)/i)?.[1] || "SCAN";
-                    const carousel = html.match(/Baggage\s*Claim\s*([0-9]+)/i)?.[1] || html.match(/Claim\s*([0-9]+)/i)?.[1] || "WAIT";
-
-                    updateDisplay(terminal, gate, carousel, "ARRIVED", flight);
+                    if (data && data.length > 0) {
+                        const flightInfo = data[0]; 
+                        updateDisplay(
+                            flightInfo.arrival?.terminal || "D",
+                            flightInfo.arrival?.gate || "TBD",
+                            flightInfo.arrival?.baggage || "WAIT",
+                            flightInfo.status?.toUpperCase() || "ARRIVED",
+                            input
+                        );
+                    } else {
+                        document.getElementById('hub-mission-status').innerText = "NO DATA FOR TODAY";
+                    }
                 } catch (e) {
-                    // Heuristic Fallback for Offline Mode
-                    updateDisplay("D", "B12", "22", "PROXIED", flight);
+                    document.getElementById('hub-mission-status').innerText = "OFFLINE MODE";
+                    resetDisplay();
                 }
             }, 1000);
         }
@@ -136,7 +148,7 @@
             document.getElementById('hub-gate').innerText = g;
             document.getElementById('hub-carousel').innerText = b;
             document.getElementById('hub-action').innerText = s;
-            document.getElementById('hub-mission-status').innerText = "MISSION ONLINE";
+            document.getElementById('hub-mission-status').innerText = "BOARD SYNCED";
             
             const ticker = document.getElementById('ticker-text');
             ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
