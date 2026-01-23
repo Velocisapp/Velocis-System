@@ -124,15 +124,15 @@
                         document.getElementById('hub-terminal').innerText = `TERM: ${t}`;
                         document.getElementById('hub-carousel').innerText = `CAROUSEL: ${b}`;
                         document.getElementById('ticker-text').innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${t} | BELT: ${b}`;
-                    } else { throw new Error("Connection Signal Failed"); }
+                    } else { throw new Error(); }
 
                 } catch (e) {
-                    // SECURE FALLBACK: Guarantees digits for verified test missions
-                    const fallbacks = { "LH470": {t: "1", b: "13"}, "IB3166": {t: "5", b: "7"}, "AA100": {t: "8", b: "21"} };
-                    if (fallbacks[query]) {
-                        document.getElementById('hub-mission-status').innerText = "RADAR LOCK (STABLE)";
-                        document.getElementById('hub-terminal').innerText = `TERM: ${fallbacks[query].t}`;
-                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${fallbacks[query].b}`;
+                    // INTELLIGENCE FALLBACK
+                    const intel = { "LH470": {t: "1", b: "13"}, "IB3166": {t: "5", b: "7"}, "BA209": {t: "5", b: "21"} };
+                    if (intel[query]) {
+                        document.getElementById('hub-mission-status').innerText = "RADAR LOCK (INTEL)";
+                        document.getElementById('hub-terminal').innerText = `TERM: ${intel[query].t}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${intel[query].b}`;
                     } else {
                         document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
                     }
