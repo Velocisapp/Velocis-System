@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VELOCIS™ Flight Information Hub</title>
+    <title>VELOCIS™ Flight Terminal</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -15,6 +15,14 @@
         }
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
+
+        /* The Jumping Clock Animation */
+        @keyframes clockJump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .active-clock { animation: clockJump 0.5s ease-in-out; }
 
         #mission-popup { 
             display: block; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(15px); 
@@ -90,7 +98,7 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text">FLIGHT DATA ACTIVE | MONITORING ARRIVALS...</div>
+            <div id="ticker-text">MONITORING ARRIVALS...</div>
         </div>
     </div>
 
@@ -130,7 +138,7 @@
 
             if (!airlineCode || !flightNum) return;
 
-            document.getElementById('hub-mission-status').innerText = "UPDATING DATA...";
+            document.getElementById('hub-mission-status').innerText = "UPDATING...";
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
@@ -143,17 +151,17 @@
                         const flightInfo = data[0]; 
                         updateDisplay(
                             flightInfo.arrival?.terminal || "D",
-                            flightInfo.arrival?.gate || "PENDING",
+                            flightInfo.arrival?.gate || "ASSIGNING",
                             flightInfo.arrival?.baggage || "PENDING",
                             flightInfo.status?.toUpperCase() || "ACTIVE",
                             input
                         );
                     } else {
-                        document.getElementById('hub-mission-status').innerText = "NO FLIGHT FOUND";
+                        document.getElementById('hub-mission-status').innerText = "NOT FOUND";
                         resetDisplay();
                     }
                 } catch (e) {
-                    document.getElementById('hub-mission-status').innerText = "CONNECTION ERROR";
+                    document.getElementById('hub-mission-status').innerText = "OFFLINE";
                 }
             }, 1000);
         }
@@ -167,7 +175,7 @@
             document.getElementById('hub-mission-status').innerText = "FLIGHT INFORMATION AVAILABLE";
             
             const ticker = document.getElementById('ticker-text');
-            ticker.innerHTML = `FLIGHT: ${flight} | TERMINAL: ${t} | GATE: ${g} | BAGGAGE: ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `FLIGHT: ${flight} | TERMINAL: ${t} | GATE: ${g} | STATUS: ${s}`;
         }
 
         function resetDisplay() {
@@ -179,13 +187,16 @@
 
         function openRadar() {
             const flight = document.getElementById('manual-mission-input').value.trim();
-            if (flight) {
-                window.open(`https://www.flightradar24.com/data/flights/${flight}`, '_blank');
-            }
+            if (flight) window.open(`https://www.flightradar24.com/data/flights/${flight}`, '_blank');
         }
 
-        // --- Visual Background Logic ---
-        const gates = [{ id: "D10", pos: 0.18, status: "BOARDING" }, { id: "D14", pos: 0.39, status: "ON TIME" }, { id: "D22", pos: 0.61, status: "ARRIVED" }, { id: "D25", pos: 0.83, status: "FINAL CALL" }];
+        // --- RESTORED PILLARS (D10, D14, D22, D25) ---
+        const gates = [
+            { id: "D10", pos: 0.18, status: "BOARDING" }, 
+            { id: "D14", pos: 0.39, status: "ON TIME" }, 
+            { id: "D22", pos: 0.61, status: "ARRIVED" }, 
+            { id: "D25", pos: 0.83, status: "FINAL CALL" }
+        ];
         const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
         function drawSleekArrow(x, y, color, dark) {
@@ -221,7 +232,15 @@
             requestAnimationFrame(draw);
         }
         draw();
-        setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
+
+        // --- CLOCK WITH JUMPING EFFECT ---
+        setInterval(() => { 
+            const clock = document.getElementById('clock');
+            clock.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; 
+            clock.classList.remove('active-clock');
+            void clock.offsetWidth; // Trigger reflow for animation
+            clock.classList.add('active-clock');
+        }, 1000);
     </script>
 </body>
 </html>
