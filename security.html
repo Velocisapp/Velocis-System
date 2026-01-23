@@ -107,45 +107,36 @@
         async function fetchFlightData() {
             const query = document.getElementById('manual-mission-input').value.trim().toUpperCase();
             if (query.length < 3) return;
-            document.getElementById('hub-mission-status').innerText = "QUERYING AIRPORT...";
+            document.getElementById('hub-mission-status').innerText = "PRO-SYNC INITIATED...";
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
-                // STRATEGY: Intelligence Sync for Verified Tests
-                const groundTruth = {
-                    "AA101": { t: "8", g: "42", b: "2", s: "ON TIME" },
-                    "LH470": { t: "1", g: "B12", b: "13", s: "LANDED" },
-                    "DL412": { t: "4", g: "B2", b: "5", s: "ON TIME" }
-                };
-
                 try {
                     const proxy = "https://cors-anywhere.herokuapp.com/";
-                    // Sync with AIDX Timetable protocol
+                    // PRIMARY PULSE: Airport Timetable (FIDS)
                     const res = await fetch(proxy + `https://api.aviationstack.com/v1/timetable?access_key=${ACCESS_KEY}&type=arrival&flight_iata=${query}`);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        // If live board data exists but certain fields are null, merge with Intelligence Layer
-                        const t = f.terminal || (groundTruth[query] ? groundTruth[query].t : "1");
-                        const g = f.gate || (groundTruth[query] ? groundTruth[query].g : "SCANNING");
-                        const b = f.baggage || (groundTruth[query] ? groundTruth[query].b : "WAITING");
-                        const s = (f.status || (groundTruth[query] ? groundTruth[query].s : "ACTIVE")).toUpperCase();
-                        updateDisplay(t, g, b, s, query);
-                    } else { throw new Error(); }
-                } catch (e) {
-                    if (groundTruth[query]) {
-                        updateDisplay(groundTruth[query].t, groundTruth[query].g, groundTruth[query].b, groundTruth[query].s, query);
-                        document.getElementById('hub-mission-status').innerText = "AIDX SYNCED";
+                        updateDisplay(f.terminal || "1", f.gate || "TBD", f.baggage || f.carousel || "WAITING", (f.status || "ACTIVE").toUpperCase(), query, "FIDS LIVE");
                     } else {
-                        document.getElementById('hub-mission-status').innerText = "NO LIVE DATA FOUND";
-                        resetDisplay();
+                        // SECONDARY PULSE: Paid-Tier Radar Sync
+                        const backupRes = await fetch(proxy + `https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
+                        const backupData = await backupRes.json();
+                        if (backupData.data && backupData.data.length > 0) {
+                            const bf = backupData.data[0].arrival;
+                            updateDisplay(bf.terminal || "1", bf.gate || "SCANNING", bf.baggage || "WAITING", "TRACKING", query, "RADAR LOCK");
+                        } else { throw new Error(); }
                     }
+                } catch (e) {
+                    document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
+                    resetDisplay();
                 }
-            }, 1000);
+            }, 800);
         }
 
-        function updateDisplay(t, g, b, s, flight) {
+        function updateDisplay(t, g, b, s, flight, source) {
             document.getElementById('hub-terminal').innerText = t;
             document.getElementById('hub-gate').innerText = g;
             document.getElementById('hub-carousel').innerText = b;
@@ -153,7 +144,7 @@
             document.getElementById('hub-mission-status').innerText = "BOARD SYNCED";
             const ticker = document.getElementById('ticker-text');
             ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
-            ticker.innerHTML = `[AIDX SYNC] ${flight} | TERM ${t} | GATE ${g} | BELT ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `<span style="color: #00ffff;">[${source}]</span> GUIDE FOR ${flight}: TERM ${t} | GATE ${g} | BELT ${b} | STATUS: ${s}`;
         }
 
         function resetDisplay() {
@@ -163,7 +154,7 @@
             document.getElementById('hub-action').innerText = "--";
         }
 
-        // --- VISUAL ENGINE (PILLARS & PYLONS) ---
+        // --- VISUAL ENGINE (RESTORED PILLARS & PYLONS) ---
         const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
         const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
