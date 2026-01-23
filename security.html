@@ -16,7 +16,6 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-160%); } }
         @keyframes alertBoxPulse { 
             0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
             50% { border-width: 5px; box-shadow: 0 0 20px #FF3131; } 
@@ -24,7 +23,7 @@
         }
 
         #mission-popup { 
-            display: none; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(15px); 
+            display: block; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(15px); 
             border: 3px solid #ffffff; border-radius: 15px; margin: 155px auto 20px auto; 
             width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8); 
             position: relative; z-index: 9999; font-family: 'Courier New', monospace; pointer-events: auto; 
@@ -36,6 +35,7 @@
         
         .ticker-wrap { position: fixed; bottom: 0; width: 100%; height: 50px; background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
         #ticker-text { white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite; display: inline-block; padding-left: 10px; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-160%); } }
     </style>
 </head>
 <body>
@@ -101,9 +101,26 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // --- VELOCIS™ FINAL AVIATION STACK (V35.0) ---
+        // --- VELOCIS™ FINAL AVIATION STACK (V36.0) ---
         const FLIGHT_API_KEY = '6973cc1546ac0bf801777b1e'; 
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let typingLock;
+
+        function playAirportChime() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(554.37, now); 
+            osc.frequency.exponentialRampToValueAtTime(440.00, now + 0.5); 
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(now + 1.5);
+        }
 
         async function fetchFlightData() {
             const input = document.getElementById('manual-mission-input').value.trim().toUpperCase();
@@ -128,8 +145,8 @@
                         const flightInfo = data[0]; 
                         updateDisplay(
                             flightInfo.arrival?.terminal || "D",
-                            flightInfo.arrival?.gate || "SCAN",
-                            flightInfo.arrival?.baggage || "WAIT",
+                            flightInfo.arrival?.gate || "ASSIGNING...",
+                            flightInfo.arrival?.baggage || "PENDING...",
                             flightInfo.status?.toUpperCase() || "SYNCED",
                             input
                         );
@@ -145,6 +162,7 @@
         }
 
         function updateDisplay(t, g, b, s, flight) {
+            playAirportChime();
             document.getElementById('hub-terminal').innerText = t;
             document.getElementById('hub-gate').innerText = g;
             document.getElementById('hub-carousel').innerText = b;
@@ -206,7 +224,6 @@
         }
         draw();
         setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
-        window.onload = function() { setTimeout(function() { document.getElementById('mission-popup').style.display = 'block'; }, 2000); };
     </script>
 </body>
 </html>
