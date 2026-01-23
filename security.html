@@ -4,44 +4,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ Journey Hub</title>
     <style>
-        body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow-x: hidden; }
+        /* PALETTE: Deep Slate & Charcoal (Warmer than Black) */
+        body { margin: 0; background: #1a1c1e; font-family: 'Courier New', monospace; color: white; overflow-x: hidden; }
         
-        /* MASTER SCROLL CONTAINER */
         #scroll-wrapper { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
         section { min-height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* PERSISTENT HEADER */
         #header-box { 
             position: fixed; top: 20px; left: 5%; width: 90%; z-index: 1000;
-            border: 1px solid rgba(255, 215, 0, 0.4); padding: 10px; background: rgba(0,20,20,0.85); 
-            backdrop-filter: blur(10px); text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.3); padding: 10px; background: rgba(30,34,38,0.8); 
+            backdrop-filter: blur(20px); text-align: center;
         }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
 
-        /* DISCREET TOP WINDOWS */
         .discreet-window {
             position: absolute; top: 110px; left: 5%; width: 85%; 
-            background: rgba(0, 10, 15, 0.7); backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
             border-left: 4px solid #39FF14; padding: 12px; z-index: 100;
-            text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: left; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
         .arr-window { border-left-color: #ff5b00; }
         
-        .label-tiny { font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1.5px; }
+        .label-tiny { font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; }
         .objective-text { font-size: 13px; color: #fff; margin-top: 4px; text-transform: uppercase; }
 
-        /* PERSISTENT 5-EMOJI NAV */
         #persistent-nav {
             position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; background: rgba(20, 40, 60, 0.6);
-            backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 50px;
-            border: 1px solid rgba(0, 255, 255, 0.3); z-index: 9999;
+            display: flex; gap: 15px; background: rgba(40, 45, 50, 0.7);
+            backdrop-filter: blur(15px); padding: 10px 20px; border-radius: 50px;
+            border: 1px solid rgba(0, 255, 255, 0.2); z-index: 9999;
         }
         .nav-item { font-size: 24px; text-decoration: none; }
 
         canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
-
-        input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(57, 255, 20, 0.3); border-radius: 4px; color: #39FF14; padding: 8px; font-family: monospace; font-size: 12px; margin-top: 10px; outline: none; }
+        input { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(57, 255, 20, 0.3); border-radius: 4px; color: #39FF14; padding: 8px; font-family: monospace; font-size: 12px; margin-top: 10px; outline: none; }
     </style>
 </head>
 <body>
@@ -85,119 +81,71 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        const API_KEY = '6973cc1546ac0bf801777b1e';
-        let activeGate = "--";
-
         const shops = [
             { name: "SINDANCE CAFE", y: 0.2, side: -1 },
-            { name: "PREMIUM LOUNGE", y: 0.5, side: 1 },
-            { name: "DUTY FREE LUXE", y: 0.8, side: -1 }
+            { name: "PREMIUM LOUNGE", y: 0.5, side: 1 }
         ];
 
-        async function syncData() {
-            const val = document.getElementById('flight-input').value.toUpperCase();
-            if (val.length < 3) return;
-            const airline = val.match(/[A-Z]+/)?.[0];
-            const num = val.match(/[0-9]+/)?.[0];
-            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-
-            try {
-                const res = await fetch(`https://api.flightapi.io/airline/${API_KEY}?num=${num}&name=${airline}&date=${today}`);
-                const data = await res.json();
-                if (data && data[0]) {
-                    const f = data[0];
-                    activeGate = f.departure?.gate || "TBD";
-                    document.getElementById('d-gate-ui').innerText = activeGate;
-                    document.getElementById('d-status-ui').innerText = f.status || "ACTIVE";
-                    document.getElementById('a-bag-ui').innerText = f.arrival?.baggage || "READY";
-                    document.getElementById('a-gate-ui').innerText = f.arrival?.gate || "--";
-                }
-            } catch (e) { console.error(e); }
-        }
-
         function draw() {
-            ctx.fillStyle = '#010508'; 
+            // 1. MATERIAL: Deep Slate Base
+            ctx.fillStyle = '#1a1c1e'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             const scrollY = scrollBox.scrollTop;
-            const scrollRatio = scrollY / canvas.height;
-            const themeColor = scrollRatio < 0.5 ? '57, 255, 20' : '255, 91, 0';
-            const time = Date.now() * 0.0008;
-
+            const themeColor = scrollY < (canvas.height/2) ? '57, 255, 20' : '255, 91, 0';
+            const time = Date.now() * 0.0001; // SLOW GLIDE
             const centerX = canvas.width / 2;
-            const vanishY = canvas.height * 0.3; 
 
-            // 1. CEILING GRID (MIA Skylight Architecture)
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i < 8; i++) {
-                let z = (i * 150 + (time * 100) % 150);
-                let opacity = (1 - z / 800) * 0.2;
-                ctx.strokeStyle = `rgba(${themeColor}, ${opacity})`;
-                ctx.beginPath();
-                ctx.moveTo(0, vanishY - z*0.5);
-                ctx.lineTo(canvas.width, vanishY - z*0.5);
-                ctx.stroke();
+            // 2. ATMOSPHERIC FLOOR (Reflective Polished Concrete)
+            let floorGrad = ctx.createLinearGradient(0, canvas.height * 0.3, 0, canvas.height);
+            floorGrad.addColorStop(0, '#25282c');
+            floorGrad.addColorStop(1, '#1a1c1e');
+            ctx.fillStyle = floorGrad;
+            ctx.fillRect(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7);
+
+            // 3. ARCHITECTURAL PYLONS (Brushed Metal Structure)
+            for (let i = 0; i < 3; i++) {
+                let zPos = (i * 300 + (time * 1500) % 300);
+                let opacity = (1 - zPos / 900) * 0.6;
+                let xOffset = (zPos * 1.8) + 140;
+                let colWidth = 28;
+
+                // Solid Pylon with Gradient
+                let colGrad = ctx.createLinearGradient(centerX - xOffset, 0, centerX - xOffset + colWidth, 0);
+                colGrad.addColorStop(0, '#333');
+                colGrad.addColorStop(0.5, '#5a5e62');
+                colGrad.addColorStop(1, '#333');
+                
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = colGrad;
+                ctx.fillRect(centerX - xOffset, canvas.height * 0.2, colWidth, canvas.height);
+                ctx.fillRect(centerX + xOffset - colWidth, canvas.height * 0.2, colWidth, canvas.height);
+                ctx.globalAlpha = 1.0;
             }
 
-            // 2. STRUCTURAL PYLONS (The 3D Columns)
-            for (let j = 0; j < 4; j++) {
-                let zPos = (j * 250 + (time * 120) % 250);
-                let opacity = (1 - zPos / 1000) * 0.4;
-                let xOffset = (zPos * 0.8) + 100;
-                
-                ctx.fillStyle = `rgba(${themeColor}, ${opacity})`;
-                ctx.fillRect(centerX - xOffset, vanishY, 4, canvas.height);
-                ctx.fillRect(centerX + xOffset, vanishY, 4, canvas.height);
-                
-                // Floor Reflections
-                ctx.fillStyle = `rgba(${themeColor}, ${opacity * 0.2})`;
-                ctx.fillRect(centerX - xOffset, canvas.height - 50, 4, 50);
-                ctx.fillRect(centerX + xOffset, canvas.height - 50, 4, 50);
-            }
-
-            // 3. MULTI-LEVEL OVERPASS (MIA Skytrain / Bridges)
-            ctx.strokeStyle = `rgba(${themeColor}, 0.15)`;
-            ctx.lineWidth = 1;
-            let bridgeY = vanishY + 50;
-            ctx.strokeRect(0, bridgeY, canvas.width, 30);
-
-            // 4. THE LEAD (Geometric Command Chevron)
-            const cy = canvas.height * 0.82;
-            ctx.shadowBlur = 25; 
-            ctx.shadowColor = `rgba(${themeColor}, 1)`;
+            // 4. THE 3D CHEVRON LEAD (Hyper-Sleek)
+            const cy = canvas.height * 0.8;
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = `rgba(${themeColor}, 0.6)`;
             ctx.fillStyle = `rgba(${themeColor}, 1)`;
+            
             ctx.beginPath();
             ctx.moveTo(centerX, cy - 30);
-            ctx.lineTo(centerX - 20, cy + 10);
-            ctx.lineTo(centerX, cy);
-            ctx.lineTo(centerX + 20, cy + 10);
+            ctx.lineTo(centerX - 22, cy + 12);
+            ctx.lineTo(centerX, cy + 2);
+            ctx.lineTo(centerX + 22, cy + 12);
             ctx.closePath();
             ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // 5. DYNAMIC SCAN LINE (The "Lidar" Sweep)
-            let scanY = (Math.sin(time * 2) * 200) + (canvas.height * 0.7);
-            ctx.strokeStyle = `rgba(${themeColor}, 0.2)`;
+            
+            // Inner Highlight for Realism
+            ctx.fillStyle = 'rgba(255,255,255,0.35)';
             ctx.beginPath();
-            ctx.moveTo(centerX - 300, scanY);
-            ctx.lineTo(centerX + 300, scanY);
-            ctx.stroke();
+            ctx.moveTo(centerX, cy - 25);
+            ctx.lineTo(centerX - 10, cy + 6);
+            ctx.lineTo(centerX + 10, cy + 6);
+            ctx.fill();
 
-            // 6. COMMERCE NODES (Gold Nodes)
-            shops.forEach(s => {
-                let y = (s.y * canvas.height + (time * 60000)) % canvas.height; 
-                if (y > canvas.height * 0.4) {
-                    let alpha = Math.min(0.8, (y / canvas.height));
-                    let x = centerX + (s.side * (canvas.width * 0.4));
-                    ctx.strokeStyle = `rgba(255, 215, 0, ${alpha})`;
-                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 50); ctx.stroke();
-                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                    ctx.font = '900 11px Courier New';
-                    ctx.textAlign = s.side === 1 ? 'left' : 'right';
-                    ctx.fillText(s.name, x + (s.side * 12), y - 45);
-                }
-            });
-
+            ctx.shadowBlur = 0;
             requestAnimationFrame(draw);
         }
         draw();
