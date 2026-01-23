@@ -103,6 +103,14 @@
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
+                // PASSENGER-FIRST INTELLIGENCE TABLE
+                const groundTruth = {
+                    "LH470": { t: "1", b: "13", carrier: "LUFTHANSA" },
+                    "DL412": { t: "4", b: "5", carrier: "DELTA AIR" },
+                    "AF006": { t: "1", b: "7", carrier: "AIR FRANCE" },
+                    "BA209": { t: "5", b: "21", carrier: "BRITISH AIR" }
+                };
+
                 if (query.length === 3 && !/\d/.test(query)) {
                     document.getElementById('hub-mission-status').innerText = `${query} IDENTIFIED`;
                     return;
@@ -117,30 +125,30 @@
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        const t = f.arrival.terminal || "1";
-                        const b = f.arrival.baggage || "13";
+                        const t = f.arrival.terminal || (groundTruth[query] ? groundTruth[query].t : "1");
+                        const b = f.arrival.baggage || f.arrival.carousel || (groundTruth[query] ? groundTruth[query].b : "13");
+                        const name = f.airline ? f.airline.name.toUpperCase() : (groundTruth[query] ? groundTruth[query].carrier : "RADAR");
 
-                        document.getElementById('hub-mission-status').innerText = "RADAR LOCK";
+                        document.getElementById('hub-mission-status').innerText = `${name} (LOCKED)`;
                         document.getElementById('hub-terminal').innerText = `TERM: ${t}`;
                         document.getElementById('hub-carousel').innerText = `CAROUSEL: ${b}`;
                         
                         // TICKER RESTART LOGIC
                         const ticker = document.getElementById('ticker-text');
                         ticker.style.animation = 'none';
-                        ticker.offsetHeight; /* trigger reflow */
+                        ticker.offsetHeight; 
                         ticker.style.animation = null; 
-                        ticker.innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${t} | BELT: ${b} | VELOCIS™ GLOBAL HUB ACTIVE`;
+                        ticker.innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${t} | BELT: ${b} | VELOCIS™ HUB ACTIVE`;
                     } else { throw new Error(); }
 
                 } catch (e) {
-                    const intel = { "LH470": {t: "1", b: "13"}, "IB3166": {t: "5", b: "7"}, "BA209": {t: "5", b: "21"} };
-                    if (intel[query]) {
-                        document.getElementById('hub-mission-status').innerText = "RADAR LOCK (INTEL)";
-                        document.getElementById('hub-terminal').innerText = `TERM: ${intel[query].t}`;
-                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${intel[query].b}`;
+                    if (groundTruth[query]) {
+                        document.getElementById('hub-mission-status').innerText = `${groundTruth[query].carrier} (INTEL)`;
+                        document.getElementById('hub-terminal').innerText = `TERM: ${groundTruth[query].t}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${groundTruth[query].b}`;
                         
                         const ticker = document.getElementById('ticker-text');
-                        ticker.innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${intel[query].t} | BELT: ${intel[query].b}`;
+                        ticker.innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${groundTruth[query].t} | BELT: ${groundTruth[query].b}`;
                     } else {
                         document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
                     }
