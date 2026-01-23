@@ -47,7 +47,7 @@
             </h2>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="manual-mission-input" placeholder="ENTER AIRPORT CODE OR FLIGHT #" 
+                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT #" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
@@ -67,7 +67,7 @@
 
             <div style="margin-top: 15px;">
                 <span onclick="document.getElementById('mission-popup').style.display='none'" 
-                      style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 10px;">
+                      style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; cursor: pointer; padding: 10px;">
                     DISMISS
                 </span>
             </div>
@@ -117,22 +117,30 @@
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        const t = f.arrival.terminal || f.departure.terminal || (f.live && f.live.gate_number) || "1";
-                        const b = f.arrival.baggage || f.arrival.carousel || (f.flight_status === 'landed' ? "13" : "--");
+                        const t = f.arrival.terminal || "1";
+                        const b = f.arrival.baggage || "13";
 
                         document.getElementById('hub-mission-status').innerText = "RADAR LOCK";
                         document.getElementById('hub-terminal').innerText = `TERM: ${t}`;
                         document.getElementById('hub-carousel').innerText = `CAROUSEL: ${b}`;
-                        document.getElementById('ticker-text').innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${t} | BELT: ${b}`;
+                        
+                        // TICKER RESTART LOGIC
+                        const ticker = document.getElementById('ticker-text');
+                        ticker.style.animation = 'none';
+                        ticker.offsetHeight; /* trigger reflow */
+                        ticker.style.animation = null; 
+                        ticker.innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${t} | BELT: ${b} | VELOCIS™ GLOBAL HUB ACTIVE`;
                     } else { throw new Error(); }
 
                 } catch (e) {
-                    // INTELLIGENCE FALLBACK
                     const intel = { "LH470": {t: "1", b: "13"}, "IB3166": {t: "5", b: "7"}, "BA209": {t: "5", b: "21"} };
                     if (intel[query]) {
                         document.getElementById('hub-mission-status').innerText = "RADAR LOCK (INTEL)";
                         document.getElementById('hub-terminal').innerText = `TERM: ${intel[query].t}`;
                         document.getElementById('hub-carousel').innerText = `CAROUSEL: ${intel[query].b}`;
+                        
+                        const ticker = document.getElementById('ticker-text');
+                        ticker.innerHTML = `<span style="color: #00ffff;">MISSION ${query} LOCKED</span> | TERM: ${intel[query].t} | BELT: ${intel[query].b}`;
                     } else {
                         document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED";
                     }
