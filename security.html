@@ -113,13 +113,12 @@
             typingLock = setTimeout(async () => {
                 try {
                     const proxy = "https://cors-anywhere.herokuapp.com/";
-                    // Paid Tier Pulse: Timetable Board (AIDX)
+                    // PRIMARY PULSE: Timetable board (AIDX Sync)
                     const res = await fetch(proxy + `https://api.aviationstack.com/v1/timetable?access_key=${ACCESS_KEY}&type=arrival&flight_iata=${query}`);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        // Extracting real digits as seen on the Miami terminal screens
                         updateDisplay(
                             f.terminal || "TBD", 
                             f.gate || "TBD", 
@@ -129,7 +128,7 @@
                             "FIDS LIVE"
                         );
                     } else {
-                        // Backup Pulse: Radar Tracking
+                        // SECONDARY PULSE: Radar Deep-Scan
                         const backupRes = await fetch(proxy + `https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
                         const backupData = await backupRes.json();
                         if (backupData.data && backupData.data.length > 0) {
