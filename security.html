@@ -101,9 +101,9 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // MASTER GHOST CREDENTIALS
+        // MASTER GHOST CREDENTIALS - ACTIVATED (V3)
         const GOOGLE_API_KEY = 'AlzaSyApXZ4OmsDr6WipkGovm-HQqUBSFqkgq0U'; 
-        const SEARCH_ENGINE_ID = '316a07607946a45af'; 
+        const SEARCH_ENGINE_ID = 'd4b35e404e4e64e64'; 
 
         let typingLock;
 
@@ -116,7 +116,7 @@
 
             typingLock = setTimeout(async () => {
                 try {
-                    // Global Ghost Query: Bypass standard API limits by scraping web snippets
+                    // Optimized Query: Adding "miami" or "flight arrival" to ensure snippets contain gate/claim numbers
                     const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+arrival+gate+baggage+claim`;
                     
                     const res = await fetch(url);
@@ -124,10 +124,10 @@
                     
                     if (!data.items || data.items.length === 0) throw new Error("Seeking...");
                     
-                    // Harvest the search snippet text
+                    // Invisible Scraper: Reading the Google snippet directly
                     const snippet = data.items[0].snippet; 
 
-                    // REGEX Extraction: Pulling numbers directly from Google text
+                    // Extracting patterns from the live web text
                     const bMatch = snippet.match(/Baggage\s*Claim\s*([0-9]+)/i) || snippet.match(/Carousel\s*([0-9]+)/i) || snippet.match(/Claim\s*([0-9]+)/i);
                     const gMatch = snippet.match(/Gate\s*([A-Z0-9]+)/i);
                     const tMatch = snippet.match(/Concourse\s*([A-Z])/i) || snippet.match(/Terminal\s*([0-9A-Z])/i);
@@ -165,7 +165,7 @@
             document.getElementById('hub-action').innerText = "--";
         }
 
-        // --- VISUAL ENGINE (HUD CANVAS) ---
+        // --- VISUAL ENGINE ---
         const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
         const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
