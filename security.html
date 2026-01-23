@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VELOCIS™ Security Hub</title>
+    <title>VELOCIS™ Flight Information Hub</title>
     <style>
         body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -15,12 +15,6 @@
         }
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
-
-        @keyframes alertBoxPulse { 
-            0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
-            50% { border-width: 5px; box-shadow: 0 0 20px #FF3131; } 
-            100% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
-        }
 
         #mission-popup { 
             display: block; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(15px); 
@@ -43,41 +37,46 @@
     
     <div id="ui">
         <div id="header-box">
-            <div id="brand-title">VELOCIS™ TRAVEL HUB</div>
+            <div id="brand-title">VELOCIS™ FLIGHT TERMINAL</div>
             <div style="height: 2px; background: #FFD700; margin: 8px 0;"></div>
             <div id="clock">TIME: --:--:--</div>
         </div>
 
         <div id="mission-popup">
-            <h2 style="color: #000000; font-size: 22px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 900;">
-                MISSION: <span id="hub-mission-status" style="color: #ffffff; text-shadow: 1px 1px 2px #000;">READY</span>
+            <h2 style="color: #000000; font-size: 18px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 900;">
+                STATUS: <span id="hub-mission-status" style="color: #ffffff; text-shadow: 1px 1px 2px #000;">SEARCHING...</span>
             </h2>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT #" 
+                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT NUMBER" 
                        oninput="fetchFlightData()"
                        style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
             </div>
 
             <div style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
-                <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">LIVE TERMINAL BOARD</h3>
+                <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">ARRIVAL INFORMATION</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid #ff5b00; padding-top: 12px;">
                     <div style="color: #000000; font-weight: 900; font-size: 14px;">TERMINAL: <span id="hub-terminal" style="color: #ff5b00;">--</span></div>
                     <div style="color: #000000; font-weight: 900; font-size: 14px;">GATE: <span id="hub-gate" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000000; font-weight: 900; font-size: 14px;">CLAIM: <span id="hub-carousel" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000000; font-weight: 900; font-size: 14px;">STATUS: <span id="hub-action" style="color: #ff5b00;">--</span></div>
+                    <div style="color: #000000; font-weight: 900; font-size: 14px;">BAGGAGE: <span id="hub-carousel" style="color: #ff5b00;">--</span></div>
+                    <div style="color: #000000; font-weight: 900; font-size: 14px;">FLIGHT STATUS: <span id="hub-action" style="color: #ff5b00;">--</span></div>
                 </div>
             </div> 
+
+            <button onclick="openRadar()" 
+                style="width: 100%; background: #FF3131; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase; margin-bottom: 10px;">
+                🛰️ View Flight Map
+            </button>
             
             <button onclick="window.location.href='index.html#ground-transport-market'" 
                 style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase;">
-                Rentals & Ride-Hailing
+                Ground Transportation
             </button>
 
             <div style="margin-top: 15px;">
                 <span onclick="document.getElementById('mission-popup').style.display='none'" 
                       style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; cursor: pointer; padding: 10px;">
-                    DISMISS
+                    CLOSE
                 </span>
             </div>
         </div>
@@ -91,7 +90,7 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text">GLOBAL HUB ACTIVE | HARVESTING TERMINAL TRUTH...</div>
+            <div id="ticker-text">FLIGHT DATA ACTIVE | MONITORING ARRIVALS...</div>
         </div>
     </div>
 
@@ -101,7 +100,6 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // --- VELOCIS™ FINAL AVIATION STACK (V36.0) ---
         const FLIGHT_API_KEY = '6973cc1546ac0bf801777b1e'; 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let typingLock;
@@ -132,7 +130,7 @@
 
             if (!airlineCode || !flightNum) return;
 
-            document.getElementById('hub-mission-status').innerText = "HARVESTING TERMINAL TRUTH...";
+            document.getElementById('hub-mission-status').innerText = "UPDATING DATA...";
             clearTimeout(typingLock);
 
             typingLock = setTimeout(async () => {
@@ -145,18 +143,17 @@
                         const flightInfo = data[0]; 
                         updateDisplay(
                             flightInfo.arrival?.terminal || "D",
-                            flightInfo.arrival?.gate || "ASSIGNING...",
-                            flightInfo.arrival?.baggage || "PENDING...",
-                            flightInfo.status?.toUpperCase() || "SYNCED",
+                            flightInfo.arrival?.gate || "PENDING",
+                            flightInfo.arrival?.baggage || "PENDING",
+                            flightInfo.status?.toUpperCase() || "ACTIVE",
                             input
                         );
                     } else {
-                        document.getElementById('hub-mission-status').innerText = "NO DATA FOR TODAY";
+                        document.getElementById('hub-mission-status').innerText = "NO FLIGHT FOUND";
                         resetDisplay();
                     }
                 } catch (e) {
-                    document.getElementById('hub-mission-status').innerText = "SYNC OFFLINE";
-                    resetDisplay();
+                    document.getElementById('hub-mission-status').innerText = "CONNECTION ERROR";
                 }
             }, 1000);
         }
@@ -167,11 +164,10 @@
             document.getElementById('hub-gate').innerText = g;
             document.getElementById('hub-carousel').innerText = b;
             document.getElementById('hub-action').innerText = s;
-            document.getElementById('hub-mission-status').innerText = "BOARD SYNCED";
+            document.getElementById('hub-mission-status').innerText = "FLIGHT INFORMATION AVAILABLE";
             
             const ticker = document.getElementById('ticker-text');
-            ticker.style.animation = 'none'; ticker.offsetHeight; ticker.style.animation = null;
-            ticker.innerHTML = `MISSION ${flight} | TERMINAL ${t} | GATE ${g} | CLAIM ${b} | STATUS: ${s}`;
+            ticker.innerHTML = `FLIGHT: ${flight} | TERMINAL: ${t} | GATE: ${g} | BAGGAGE: ${b} | STATUS: ${s}`;
         }
 
         function resetDisplay() {
@@ -181,8 +177,15 @@
             document.getElementById('hub-action').innerText = "--";
         }
 
-        // --- VISUAL ENGINE (HUD CANVAS) ---
-        const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
+        function openRadar() {
+            const flight = document.getElementById('manual-mission-input').value.trim();
+            if (flight) {
+                window.open(`https://www.flightradar24.com/data/flights/${flight}`, '_blank');
+            }
+        }
+
+        // --- Visual Background Logic ---
+        const gates = [{ id: "D10", pos: 0.18, status: "BOARDING" }, { id: "D14", pos: 0.39, status: "ON TIME" }, { id: "D22", pos: 0.61, status: "ARRIVED" }, { id: "D25", pos: 0.83, status: "FINAL CALL" }];
         const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
         function drawSleekArrow(x, y, color, dark) {
@@ -200,15 +203,10 @@
 
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
-            if (hasFinalCall) document.getElementById('header-box').style.animation = 'alertBoxPulse 1s infinite ease-in-out';
             gates.forEach((g) => {
                 const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
-                let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
-                let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
-                const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
-                pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 255, 255, 0.15)'); pGrd.addColorStop(1, 'transparent');
-                ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
+                let color = (g.status === "ARRIVED") ? '#00ffff' : '#FFD700';
+                let dark = (g.status === "ARRIVED") ? '#008b8b' : '#8B6B00';
                 drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
                 ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
                 ctx.fillText("GATE", gx, gy - 60); ctx.fillStyle = color; ctx.font = '900 42px Courier New';
