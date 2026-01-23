@@ -4,103 +4,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ Journey Hub</title>
     <style>
-        body { margin: 0; background: #010406; overflow: hidden; font-family: 'Courier New', monospace; width: 100vw; height: 100vh; }
-        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
-        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        /* Base Setup */
+        body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow-x: hidden; }
+        
+        /* 1. SCROLL CONTAINER (Task 1) */
+        #scroll-wrapper { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        section { height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
         
         #header-box { 
-            position: absolute; top: 20px; left: 5%; width: 90%; 
+            position: fixed; top: 20px; left: 5%; width: 90%; z-index: 1000;
             border: 2px solid #FFD700; padding: 10px; background: rgba(0,20,20,0.9); 
-            box-sizing: border-box; transition: all 0.5s ease;
+            box-sizing: border-box; text-align: center;
         }
-        #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
-        /* Journey Mode Switcher */
-        #mode-toggle { pointer-events: auto; display: flex; gap: 5px; margin-top: 10px; }
-        .mode-btn {
-            flex: 1; padding: 8px; font-size: 10px; font-weight: 900; border: 1px solid #FFD700;
-            background: rgba(0,0,0,0.5); color: #FFD700; cursor: pointer; text-transform: uppercase;
+        /* 3. PERSISTENT 5-EMOJI NAV (Task 3) */
+        #persistent-nav {
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; background: rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 50px;
+            border: 1px solid rgba(0, 255, 255, 0.5); z-index: 9999; pointer-events: auto;
         }
-        .mode-btn.active { background: #FFD700; color: #000; }
+        .nav-item { font-size: 24px; text-decoration: none; cursor: pointer; }
 
+        /* DEPARTURE WINDOW (Task 4) */
+        #departure-window {
+            background: rgba(0, 40, 0, 0.9); border: 3px solid #39FF14; border-radius: 15px;
+            width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(57, 255, 20, 0.4);
+            position: relative; z-index: 10; pointer-events: auto;
+        }
+
+        /* ARRIVAL WINDOW (Task 4) */
+        #arrival-window {
+            background: rgba(255, 91, 0, 0.98); border: 3px solid #ffffff; border-radius: 15px;
+            width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8);
+            position: relative; z-index: 10; pointer-events: auto; color: black;
+        }
+
+        input { width: 90%; background: #ffffff; border: 2px solid #000; border-radius: 8px; color: #000; padding: 12px; text-align: center; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; outline: none; }
+
+        /* MARKETPLACE (Task 2) */
+        #ota-market { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; 
+            background: white; padding: 10px; border-radius: 10px; border: 2px solid black;
+        }
+        .ota-link { color: #ff5b00; font-weight: 900; font-size: 11px; text-decoration: none; text-transform: uppercase; border: 1px solid #ff5b00; padding: 4px; border-radius: 4px; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid rgba(0,0,0,0.1); padding-top: 12px; font-weight: 900; }
+        
         @keyframes clockJump { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .active-clock { animation: clockJump 0.5s ease-in-out; }
-
-        #mission-popup { 
-            display: block; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(15px); 
-            border: 3px solid #ffffff; border-radius: 15px; margin: 155px auto 20px auto; 
-            width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8); 
-            position: relative; z-index: 9999; font-family: 'Courier New', monospace; pointer-events: auto; 
-        }
-
-        #transport-menu { position: fixed; bottom: 65px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000; pointer-events: auto; }
-        .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; color: white; text-decoration: none;}
-        
-        .ticker-wrap { position: fixed; bottom: 0; width: 100%; height: 50px; background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
-        #ticker-text { white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite; display: inline-block; padding-left: 10px; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-160%); } }
     </style>
 </head>
 <body>
-    <canvas id="engine"></canvas>
-    
-    <div id="ui">
-        <div id="header-box">
-            <div id="brand-title">VELOCIS™ TRAVEL ASSISTANT</div>
-            <div id="mode-toggle">
-                <button class="mode-btn active" id="btn-dep" onclick="setMode('DEPARTURE')">Departure Path</button>
-                <button class="mode-btn" id="btn-arr" onclick="setMode('ARRIVAL')">Arrival Mode</button>
-            </div>
-            <div id="clock" style="margin-top:10px;">TIME: --:--:--</div>
-        </div>
 
-        <div id="mission-popup">
-            <h2 id="hub-mode-title" style="color: #000; font-size: 18px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 900;">READY FOR FLIGHT</h2>
+    <div id="header-box">
+        <div style="color: #FFD700; font-size: 12px; font-weight: 900;">VELOCIS™ JOURNEY HUB</div>
+        <div id="clock">TIME: --:--:--</div>
+    </div>
 
-            <div style="margin-bottom: 15px;">
-                <input type="text" id="manual-mission-input" placeholder="ENTER FLIGHT NUMBER" 
-                       oninput="fetchFlightData()"
-                       style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
-            </div>
-
-            <div id="info-box" style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
-                <h3 id="info-header" style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">ARRIVAL INFORMATION</h3>
-                <div id="arrival-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 2px solid #ff5b00; padding-top: 12px;">
-                    <div style="color: #000; font-weight: 900; font-size: 14px;">TERMINAL: <span id="hub-terminal" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000; font-weight: 900; font-size: 14px;">GATE: <span id="hub-gate" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000; font-weight: 900; font-size: 14px;">CAROUSEL: <span id="hub-carousel" style="color: #ff5b00;">--</span></div>
-                    <div style="color: #000; font-weight: 900; font-size: 14px;">STATUS: <span id="hub-action" style="color: #ff5b00;">--</span></div>
+    <div id="scroll-wrapper">
+        <section id="dep-section">
+            <canvas id="engine"></canvas>
+            <div id="departure-window">
+                <h2 style="color: #39FF14; font-size: 18px; margin: 0 0 10px 0;">DEPARTURE PATH</h2>
+                <input type="text" id="flight-input" placeholder="ENTER FLIGHT #" oninput="syncData()">
+                <div class="info-grid" style="color: white;">
+                    <div>TERM: <span id="d-term" style="color: #39FF14;">--</span></div>
+                    <div>GATE: <span id="d-gate" style="color: #39FF14;">--</span></div>
+                    <div>COUNTER: <span style="color: #39FF14;">READY</span></div>
+                    <div>STATUS: <span id="d-status" style="color: #39FF14;">--</span></div>
                 </div>
-            </div> 
-
-            <button onclick="openRadar()" 
-                style="width: 100%; background: #FF3131; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase; margin-bottom: 10px;">
-                🛰️ View Flight Map
-            </button>
-            
-            <button onclick="window.location.href='index.html#ground-transport-market'" 
-                style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase;">
-                Ground Transportation
-            </button>
-
-            <div style="margin-top: 15px;">
-                <span onclick="document.getElementById('mission-popup').style.display='none'" 
-                      style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; cursor: pointer; padding: 10px;">
-                    CLOSE
-                </span>
+                <p style="font-size: 10px; color: #39FF14; margin-top: 15px; font-weight: bold;">SCROLL DOWN FOR ARRIVAL INFO</p>
             </div>
-        </div>
+        </section>
 
-        <div id="transport-menu">
-            <a href="security.html" class="icon-btn active">✈️</a>
-            <a href="sea.html" class="icon-btn">🚢</a>
-            <a href="rail.html" class="icon-btn">🚆</a>
-            <a href="metro.html" class="icon-btn">🚇</a>
-            <a href="port.html" class="icon-btn">🚗</a>
-        </div>
+        <section id="arr-section">
+            <div id="arrival-window">
+                <h2 style="margin: 0 0 10px 0;">ARRIVAL INFORMATION</h2>
+                <div class="info-grid">
+                    <div>TERM: <span id="a-term" style="color: #ff5b00;">--</span></div>
+                    <div>GATE: <span id="a-gate" style="color: #ff5b00;">--</span></div>
+                    <div>CAROUSEL: <span id="a-bag" style="color: #ff5b00;">--</span></div>
+                    <div>STATUS: <span id="a-status" style="color: #ff5b00;">--</span></div>
+                </div>
 
-        <div class="ticker-wrap"><div id="ticker-text">MONITORING ARRIVALS AND DEPARTURES...</div></div>
+                <div id="ota-market">
+                    <a href="https://www.klook.com" target="_blank" class="ota-link">KLOOK</a>
+                    <a href="https://www.rome2rio.com" target="_blank" class="ota-link">ROME2RIO</a>
+                    <a href="https://www.travelocity.com" target="_blank" class="ota-link">TRAVELOCITY</a>
+                    <a href="https://www.kayak.com" target="_blank" class="ota-link">KAYAK</a>
+                </div>
+                
+                <button onclick="window.location.href='index.html#ground-transport-market'" 
+                    style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; margin-top: 10px; cursor: pointer;">
+                    RENTALS & RIDE-HAILING
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <div id="persistent-nav">
+        <a href="security.html" class="nav-item">✈️</a>
+        <a href="sea.html" class="nav-item">🚢</a>
+        <a href="rail.html" class="nav-item">🚆</a>
+        <a href="metro.html" class="nav-item">🚇</a>
+        <a href="port.html" class="nav-item">🚗</a>
     </div>
 
     <script>
@@ -109,125 +121,61 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        const FLIGHT_API_KEY = '6973cc1546ac0bf801777b1e'; 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let typingLock, flightStore = null, currentMode = 'DEPARTURE';
+        const API_KEY = '6973cc1546ac0bf801777b1e';
+        let flightData = null;
+        let activeGate = "TBD";
 
-        let gates = [
-            { id: "G1", pos: 0.18, status: "NEARBY", active: false }, 
-            { id: "G2", pos: 0.39, status: "NEARBY", active: false }, 
-            { id: "G3", pos: 0.61, status: "READY", active: false }, 
-            { id: "G4", pos: 0.83, status: "NEARBY", active: false }
-        ];
-
-        function setMode(mode) {
-            currentMode = mode;
-            document.getElementById('btn-dep').classList.toggle('active', mode === 'DEPARTURE');
-            document.getElementById('btn-arr').classList.toggle('active', mode === 'ARRIVAL');
-            document.getElementById('info-header').innerText = mode + " INFORMATION";
-            if (flightStore) updateUI();
-        }
-
-        function playChime() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(554.37, now); 
-            osc.frequency.exponentialRampToValueAtTime(440.00, now + 0.5); 
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(now + 1.5);
-        }
-
-        async function fetchFlightData() {
-            const input = document.getElementById('manual-mission-input').value.trim().toUpperCase();
+        async function syncData() {
+            const input = document.getElementById('flight-input').value.toUpperCase();
             if (input.length < 3) return;
-            const airlineCode = input.match(/[A-Z]+/)?.[0];
-            const flightNum = input.match(/[0-9]+/)?.[0];
+            const airline = input.match(/[A-Z]+/)?.[0];
+            const num = input.match(/[0-9]+/)?.[0];
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
-            clearTimeout(typingLock);
-            typingLock = setTimeout(async () => {
-                try {
-                    const url = `https://api.flightapi.io/airline/${FLIGHT_API_KEY}?num=${flightNum}&name=${airlineCode}&date=${today}`;
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    if (data && data.length > 0) {
-                        flightStore = data[0];
-                        const status = flightStore.status?.toUpperCase();
-                        if (status === "ARRIVED" || status === "LANDED") setMode('ARRIVAL');
-                        else setMode('DEPARTURE');
-                        updateUI();
-                    }
-                } catch (e) { console.error(e); }
-            }, 1000);
-        }
-
-        function updateUI() {
-            playChime();
-            const info = flightStore;
-            document.getElementById('hub-terminal').innerText = info.arrival?.terminal || "TBD";
-            document.getElementById('hub-gate').innerText = info.arrival?.gate || "PENDING";
-            document.getElementById('hub-carousel').innerText = info.arrival?.baggage || "WAIT";
-            document.getElementById('hub-action').innerText = info.status || "ACTIVE";
-            document.getElementById('hub-mode-title').innerText = "FLIGHT DATA SYNCED";
-
-            // Sync Background Pillars to REAL Departure Airport Data
-            const depGate = info.departure?.gate || "G-10";
-            const gateBase = parseInt(depGate.replace(/[^0-9]/g, '')) || 10;
-            const termChar = depGate.match(/[A-Z]/) ? depGate.match(/[A-Z]/)[0] : (info.departure?.terminal || "G");
-
-            gates[0].id = termChar + (gateBase - 2);
-            gates[1].id = termChar + (gateBase - 1);
-            gates[2].id = depGate; 
-            gates[2].status = "BOARDING GATE";
-            gates[2].active = true; 
-            gates[3].id = termChar + (gateBase + 1);
-        }
-
-        function openRadar() {
-            const flight = document.getElementById('manual-mission-input').value.trim();
-            if (flight) window.open(`https://www.flightradar24.com/data/flights/${flight}`, '_blank');
-        }
-
-        function drawSleekArrow(x, y, color, dark, active) {
-            ctx.save(); ctx.translate(x, y);
-            const pulse = active ? Math.abs(Math.sin(Date.now() / 250)) * 20 : 0;
-            const hover = Math.sin(Date.now()/400)*10;
-            ctx.shadowBlur = 15 + pulse; ctx.shadowColor = color;
-            ctx.fillStyle = dark; ctx.beginPath();
-            ctx.moveTo(-35, 7 + hover); ctx.lineTo(0, -45 + hover); ctx.lineTo(35, 7 + hover); ctx.lineTo(17, 7 + hover); ctx.lineTo(17, 50 + hover); ctx.lineTo(-17, 50 + hover); ctx.lineTo(-17, 7 + hover); ctx.fill();
-            let faceGrd = ctx.createLinearGradient(0, -40 + hover, 0, 50 + hover);
-            faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
-            ctx.fillStyle = faceGrd; ctx.beginPath();
-            ctx.moveTo(-35, 7 + hover); ctx.lineTo(0, -45 + hover); ctx.lineTo(35, 7 + hover); ctx.lineTo(17, 7 + hover); ctx.lineTo(17, 45 + hover); ctx.lineTo(-17, 45 + hover); ctx.lineTo(-17, 7 + hover); ctx.fill();
-            ctx.restore();
+            try {
+                const res = await fetch(`https://api.flightapi.io/airline/${API_KEY}?num=${num}&name=${airline}&date=${today}`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    flightData = data[0];
+                    // Update Departure Path
+                    document.getElementById('d-term').innerText = flightData.departure?.terminal || "TBD";
+                    document.getElementById('d-gate').innerText = flightData.departure?.gate || "TBD";
+                    document.getElementById('d-status').innerText = flightData.status || "ACTIVE";
+                    activeGate = flightData.departure?.gate || "TBD";
+                    
+                    // Update Arrival Mode
+                    document.getElementById('a-term').innerText = flightData.arrival?.terminal || "TBD";
+                    document.getElementById('a-gate').innerText = flightData.arrival?.gate || "TBD";
+                    document.getElementById('a-bag').innerText = flightData.arrival?.baggage || "WAIT";
+                    document.getElementById('a-status').innerText = flightData.status || "SYNCED";
+                }
+            } catch (e) { console.error(e); }
         }
 
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const color = (currentMode === 'DEPARTURE') ? '#39FF14' : '#00ffff';
-            const dark = (currentMode === 'DEPARTURE') ? '#006400' : '#008b8b';
-            gates.forEach((g) => {
-                const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
-                drawSleekArrow(gx, gy, g.active ? color : '#FFD700', g.active ? dark : '#8B6B00', g.active);
-                ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
-                ctx.fillText("GATE", gx, gy - 60 + Math.sin(Date.now()/400)*10);
-                ctx.fillStyle = g.active ? color : '#FFD700'; ctx.font = '900 42px Courier New';
-                ctx.fillText(g.id, gx, gy - 20 + Math.sin(Date.now()/400)*10);
-                ctx.font = 'bold 12px monospace'; ctx.fillText(g.status, gx, gy + 15 + Math.sin(Date.now()/400)*10);
-            });
+            const gx = canvas.width * 0.5; const gy = canvas.height * 0.65;
+            
+            // Single Departure Pillar
+            const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
+            ctx.shadowBlur = 10 + pulse; ctx.shadowColor = '#39FF14';
+            ctx.fillStyle = '#39FF14';
+            ctx.beginPath();
+            ctx.moveTo(gx-35, gy); ctx.lineTo(gx, gy-50); ctx.lineTo(gx+35, gy); ctx.fill();
+            
+            ctx.textAlign = "center"; ctx.fillStyle = '#fff'; ctx.font = '900 14px Courier New';
+            ctx.fillText("BOARDING GATE", gx, gy - 85);
+            ctx.font = '900 48px Courier New'; ctx.fillStyle = '#39FF14';
+            ctx.fillText(activeGate, gx, gy - 35);
+            
             requestAnimationFrame(draw);
         }
         draw();
 
-        setInterval(() => { 
-            const clock = document.getElementById('clock');
-            clock.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; 
-            clock.classList.remove('active-clock'); void clock.offsetWidth; clock.classList.add('active-clock');
+        setInterval(() => {
+            const c = document.getElementById('clock');
+            c.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
+            c.classList.remove('active-clock'); void c.offsetWidth; c.classList.add('active-clock');
         }, 1000);
     </script>
 </body>
