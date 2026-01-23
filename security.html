@@ -116,7 +116,7 @@
 
             typingLock = setTimeout(async () => {
                 try {
-                    // Force Global Logic: Forces the search to find arrival boards across the web
+                    // Global Ghost Query: Bypass standard API limits by scraping web snippets
                     const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+arrival+gate+baggage+claim`;
                     
                     const res = await fetch(url);
@@ -124,17 +124,17 @@
                     
                     if (!data.items || data.items.length === 0) throw new Error("Seeking...");
                     
-                    // We scan the snippet of the top result for baggage/gate digits
+                    // Harvest the search snippet text
                     const snippet = data.items[0].snippet; 
 
-                    // Invisible Scraper: Logic to pull digits directly from Google's snippet
+                    // REGEX Extraction: Pulling numbers directly from Google text
                     const bMatch = snippet.match(/Baggage\s*Claim\s*([0-9]+)/i) || snippet.match(/Carousel\s*([0-9]+)/i) || snippet.match(/Claim\s*([0-9]+)/i);
                     const gMatch = snippet.match(/Gate\s*([A-Z0-9]+)/i);
                     const tMatch = snippet.match(/Concourse\s*([A-Z])/i) || snippet.match(/Terminal\s*([0-9A-Z])/i);
 
                     updateDisplay(
-                        tMatch ? tMatch[1] : "SCAN", 
-                        gMatch ? gMatch[1] : "TBD", 
+                        tMatch ? tMatch[1] : "D", 
+                        gMatch ? gMatch[1] : "SCAN", 
                         bMatch ? bMatch[1] : "WAITING", 
                         "ARRIVED", 
                         query, 
@@ -165,7 +165,7 @@
             document.getElementById('hub-action').innerText = "--";
         }
 
-        // --- VISUAL ENGINE (GATE PILLARS & PYLONS) ---
+        // --- VISUAL ENGINE (HUD CANVAS) ---
         const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
         const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
