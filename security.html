@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,7 +102,7 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // MASTER GHOST CREDENTIALS - ACTIVATED (V8.0 GLOBAL)
+        // MASTER GHOST CREDENTIALS - V8.0 ACTIVATED
         const GOOGLE_API_KEY = 'AlzaSyApXZ4OmsDr6WipkGovm-HQqUBSFqkgq0U'; 
         const SEARCH_ENGINE_ID = 'd4b35e404e4e64e64'; 
 
@@ -116,7 +117,7 @@
 
             typingLock = setTimeout(async () => {
                 try {
-                    // Optimized Web Query: Leverages the "Search the Entire Web" capability
+                    // Leverages "Search the Entire Web" for global flight data
                     const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${query}+flight+arrival+gate+baggage+claim`;
                     
                     const res = await fetch(url);
@@ -124,10 +125,9 @@
                     
                     if (!data.items || data.items.length === 0) throw new Error("Seeking...");
                     
-                    // Invisible Scraper: Reading snippets from the global index
+                    // Scrape logic: scan the top 3 results for the most accurate board digits
                     const combinedSnippet = data.items.slice(0, 3).map(i => i.snippet).join(" "); 
 
-                    // Extracting patterns from the live web text
                     const bMatch = combinedSnippet.match(/Baggage\s*Claim\s*([0-9]+)/i) || combinedSnippet.match(/Carousel\s*([0-9]+)/i) || combinedSnippet.match(/Claim\s*([0-9]+)/i);
                     const gMatch = combinedSnippet.match(/Gate\s*([A-Z0-9]+)/i);
                     const tMatch = combinedSnippet.match(/Terminal\s*([0-9A-Z])/i) || combinedSnippet.match(/Concourse\s*([A-Z])/i);
