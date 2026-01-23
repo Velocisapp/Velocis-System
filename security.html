@@ -113,11 +113,13 @@
                 const data = await res.json();
                 if (data && data.length > 0) {
                     const f = data[0];
+                    // Departure Data
                     document.getElementById('d-term').innerText = f.departure?.terminal || "TBD";
                     document.getElementById('d-gate').innerText = f.departure?.gate || "TBD";
                     document.getElementById('d-status').innerText = f.status || "ACTIVE";
                     activeGate = f.departure?.gate || "TBD";
                     
+                    // Arrival Data
                     document.getElementById('a-term').innerText = f.arrival?.terminal || "TBD";
                     document.getElementById('a-gate').innerText = f.arrival?.gate || "TBD";
                     document.getElementById('a-bag').innerText = f.arrival?.baggage || "WAIT";
