@@ -16,7 +16,6 @@
         #brand-title { color: #FFD700; font-size: 16px; font-weight: 900; }
         #clock { color: #FFD700; font-size: 22px; font-weight: bold; }
 
-        /* ANIMATIONS RESTORED */
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         @keyframes alertBoxPulse { 
             0% { border-width: 2px; box-shadow: 0 0 5px #FF3131; } 
@@ -83,7 +82,7 @@
 
         <div class="ticker-wrap">
             <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite;">
-                AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE
+                AIR GATE ACTIVE | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING SATELLITE FEED...
             </div>
         </div>
     </div>
@@ -96,38 +95,36 @@
 
         const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
 
-        let lockTimer;
+        let typingLock;
         async function fetchFlightData() {
             const query = document.getElementById('manual-mission-input').value.trim().toUpperCase();
             if (query.length < 3) return;
 
             document.getElementById('hub-mission-status').innerText = "LOCKING...";
-            clearTimeout(lockTimer);
+            clearTimeout(typingLock);
 
-            lockTimer = setTimeout(async () => {
-                // Airport Code Logic
+            typingLock = setTimeout(async () => {
+                // Airport Code Detection
                 if (query.length === 3 && !/\d/.test(query)) {
                     document.getElementById('hub-mission-status').innerText = `${query} IDENTIFIED`;
-                    document.getElementById('ticker-text').innerText = `AIRPORT ${query} SECURED | STANDBY FOR LOGISTICS`;
                     return;
                 }
 
                 try {
                     const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
-                    const data = await res.json();
+                    const json = await res.json();
                     
-                    if (data.data && data.data.length > 0) {
-                        const f = data.data[0];
+                    if (json.data && json.data.length > 0) {
+                        const f = json.data[0];
                         const carrier = (f.airline && f.airline.name) ? f.airline.name.toUpperCase() : "CARRIER";
                         
-                        // THE DEEP DATA FIX
-                        const t = f.arrival.terminal || f.departure.terminal || f.arrival.gate || "1";
-                        const b = f.arrival.baggage || f.arrival.carousel || (f.flight_status === 'landed' ? "13" : "--");
+                        // THE HEART FIX: Deep Search sequential check
+                        const tNum = f.arrival.terminal || f.departure.terminal || f.arrival.gate || "1";
+                        const bNum = f.arrival.baggage || f.arrival.carousel || (f.flight_status === 'landed' ? "13" : "--");
 
                         document.getElementById('hub-mission-status').innerText = `${carrier} (${f.flight_status.toUpperCase()})`;
-                        document.getElementById('hub-terminal').innerText = `TERM: ${t}`;
-                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${b}`;
-                        document.getElementById('ticker-text').innerText = `MISSION ${query} LOCKED | TERMINAL ${t} | CAROUSEL ${b}`;
+                        document.getElementById('hub-terminal').innerText = `TERM: ${tNum}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${bNum}`;
                     }
                 } catch (e) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
             }, 1000); 
@@ -141,45 +138,37 @@
             const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
             ctx.shadowBlur = 10 + pulse; ctx.shadowColor = color;
             ctx.fillStyle = dark; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-            ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); 
-            ctx.lineTo(-17, 7); ctx.fill();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); ctx.lineTo(-17, 7); ctx.fill();
             let faceGrd = ctx.createLinearGradient(0, -40, 0, 50);
             faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
             ctx.fillStyle = faceGrd; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-            ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); 
-            ctx.lineTo(-17, 7); ctx.fill();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); ctx.lineTo(-17, 7); ctx.fill();
             ctx.restore();
         }
 
         function draw() {
             ctx.fillStyle = '#010406'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const hasFinalCall = gates.some(g => g.status === "FINAL CALL");
-            if (hasFinalCall) document.getElementById('header-box').style.animation = 'alertBoxPulse 1s infinite ease-in-out';
+            if (hasFinalCall) document.getElementById('header-box').style.animation = 'alertBoxPulse 1.5s infinite ease-in-out';
             
             gates.forEach((g) => {
                 const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
                 let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
                 let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
                 
-                // RESTORED PILLARS
                 const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
                 pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, (g.status === "ON TIME") ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 49, 49, 0.15)'); pGrd.addColorStop(1, 'transparent');
                 ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
                 
                 drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
                 ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
-                ctx.fillText("GATE", gx, gy - 60);
-                ctx.fillStyle = color; ctx.font = '900 42px Courier New';
-                ctx.fillText(g.id, gx, gy - 20);
-                ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
+                ctx.fillText("GATE", gx, gy - 60); ctx.fillStyle = color; ctx.font = '900 42px Courier New';
+                ctx.fillText(g.id, gx, gy - 20); ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
             });
-
             dots.forEach(d => {
-                const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.65;
+                const gx = canvas.width * gates[d.targetGate].pos;
                 d.x += (gx - d.x) * 0.015; d.y -= d.speed;
-                if (d.y < gy) d.y = canvas.height + 20;
+                if (d.y < canvas.height * 0.65) d.y = canvas.height + 20;
                 ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(draw);
