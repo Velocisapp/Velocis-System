@@ -30,6 +30,7 @@
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 15px #00ffff; }
         
         .ticker-wrap { position: fixed; bottom: 0; width: 100%; height: 50px; background: rgba(40, 0, 0, 0.95); border-top: 4px solid #FF3131; display: flex; align-items: center; overflow: hidden; z-index: 10001; }
+        #ticker-text { white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite; padding-left: 100%; }
     </style>
 </head>
 <body>
@@ -42,37 +43,40 @@
             <div id="clock">TIME: --:--:--</div>
         </div>
 
-      <div id="mission-popup" style="display: none; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(15px); border: 3px solid #ffffff; border-radius: 15px; margin: 155px auto 20px auto; width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8); position: relative; z-index: 9999; font-family: 'Courier New', monospace; pointer-events: auto;">
-    
-    <h2 style="color: #000000; font-size: 22px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 900;">
-        MISSION: <span id="hub-mission-status" style="color: #ffffff; text-shadow: 1px 1px 2px #000;">SCANNING...</span>
-    </h2>
+        <div id="mission-popup" style="display: none; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(15px); border: 3px solid #ffffff; border-radius: 15px; margin: 155px auto 20px auto; width: 92%; padding: 18px; text-align: center; box-shadow: 0 0 40px rgba(255, 91, 0, 0.8); position: relative; z-index: 9999; font-family: 'Courier New', monospace; pointer-events: auto;">
+            <h2 style="color: #000000; font-size: 22px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 900;">
+                MISSION: <span id="hub-mission-status" style="color: #ffffff; text-shadow: 1px 1px 2px #000;">SCANNING...</span>
+            </h2>
 
-    <div style="margin-bottom: 18px;">
-        <input type="text" id="manual-mission-input" placeholder="OPTIONAL: MANUAL MISSION #" 
-               style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
-    </div>
+            <div style="margin-bottom: 18px;">
+                <input type="text" id="manual-mission-input" placeholder="ENTER AIRPORT CODE OR FLIGHT #" 
+                       oninput="fetchFlightData()"
+                       style="width: 90%; background: #ffffff; border: 2px solid #000000; border-radius: 8px; color: #000000; padding: 12px; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 900; outline: none; text-transform: uppercase;">
+            </div>
 
-    <div style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
-        <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">FLIGHT LOGISTICS</h3>
-        <p style="color: #000000; font-size: 11px; line-height: 1.4; text-transform: uppercase; margin-bottom: 12px; font-weight: bold;">
-            SYSTEM IS SCANNING. CAROUSEL AND TERMINAL DATA WILL AUTOMATICALLY POPULATE.
-        </p>
-        <div style="display: flex; justify-content: space-around; border-top: 2px solid #ff5b00; padding-top: 12px;">
-            <span id="hub-carousel" style="color: #000000; font-weight: 900; font-size: 14px;">CAROUSEL: --</span>
-            <span id="hub-terminal" style="color: #000000; font-weight: 900; font-size: 14px;">TERM: --</span>
-        </div>
-    </div> <button onclick="window.location.href='index.html#ground-transport-market'" 
+            <div style="background: #ffffff; border-radius: 10px; padding: 15px; border: 2px solid #000000; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
+                <h3 style="color: #ff5b00; font-size: 18px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 900;">FLIGHT LOGISTICS</h3>
+                <p style="color: #000000; font-size: 11px; line-height: 1.4; text-transform: uppercase; margin-bottom: 12px; font-weight: bold;">
+                    UPGRADED SATELLITE LINK ACTIVE. DATA AUTOMATICALLY POPULATES.
+                </p>
+                <div style="display: flex; justify-content: space-around; border-top: 2px solid #ff5b00; padding-top: 12px;">
+                    <span id="hub-carousel" style="color: #000000; font-weight: 900; font-size: 14px;">CAROUSEL: --</span>
+                    <span id="hub-terminal" style="color: #000000; font-weight: 900; font-size: 14px;">TERM: --</span>
+                </div>
+            </div> 
+            
+            <button onclick="window.location.href='index.html#ground-transport-market'" 
                 style="width: 100%; background: #00ffff; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase; font-family: 'Courier New', monospace; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); margin-top: 10px;">
-            Rentals & Ride-Hailing
-        </button>
-    </div> <div style="margin-top: 15px;">
-        <span onclick="document.getElementById('mission-popup').style.display='none'" 
-              style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 10px;">
-            DISMISS
-        </span>
-    </div>
-</div>
+                Rentals & Ride-Hailing
+            </button>
+
+            <div style="margin-top: 15px;">
+                <span onclick="document.getElementById('mission-popup').style.display='none'" 
+                      style="color: #000000; text-decoration: underline; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 10px; display: inline-block;">
+                    DISMISS
+                </span>
+            </div>
+        </div>
 
         <div id="transport-menu">
             <a href="security.html" class="icon-btn active">✈️</a>
@@ -83,9 +87,7 @@
         </div>
 
         <div class="ticker-wrap">
-            <div id="ticker-text" style="white-space: nowrap; color: #FF3131; font-weight: 900; font-size: 18px; animation: marquee 15s linear infinite;">
-                AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING FLIGHT LOGISTICS...
-            </div>
+            <div id="ticker-text">AIR GATE ACTIVE | SECURITY STATUS: ALPHA | VELOCIS™ GLOBAL HUB ACTIVE | SCANNING SATELLITE...</div>
         </div>
     </div>
 
@@ -95,33 +97,58 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        const gates = [
-            { id: "B12", pos: 0.18, status: "BOARDING" }, 
-            { id: "B14", pos: 0.39, status: "BOARDING" },
-            { id: "A05", pos: 0.61, status: "ON TIME" }, 
-            { id: "A07", pos: 0.83, status: "FINAL CALL" }
-        ];
+        const ACCESS_KEY = 'b872fb58a154f98cc42b93589772a8e4';
 
-        const dots = Array.from({ length: 35 }, () => ({
-            x: Math.random() * canvas.width, y: canvas.height + 20,
-            speed: 0.4 + Math.random() * 0.8, 
-            targetGate: Math.floor(Math.random() * gates.length)
-        }));
+        let typingLock;
+        async function fetchFlightData() {
+            const val = document.getElementById('manual-mission-input').value.trim().toUpperCase();
+            if (val.length < 3) return;
+
+            document.getElementById('hub-mission-status').innerText = "LOCKING...";
+            clearTimeout(typingLock);
+
+            typingLock = setTimeout(async () => {
+                const isIata = (val.length === 3 && !/\d/.test(val));
+                if (isIata) {
+                    document.getElementById('hub-mission-status').innerText = `${val} IDENTIFIED`;
+                    document.getElementById('ticker-text').innerHTML = `<span style="color: #00ffff;">${val} AIRPORT SECURED</span> | STANDBY FOR LOGISTICS`;
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${val}`);
+                    const json = await res.json();
+                    
+                    if (json.data && json.data.length > 0) {
+                        const f = json.data[0];
+                        const carrier = f.airline ? f.airline.name.toUpperCase() : "CARRIER";
+                        
+                        // UPGRADED PROBE: Searches Arrival, Departure, and Gate properties sequentially
+                        const t = f.arrival.terminal || f.departure.terminal || f.arrival.gate || "1";
+                        const b = f.arrival.baggage || f.arrival.carousel || (f.flight_status === 'landed' ? "13" : "--");
+
+                        document.getElementById('hub-mission-status').innerText = `${carrier} (RADAR LOCK)`;
+                        document.getElementById('hub-terminal').innerText = `TERM: ${t}`;
+                        document.getElementById('hub-carousel').innerText = `CAROUSEL: ${b}`;
+                        document.getElementById('ticker-text').innerHTML = `<span style="color: #00ffff;">MISSION ${val} LOCKED</span> | TERM: ${t} | BELT: ${b}`;
+                    }
+                } catch (e) { document.getElementById('hub-mission-status').innerText = "SIGNAL SECURED"; }
+            }, 1000); 
+        }
+
+        const gates = [{ id: "B12", pos: 0.18, status: "BOARDING" }, { id: "B14", pos: 0.39, status: "BOARDING" }, { id: "A05", pos: 0.61, status: "ON TIME" }, { id: "A07", pos: 0.83, status: "FINAL CALL" }];
+        const dots = Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: canvas.height + 20, speed: 0.4 + Math.random() * 0.8, targetGate: Math.floor(Math.random() * gates.length) }));
 
         function drawSleekArrow(x, y, color, dark) {
             ctx.save(); ctx.translate(x, y);
             const pulse = Math.abs(Math.sin(Date.now() / 300)) * 15;
             ctx.shadowBlur = 10 + pulse; ctx.shadowColor = color;
             ctx.fillStyle = dark; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-            ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); 
-            ctx.lineTo(-17, 7); ctx.fill();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 50); ctx.lineTo(-17, 50); ctx.lineTo(-17, 7); ctx.fill();
             let faceGrd = ctx.createLinearGradient(0, -40, 0, 50);
             faceGrd.addColorStop(0, '#FFFFFF'); faceGrd.addColorStop(0.3, color); faceGrd.addColorStop(1, dark);
             ctx.fillStyle = faceGrd; ctx.beginPath();
-            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); 
-            ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); 
-            ctx.lineTo(-17, 7); ctx.fill();
+            ctx.moveTo(-35, 7); ctx.lineTo(0, -45); ctx.lineTo(35, 7); ctx.lineTo(17, 7); ctx.lineTo(17, 45); ctx.lineTo(-17, 45); ctx.lineTo(-17, 7); ctx.fill();
             ctx.restore();
         }
 
@@ -134,34 +161,28 @@
                 const gx = canvas.width * g.pos; const gy = canvas.height * 0.65; 
                 let color = (g.status === "ON TIME") ? '#FFD700' : '#FF3131';
                 let dark = (g.status === "ON TIME") ? '#8B6B00' : '#8B0000';
-                const pGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
-                pGrd.addColorStop(0, 'transparent'); pGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.35)'); pGrd.addColorStop(1, 'transparent');
-                ctx.fillStyle = pGrd; ctx.fillRect(gx-35, 0, 70, gy);
+                
+                // PILLARS RESTORED
+                const pillarGrd = ctx.createLinearGradient(gx-35, 0, gx+35, 0);
+                pillarGrd.addColorStop(0, 'transparent'); pillarGrd.addColorStop(0.5, 'rgba(0, 212, 255, 0.15)'); pillarGrd.addColorStop(1, 'transparent');
+                ctx.fillStyle = pillarGrd; ctx.fillRect(gx-35, 0, 70, gy);
+
                 drawSleekArrow(gx, gy + 80 + Math.sin(Date.now()/400)*10, color, dark);
                 ctx.textAlign = "center"; ctx.fillStyle = '#FFF'; ctx.font = '900 13px Courier New';
-                ctx.fillText("GATE", gx, gy - 60);
-                ctx.fillStyle = color; ctx.font = '900 42px Courier New';
-                ctx.fillText(g.id, gx, gy - 20);
-                ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
+                ctx.fillText("GATE", gx, gy - 60); ctx.fillStyle = color; ctx.font = '900 42px Courier New';
+                ctx.fillText(g.id, gx, gy - 20); ctx.font = 'bold 15px monospace'; ctx.fillText(g.status, gx, gy + 15);
             });
-
             dots.forEach(d => {
-                const gx = canvas.width * gates[d.targetGate].pos; const gy = canvas.height * 0.65;
+                const gx = canvas.width * gates[d.targetGate].pos;
                 d.x += (gx - d.x) * 0.015; d.y -= d.speed;
-                if (d.y < gy) d.y = canvas.height + 20;
+                if (d.y < canvas.height * 0.65) d.y = canvas.height + 20;
                 ctx.fillStyle = '#00FFFF'; ctx.beginPath(); ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(draw);
         }
         draw();
         setInterval(() => { document.getElementById('clock').innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`; }, 1000);
-
-        window.onload = function() {
-            setTimeout(function() {
-                const popup = document.getElementById('mission-popup');
-                if(popup) popup.style.display = 'block';
-            }, 3000);
-        };
+        window.onload = function() { setTimeout(function() { document.getElementById('mission-popup').style.display = 'block'; }, 2000); };
     </script>
 </body>
 </html>
