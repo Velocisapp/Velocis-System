@@ -116,75 +116,85 @@
         }
 
         function draw() {
-            ctx.fillStyle = '#010406'; 
+            ctx.fillStyle = '#010508'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             const scrollY = scrollBox.scrollTop;
             const scrollRatio = scrollY / canvas.height;
             const themeColor = scrollRatio < 0.5 ? '57, 255, 20' : '255, 91, 0';
-            const time = Date.now() * 0.001;
+            const time = Date.now() * 0.0008;
 
-            // 1. CONCOURSE AMBIANCE (Floor Glow)
-            let floorGrad = ctx.createLinearGradient(0, canvas.height * 0.4, 0, canvas.height);
-            floorGrad.addColorStop(0, 'rgba(0,0,0,0)');
-            floorGrad.addColorStop(1, `rgba(${themeColor}, 0.1)`);
-            ctx.fillStyle = floorGrad;
-            ctx.fillRect(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7);
+            const centerX = canvas.width / 2;
+            const vanishY = canvas.height * 0.3; 
 
-            // 2. ARCHITECTURAL RIBS (Elegant Quadratic Arches)
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 6; i++) {
-                let zPos = (i * 180 + (time * 50) % 180);
-                let opacity = (1 - zPos / 1000) * 0.3;
+            // 1. CEILING GRID (MIA Skylight Architecture)
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < 8; i++) {
+                let z = (i * 150 + (time * 100) % 150);
+                let opacity = (1 - z / 800) * 0.2;
                 ctx.strokeStyle = `rgba(${themeColor}, ${opacity})`;
-                
-                let w = (zPos / canvas.height) * canvas.width * 2.2;
-                let x = canvas.width/2 - w/2;
-                let y = canvas.height - zPos;
-
                 ctx.beginPath();
-                ctx.moveTo(x, canvas.height);
-                ctx.quadraticCurveTo(x, y, canvas.width/2, y);
-                ctx.quadraticCurveTo(x + w, y, x + w, canvas.height);
+                ctx.moveTo(0, vanishY - z*0.5);
+                ctx.lineTo(canvas.width, vanishY - z*0.5);
                 ctx.stroke();
             }
 
-            // 3. RECESSED PATHWAY LIGHTS (LED Floor Studs)
-            for (let k = 0; k < 15; k++) {
-                let dotY = (k * 60 + (time * 50) % 60) + (canvas.height * 0.3);
-                if (dotY < canvas.height) {
-                    let dotAlpha = (dotY / canvas.height) * 0.4;
-                    ctx.fillStyle = `rgba(${themeColor}, ${dotAlpha})`;
-                    ctx.beginPath(); ctx.arc(canvas.width/2 - 80, dotY, 2, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(canvas.width/2 + 80, dotY, 2, 0, Math.PI*2); ctx.fill();
-                }
+            // 2. STRUCTURAL PYLONS (The 3D Columns)
+            for (let j = 0; j < 4; j++) {
+                let zPos = (j * 250 + (time * 120) % 250);
+                let opacity = (1 - zPos / 1000) * 0.4;
+                let xOffset = (zPos * 0.8) + 100;
+                
+                ctx.fillStyle = `rgba(${themeColor}, ${opacity})`;
+                ctx.fillRect(centerX - xOffset, vanishY, 4, canvas.height);
+                ctx.fillRect(centerX + xOffset, vanishY, 4, canvas.height);
+                
+                // Floor Reflections
+                ctx.fillStyle = `rgba(${themeColor}, ${opacity * 0.2})`;
+                ctx.fillRect(centerX - xOffset, canvas.height - 50, 4, 50);
+                ctx.fillRect(centerX + xOffset, canvas.height - 50, 4, 50);
             }
 
-            // 4. THE LEAD (Geometric Prism)
-            const cx = canvas.width / 2;
+            // 3. MULTI-LEVEL OVERPASS (MIA Skytrain / Bridges)
+            ctx.strokeStyle = `rgba(${themeColor}, 0.15)`;
+            ctx.lineWidth = 1;
+            let bridgeY = vanishY + 50;
+            ctx.strokeRect(0, bridgeY, canvas.width, 30);
+
+            // 4. THE LEAD (Geometric Command Chevron)
             const cy = canvas.height * 0.82;
-            ctx.shadowBlur = 20; ctx.shadowColor = `rgba(${themeColor}, 1)`;
+            ctx.shadowBlur = 25; 
+            ctx.shadowColor = `rgba(${themeColor}, 1)`;
             ctx.fillStyle = `rgba(${themeColor}, 1)`;
             ctx.beginPath();
-            ctx.moveTo(cx, cy - 22);
-            ctx.lineTo(cx - 14, cy + 6);
-            ctx.lineTo(cx, cy);
-            ctx.lineTo(cx + 14, cy + 6);
-            ctx.closePath(); ctx.fill();
+            ctx.moveTo(centerX, cy - 30);
+            ctx.lineTo(centerX - 20, cy + 10);
+            ctx.lineTo(centerX, cy);
+            ctx.lineTo(centerX + 20, cy + 10);
+            ctx.closePath();
+            ctx.fill();
             ctx.shadowBlur = 0;
 
-            // 5. COMMERCE NODES (Minimalist Gold Annotations)
+            // 5. DYNAMIC SCAN LINE (The "Lidar" Sweep)
+            let scanY = (Math.sin(time * 2) * 200) + (canvas.height * 0.7);
+            ctx.strokeStyle = `rgba(${themeColor}, 0.2)`;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 300, scanY);
+            ctx.lineTo(centerX + 300, scanY);
+            ctx.stroke();
+
+            // 6. COMMERCE NODES (Gold Nodes)
             shops.forEach(s => {
-                let y = (s.y * canvas.height + (time * 40)) % canvas.height;
-                if (y > canvas.height * 0.45) {
-                    let alpha = Math.min(0.7, (y / canvas.height));
-                    let x = (canvas.width / 2) + (s.side * (canvas.width * 0.35));
-                    ctx.strokeStyle = `rgba(255, 215, 0, ${alpha * 0.5})`;
-                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 40); ctx.stroke();
+                let y = (s.y * canvas.height + (time * 60000)) % canvas.height; 
+                if (y > canvas.height * 0.4) {
+                    let alpha = Math.min(0.8, (y / canvas.height));
+                    let x = centerX + (s.side * (canvas.width * 0.4));
+                    ctx.strokeStyle = `rgba(255, 215, 0, ${alpha})`;
+                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 50); ctx.stroke();
                     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                    ctx.font = '900 10px sans-serif';
+                    ctx.font = '900 11px Courier New';
                     ctx.textAlign = s.side === 1 ? 'left' : 'right';
-                    ctx.fillText(s.name, x + (s.side * 10), y - 35);
+                    ctx.fillText(s.name, x + (s.side * 12), y - 45);
                 }
             });
 
@@ -194,7 +204,7 @@
 
         setInterval(() => {
             const c = document.getElementById('clock');
-            c.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
+            if(c) c.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
         }, 1000);
     </script>
 </body>
