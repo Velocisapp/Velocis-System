@@ -113,20 +113,20 @@
             typingLock = setTimeout(async () => {
                 try {
                     const proxy = "https://cors-anywhere.herokuapp.com/";
-                    // PRIMARY PULSE: Airport Timetable (FIDS)
+                    // PRIMARY PULSE: Timetable board (FIDS)
                     const res = await fetch(proxy + `https://api.aviationstack.com/v1/timetable?access_key=${ACCESS_KEY}&type=arrival&flight_iata=${query}`);
                     const data = await res.json();
                     
                     if (data.data && data.data.length > 0) {
                         const f = data.data[0];
-                        updateDisplay(f.terminal || "1", f.gate || "TBD", f.baggage || f.carousel || "WAITING", (f.status || "ACTIVE").toUpperCase(), query, "FIDS LIVE");
+                        updateDisplay(f.terminal || "TBD", f.gate || "SCANNING", f.baggage || f.carousel || "WAITING", (f.status || "ACTIVE").toUpperCase(), query, "FIDS LIVE");
                     } else {
-                        // SECONDARY PULSE: Paid-Tier Radar Sync
+                        // SECONDARY PULSE: Paid-Tier Deep Radar Sync
                         const backupRes = await fetch(proxy + `https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${query}`);
                         const backupData = await backupRes.json();
                         if (backupData.data && backupData.data.length > 0) {
                             const bf = backupData.data[0].arrival;
-                            updateDisplay(bf.terminal || "1", bf.gate || "SCANNING", bf.baggage || "WAITING", "TRACKING", query, "RADAR LOCK");
+                            updateDisplay(bf.terminal || "TBD", bf.gate || "SCANNING", bf.baggage || "WAITING", "TRACKING", query, "RADAR LOCK");
                         } else { throw new Error(); }
                     }
                 } catch (e) {
