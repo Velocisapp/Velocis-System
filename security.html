@@ -31,22 +31,22 @@
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v11',
-            center: [-80.2825, 25.7962], 
+            style: 'mapbox://styles/mapbox/light-v11', // Original crisp style
+            center: [-80.2831, 25.7960], 
             zoom: 18.5, pitch: 0, bearing: 0, antialias: true
         });
 
-        // MANUALLY ANCHORED TO BUILDING HALLWAYS (Visual Match for Screenshot 6:15 PM)
+        // MANUALLY ANCHORED TO BUILDING HALLWAYS (Visual Match)
         const missionPath = [
             [-80.2846, 25.7954], // Node A: The Curb
             [-80.2838, 25.7957], // Entry into Lobby
-            [-80.2831, 25.7959], // Pass Security (Landmark)
-            [-80.2825, 25.7962], // Concourse Hallway (Past Starbucks)
+            [-80.2831, 25.7959], // Pass Security
+            [-80.2825, 25.7962], // Concourse Hallway
             [-80.2818, 25.7965]  // Node B: Gate D34/D20 Area
         ];
 
         map.on('load', () => {
-            // FORCE BUILDING TO BE SOLID (Fixes the "Ghost" look)
+            // FIX: Restore the 3D terminal geometry as solid white (Not transparent)
             map.addLayer({
                 'id': 'solid-terminal',
                 'source': 'composite', 'source-layer': 'building',
@@ -58,16 +58,27 @@
                 }
             });
 
-            // THE CLEAN ARCHITECTURAL LINE
-            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': missionPath } } });
-            map.addLayer({ 'id': 'line', 'type': 'line', 'source': 'route', 'paint': { 'line-color': '#00FBFF', 'line-width': 4 } });
+            // THE CLEAN ARCHITECTURAL THREAD
+            map.addSource('route', { 
+                'type': 'geojson', 
+                'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': missionPath } } 
+            });
+
+            map.addLayer({ 
+                'id': 'line', 
+                'type': 'line', 
+                'source': 'route', 
+                'paint': { 'line-color': '#00FBFF', 'line-width': 4 } 
+            });
         });
 
         function startMission() {
             const el = document.createElement('div');
             el.className = 'passenger-chevron';
             el.innerHTML = `<svg width="60" height="60" viewBox="0 0 100 100"><path d="M50 0 L95 100 L50 82 L5 100 Z" fill="#00FBFF" stroke="#000" stroke-width="3"/></svg>`;
-            const marker = new mapboxgl.Marker({ element: el, rotationAlignment: 'map' }).setLngLat(missionPath[0]).addTo(map);
+            const marker = new mapboxgl.Marker({ element: el, rotationAlignment: 'map' })
+                .setLngLat(missionPath[0])
+                .addTo(map);
 
             let step = 0;
             function move() {
@@ -85,6 +96,7 @@
                 }
             }
             move();
+            // Transition to the Roof/Plant View as requested
             map.flyTo({ center: [-80.2825, 25.7962], zoom: 19.5, speed: 1 });
         }
     </script>
