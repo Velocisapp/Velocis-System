@@ -78,7 +78,7 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Exact hallway spine of MIA Concourse D (Center of shop/gate data)
+        // COORDINATES: Locked to the main Concourse D hallway spine at MIA
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
@@ -94,7 +94,7 @@
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            // Force the engine to register indoor POIs immediately
+            // Enable shop/gate labels globally
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
         });
 
@@ -103,8 +103,8 @@
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
             // THE KILL-SWITCH:
-            // We physically disable 3D objects BEFORE we fly. 
-            // This removes the "Lid" mesh entirely so the camera can land on the floor.
+            // Physically remove 3D buildings before flight starts.
+            // This prevents the camera look-at point from being blocked by the roof mesh.
             map.setConfigProperty('basemap', 'show3dObjects', false);
 
             if (currentMarker) currentMarker.remove();
@@ -112,11 +112,11 @@
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
             // THE PENETRATION DIVE:
-            // Zoom 20.5 is the precise threshold where 2D indoor floorplans override 3D models.
+            // Zoom 20.8 triggers the "Interior" label priority in the Standard engine.
             map.flyTo({
                 center: coords,
-                zoom: 20.5,       
-                pitch: 45,      // Reduced pitch to avoid "clipping" into the tarmac
+                zoom: 20.8,       
+                pitch: 45,      // Reduced pitch to avoid "clipping" through the ground
                 bearing: -45,   
                 speed: 0.5,
                 essential: true
