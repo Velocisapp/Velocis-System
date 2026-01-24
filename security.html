@@ -67,8 +67,8 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES FOR THE HEART OF MIA CONCOURSE D HALLWAY
-        const MIA_HALLWAY_CENTER = [-80.2825, 25.7968];
+        // COORDINATES FOR THE ABSOLUTE CENTER OF THE CONCOURSE D HUB INTERIOR
+        const MIA_INTERIOR_HUB = [-80.2838, 25.7972];
 
         const map = new mapboxgl.Map({
             container: 'map',
@@ -84,9 +84,16 @@
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
             
-            // THE X-RAY COMMAND: Strip the roof from the 3D buildings
+            // THE CRITICAL FIX: Tell the map to hide the building rooftops 
+            // and show the "floorplan" view immediately.
+            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+            
             if (map.getLayer('building')) {
-                map.setFilter('building', ['!=', ['get', 'type'], 'roof']);
+                map.setPaintProperty('building', 'fill-extrusion-opacity', [
+                    'interpolate', ['exponential', 0.5], ['zoom'],
+                    18, 0.8,
+                    20, 0.0 // Make roof 100% transparent at high zoom
+                ]);
             }
 
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
@@ -100,9 +107,9 @@
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 2) return;
             
-            // Bypass API and force internal dive
+            // Bypass API for MIA demo immediately
             if (val.includes("AA")) {
-                executeGlobalDive(MIA_HALLWAY_CENTER, "D48C", "STANDBY");
+                executeGlobalDive(MIA_INTERIOR_HUB, "D48C", "STANDBY");
                 return;
             }
         }
@@ -111,8 +118,8 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // Draw path along the interior floor
-            const path = [[coords[0] - 0.0008, coords[1] - 0.0008], [coords[0] - 0.0004, coords[1] - 0.0004], coords];
+            // DRAW NEON PATH DIRECTLY DOWN THE MAIN CONCOURSE SPINE
+            const path = [[coords[0] - 0.001, coords[1] - 0.001], [coords[0] - 0.0005, coords[1] - 0.0005], coords];
             map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
             if (currentMarker) currentMarker.remove();
@@ -121,10 +128,10 @@
 
             map.flyTo({
                 center: coords,
-                zoom: 20.5,     // Dives past the roof line
-                pitch: 80,      // Architectural perspective
-                bearing: -45,   // Rotates to face down the concourse
-                speed: 0.5,     // Cinematic glide
+                zoom: 20.4,     // AGGRESSIVE ZOOM: Penetrates building exterior
+                pitch: 78,      // ARCHITECTURAL TILT: Shows floor depth
+                bearing: -45,   // ROTATED: Faces the concourse hallway
+                speed: 0.4,     // SLOW GLIDE: High-end feel
                 essential: true
             });
         }
