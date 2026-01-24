@@ -7,62 +7,24 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        :root {
-            --velocity-blue: #007AFF;
-            --slate-primary: #1D1D1F;
-            --slate-secondary: #424245;
-            --glass-white: rgba(255, 255, 255, 0.95);
-            --border-light: rgba(0, 0, 0, 0.1);
-            --shadow-premium: 0 4px 24px rgba(0, 0, 0, 0.06);
-        }
-
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; background-color: #F5F5F7; }
+        :root { --velocity-blue: #007AFF; --slate-primary: #1D1D1F; --glass-white: rgba(255, 255, 255, 0.95); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
-
-        /* Flight Entry Overlay */
+        
         #flight-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             z-index: 100; display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.6s ease;
         }
-
         .entry-card {
             background: var(--glass-white); padding: 40px; border-radius: 28px;
-            box-shadow: var(--shadow-premium); width: 340px; text-align: center;
-            border: 1px solid var(--border-light);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 340px; text-align: center; border: 1px solid rgba(0,0,0,0.1);
         }
-
-        .entry-card h1 { font-weight: 700; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.5px; }
-        .entry-card h1 span { font-weight: 300; color: var(--velocity-blue); }
-        .entry-card p { font-size: 14px; color: var(--slate-secondary); margin-bottom: 24px; }
-
-        input {
-            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid var(--border-light);
-            font-size: 20px; text-align: center; margin-bottom: 20px; box-sizing: border-box;
-            font-weight: 600; text-transform: uppercase; outline: none; transition: border 0.3s;
-        }
-        input:focus { border-color: var(--velocity-blue); }
-
-        button {
-            width: 100%; padding: 16px; background: var(--velocity-blue); color: white;
-            border: none; border-radius: 14px; font-weight: 600; font-size: 16px; cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
-        }
-        button:hover { background: #0056b3; transform: translateY(-1px); }
-
-        header {
-            position: absolute; top: 0; width: 100%; height: 48px;
-            background: var(--glass-white); backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-light);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 24px; z-index: 10; box-sizing: border-box;
-        }
-
-        .logo { font-weight: 700; font-size: 18px; }
-        .status-indicator { display: flex; align-items: center; font-size: 11px; font-weight: 600; color: var(--slate-secondary); }
-        .pulse-dot { height: 6px; width: 6px; background-color: #34C759; border-radius: 50%; margin-right: 8px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(0.95); opacity: 1; } 70% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(0.95); opacity: 0; } }
+        input { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid #ddd; font-size: 20px; text-align: center; margin-bottom: 20px; box-sizing: border-box; }
+        button { width: 100%; padding: 16px; background: var(--velocity-blue); color: white; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; }
+        
+        header { position: absolute; top: 0; width: 100%; height: 48px; background: var(--glass-white); border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 24px; z-index: 10; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -70,19 +32,13 @@
     <div id="flight-overlay">
         <div class="entry-card">
             <h1>VELOCIS<span>™</span></h1>
-            <p>ENTER FLIGHT TO SYNC TERMINAL D</p>
-            <input type="text" id="flightNum" placeholder="AA 1234" maxlength="7">
+            <p>ENTER FLIGHT NUMBER TO SYNC GATE</p>
+            <input type="text" id="flightNum" placeholder="AA 1234">
             <button onclick="startMission()">BEGIN MISSION</button>
         </div>
     </div>
 
-    <header>
-        <div class="logo">VELOCIS<span style="font-weight:300; color:var(--velocity-blue);">™</span></div>
-        <div class="status-indicator">
-            <div class="pulse-dot"></div>
-            MISSION STATUS: STANDBY
-        </div>
-    </header>
+    <header><div style="font-weight:700;">VELOCIS<span style="color:var(--velocity-blue); font-weight:300;">™</span></div></header>
 
     <div id="map"></div>
 
@@ -91,81 +47,50 @@
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v11',
-            center: [-80.283182, 25.797284],
-            zoom: 15, pitch: 0, antialias: true
+            style: 'mapbox://styles/mapbox/streets-v12', // SWITCHED to v12 for higher label density
+            center: [-80.2831, 25.7972],
+            zoom: 14, pitch: 0
         });
 
-        const geolocate = new mapboxgl.GeolocateControl({
-            positionOptions: { enableHighAccuracy: true },
-            trackUserLocation: true,
-            showUserHeading: true
-        });
-        map.addControl(geolocate, 'top-right');
+        map.addControl(new mapboxgl.GeolocateControl({ trackUserLocation: true, showUserHeading: true }), 'top-right');
 
         map.on('load', () => {
-            // Add 3D Buildings
+            // Restore 3D Buildings
             map.addLayer({
                 'id': '3d-buildings',
                 'source': 'composite', 'source-layer': 'building',
                 'filter': ['==', 'extrude', 'true'],
                 'type': 'fill-extrusion',
                 'paint': {
-                    'fill-extrusion-color': '#D1D1D6',
+                    'fill-extrusion-color': '#e0e0e0',
                     'fill-extrusion-height': ['get', 'height'],
-                    'fill-extrusion-base': ['get', 'min_height'],
-                    'fill-extrusion-opacity': 0.8
+                    'fill-extrusion-opacity': 0.6
                 }
             });
 
-            // Add Custom Labels
-            map.addSource('velocis_labels', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'FeatureCollection',
-                    'features': [
-                        { 'type': 'Feature', 'properties': { 'title': 'GATE D20' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2828, 25.7977] } },
-                        { 'type': 'Feature', 'properties': { 'title': 'SECURITY CHECK' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2835, 25.7972] } },
-                        { 'type': 'Feature', 'properties': { 'title': 'DUTY FREE' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2820, 25.7970] } }
-                    ]
-                }
-            });
-
-            map.addLayer({
-                'id': 'velocis-poi-labels',
-                'type': 'symbol',
-                'source': 'velocis_labels',
-                'layout': {
-                    'text-field': ['get', 'title'],
-                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                    'text-size': 11,
-                    'text-allow-overlap': true
-                },
-                'paint': {
-                    'text-color': '#007AFF',
-                    'text-halo-color': '#FFFFFF',
-                    'text-halo-width': 2
+            // FORCE-SURFACE LABELS: The "Truth" code
+            const labelLayers = ['poi-label', 'airport-label', 'gate-label', 'natural-point-label'];
+            labelLayers.forEach(layer => {
+                if (map.getLayer(layer)) {
+                    map.setLayoutProperty(layer, 'visibility', 'visible');
+                    map.setPaintProperty(layer, 'text-halo-width', 2);
+                    map.setPaintProperty(layer, 'text-halo-color', '#ffffff');
                 }
             });
         });
 
         function startMission() {
             const flight = document.getElementById('flightNum').value;
-            if(!flight) return alert("Please enter your flight number.");
+            if(!flight) return alert("Enter flight.");
             
             document.getElementById('flight-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('flight-overlay').style.display = 'none';
-            }, 600);
+            setTimeout(() => { document.getElementById('flight-overlay').style.display = 'none'; }, 600);
 
-            // Execute "The Drop": Zoom from high altitude into Terminal D
             map.flyTo({
                 center: [-80.2831, 25.7972],
-                zoom: 17.5,
-                pitch: 45,
-                bearing: -15,
+                zoom: 18, // ZOOM IN DEEPER to see indoor nodes
+                pitch: 60,
                 speed: 1.2,
-                curve: 1.5,
                 essential: true
             });
         }
