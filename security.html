@@ -69,9 +69,9 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // PRECISION COORDS: LANDING IN THE CENTER OF CONCOURSE D SPINE
+        // COORDINATES CENTERED ON INTERIOR HALLWAY OF CONCOURSE D
         const AIRPORT_COORDS = {
-            'MIA': [-80.2825, 25.7961], 
+            'MIA': [-80.2818, 25.7965], 
             'JFK': [-73.7781, 40.6413],
             'LAX': [-118.4085, 33.9416]
         };
@@ -116,7 +116,7 @@
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 2) return;
             
-            // FAIL-SAFE: If API is 403, Dive to MIA immediately for demo
+            // FAIL-SAFE: Force interior dive for MIA demo immediately
             if (val.includes("AA")) {
                 executeGlobalDive(AIRPORT_COORDS['MIA'], "D48C", "STANDBY");
                 return;
@@ -142,8 +142,8 @@
             document.getElementById('d-gate-ui').innerText = gate || "TBD";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // NEON PATH ALONG THE HALLWAY
-            const path = [[coords[0] - 0.0006, coords[1] - 0.0006], [coords[0] - 0.0002, coords[1] - 0.0002], coords];
+            // NEON PATH SCALED FOR INTERIOR HALLWAY
+            const path = [[coords[0] - 0.0005, coords[1] - 0.0005], [coords[0] - 0.0002, coords[1] - 0.0002], coords];
             map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
             if (currentMarker) currentMarker.remove();
@@ -153,9 +153,9 @@
             map.flyTo({
                 center: coords,
                 zoom: 20.2,     // PENETRATE ROOF
-                pitch: 82,      // EXTREME 3D TILT
-                bearing: -35,   // ROTATED TO LOOK DOWN THE HALLWAY
-                speed: 0.5,
+                pitch: 80,      // ARCHITECTURAL ANGLE
+                bearing: -45,   // ROTATED TO LOOK DOWN THE HALLWAY
+                speed: 0.6,
                 essential: true
             });
         }
