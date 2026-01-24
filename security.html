@@ -45,66 +45,65 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // THE HUB BRAIN DATABASE: Manual injection of every indoor point
-        // This is replicated at Sea, Rail, and Port hubs by changing these coords
-        const HUB_DATA = {
+        // THE HUB BRAIN: Manual Geometry Injection
+        // This is the blueprint we replicate for Sea and Rail hubs
+        const HUB_GEOMETRY = {
             'type': 'FeatureCollection',
             'features': [
-                { 'type': 'Feature', 'properties': { 'name': 'GATE D48', 'type': 'gate' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2828, 25.7960] } },
-                { 'type': 'Feature', 'properties': { 'name': 'SECURITY CHECK', 'type': 'checkpoint' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2810, 25.7952] } },
-                { 'type': 'Feature', 'properties': { 'name': 'DUTY FREE SHOP', 'type': 'retail' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2820, 25.7958] } },
-                { 'type': 'Feature', 'properties': { 'name': 'RESTROOMS D-NORTH', 'type': 'service' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2815, 25.7955] } },
-                { 'type': 'Feature', 'properties': { 'name': 'CHECK-IN COUNTERS', 'type': 'counter' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2860, 25.7950] } }
+                // MAIN HALLWAY (Blue Floor)
+                { 'type': 'Feature', 'properties': { 'class': 'hall' }, 'geometry': { 'type': 'Polygon', 'coordinates': [[ [-80.285, 25.797], [-80.278, 25.795], [-80.278, 25.794], [-80.285, 25.796], [-80.285, 25.797] ]] } },
+                // GATE ZONES (Green Outlines)
+                { 'type': 'Feature', 'properties': { 'name': 'GATE D48', 'class': 'gate' }, 'geometry': { 'type': 'Polygon', 'coordinates': [[ [-80.283, 25.7962], [-80.282, 25.7962], [-80.282, 25.7958], [-80.283, 25.7958], [-80.283, 25.7962] ]] } },
+                { 'type': 'Feature', 'properties': { 'name': 'DUTY FREE', 'class': 'retail' }, 'geometry': { 'type': 'Polygon', 'coordinates': [[ [-80.281, 25.7955], [-80.280, 25.7955], [-80.280, 25.7952], [-80.281, 25.7952], [-80.281, 25.7955] ]] } },
+                { 'type': 'Feature', 'properties': { 'name': 'SECURITY', 'class': 'security' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2855, 25.7950] } }
             ]
         };
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/dark-v11', // Stable base layer
+            style: 'mapbox://styles/mapbox/dark-v11',
             center: [-80.2871, 25.7959],
             zoom: 15, pitch: 0
         });
 
         map.on('load', () => {
-            // INJECT OUR BRAIN DATA
-            map.addSource('hub-internal', { 'type': 'geojson', 'data': HUB_DATA });
+            map.addSource('hub-internal', { 'type': 'geojson', 'data': HUB_GEOMETRY });
 
-            // DRAW OUR CUSTOM LABELS
+            // 1. DRAW THE FLOORS (Dark Blue)
             map.addLayer({
-                'id': 'hub-labels',
-                'type': 'symbol',
-                'source': 'hub-internal',
+                'id': 'hub-floor', 'type': 'fill', 'source': 'hub-internal',
+                'filter': ['==', 'class', 'hall'],
+                'paint': { 'fill-color': '#0a1a2a', 'fill-opacity': 0.8 }
+            });
+
+            // 2. DRAW THE GATE ZONES (Glowing Green)
+            map.addLayer({
+                'id': 'hub-zones', 'type': 'fill', 'source': 'hub-internal',
+                'filter': ['==', 'class', 'gate'],
+                'paint': { 'fill-color': '#39FF14', 'fill-opacity': 0.3, 'fill-outline-color': '#39FF14' }
+            });
+
+            // 3. DRAW THE LABELS
+            map.addLayer({
+                'id': 'hub-labels', 'type': 'symbol', 'source': 'hub-internal',
                 'layout': {
                     'text-field': ['get', 'name'],
                     'text-size': 11,
                     'text-font': ['Open Sans Bold'],
                     'text-transform': 'uppercase'
                 },
-                'paint': { 
-                    'text-color': '#39FF14',
-                    'text-halo-color': '#000',
-                    'text-halo-width': 2
-                }
+                'paint': { 'text-color': '#39FF14', 'text-halo-color': '#000', 'text-halo-width': 2 }
             });
         });
 
         function executeGlobalDive(coords, label) {
             document.getElementById('d-gate-ui').innerText = label;
-            
-            map.flyTo({
-                center: coords,
-                zoom: 19.5,
-                speed: 0.7,
-                essential: true
-            });
+            map.flyTo({ center: coords, zoom: 19, speed: 0.7, essential: true });
         }
 
         async function syncData() {
             const val = document.getElementById('flight-input').value.toUpperCase();
-            if (val.includes("AA")) {
-                // Find Gate D48 in our manual database
-                executeGlobalDive([-80.2828, 25.7960], "D48");
-            }
+            if (val.includes("AA")) executeGlobalDive([-80.2825, 25.7960], "D48");
         }
 
         setInterval(() => {
