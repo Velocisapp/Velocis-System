@@ -11,11 +11,11 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
         
-        /* 3D Chevron Styling */
+        /* 3D Chevron Styling - Fixed for proper rotation */
         .passenger-chevron {
-            width: 40px; height: 40px;
-            filter: drop-shadow(0px 8px 12px rgba(0, 251, 255, 0.6));
-            transition: transform 0.1s linear;
+            width: 50px; height: 50px;
+            filter: drop-shadow(0px 8px 12px rgba(0, 251, 255, 0.7));
+            display: flex; align-items: center; justify-content: center;
         }
 
         #overlay {
@@ -95,58 +95,77 @@
                 document.getElementById('status-pill').innerText = `${flightCode} • ${config.counter} • GATE ${gate}`;
             }, 800);
 
-            // 3. LOCATIONS
-            const userHome = [-80.3172, 25.6792];
-            const curbDrop = config.terminalLoc; 
-            const finalGate = [-80.2818, 25.7960];
+            // 3. UNIFIED MISSION PATH (Kendall -> Curb -> Gate)
+            const missionCoords = [
+                [-80.3172, 25.6792], // Kendall Start
+                [-80.2835, 25.7952], // Airline Counter Entrance
+                [-80.2825, 25.7955], // Security Threshold
+                [-80.2818, 25.7960]  // Final Gate
+            ];
 
-            // 4. ROUTING
-            const driveRes = await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${userHome[0]},${userHome[1]};${curbDrop[0]},${curbDrop[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`).then(r => r.json());
-            const walkRes = await fetch(`https://api.mapbox.com/directions/v5/mapbox/walking/${curbDrop[0]},${curbDrop[1]};${finalGate[0]},${finalGate[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`).then(r => r.json());
-
-            // Add Sources
-            map.addSource('drive-data', { 'type': 'geojson', 'data': driveRes.routes[0].geometry });
-            map.addSource('walk-data', { 'type': 'geojson', 'data': walkRes.routes[0].geometry });
-
-            // Drive Layer (Solid V-Blue)
-            map.addLayer({
-                'id': 'drive-path', 'type': 'line', 'source': 'drive-data',
-                'paint': { 'line-color': '#007AFF', 'line-width': 4 }
+            // 4. DRAW CONTINUOUS CYAN LINE (One color, no interruptions)
+            map.addSource('unified-path', {
+                'type': 'geojson',
+                'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': missionCoords } }
             });
 
-            // Light Cyan Guide Line (Very light as requested)
             map.addLayer({
-                'id': 'walk-path', 'type': 'line', 'source': 'walk-data',
-                'paint': { 'line-color': '#00FBFF', 'line-width': 2, 'line-opacity': 0.6 }
+                'id': 'guide-line',
+                'type': 'line',
+                'source': 'unified-path',
+                'paint': {
+                    'line-color': '#00FBFF',
+                    'line-width': 2.5,
+                    'line-opacity': 0.8,
+                    'line-blur': 1
+                }
             });
 
-            // 5. 3D CHEVRON PASSENGER
+            // 5. THE 3D CHEVRON PASSENGER (Refined SVG)
             const chevronEl = document.createElement('div');
             chevronEl.className = 'passenger-chevron';
             chevronEl.innerHTML = `
-                <svg width="40" height="40" viewBox="0 0 100 100">
-                    <path d="M50 0 L100 100 L50 75 L0 100 Z" fill="#00FBFF" stroke="#fff" stroke-width="2"/>
+                <svg width="50" height="50" viewBox="0 0 100 100">
+                    <path d="M50 0 L90 100 L50 80 L10 L100 Z" fill="#00FBFF" stroke="#fff" stroke-width="3"/>
                 </svg>`;
             
-            passengerMarker = new mapboxgl.Marker(chevronEl)
-                .setLngLat(curbDrop)
-                .setRotation(-15)
+            passengerMarker = new mapboxgl.Marker({ element: chevronEl, rotationAlignment: 'map' })
+                .setLngLat(missionCoords[0])
                 .addTo(map);
 
-            // Animate Chevron along the walk path
+            // 6. ANIMATION LOGIC (Smoothed and Continuous)
             let step = 0;
-            const walkCoords = walkRes.routes[0].geometry.coordinates;
-            function animatePassenger() {
-                if (step < walkCoords.length) {
-                    passengerMarker.setLngLat(walkCoords[Math.floor(step)]);
-                    step += 0.25;
-                    requestAnimationFrame(animatePassenger);
+            const animationSpeed = 0.005; // Adjust speed here
+
+            function animate() {
+                if (step < 1) {
+                    // Calculate current position along the segment
+                    const segment = Math.floor(step * (missionCoords.length - 1));
+                    const nextSegment = Math.min(segment + 1, missionCoords.length - 1);
+                    const segmentStep = (step * (missionCoords.length - 1)) - segment;
+
+                    const currentLng = missionCoords[segment][0] + (missionCoords[nextSegment][0] - missionCoords[segment][0]) * segmentStep;
+                    const currentLat = missionCoords[segment][1] + (missionCoords[nextSegment][1] - missionCoords[segment][1]) * segmentStep;
+
+                    // Update Position
+                    passengerMarker.setLngLat([currentLng, currentLat]);
+
+                    // Calculate Bearing/Rotation
+                    const angle = Math.atan2(
+                        missionCoords[nextSegment][0] - missionCoords[segment][0],
+                        missionCoords[nextSegment][1] - missionCoords[segment][1]
+                    ) * 180 / Math.PI;
+                    
+                    passengerMarker.setRotation(angle);
+
+                    step += animationSpeed;
+                    requestAnimationFrame(animate);
                 }
             }
-            animatePassenger();
+            animate();
 
-            // 6. DEPARTURE DIVE
-            map.flyTo({ center: finalGate, zoom: 19, pitch: 65, bearing: -20, speed: 1.4 });
+            // 7. CINEMATIC FOLLOW
+            map.flyTo({ center: [-80.2818, 25.7960], zoom: 18.5, pitch: 60, bearing: -20, speed: 1.2 });
         }
     </script>
 </body>
