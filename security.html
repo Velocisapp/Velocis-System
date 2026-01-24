@@ -5,6 +5,7 @@
     <title>VELOCIS™ Journey Hub</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
+    
     <style>
         body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow: hidden; height: 100vh; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
@@ -23,15 +24,41 @@
     </style>
 </head>
 <body>
-    <div id="header-box"><div style="color: #FFD700; font-size: 10px; font-weight: 900; letter-spacing: 3px;">VELOCIS™ GLOBAL SECURITY</div><div id="clock">TIME: --:--:--</div></div>
-    <div id="map"></div>
-    <div class="discreet-window"><div class="label-tiny">Terminal Guidance: Departure</div><div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">SCANNING</span> | Status: <span id="d-status-ui">--</span></div><div class="input-group"><input type="text" id="flight-input" placeholder="FLIGHT #"><button class="dive-btn" onclick="syncData()">DIVE</button></div></div>
-    <div id="persistent-nav">
-        <a href="security.html" class="nav-item">✈️</a><a href="sea.html" class="nav-item">🚢</a><a href="rail.html" class="nav-item">🚆</a><a href="metro.html" class="nav-item">🚇</a><a href="port.html" class="nav-item">🚗</a>
+
+    <div id="header-box">
+        <div style="color: #FFD700; font-size: 10px; font-weight: 900; letter-spacing: 3px;">VELOCIS™ GLOBAL SECURITY</div>
+        <div id="clock">TIME: --:--:--</div>
     </div>
+
+    <div id="map"></div>
+
+    <div class="discreet-window">
+        <div class="label-tiny">Terminal Guidance: Departure</div>
+        <div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">SCANNING</span> | Status: <span id="d-status-ui">--</span></div>
+        <div class="input-group">
+            <input type="text" id="flight-input" placeholder="FLIGHT #">
+            <button class="dive-btn" onclick="syncData()">DIVE</button>
+        </div>
+    </div>
+
+    <div id="persistent-nav">
+        <a href="security.html" class="nav-item">✈️</a>
+        <a href="sea.html" class="nav-item">🚢</a>
+        <a href="rail.html" class="nav-item">🚆</a>
+        <a href="metro.html" class="nav-item">🚇</a>
+        <a href="port.html" class="nav-item">🚗</a>
+    </div>
+
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
-        const MIA_INTERIOR = [-80.2818, 25.7965];
+
+        // DATABASE: Specific gate coordinates for Terminal D
+        const GATE_MAP = {
+            "D48": [-80.2828, 25.7960],
+            "D50": [-80.2835, 25.7962],
+            "DEFAULT": [-80.2818, 25.7965]
+        };
+
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/standard', 
@@ -39,39 +66,47 @@
             zoom: 2, pitch: 0, antialias: true
         });
 
+        let currentMarker = null;
+
         function executeGlobalDive(coords, gate, status) {
-            document.getElementById('d-gate-ui').innerText = gate || "D48C";
+            document.getElementById('d-gate-ui').innerText = gate || "D48";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // CHANGE LOGIC: We swap styles to physically unlock the 'composite' source.
-            // This is how real apps remove the 3D "lid" you see in your tarmac shots.
+            // ACTION: Switch to the Indoor-Ready Layout
             map.setStyle('mapbox://styles/mapbox/light-v11');
 
             map.once('style.load', () => {
-                // Now the source exists. We set the floor level to 1 (Departures).
-                map.setFeatureState(
-                    { source: 'composite', sourceLayer: 'indoor', id: 'level' },
-                    { level: 1 } 
-                );
+                // Set floor to Level 1 (Departures)
+                if (map.getSource('composite')) {
+                    map.setFeatureState(
+                        { source: 'composite', sourceLayer: 'indoor', id: 'level' },
+                        { level: 1 } 
+                    );
+                }
 
                 map.flyTo({
                     center: coords,
-                    zoom: 19.5,   // Threshold for high-density blueprint labels
-                    pitch: 0,     // Top-down view for blueprint clarity
+                    zoom: 19.8,   // Slightly tighter zoom to force indoor labels
+                    pitch: 0,     // Mandatory for blueprint view
                     bearing: 0, 
                     speed: 0.7,
                     essential: true
                 });
 
+                if (currentMarker) currentMarker.remove();
                 const el = document.createElement('div'); el.className = 'gate-beacon';
-                new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
+                currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
             });
         }
 
         async function syncData() {
             const val = document.getElementById('flight-input').value.toUpperCase();
-            if (val.includes("AA")) executeGlobalDive(MIA_INTERIOR, "D48C", "STANDBY");
+            if (val.includes("AA")) {
+                // If the flight contains AA, we target the specific Gate D48 coordinates
+                executeGlobalDive(GATE_MAP["D48"], "D48", "STANDBY");
+            }
         }
+
         setInterval(() => {
             const c = document.getElementById('clock');
             if(c) c.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
