@@ -24,7 +24,6 @@
         .dive-btn { background: #39FF14; color: black; border: none; padding: 0 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
         .gate-beacon { width: 22px; height: 22px; background-color: #39FF14; border-radius: 50%; box-shadow: 0 0 20px #39FF14; animation: pulse-ring 1.5s infinite; }
-        .user-dot { width: 15px; height: 15px; background: #007AFF; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px #007AFF; }
         
         @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { transform: scale(2.5); opacity: 0; } }
     </style>
@@ -68,11 +67,8 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // TERMINAL AREA BOUNDS (Southwest to Northeast corners of the active D-Pier)
-        const MIA_D_BOUNDS = [
-            [-80.2855, 25.7955], 
-            [-80.2805, 25.7985]  
-        ];
+        // COORDINATES FOR THE HEART OF MIA CONCOURSE D HALLWAY
+        const MIA_HALLWAY_CENTER = [-80.2825, 25.7968];
 
         const map = new mapboxgl.Map({
             container: 'map',
@@ -88,7 +84,11 @@
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
             
-            // CONFIGURE THE 3D ENGINE TO SHOW INTERIORS
+            // THE X-RAY COMMAND: Strip the roof from the 3D buildings
+            if (map.getLayer('building')) {
+                map.setFilter('building', ['!=', ['get', 'type'], 'roof']);
+            }
+
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
             map.addLayer({
                 'id': 'route-line', 'type': 'line', 'source': 'route',
@@ -100,41 +100,33 @@
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 2) return;
             
-            // INSTANT DIVE: Bypassing the broken API to hit the terminal
+            // Bypass API and force internal dive
             if (val.includes("AA")) {
-                executeUniversalDive(MIA_D_BOUNDS, "D48C", "STANDBY");
+                executeGlobalDive(MIA_HALLWAY_CENTER, "D48C", "STANDBY");
                 return;
             }
         }
 
-        function executeUniversalDive(bounds, gate, status) {
+        function executeGlobalDive(coords, gate, status) {
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            const spinePath = [
-                [-80.2850, 25.7960],
-                [-80.2830, 25.7970],
-                [-80.2815, 25.7975]
-            ];
-            map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': spinePath }});
+            // Draw path along the interior floor
+            const path = [[coords[0] - 0.0008, coords[1] - 0.0008], [coords[0] - 0.0004, coords[1] - 0.0004], coords];
+            map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
-            // PHASE 1: Fly to the building footprint
-            map.fitBounds(bounds, {
-                padding: 30,
-                pitch: 75,
-                bearing: -35,
-                duration: 4000,
+            if (currentMarker) currentMarker.remove();
+            const el = document.createElement('div'); el.className = 'gate-beacon';
+            currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
+
+            map.flyTo({
+                center: coords,
+                zoom: 20.5,     // Dives past the roof line
+                pitch: 80,      // Architectural perspective
+                bearing: -45,   // Rotates to face down the concourse
+                speed: 0.5,     // Cinematic glide
                 essential: true
             });
-
-            // PHASE 2: Surgical zoom into the interior hallway
-            setTimeout(() => {
-                map.easeTo({
-                    zoom: 20.2,
-                    pitch: 82,
-                    duration: 2000
-                });
-            }, 4200);
         }
 
         setInterval(() => {
