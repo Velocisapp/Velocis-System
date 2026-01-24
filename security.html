@@ -2,114 +2,93 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>VELOCIS™ Hub Brain</title>
+    <title>VELOCIS™ NAV ENGINE</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow: hidden; height: 100vh; }
+        body { margin: 0; background: #000; font-family: 'Courier New', monospace; color: white; overflow: hidden; height: 100vh; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
-        #header-box { position: fixed; top: env(safe-area-inset-top, 20px); left: 50%; transform: translateX(-50%); width: 90%; z-index: 1000; border: 1px solid rgba(255, 215, 0, 0.4); padding: 10px; background: rgba(0,20,20,0.85); backdrop-filter: blur(15px); text-align: center; border-radius: 4px; }
-        #clock { color: #FFD700; font-size: 18px; font-weight: bold; }
-        .discreet-window { position: fixed; top: calc(env(safe-area-inset-top, 20px) + 70px); left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: rgba(10, 20, 30, 0.95); backdrop-filter: blur(20px); border-left: 4px solid #39FF14; padding: 15px; z-index: 1100; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border-radius: 0 8px 8px 0; }
-        .label-tiny { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
-        .objective-text { font-size: 14px; margin: 8px 0; text-transform: uppercase; }
-        .input-group { display: flex; gap: 8px; margin-top: 10px; }
-        input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid #39FF14; border-radius: 4px; color: #39FF14; padding: 12px; font-family: monospace; outline: none; font-size: 16px; }
-        .dive-btn { background: #39FF14; color: black; border: none; padding: 0 20px; border-radius: 4px; font-weight: 900; cursor: pointer; }
-        #persistent-nav { position: fixed; bottom: env(safe-area-inset-bottom, 20px); left: 50%; transform: translateX(-50%); display: flex; gap: 20px; background: rgba(20, 40, 60, 0.9); backdrop-filter: blur(15px); padding: 15px 30px; border-radius: 50px; border: 1px solid rgba(0, 255, 255, 0.3); z-index: 9999; }
-        .nav-item { font-size: 24px; text-decoration: none; }
+        
+        /* High-Fidelity UI Overlays */
+        #nav-banner {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 92%; background: rgba(0, 80, 255, 0.85); backdrop-filter: blur(15px);
+            padding: 15px; border-radius: 12px; z-index: 1000; display: none;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .dist-text { font-size: 28px; font-weight: 900; }
+        
+        .discreet-window {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            width: 85%; background: rgba(10, 20, 30, 0.9); backdrop-filter: blur(20px);
+            padding: 20px; border-radius: 16px; z-index: 1100; border: 1px solid #39FF14;
+        }
+        input { width: 70%; background: #222; border: 1px solid #39FF14; color: #39FF14; padding: 12px; border-radius: 8px; }
+        .dive-btn { background: #39FF14; color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 900; }
     </style>
 </head>
 <body>
 
-    <div id="header-box">
-        <div style="color: #FFD700; font-size: 10px; font-weight: 900; letter-spacing: 3px;">VELOCIS™ HUB ENGINE</div>
-        <div id="clock">TIME: --:--:--</div>
+    <div id="nav-banner">
+        <div class="dist-text">↑ 0.2 mi</div>
+        <div style="font-size: 14px;">Concourse D - Gate D48</div>
     </div>
 
     <div id="map"></div>
 
     <div class="discreet-window">
-        <div class="label-tiny">Hub Intelligence: Concourse D</div>
-        <div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">SCANNING</span> | Status: <span id="d-status-ui">READY</span></div>
-        <div class="input-group">
-            <input type="text" id="flight-input" placeholder="TARGET HUB">
-            <button class="dive-btn" onclick="syncData()">DIVE</button>
+        <div style="font-size: 10px; opacity: 0.6; letter-spacing: 2px;">TARGETING SYSTEM</div>
+        <div style="margin: 10px 0;">HUB: MIA | GATE: <span id="gate-target" style="color:#39FF14;">--</span></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="flight-input" placeholder="AA245">
+            <button class="dive-btn" onclick="engageNav()">DIVE</button>
         </div>
-    </div>
-
-    <div id="persistent-nav">
-        <a href="security.html" class="nav-item">✈️</a><a href="sea.html" class="nav-item">🚢</a><a href="rail.html" class="nav-item">🚆</a><a href="metro.html" class="nav-item">🚇</a><a href="port.html" class="nav-item">🚗</a>
     </div>
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // THE HUB BRAIN: Manual Geometry Injection
-        // This is the blueprint we replicate for Sea and Rail hubs
-        const HUB_GEOMETRY = {
-            'type': 'FeatureCollection',
-            'features': [
-                // MAIN HALLWAY (Blue Floor)
-                { 'type': 'Feature', 'properties': { 'class': 'hall' }, 'geometry': { 'type': 'Polygon', 'coordinates': [[ [-80.285, 25.797], [-80.278, 25.795], [-80.278, 25.794], [-80.285, 25.796], [-80.285, 25.797] ]] } },
-                // GATE ZONES (Green Outlines)
-                { 'type': 'Feature', 'properties': { 'name': 'GATE D48', 'class': 'gate' }, 'geometry': { 'type': 'Polygon', 'coordinates': [[ [-80.283, 25.7962], [-80.282, 25.7962], [-80.282, 25.7958], [-80.283, 25.7958], [-80.283, 25.7962] ]] } },
-                { 'type': 'Feature', 'properties': { 'name': 'DUTY FREE', 'class': 'retail' }, 'geometry': { 'type': 'Polygon', 'coordinates': [[ [-80.281, 25.7955], [-80.280, 25.7955], [-80.280, 25.7952], [-80.281, 25.7952], [-80.281, 25.7955] ]] } },
-                { 'type': 'Feature', 'properties': { 'name': 'SECURITY', 'class': 'security' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2855, 25.7950] } }
-            ]
-        };
-
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/dark-v11',
+            style: 'mapbox://styles/mapbox/navigation-night-v1', // High-Nav Specific Style
             center: [-80.2871, 25.7959],
-            zoom: 15, pitch: 0
+            zoom: 17, pitch: 60, bearing: 0, antialias: true
         });
 
         map.on('load', () => {
-            map.addSource('hub-internal', { 'type': 'geojson', 'data': HUB_GEOMETRY });
-
-            // 1. DRAW THE FLOORS (Dark Blue)
+            // ACTIVATE 3D BUILDINGS FOR DEPTH
             map.addLayer({
-                'id': 'hub-floor', 'type': 'fill', 'source': 'hub-internal',
-                'filter': ['==', 'class', 'hall'],
-                'paint': { 'fill-color': '#0a1a2a', 'fill-opacity': 0.8 }
+                'id': '3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
+                    'fill-extrusion-color': '#222',
+                    'fill-extrusion-height': ['get', 'height'],
+                    'fill-extrusion-base': ['get', 'min_height'],
+                    'fill-extrusion-opacity': 0.6
+                }
             });
 
-            // 2. DRAW THE GATE ZONES (Glowing Green)
-            map.addLayer({
-                'id': 'hub-zones', 'type': 'fill', 'source': 'hub-internal',
-                'filter': ['==', 'class', 'gate'],
-                'paint': { 'fill-color': '#39FF14', 'fill-opacity': 0.3, 'fill-outline-color': '#39FF14' }
-            });
-
-            // 3. DRAW THE LABELS
-            map.addLayer({
-                'id': 'hub-labels', 'type': 'symbol', 'source': 'hub-internal',
-                'layout': {
-                    'text-field': ['get', 'name'],
-                    'text-size': 11,
-                    'text-font': ['Open Sans Bold'],
-                    'text-transform': 'uppercase'
-                },
-                'paint': { 'text-color': '#39FF14', 'text-halo-color': '#000', 'text-halo-width': 2 }
-            });
+            // ADD DYNAMIC LIGHTING
+            map.setLight({ anchor: 'viewport', color: '#fff', intensity: 0.3 });
         });
 
-        function executeGlobalDive(coords, label) {
-            document.getElementById('d-gate-ui').innerText = label;
-            map.flyTo({ center: coords, zoom: 19, speed: 0.7, essential: true });
-        }
+        function engageNav() {
+            document.getElementById('nav-banner').style.display = 'block';
+            document.getElementById('gate-target').innerText = 'D48';
 
-        async function syncData() {
-            const val = document.getElementById('flight-input').value.toUpperCase();
-            if (val.includes("AA")) executeGlobalDive([-80.2825, 25.7960], "D48");
+            map.flyTo({
+                center: [-80.2828, 25.7960],
+                zoom: 19.5,
+                pitch: 75, // Steep angle for Nav perspective
+                bearing: -20,
+                speed: 0.5,
+                curve: 1
+            });
         }
-
-        setInterval(() => {
-            const clock = document.getElementById('clock');
-            if(clock) clock.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
-        }, 1000);
     </script>
 </body>
 </html>
