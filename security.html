@@ -10,13 +10,21 @@
         :root { --v-blue: #007AFF; --cyan: #00FBFF; --glass: rgba(255, 255, 255, 0.98); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
+        
+        /* 3D Chevron Styling */
+        .passenger-chevron {
+            width: 40px; height: 40px;
+            filter: drop-shadow(0px 8px 12px rgba(0, 251, 255, 0.6));
+            transition: transform 0.1s linear;
+        }
+
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.4); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             z-index: 100; display: flex; align-items: center; justify-content: center; transition: 0.8s;
         }
         .card { background: var(--glass); padding: 40px; border-radius: 32px; box-shadow: 0 30px 60px rgba(0,0,0,0.12); width: 360px; text-align: center; }
-        input { width: 100%; padding: 18px; border-radius: 16px; border: 1px solid #E5E5EA; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; }
+        input { width: 100%; padding: 18px; border-radius: 16px; border: 1px solid #E5E5EA; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; outline: none; }
         button { width: 100%; padding: 18px; background: var(--v-blue); color: white; border: none; border-radius: 16px; font-weight: 600; font-size: 18px; cursor: pointer; }
         header { position: absolute; top: 0; width: 100%; height: 64px; background: var(--glass); border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; box-sizing: border-box; }
         #airline-img { height: 28px; margin-right: 14px; display: none; }
@@ -48,11 +56,10 @@
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
         const AVIATION_KEY = '857039a50212727142b781216d842750';
 
-        // MIA Airline Counter Database
         const airlineConfig = {
-            'AA': { name: 'American Airlines', counter: 'Counters 1-32', gatePrefix: 'D', terminalLoc: [-80.2835, 25.7952] },
-            'DL': { name: 'Delta', counter: 'Counters 60-72', gatePrefix: 'H', terminalLoc: [-80.2705, 25.7922] },
-            'UA': { name: 'United', counter: 'Counters 45-55', gatePrefix: 'G', terminalLoc: [-80.2735, 25.7932] }
+            'AA': { name: 'American Airlines', counter: 'Counters 1-32', terminalLoc: [-80.2835, 25.7952] },
+            'DL': { name: 'Delta', counter: 'Counters 60-72', terminalLoc: [-80.2705, 25.7922] },
+            'UA': { name: 'United', counter: 'Counters 45-55', terminalLoc: [-80.2735, 25.7932] }
         };
 
         const map = new mapboxgl.Map({
@@ -61,6 +68,8 @@
             center: [-80.2831, 25.7972], 
             zoom: 13, pitch: 0, antialias: true
         });
+
+        let passengerMarker;
 
         async function startMission() {
             const flightCode = document.getElementById('flightNum').value.toUpperCase().replace(/\s/g, '');
@@ -76,7 +85,7 @@
                     document.getElementById('airline-img').src = `https://logo.clearbit.com/${config.name.toLowerCase().replace(/\s/g, '')}.com`;
                     document.getElementById('airline-img').style.display = 'block';
                 }
-            } catch (e) { console.error("Aviation API Sync Error"); }
+            } catch (e) { console.error("Aviation API Error"); }
 
             // 2. UI TRANSITION
             document.getElementById('overlay').style.opacity = '0';
@@ -86,51 +95,57 @@
                 document.getElementById('status-pill').innerText = `${flightCode} • ${config.counter} • GATE ${gate}`;
             }, 800);
 
-            // 3. THE MULTI-PHASE ROUTE
-            const userHome = [-80.3172, 25.6792]; // Kendall Ref
-            const curbDrop = config.terminalLoc;  // Precise Airline Counter Entrance
-            const finalGate = [-80.2818, 25.7960]; // Indoor Gate Node
+            // 3. LOCATIONS
+            const userHome = [-80.3172, 25.6792];
+            const curbDrop = config.terminalLoc; 
+            const finalGate = [-80.2818, 25.7960];
 
-            // Fetch Driving Route to Curb
+            // 4. ROUTING
             const driveRes = await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${userHome[0]},${userHome[1]};${curbDrop[0]},${curbDrop[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`).then(r => r.json());
-            
-            // Fetch Walking Route from Curb to Gate
             const walkRes = await fetch(`https://api.mapbox.com/directions/v5/mapbox/walking/${curbDrop[0]},${curbDrop[1]};${finalGate[0]},${finalGate[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`).then(r => r.json());
 
-            // Add Combined Path
-            const combinedPath = {
-                type: 'FeatureCollection',
-                features: [
-                    { type: 'Feature', properties: { type: 'drive' }, geometry: driveRes.routes[0].geometry },
-                    { type: 'Feature', properties: { type: 'walk' }, geometry: walkRes.routes[0].geometry }
-                ]
-            };
+            // Add Sources
+            map.addSource('drive-data', { 'type': 'geojson', 'data': driveRes.routes[0].geometry });
+            map.addSource('walk-data', { 'type': 'geojson', 'data': walkRes.routes[0].geometry });
 
-            map.addSource('full-mission', { 'type': 'geojson', 'data': combinedPath });
+            // Drive Layer (Solid V-Blue)
+            map.addLayer({
+                'id': 'drive-path', 'type': 'line', 'source': 'drive-data',
+                'paint': { 'line-color': '#007AFF', 'line-width': 4 }
+            });
+
+            // Light Cyan Guide Line (Very light as requested)
+            map.addLayer({
+                'id': 'walk-path', 'type': 'line', 'source': 'walk-data',
+                'paint': { 'line-color': '#00FBFF', 'line-width': 2, 'line-opacity': 0.6 }
+            });
+
+            // 5. 3D CHEVRON PASSENGER
+            const chevronEl = document.createElement('div');
+            chevronEl.className = 'passenger-chevron';
+            chevronEl.innerHTML = `
+                <svg width="40" height="40" viewBox="0 0 100 100">
+                    <path d="M50 0 L100 100 L50 75 L0 100 Z" fill="#00FBFF" stroke="#fff" stroke-width="2"/>
+                </svg>`;
             
-            // Drive Layer (Solid)
-            map.addLayer({
-                'id': 'drive-path', 'type': 'line', 'source': 'full-mission',
-                'filter': ['==', 'type', 'drive'],
-                'paint': { 'line-color': '#007AFF', 'line-width': 5 }
-            });
+            passengerMarker = new mapboxgl.Marker(chevronEl)
+                .setLngLat(curbDrop)
+                .setRotation(-15)
+                .addTo(map);
 
-            // Walking Chevron Layer (Animated)
-            map.addLayer({
-                'id': 'walk-path', 'type': 'line', 'source': 'full-mission',
-                'filter': ['==', 'type', 'walk'],
-                'paint': { 'line-color': '#00FBFF', 'line-width': 8, 'line-dasharray': [2, 2] }
-            });
-
-            let offset = 0;
-            function animate() {
-                offset -= 0.15;
-                map.setPaintProperty('walk-path', 'line-dasharray-offset', offset);
-                requestAnimationFrame(animate);
+            // Animate Chevron along the walk path
+            let step = 0;
+            const walkCoords = walkRes.routes[0].geometry.coordinates;
+            function animatePassenger() {
+                if (step < walkCoords.length) {
+                    passengerMarker.setLngLat(walkCoords[Math.floor(step)]);
+                    step += 0.25;
+                    requestAnimationFrame(animatePassenger);
+                }
             }
-            animate();
+            animatePassenger();
 
-            // 4. THE CINEMATIC "DEPARTURE" DIVE
+            // 6. DEPARTURE DIVE
             map.flyTo({ center: finalGate, zoom: 19, pitch: 65, bearing: -20, speed: 1.4 });
         }
     </script>
