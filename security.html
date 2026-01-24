@@ -78,7 +78,7 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Exact hallway spine of MIA Concourse D (Center of shops/gates)
+        // COORDINATES: Exact hallway spine of MIA Concourse D (Center of shop/gate data)
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
@@ -94,24 +94,17 @@
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            
-            // PRE-LOAD: Force the indoor engine to wake up before we move
+            // Force the engine to register indoor POIs immediately
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-
-            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
-            map.addLayer({
-                'id': 'route-line', 'type': 'line', 'source': 'route',
-                'paint': { 'line-color': '#39FF14', 'line-width': 10, 'line-opacity': 0.8 }
-            });
         });
 
         function executeGlobalDive(coords, gate, status) {
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // THE KILL-SWITCH: 
+            // THE KILL-SWITCH:
             // We physically disable 3D objects BEFORE we fly. 
-            // This ensures the camera look-at point penetrates the floor level.
+            // This removes the "Lid" mesh entirely so the camera can land on the floor.
             map.setConfigProperty('basemap', 'show3dObjects', false);
 
             if (currentMarker) currentMarker.remove();
@@ -119,13 +112,13 @@
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
             // THE PENETRATION DIVE:
-            // Zoom 21 is the hardcoded threshold for high-detail indoor mapping.
+            // Zoom 20.5 is the precise threshold where 2D indoor floorplans override 3D models.
             map.flyTo({
                 center: coords,
-                zoom: 21,       
-                pitch: 80,      
+                zoom: 20.5,       
+                pitch: 45,      // Reduced pitch to avoid "clipping" into the tarmac
                 bearing: -45,   
-                speed: 0.4,
+                speed: 0.5,
                 essential: true
             });
         }
