@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VELOCIS™ | ORIGINAL MAPBOX VIEW</title>
+    <title>VELOCIS™ | ORIGINAL RESTORATION</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
     </style>
 </head>
@@ -20,15 +20,19 @@
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v11', // THE PURE LIGHT-V11 STYLE
-            center: [-80.2831, 25.7960], // Miami International Airport (MIA) Terminal D
+            // THIS IS THE ORIGINAL HIGH-FIDELITY 3D STYLE
+            style: 'mapbox://styles/mapbox/standard', 
+            center: [-80.2831, 25.7960], 
             zoom: 18, 
-            pitch: 45, // Classic tilt to see the 3D structures
+            pitch: 45, 
             bearing: -15, 
             antialias: true
         });
 
-        // NO CUSTOM LAYERS ADDED. NO MODIFICATIONS.
+        map.on('style.load', () => {
+            // Setting the lighting to 'day' ensures the building labels and shops are bright and visible.
+            map.setConfigProperty('basemap', 'lightPreset', 'day');
+        });
     </script>
 </body>
 </html>
