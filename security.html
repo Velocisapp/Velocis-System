@@ -78,12 +78,11 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Exact hallway spine of MIA Concourse D
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard',
+            style: 'mapbox://styles/mapbox/standard', // 3D Startup
             center: [-80.2871, 25.7959],
             zoom: 2,
             pitch: 0,
@@ -94,8 +93,6 @@
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            
-            // INDOOR LAYOUT PREP: Ensure POIs are enabled globally
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
         });
 
@@ -103,31 +100,31 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // 1. THE LAYOUT FIX (As seen in research):
-            // We set the level state to '1' (Departures). 
-            // This physically "pops" the roof mesh to reveal the blueprint below.
-            map.setFeatureState(
-                { source: 'composite', sourceLayer: 'indoor', id: 'level' },
-                { level: 1 } 
-            );
+            // THE PROPER LAYOUT TRANSITION:
+            // Swap to 'streets-v12' which physically exposes the IMDF (Indoor) data 
+            // and the 'composite' source your console was missing.
+            map.setStyle('mapbox://styles/mapbox/streets-v12');
 
-            // 2. DISABLE OUTDOOR MESH:
-            // Remove the 3D shell so we only see the functional indoor layout.
-            map.setConfigProperty('basemap', 'show3dObjects', false);
+            map.once('style.load', () => {
+                // Now the source exists. We set the floor level to 1 (Departures).
+                map.setFeatureState(
+                    { source: 'composite', sourceLayer: 'indoor', id: 'level' },
+                    { level: 1 } 
+                );
 
-            if (currentMarker) currentMarker.remove();
-            const el = document.createElement('div'); el.className = 'gate-beacon';
-            currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
+                map.flyTo({
+                    center: coords,
+                    zoom: 19.5,   // Correct zoom to trigger indoor POIs
+                    pitch: 0,     // Flat blueprint view as shown in your research
+                    bearing: 0, 
+                    speed: 0.7,
+                    essential: true
+                });
 
-            // 3. THE PROPER FLY-TO:
-            // Fly to Zoom 19.5 with 0 pitch for a clean 2D Blueprint view.
-            map.flyTo({
-                center: coords,
-                zoom: 19.5,   
-                pitch: 0, 
-                bearing: 0, 
-                speed: 0.5,
-                essential: true
+                // Re-add beacon for the new style
+                if (currentMarker) currentMarker.remove();
+                const el = document.createElement('div'); el.className = 'gate-beacon';
+                currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
             });
         }
 
