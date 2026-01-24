@@ -11,68 +11,78 @@
             --velocity-blue: #007AFF;
             --slate-primary: #1D1D1F;
             --slate-secondary: #424245;
-            --glass-white: rgba(255, 255, 255, 0.92);
-            --border-light: rgba(0, 0, 0, 0.08);
+            --glass-white: rgba(255, 255, 255, 0.95);
+            --border-light: rgba(0, 0, 0, 0.1);
             --shadow-premium: 0 4px 24px rgba(0, 0, 0, 0.06);
         }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #F5F5F7; color: var(--slate-primary);
-            overflow: hidden;
-        }
-
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; background-color: #F5F5F7; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
 
+        /* Flight Entry Overlay */
+        #flight-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .entry-card {
+            background: var(--glass-white); padding: 40px; border-radius: 28px;
+            box-shadow: var(--shadow-premium); width: 340px; text-align: center;
+            border: 1px solid var(--border-light);
+        }
+
+        .entry-card h1 { font-weight: 700; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .entry-card h1 span { font-weight: 300; color: var(--velocity-blue); }
+        .entry-card p { font-size: 14px; color: var(--slate-secondary); margin-bottom: 24px; }
+
+        input {
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid var(--border-light);
+            font-size: 20px; text-align: center; margin-bottom: 20px; box-sizing: border-box;
+            font-weight: 600; text-transform: uppercase; outline: none; transition: border 0.3s;
+        }
+        input:focus { border-color: var(--velocity-blue); }
+
+        button {
+            width: 100%; padding: 16px; background: var(--velocity-blue); color: white;
+            border: none; border-radius: 14px; font-weight: 600; font-size: 16px; cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+        button:hover { background: #0056b3; transform: translateY(-1px); }
+
         header {
-            position: absolute; top: 0; left: 0; right: 0; height: 48px;
+            position: absolute; top: 0; width: 100%; height: 48px;
             background: var(--glass-white); backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-light);
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 24px; z-index: 10;
+            padding: 0 24px; z-index: 10; box-sizing: border-box;
         }
 
-        .logo { font-weight: 700; font-size: 18px; color: var(--slate-primary); }
-        .logo span { font-weight: 300; color: var(--velocity-blue); }
-
+        .logo { font-weight: 700; font-size: 18px; }
         .status-indicator { display: flex; align-items: center; font-size: 11px; font-weight: 600; color: var(--slate-secondary); }
         .pulse-dot { height: 6px; width: 6px; background-color: #34C759; border-radius: 50%; margin-right: 8px; animation: pulse 2s infinite; }
-
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(52, 199, 89, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
-        }
-
-        .nav-card {
-            position: absolute; top: 72px; left: 24px; width: 320px;
-            background: var(--glass-white); backdrop-filter: blur(15px);
-            border-radius: 16px; border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-premium); padding: 20px; z-index: 5;
-        }
-
-        .nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--velocity-blue); font-weight: 700; margin-bottom: 8px; }
-        .nav-objective { font-size: 16px; font-weight: 600; line-height: 1.4; }
+        @keyframes pulse { 0% { transform: scale(0.95); opacity: 1; } 70% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(0.95); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">VELOCIS<span>™</span></div>
-        <div class="status-indicator">
-            <div class="pulse-dot"></div>
-            LIVE MISSION: HOME TO SEAT
-        </div>
-    </header>
-
-    <div class="nav-card">
-        <div class="nav-label">Current Segment</div>
-        <div class="nav-objective">Terminal D Exploration</div>
-        <div style="margin-top: 12px; font-size: 12px; color: var(--slate-secondary);">
-            Coordinate Lock: <span id="coords" style="font-family: monospace;">Syncing...</span>
+    <div id="flight-overlay">
+        <div class="entry-card">
+            <h1>VELOCIS<span>™</span></h1>
+            <p>ENTER FLIGHT TO SYNC TERMINAL D</p>
+            <input type="text" id="flightNum" placeholder="AA 1234" maxlength="7">
+            <button onclick="startMission()">BEGIN MISSION</button>
         </div>
     </div>
+
+    <header>
+        <div class="logo">VELOCIS<span style="font-weight:300; color:var(--velocity-blue);">™</span></div>
+        <div class="status-indicator">
+            <div class="pulse-dot"></div>
+            MISSION STATUS: STANDBY
+        </div>
+    </header>
 
     <div id="map"></div>
 
@@ -83,11 +93,18 @@
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11',
             center: [-80.283182, 25.797284],
-            zoom: 17.5, pitch: 45, bearing: -15.4, antialias: true
+            zoom: 15, pitch: 0, antialias: true
         });
 
+        const geolocate = new mapboxgl.GeolocateControl({
+            positionOptions: { enableHighAccuracy: true },
+            trackUserLocation: true,
+            showUserHeading: true
+        });
+        map.addControl(geolocate, 'top-right');
+
         map.on('load', () => {
-            // 1. High-Precision 3D Layer
+            // Add 3D Buildings
             map.addLayer({
                 'id': '3d-buildings',
                 'source': 'composite', 'source-layer': 'building',
@@ -101,30 +118,7 @@
                 }
             });
 
-            // 2. Terminal D North Concourse Precise Geometry
-            map.addSource('terminal_d_north', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'Polygon',
-                        'coordinates': [[
-                            [-80.2840, 25.7980], [-80.2815, 25.7980],
-                            [-80.2815, 25.7965], [-80.2840, 25.7965],
-                            [-80.2840, 25.7980]
-                        ]]
-                    }
-                }
-            });
-
-            map.addLayer({
-                'id': 'terminal-highlight',
-                'type': 'fill',
-                'source': 'terminal_d_north',
-                'paint': { 'fill-color': '#007AFF', 'fill-opacity': 0.15 }
-            });
-
-            // 3. CUSTOM LABEL INJECTION (The Fix for Hidden Shops)
+            // Add Custom Labels
             map.addSource('velocis_labels', {
                 'type': 'geojson',
                 'data': {
@@ -132,10 +126,49 @@
                     'features': [
                         { 'type': 'Feature', 'properties': { 'title': 'GATE D20' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2828, 25.7977] } },
                         { 'type': 'Feature', 'properties': { 'title': 'SECURITY CHECK' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2835, 25.7972] } },
-                        { 'type': 'Feature', 'properties': { 'title': 'DUTY FREE / SHOPS' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2820, 25.7970] } },
-                        { 'type': 'Feature', 'properties': { 'title': 'ADMIRALS CLUB' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2825, 25.7974] } }
+                        { 'type': 'Feature', 'properties': { 'title': 'DUTY FREE' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2820, 25.7970] } }
                     ]
                 }
             });
 
             map.addLayer({
+                'id': 'velocis-poi-labels',
+                'type': 'symbol',
+                'source': 'velocis_labels',
+                'layout': {
+                    'text-field': ['get', 'title'],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 11,
+                    'text-allow-overlap': true
+                },
+                'paint': {
+                    'text-color': '#007AFF',
+                    'text-halo-color': '#FFFFFF',
+                    'text-halo-width': 2
+                }
+            });
+        });
+
+        function startMission() {
+            const flight = document.getElementById('flightNum').value;
+            if(!flight) return alert("Please enter your flight number.");
+            
+            document.getElementById('flight-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('flight-overlay').style.display = 'none';
+            }, 600);
+
+            // Execute "The Drop": Zoom from high altitude into Terminal D
+            map.flyTo({
+                center: [-80.2831, 25.7972],
+                zoom: 17.5,
+                pitch: 45,
+                bearing: -15,
+                speed: 1.2,
+                curve: 1.5,
+                essential: true
+            });
+        }
+    </script>
+</body>
+</html>
