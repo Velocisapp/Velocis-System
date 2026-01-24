@@ -78,12 +78,12 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Exact hallway spine of MIA Concourse D
+        // COORDINATES: Centered on the interior "Spine" of MIA Concourse D
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard',
+            style: 'mapbox://styles/mapbox/standard', // Initial High-End 3D View
             center: [-80.2871, 25.7959],
             zoom: 2,
             pitch: 0,
@@ -102,13 +102,11 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // THE PROFESSIONAL SOLUTION:
-            // We swap the style to 'light-v11'. This style lacks the 3D "Envelope" 
-            // of the Standard style, allowing us to see the floorplan clearly.
+            // THE STYLE SWAP: This removes the 3D "lid" of the airport
             map.setStyle('mapbox://styles/mapbox/light-v11');
 
             map.once('style.load', () => {
-                // Style swap clears data, so we re-add the route
+                // Style swap clears map data; we must re-add the neon route
                 map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [[coords[0] - 0.001, coords[1] - 0.001], coords] }}});
                 map.addLayer({
                     'id': 'route-line', 'type': 'line', 'source': 'route',
@@ -121,10 +119,10 @@
 
                 map.flyTo({
                     center: coords,
-                    zoom: 19.8,      // High zoom for indoor label density
-                    pitch: 75,       
+                    zoom: 19.8,      // Standard interior floorplan zoom
+                    pitch: 70,       
                     bearing: -45,    
-                    speed: 0.7,      
+                    speed: 0.6,      
                     essential: true
                 });
             });
@@ -134,7 +132,7 @@
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 2) return;
             
-            // Bypass API 403 errors and trigger deep dive immediately
+            // Bypass API and force local style-switch dive
             if (val.includes("AA")) {
                 executeGlobalDive(MIA_INTERIOR, "D48C", "STANDBY");
             }
