@@ -68,7 +68,7 @@
 
     <div class="nav-card">
         <div class="nav-label">Current Segment</div>
-        <div class="nav-objective">Approaching Terminal D North</div>
+        <div class="nav-objective">Terminal D Exploration</div>
         <div style="margin-top: 12px; font-size: 12px; color: var(--slate-secondary);">
             Coordinate Lock: <span id="coords" style="font-family: monospace;">Syncing...</span>
         </div>
@@ -83,11 +83,11 @@
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11',
             center: [-80.283182, 25.797284],
-            zoom: 17.2, pitch: 40, bearing: -15.4, antialias: true
+            zoom: 17.5, pitch: 45, bearing: -15.4, antialias: true
         });
 
         map.on('load', () => {
-            // High-Precision 3D Layer
+            // 1. High-Precision 3D Layer
             map.addLayer({
                 'id': '3d-buildings',
                 'source': 'composite', 'source-layer': 'building',
@@ -101,7 +101,7 @@
                 }
             });
 
-            // Terminal D North Concourse Precise Geometry
+            // 2. Terminal D North Concourse Precise Geometry
             map.addSource('terminal_d_north', {
                 'type': 'geojson',
                 'data': {
@@ -123,12 +123,19 @@
                 'source': 'terminal_d_north',
                 'paint': { 'fill-color': '#007AFF', 'fill-opacity': 0.15 }
             });
-        });
 
-        map.on('move', () => {
-            const center = map.getCenter();
-            document.getElementById('coords').innerText = center.lng.toFixed(4) + ", " + center.lat.toFixed(4);
-        });
-    </script>
-</body>
-</html>
+            // 3. CUSTOM LABEL INJECTION (The Fix for Hidden Shops)
+            map.addSource('velocis_labels', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        { 'type': 'Feature', 'properties': { 'title': 'GATE D20' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2828, 25.7977] } },
+                        { 'type': 'Feature', 'properties': { 'title': 'SECURITY CHECK' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2835, 25.7972] } },
+                        { 'type': 'Feature', 'properties': { 'title': 'DUTY FREE / SHOPS' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2820, 25.7970] } },
+                        { 'type': 'Feature', 'properties': { 'title': 'ADMIRALS CLUB' }, 'geometry': { 'type': 'Point', 'coordinates': [-80.2825, 25.7974] } }
+                    ]
+                }
+            });
+
+            map.addLayer({
