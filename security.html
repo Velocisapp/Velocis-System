@@ -78,7 +78,7 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // TARGET: The exact hallway spine for MIA Terminal D
+        // COORDINATES: Exact hallway spine of MIA Concourse D
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
@@ -93,11 +93,10 @@
         let currentMarker = null;
 
         map.on('style.load', () => {
+            // OFFICIAL API: Set lighting and force labels to register
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            
-            // PRE-ENABLE INDOOR DATA: This tells the engine to start fetching floor data
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-            
+
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
             map.addLayer({
                 'id': 'route-line', 'type': 'line', 'source': 'route',
@@ -109,28 +108,24 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // THE BLUEPRINT MOVE:
-            // 1. Physically turn off the 3D models (the roof/walls)
-            map.setConfigProperty('basemap', 'show3dObjects', false);
+            // Update Neon Path
+            const path = [[coords[0] - 0.0007, coords[1] - 0.0007], coords];
+            map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
             if (currentMarker) currentMarker.remove();
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // 2. Fly to the blueprint level
+            // THE X-RAY GLIDE:
+            // We fly to Zoom 19.5. This is the threshold where Mapbox Standard 
+            // automatically prioritizes indoor POIs (shops/gates) over roofs.
             map.flyTo({
                 center: coords,
-                zoom: 20.5,    // Deep zoom activates internal feature labels
-                pitch: 45,     // Lower pitch works better for 2D blueprints
-                bearing: -45, 
+                zoom: 19.5,
+                pitch: 65,      // Cinematic angle that keeps the building visible but shows labels
+                bearing: -45,   
                 speed: 0.5,
                 essential: true
-            });
-
-            // 3. Force the internal "indoor" source to render its labels
-            map.once('moveend', () => {
-                // Ensure everything sits on the floor
-                map.setPaintProperty('poi-label', 'text-allow-overlap', true);
             });
         }
 
