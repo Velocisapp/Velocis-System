@@ -41,6 +41,20 @@
         .nav-item { font-size: 24px; text-decoration: none; filter: drop-shadow(0 0 5px rgba(0,255,255,0.5)); }
 
         input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(57, 255, 20, 0.4); border-radius: 4px; color: #39FF14; padding: 10px; font-family: monospace; margin-top: 10px; outline: none; }
+
+        /* PULSING BEACON ANIMATION */
+        .gate-beacon {
+            width: 20px; height: 20px;
+            background-color: #39FF14;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #39FF14;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(.33); opacity: 1; }
+            80%, 100% { transform: scale(2.5); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -55,7 +69,7 @@
     <div id="scroll-wrapper">
         <section id="dep-section">
             <div class="discreet-window">
-                <div class="label-tiny">Terminal Guidance: Departure</div>
+                <div class="label-tiny">Mission Guidance: Departure</div>
                 <div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">SCANNING</span> | Status: <span id="d-status-ui">--</span></div>
                 <input type="text" id="flight-input" placeholder="INPUT FLIGHT #" oninput="syncData()">
             </div>
@@ -63,7 +77,7 @@
 
         <section id="arr-section">
             <div class="discreet-window" style="border-left-color: #ff5b00;">
-                <div class="label-tiny">Terminal Guidance: Arrival</div>
+                <div class="label-tiny">Mission Guidance: Arrival</div>
                 <div class="objective-text">Carousel: <span id="a-bag-ui" style="color:#ff5b00; font-weight:900;">WAIT</span> | Gate: <span id="a-gate-ui">--</span></div>
             </div>
         </section>
@@ -78,34 +92,57 @@
     </div>
 
     <script>
-        // 1. INITIALIZE MAPBOX
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard', // The Professional 3D Standard
-            center: [-80.2871, 25.7959], // Default: Miami (MIA)
+            style: 'mapbox://styles/mapbox/standard',
+            center: [-80.2871, 25.7959],
             zoom: 16.5,
-            pitch: 70, // Architectural 3D Perspective
+            pitch: 70,
             bearing: -20,
             antialias: true
         });
 
-        // 2. APPLY ARCHITECTURAL NIGHT THEME
+        // SAMPLE COORDINATES FOR MIA CONCOURSE D
+        const MIA_NAV = {
+            START: [-80.2900, 25.7940],
+            SECURITY: [-80.2885, 25.7950],
+            D28: [-80.2830, 25.7970]
+        };
+
         map.on('style.load', () => {
-            // "Night" preset provides the airy, blue-glass look from your reference
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            
-            // Set building materials to high-class slate/extrusion
             map.setPaintProperty('building', 'fill-extrusion-opacity', 0.8);
+
+            // INITIALIZE PATH SOURCE
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': { 'type': 'LineString', 'coordinates': [] }
+                }
+            });
+
+            // NEON PATH LAYER
+            map.addLayer({
+                'id': 'route-line',
+                'type': 'line',
+                'source': 'route',
+                'paint': {
+                    'line-color': '#39FF14',
+                    'line-width': 5,
+                    'line-blur': 3,
+                    'line-opacity': 0.8
+                }
+            });
         });
 
-        // 3. FLIGHT DATA INTEGRATION & SMART CAMERA
         async function syncData() {
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 3) return;
             
-            const API_KEY = '6973cc1546ac0bf801777b1e'; // flightAPI.io key
+            const API_KEY = '6973cc1546ac0bf801777b1e';
             const airline = val.match(/[A-Z]+/)?.[0];
             const num = val.match(/[0-9]+/)?.[0];
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -116,24 +153,39 @@
                 
                 if (data && data[0]) {
                     const f = data[0];
-                    document.getElementById('d-gate-ui').innerText = f.departure?.gate || "TBD";
+                    const gate = f.departure?.gate || "D28";
+                    document.getElementById('d-gate-ui').innerText = gate;
                     document.getElementById('d-status-ui').innerText = f.status || "ACTIVE";
                     
-                    // SMART CAMERA: If airport is MIA, fly the drone camera to the gate
+                    // IF MIA - INITIATE INDOOR ROUTING
                     if(f.departure?.airport === "MIA") {
+                        // 1. Draw Path
+                        const routeData = {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': [MIA_NAV.START, MIA_NAV.SECURITY, [-80.2860, 25.7960], MIA_NAV.D28]
+                            }
+                        };
+                        map.getSource('route').setData(routeData);
+
+                        // 2. Add Pulsing Marker
+                        const el = document.createElement('div');
+                        el.className = 'gate-beacon';
+                        new mapboxgl.Marker(el).setLngLat(MIA_NAV.D28).addTo(map);
+
+                        // 3. Move Camera to focus on the full path
                         map.flyTo({
-                            center: [-80.2871, 25.7959],
-                            zoom: 18.5,
+                            center: [-80.2865, 25.7955],
+                            zoom: 18,
                             pitch: 75,
-                            duration: 5000,
-                            essential: true
+                            duration: 4000
                         });
                     }
                 }
             } catch (e) { console.error("Flight Sync Error", e); }
         }
 
-        // 4. PERSISTENT CLOCK
         setInterval(() => {
             const c = document.getElementById('clock');
             if(c) c.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
