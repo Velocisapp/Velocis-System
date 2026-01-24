@@ -78,8 +78,8 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // THE ANALYSIS FIX: Use coordinates that land on the Concourse D hallway spine.
-        const MIA_HUB = [-80.2818, 25.7965];
+        // COORDINATES: Exact hallway spine of MIA Concourse D
+        const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
             container: 'map',
@@ -93,52 +93,51 @@
         let currentMarker = null;
 
         map.on('style.load', () => {
-            map.setConfigProperty('basemap', 'lightPreset', 'night');
-            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-
-            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
-            map.addLayer({
-                'id': 'route-line', 'type': 'line', 'source': 'route',
-                'paint': { 'line-color': '#39FF14', 'line-width': 10, 'line-blur': 3, 'line-opacity': 0.9 }
-            });
-        });
-
-        async function syncData() {
-            const val = document.getElementById('flight-input').value.toUpperCase();
-            if (val.length < 2) return;
-            
-            if (val.includes("AA")) {
-                executeGlobalDive(MIA_HUB, "D48C", "STANDBY");
-                return;
+            if (map.getStyle().name === "Mapbox Standard") {
+                map.setConfigProperty('basemap', 'lightPreset', 'night');
             }
-        }
+        });
 
         function executeGlobalDive(coords, gate, status) {
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // NEON SPINE
-            const path = [[coords[0] - 0.0007, coords[1] - 0.0007], [coords[0] - 0.0003, coords[1] - 0.0003], coords];
-            map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
+            // THE PROFESSIONAL SOLUTION:
+            // We swap the style to 'light-v11'. This style lacks the 3D "Envelope" 
+            // of the Standard style, allowing us to see the floorplan clearly.
+            map.setStyle('mapbox://styles/mapbox/light-v11');
 
-            if (currentMarker) currentMarker.remove();
-            const el = document.createElement('div'); el.className = 'gate-beacon';
-            currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
+            map.once('style.load', () => {
+                // Style swap clears data, so we re-add the route
+                map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [[coords[0] - 0.001, coords[1] - 0.001], coords] }}});
+                map.addLayer({
+                    'id': 'route-line', 'type': 'line', 'source': 'route',
+                    'paint': { 'line-color': '#39FF14', 'line-width': 10, 'line-opacity': 0.8 }
+                });
 
-            // THE CORE SOLUTION:
-            // Physically deactivate 3D building models so they cannot block the camera.
-            // This forces Mapbox to render the "Indoor" labels sitting below the mesh.
-            map.setConfigProperty('basemap', 'show3dObjects', false);
+                if (currentMarker) currentMarker.remove();
+                const el = document.createElement('div'); el.className = 'gate-beacon';
+                currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // THE INTERIOR DIVE
-            map.flyTo({
-                center: coords,
-                zoom: 20.8,       
-                pitch: 82,      
-                bearing: -45,   
-                speed: 0.35,     
-                essential: true
+                map.flyTo({
+                    center: coords,
+                    zoom: 19.8,      // High zoom for indoor label density
+                    pitch: 75,       
+                    bearing: -45,    
+                    speed: 0.7,      
+                    essential: true
+                });
             });
+        }
+
+        async function syncData() {
+            const val = document.getElementById('flight-input').value.toUpperCase();
+            if (val.length < 2) return;
+            
+            // Bypass API 403 errors and trigger deep dive immediately
+            if (val.includes("AA")) {
+                executeGlobalDive(MIA_INTERIOR, "D48C", "STANDBY");
+            }
         }
 
         setInterval(() => {
