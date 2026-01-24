@@ -10,20 +10,17 @@
         :root { --v-blue: #007AFF; --cyan: #00FBFF; --glass: rgba(255, 255, 255, 0.98); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
-        
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.4); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             z-index: 100; display: flex; align-items: center; justify-content: center; transition: 0.8s;
         }
-        .card { background: var(--glass); padding: 40px; border-radius: 32px; box-shadow: 0 30px 60px rgba(0,0,0,0.12); width: 360px; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
-        input { width: 100%; padding: 18px; border-radius: 16px; border: 1px solid #E5E5EA; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; outline: none; }
+        .card { background: var(--glass); padding: 40px; border-radius: 32px; box-shadow: 0 30px 60px rgba(0,0,0,0.12); width: 360px; text-align: center; }
+        input { width: 100%; padding: 18px; border-radius: 16px; border: 1px solid #E5E5EA; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; }
         button { width: 100%; padding: 18px; background: var(--v-blue); color: white; border: none; border-radius: 16px; font-weight: 600; font-size: 18px; cursor: pointer; }
-
         header { position: absolute; top: 0; width: 100%; height: 64px; background: var(--glass); border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; box-sizing: border-box; }
-        .logo-box { display: flex; align-items: center; }
-        #airline-img { height: 28px; margin-right: 14px; display: none; border-radius: 4px; }
-        #status-pill { display: none; align-items: center; background: #000; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        #airline-img { height: 28px; margin-right: 14px; display: none; }
+        #status-pill { display: none; background: #000; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -31,92 +28,110 @@
     <div id="overlay">
         <div class="card">
             <h1 style="font-weight:900;">VELOCIS<span style="font-weight:200; color:var(--v-blue);">™</span></h1>
-            <p style="color:#8E8E93; font-size: 13px; margin-bottom: 30px; font-weight: 500;">DEPARTURE MISSION CONTROL</p>
-            <input type="text" id="flightNum" placeholder="e.g. AA 2402" spellcheck="false">
+            <p style="color:#8E8E93; font-size: 13px; margin-bottom: 30px;">DEPARTURE MISSION CONTROL</p>
+            <input type="text" id="flightNum" placeholder="AA 2402">
             <button onclick="startMission()">BEGIN JOURNEY</button>
         </div>
     </div>
 
     <header>
-        <div class="logo-box">
+        <div style="display:flex; align-items:center;">
             <img id="airline-img" src="" alt="">
             <div style="font-weight:900; font-size: 20px;">VELOCIS<span style="color:var(--v-blue); font-weight:200;">™</span></div>
         </div>
-        <div id="status-pill">SYNCING MISSION...</div>
+        <div id="status-pill">SYNCING...</div>
     </header>
 
     <div id="map"></div>
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
-        const AVIATION_KEY = '857039a50212727142b781216d842750'; 
+        const AVIATION_KEY = '857039a50212727142b781216d842750';
+
+        // MIA Airline Counter Database
+        const airlineConfig = {
+            'AA': { name: 'American Airlines', counter: 'Counters 1-32', gatePrefix: 'D', terminalLoc: [-80.2835, 25.7952] },
+            'DL': { name: 'Delta', counter: 'Counters 60-72', gatePrefix: 'H', terminalLoc: [-80.2705, 25.7922] },
+            'UA': { name: 'United', counter: 'Counters 45-55', gatePrefix: 'G', terminalLoc: [-80.2735, 25.7932] }
+        };
 
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v12',
             center: [-80.2831, 25.7972], 
-            zoom: 12, pitch: 0, antialias: true
-        });
-
-        map.on('load', () => {
-            map.addLayer({
-                'id': '3d-buildings',
-                'source': 'composite', 'source-layer': 'building',
-                'type': 'fill-extrusion',
-                'paint': { 'fill-extrusion-color': '#F2F2F7', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-opacity': 0.5 }
-            });
+            zoom: 13, pitch: 0, antialias: true
         });
 
         async function startMission() {
             const flightCode = document.getElementById('flightNum').value.toUpperCase().replace(/\s/g, '');
-            if(!flightCode) return;
+            const prefix = flightCode.substring(0, 2);
+            const config = airlineConfig[prefix] || airlineConfig['AA'];
 
             // 1. DATA SYNC
-            let gate = "D20"; 
+            let gate = "D20";
             try {
-                const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${AVIATION_KEY}&flight_iata=${flightCode}`);
-                const fData = await response.json();
+                const fData = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${AVIATION_KEY}&flight_iata=${flightCode}`).then(r => r.json());
                 if (fData.data && fData.data.length > 0) {
-                    const flightData = fData.data[0];
-                    gate = flightData.departure.gate || "D20";
-                    const airlineName = flightData.airline.name;
-                    document.getElementById('airline-img').src = `https://logo.clearbit.com/${airlineName.toLowerCase().replace(/\s/g, '')}.com`;
+                    gate = fData.data[0].departure.gate || "D20";
+                    document.getElementById('airline-img').src = `https://logo.clearbit.com/${config.name.toLowerCase().replace(/\s/g, '')}.com`;
                     document.getElementById('airline-img').style.display = 'block';
                 }
-            } catch (e) { console.error("Aviation API Error"); }
+            } catch (e) { console.error("Aviation API Sync Error"); }
 
-            // 2. UI UPDATE
+            // 2. UI TRANSITION
             document.getElementById('overlay').style.opacity = '0';
             setTimeout(() => { 
                 document.getElementById('overlay').style.display = 'none'; 
                 document.getElementById('status-pill').style.display = 'flex';
-                document.getElementById('status-pill').innerText = `${flightCode} • GATE ${gate}`;
-            }, 600);
+                document.getElementById('status-pill').innerText = `${flightCode} • ${config.counter} • GATE ${gate}`;
+            }, 800);
 
-            // 3. ROUTING (Reference Home Address to MIA Terminal D)
-            const startLoc = [-80.3172, 25.6792]; // Kendall Reference
-            const endLoc = [-80.2818, 25.7960];   // MIA Concourse D
+            // 3. THE MULTI-PHASE ROUTE
+            const userHome = [-80.3172, 25.6792]; // Kendall Ref
+            const curbDrop = config.terminalLoc;  // Precise Airline Counter Entrance
+            const finalGate = [-80.2818, 25.7960]; // Indoor Gate Node
 
-            const routeQuery = await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${startLoc[0]},${startLoc[1]};${endLoc[0]},${endLoc[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`).then(r => r.json());
+            // Fetch Driving Route to Curb
+            const driveRes = await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${userHome[0]},${userHome[1]};${curbDrop[0]},${curbDrop[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`).then(r => r.json());
             
-            map.addSource('route', { 'type': 'geojson', 'data': routeQuery.routes[0].geometry });
+            // Fetch Walking Route from Curb to Gate
+            const walkRes = await fetch(`https://api.mapbox.com/directions/v5/mapbox/walking/${curbDrop[0]},${curbDrop[1]};${finalGate[0]},${finalGate[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`).then(r => r.json());
+
+            // Add Combined Path
+            const combinedPath = {
+                type: 'FeatureCollection',
+                features: [
+                    { type: 'Feature', properties: { type: 'drive' }, geometry: driveRes.routes[0].geometry },
+                    { type: 'Feature', properties: { type: 'walk' }, geometry: walkRes.routes[0].geometry }
+                ]
+            };
+
+            map.addSource('full-mission', { 'type': 'geojson', 'data': combinedPath });
+            
+            // Drive Layer (Solid)
             map.addLayer({
-                'id': 'route-line', 'type': 'line', 'source': 'route',
-                'layout': { 'line-join': 'round', 'line-cap': 'round' },
-                'paint': { 'line-color': '#007AFF', 'line-width': 6, 'line-dasharray': [2, 2] }
+                'id': 'drive-path', 'type': 'line', 'source': 'full-mission',
+                'filter': ['==', 'type', 'drive'],
+                'paint': { 'line-color': '#007AFF', 'line-width': 5 }
             });
 
-            // 4. THE FLOWING CHEVRON ANIMATION
-            let step = 0;
+            // Walking Chevron Layer (Animated)
+            map.addLayer({
+                'id': 'walk-path', 'type': 'line', 'source': 'full-mission',
+                'filter': ['==', 'type', 'walk'],
+                'paint': { 'line-color': '#00FBFF', 'line-width': 8, 'line-dasharray': [2, 2] }
+            });
+
+            let offset = 0;
             function animate() {
-                step -= 0.15;
-                map.setPaintProperty('route-line', 'line-dasharray-offset', step);
+                offset -= 0.15;
+                map.setPaintProperty('walk-path', 'line-dasharray-offset', offset);
                 requestAnimationFrame(animate);
             }
             animate();
 
-            // 5. THE CINEMATIC FLY-IN
-            map.flyTo({ center: endLoc, zoom: 19, pitch: 65, bearing: -20, speed: 1.4, essential: true });
+            // 4. THE CINEMATIC "DEPARTURE" DIVE
+            map.flyTo({ center: finalGate, zoom: 19, pitch: 65, bearing: -20, speed: 1.4 });
         }
     </script>
 </body>
