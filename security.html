@@ -62,8 +62,9 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
+        // COORDINATES CENTERED ON INTERIOR HALLWAY OF CONCOURSE D
         const AIRPORT_COORDS = {
-            'MIA': [-80.2825, 25.7972], // Precise Concourse D Terminal Coords
+            'MIA': [-80.2818, 25.7965], 
             'JFK': [-73.7781, 40.6413],
             'LAX': [-118.4085, 33.9416],
             'LHR': [-0.4543, 51.4700],
@@ -135,7 +136,8 @@
             document.getElementById('d-gate-ui').innerText = gate || "TBD";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            const path = [[coords[0] - 0.001, coords[1] - 0.001], [coords[0] - 0.0005, coords[1] - 0.0005], coords];
+            // NEON PATH SCALED FOR INTERIOR
+            const path = [[coords[0] - 0.0008, coords[1] - 0.0008], [coords[0] - 0.0004, coords[1] - 0.0004], coords];
             map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
             if (currentMarker) currentMarker.remove();
@@ -144,10 +146,10 @@
 
             map.flyTo({
                 center: coords,
-                zoom: 19.5, // Forced Deep Zoom for Indoor Labels
-                pitch: 80,   // Forced Sharper Pitch
-                bearing: 30, // Rotated for Concourse View
-                speed: 0.7,
+                zoom: 20,       // MAX ZOOM: To see through the roof
+                pitch: 75,      // ARCHITECTURAL ANGLE
+                bearing: -45,   // ROTATED: To look down the length of the concourse hallway
+                speed: 0.6,
                 essential: true
             });
         }
