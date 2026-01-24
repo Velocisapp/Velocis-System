@@ -78,12 +78,12 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Centered on the interior "Spine" of MIA Concourse D
+        // TARGET: The exact hallway spine for MIA Terminal D
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard', // Initial High-End 3D View
+            style: 'mapbox://styles/mapbox/standard',
             center: [-80.2871, 25.7959],
             zoom: 2,
             pitch: 0,
@@ -93,46 +93,50 @@
         let currentMarker = null;
 
         map.on('style.load', () => {
-            if (map.getStyle().name === "Mapbox Standard") {
-                map.setConfigProperty('basemap', 'lightPreset', 'night');
-            }
+            map.setConfigProperty('basemap', 'lightPreset', 'night');
+            
+            // PRE-ENABLE INDOOR DATA: This tells the engine to start fetching floor data
+            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+            
+            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
+            map.addLayer({
+                'id': 'route-line', 'type': 'line', 'source': 'route',
+                'paint': { 'line-color': '#39FF14', 'line-width': 10, 'line-opacity': 0.8 }
+            });
         });
 
         function executeGlobalDive(coords, gate, status) {
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // THE STYLE SWAP: This removes the 3D "lid" of the airport
-            map.setStyle('mapbox://styles/mapbox/light-v11');
+            // THE BLUEPRINT MOVE:
+            // 1. Physically turn off the 3D models (the roof/walls)
+            map.setConfigProperty('basemap', 'show3dObjects', false);
 
-            map.once('style.load', () => {
-                // Style swap clears map data; we must re-add the neon route
-                map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [[coords[0] - 0.001, coords[1] - 0.001], coords] }}});
-                map.addLayer({
-                    'id': 'route-line', 'type': 'line', 'source': 'route',
-                    'paint': { 'line-color': '#39FF14', 'line-width': 10, 'line-opacity': 0.8 }
-                });
+            if (currentMarker) currentMarker.remove();
+            const el = document.createElement('div'); el.className = 'gate-beacon';
+            currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-                if (currentMarker) currentMarker.remove();
-                const el = document.createElement('div'); el.className = 'gate-beacon';
-                currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
+            // 2. Fly to the blueprint level
+            map.flyTo({
+                center: coords,
+                zoom: 20.5,    // Deep zoom activates internal feature labels
+                pitch: 45,     // Lower pitch works better for 2D blueprints
+                bearing: -45, 
+                speed: 0.5,
+                essential: true
+            });
 
-                map.flyTo({
-                    center: coords,
-                    zoom: 19.8,      // Standard interior floorplan zoom
-                    pitch: 70,       
-                    bearing: -45,    
-                    speed: 0.6,      
-                    essential: true
-                });
+            // 3. Force the internal "indoor" source to render its labels
+            map.once('moveend', () => {
+                // Ensure everything sits on the floor
+                map.setPaintProperty('poi-label', 'text-allow-overlap', true);
             });
         }
 
         async function syncData() {
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 2) return;
-            
-            // Bypass API and force local style-switch dive
             if (val.includes("AA")) {
                 executeGlobalDive(MIA_INTERIOR, "D48C", "STANDBY");
             }
