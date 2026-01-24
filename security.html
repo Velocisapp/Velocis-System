@@ -3,30 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VELOCIS™ | MISSION CONTROL</title>
+    <title>VELOCIS™ | PLANT VIEW MISSION</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
         :root { --v-blue: #007AFF; --cyan: #00FBFF; --glass: rgba(255, 255, 255, 0.98); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, sans-serif; overflow: hidden; background: #000; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
+        
         .passenger-chevron {
-            width: 60px; height: 60px;
-            filter: drop-shadow(0px 10px 15px rgba(0, 251, 255, 1));
+            width: 65px; height: 65px;
+            filter: drop-shadow(0px 10px 15px rgba(0, 251, 255, 0.9));
             display: flex; align-items: center; justify-content: center;
         }
-        header { position: absolute; top: 0; width: 100%; height: 64px; background: var(--glass); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; box-sizing: border-box; }
-        button { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--v-blue); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 100; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
+        header { 
+            position: absolute; top: 0; width: 100%; height: 64px; 
+            background: var(--glass); display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 24px; z-index: 10; box-sizing: border-box; 
+        }
+
+        #begin-btn {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            padding: 18px 45px; background: var(--v-blue); color: white; border: none;
+            border-radius: 18px; font-weight: 900; font-size: 18px; cursor: pointer;
+            z-index: 100; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div style="font-weight:900; font-size: 20px;">VELOCIS<span style="color:var(--v-blue); font-weight:200;">™</span></div>
-        <div style="background:#000; color:#fff; padding:6px 12px; border-radius:20px; font-size:10px; font-weight:900;">MISSION: CURB TO GATE</div>
+        <div style="background:#000; color:#fff; padding:6px 14px; border-radius:20px; font-size:11px; font-weight:900;">MISSION: CURB TO GATE</div>
     </header>
 
-    <button onclick="startJourney()">BEGIN JOURNEY</button>
+    <button id="begin-btn" onclick="startJourney()">BEGIN JOURNEY</button>
     <div id="map"></div>
 
     <script>
@@ -36,61 +48,89 @@
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11', 
             center: [-80.2835, 25.7958], 
-            zoom: 18.5, pitch: 0, bearing: 0, antialias: true
+            zoom: 18.8, pitch: 0, bearing: 0, antialias: true
         });
 
-        // The Manual "Common Sense" Route
-        const simpleRoute = [
-            [-80.2846, 25.7954], // THE CURB (Door 1)
-            [-80.2838, 25.7957], // THROUGH CHECK-IN
-            [-80.2832, 25.7959], // THROUGH SECURITY
-            [-80.2825, 25.7962], // DOWN CONCOURSE D
-            [-80.2818, 25.7965]  // THE GATE (D20)
+        // DEFINITIVE ARCHITECTURAL NODES
+        const missionPath = [
+            [-80.2846, 25.7954], // Node 1: THE CURB (Door 1)
+            [-80.2838, 25.7957], // Node 2: INTERNAL CHECK-IN
+            [-80.2831, 25.7959], // Node 3: SECURITY THRESHOLD
+            [-80.2824, 25.7962], // Node 4: CONCOURSE D MAIN CORRIDOR
+            [-80.2818, 25.7965]  // Node 5: THE GATE (D20)
         ];
 
         map.on('load', () => {
-            // Fix Transparency: Solid Terminal Footprint
+            // FIXING THE FAILURE: Force the 3D terminal to be SOLID and OPAQUE
             map.addLayer({
-                'id': 'solid-terminal',
+                'id': 'solid-terminal-floor',
                 'source': 'composite', 'source-layer': 'building',
                 'type': 'fill-extrusion',
                 'paint': {
                     'fill-extrusion-color': '#FFFFFF',
                     'fill-extrusion-height': ['get', 'height'],
-                    'fill-extrusion-opacity': 1.0 
+                    'fill-extrusion-opacity': 1.0 // NO TRANSPARENCY
                 }
             });
 
-            // Draw the Guide Line
-            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': simpleRoute } } });
-            map.addLayer({ 'id': 'line', 'type': 'line', 'source': 'route', 'paint': { 'line-color': '#00FBFF', 'line-width': 4 } });
+            // THE SINGLE MISSION THREAD
+            map.addSource('mission-source', {
+                'type': 'geojson',
+                'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': missionPath } }
+            });
+
+            map.addLayer({
+                'id': 'mission-line',
+                'type': 'line',
+                'source': 'mission-source',
+                'paint': {
+                    'line-color': '#00FBFF',
+                    'line-width': 4,
+                    'line-opacity': 1
+                }
+            });
         });
 
         function startJourney() {
+            document.getElementById('begin-btn').style.display = 'none';
+
+            // CREATE THE 3D CHEVRON
             const el = document.createElement('div');
             el.className = 'passenger-chevron';
-            el.innerHTML = `<svg width="60" height="60" viewBox="0 0 100 100"><path d="M50 0 L95 100 L50 82 L5 100 Z" fill="#00FBFF" stroke="#000" stroke-width="3"/></svg>`;
+            el.innerHTML = `
+                <svg width="65" height="65" viewBox="0 0 100 100">
+                    <path d="M50 0 L95 100 L50 82 L5 100 Z" fill="#00FBFF" stroke="#000" stroke-width="3"/>
+                </svg>`;
             
             const marker = new mapboxgl.Marker({ element: el, rotationAlignment: 'map' })
-                .setLngLat(simpleRoute[0])
+                .setLngLat(missionPath[0])
                 .addTo(map);
 
+            // SMOOTH INDOOR MOVEMENT
             let step = 0;
-            function walk() {
+            function move() {
                 if (step < 1) {
                     const i = Math.floor(step * 4);
                     const next = i + 1;
                     const t = (step * 4) - i;
-                    const lng = simpleRoute[i][0] + (simpleRoute[next][0] - simpleRoute[i][0]) * t;
-                    const lat = simpleRoute[i][1] + (simpleRoute[next][1] - simpleRoute[i][1]) * t;
+
+                    const lng = missionPath[i][0] + (missionPath[next][0] - missionPath[i][0]) * t;
+                    const lat = missionPath[i][1] + (missionPath[next][1] - missionPath[i][1]) * t;
+
                     marker.setLngLat([lng, lat]);
-                    marker.setRotation(Math.atan2(simpleRoute[next][0]-simpleRoute[i][0], simpleRoute[next][1]-simpleRoute[i][1])*180/Math.PI);
+                    
+                    // Face the Gate
+                    const angle = Math.atan2(missionPath[next][0] - missionPath[i][0], missionPath[next][1] - missionPath[i][1]) * 180 / Math.PI;
+                    marker.setRotation(angle);
+
                     step += 0.002;
-                    requestAnimationFrame(walk);
+                    requestAnimationFrame(move);
                 }
             }
-            walk();
-            map.flyTo({ center: [-80.2825, 25.7962], zoom: 19.5, speed: 1 });
+            move();
+
+            // Lock camera over the roof
+            map.flyTo({ center: [-80.2825, 25.7962], zoom: 19.5, speed: 0.8 });
         }
     </script>
 </body>
