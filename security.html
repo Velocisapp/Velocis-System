@@ -52,7 +52,6 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // DATABASE: Specific gate coordinates for Terminal D
         const GATE_MAP = {
             "D48": [-80.2828, 25.7960],
             "D50": [-80.2835, 25.7962],
@@ -68,41 +67,61 @@
 
         let currentMarker = null;
 
+        map.on('load', () => {
+            // PARAMETER SETTING: Manual Layer Injection
+            // This forces the indoor floorplan to render even if the basemap is blocking it.
+            if (map.getSource('composite')) {
+                map.addLayer({
+                    'id': 'velocis-indoor-fill',
+                    'type': 'fill',
+                    'source': 'composite',
+                    'source-layer': 'indoor',
+                    'paint': {
+                        'fill-color': '#002222',
+                        'fill-opacity': 0.8
+                    },
+                    'filter': ['==', ['get', 'level'], 1]
+                });
+
+                map.addLayer({
+                    'id': 'velocis-indoor-labels',
+                    'type': 'symbol',
+                    'source': 'composite',
+                    'source-layer': 'indoor',
+                    'layout': {
+                        'text-field': ['get', 'name'],
+                        'text-size': 12,
+                        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold']
+                    },
+                    'paint': { 'text-color': '#39FF14' }
+                });
+            }
+        });
+
         function executeGlobalDive(coords, gate, status) {
             document.getElementById('d-gate-ui').innerText = gate || "D48";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // ACTION: Switch to the Indoor-Ready Layout
-            map.setStyle('mapbox://styles/mapbox/light-v11');
+            // PEEL THE ROOF: Remove 3D obstacles
+            map.setConfigProperty('basemap', 'show3dObjects', false);
 
-            map.once('style.load', () => {
-                // Set floor to Level 1 (Departures)
-                if (map.getSource('composite')) {
-                    map.setFeatureState(
-                        { source: 'composite', sourceLayer: 'indoor', id: 'level' },
-                        { level: 1 } 
-                    );
-                }
-
-                map.flyTo({
-                    center: coords,
-                    zoom: 19.8,   // Slightly tighter zoom to force indoor labels
-                    pitch: 0,     // Mandatory for blueprint view
-                    bearing: 0, 
-                    speed: 0.7,
-                    essential: true
-                });
-
-                if (currentMarker) currentMarker.remove();
-                const el = document.createElement('div'); el.className = 'gate-beacon';
-                currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
+            map.flyTo({
+                center: coords,
+                zoom: 20,       // Zoom 20 triggers high-density indoor labels
+                pitch: 0,       // Top-down view is essential for Blueprint Layout
+                bearing: 0, 
+                speed: 0.6,
+                essential: true
             });
+
+            if (currentMarker) currentMarker.remove();
+            const el = document.createElement('div'); el.className = 'gate-beacon';
+            currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
         }
 
         async function syncData() {
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.includes("AA")) {
-                // If the flight contains AA, we target the specific Gate D48 coordinates
                 executeGlobalDive(GATE_MAP["D48"], "D48", "STANDBY");
             }
         }
