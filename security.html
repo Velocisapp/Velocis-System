@@ -20,7 +20,6 @@
         .nav-item { font-size: 24px; text-decoration: none; filter: drop-shadow(0 0 5px rgba(0,255,255,0.5)); }
         input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(57, 255, 20, 0.4); border-radius: 4px; color: #39FF14; padding: 10px; font-family: monospace; margin-top: 10px; outline: none; }
         
-        /* BEACONS & MARKERS */
         .gate-beacon { width: 22px; height: 22px; background-color: #39FF14; border-radius: 50%; box-shadow: 0 0 20px #39FF14; animation: pulse-ring 1.5s infinite; }
         .user-dot { width: 15px; height: 15px; background: #007AFF; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px #007AFF; }
         
@@ -64,7 +63,7 @@
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
         const AIRPORT_COORDS = {
-            'MIA': [-80.2871, 25.7959],
+            'MIA': [-80.2825, 25.7972], // Precise Concourse D Terminal Coords
             'JFK': [-73.7781, 40.6413],
             'LAX': [-118.4085, 33.9416],
             'LHR': [-0.4543, 51.4700],
@@ -90,8 +89,6 @@
                 'id': 'route-line', 'type': 'line', 'source': 'route',
                 'paint': { 'line-color': '#39FF14', 'line-width': 5, 'line-blur': 3, 'line-opacity': 0.8 }
             });
-
-            // START REAL-TIME GPS TRACKING
             startTracking();
         });
 
@@ -138,22 +135,19 @@
             document.getElementById('d-gate-ui').innerText = gate || "TBD";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // NEON PATH
-            const path = [[coords[0] - 0.0015, coords[1] - 0.001], [coords[0] - 0.0005, coords[1] - 0.0005], coords];
+            const path = [[coords[0] - 0.001, coords[1] - 0.001], [coords[0] - 0.0005, coords[1] - 0.0005], coords];
             map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
-            // GATE BEACON
             if (currentMarker) currentMarker.remove();
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // THE DEEP DIVE (ZOOM: 19.2 + PITCH: 78)
             map.flyTo({
                 center: coords,
-                zoom: 19.2,
-                pitch: 78,
-                bearing: 45,
-                speed: 0.8,
+                zoom: 19.5, // Forced Deep Zoom for Indoor Labels
+                pitch: 80,   // Forced Sharper Pitch
+                bearing: 30, // Rotated for Concourse View
+                speed: 0.7,
                 essential: true
             });
         }
