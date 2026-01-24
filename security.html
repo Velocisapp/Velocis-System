@@ -10,7 +10,6 @@
         body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow: hidden; height: 100vh; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
 
-        /* FIXED: Header pinned to safe area */
         #header-box { 
             position: fixed; top: env(safe-area-inset-top, 20px); left: 50%; transform: translateX(-50%);
             width: 90%; z-index: 1000; border: 1px solid rgba(255, 215, 0, 0.4); padding: 10px; 
@@ -18,7 +17,6 @@
         }
         #clock { color: #FFD700; font-size: 18px; font-weight: bold; }
 
-        /* FIXED: UI Window pinned to safe area to prevent "vanishing" on iPhone */
         .discreet-window {
             position: fixed; top: calc(env(safe-area-inset-top, 20px) + 70px); 
             left: 50%; transform: translateX(-50%);
@@ -80,8 +78,8 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // THE ANALYSIS FIX: Use coordinates that land on the Concourse D hallway spine.
-        const MIA_HUB = [-80.2818, 25.7965];
+        // COORDINATES: Centered exactly on the interior concourse spine of MIA Terminal D
+        const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
             container: 'map',
@@ -97,7 +95,7 @@
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
             
-            // INDOOR ENGINE ON:
+            // PRE-LOAD INDOOR LABELS
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
             
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
@@ -112,7 +110,8 @@
             if (val.length < 2) return;
             
             if (val.includes("AA")) {
-                executeGlobalDive(MIA_HUB, "D48C", "STANDBY");
+                executeGlobalDive(MIA_INTERIOR, "D48C", "STANDBY");
+                return;
             }
         }
 
@@ -120,6 +119,7 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
+            // DRAW ROUTE
             const path = [[coords[0] - 0.0007, coords[1] - 0.0007], [coords[0] - 0.0003, coords[1] - 0.0003], coords];
             map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
@@ -127,20 +127,18 @@
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // THE DIVE SEQUENCE
+            // THE KILL-SWITCH SOLUTION:
+            // Physically deactivate 3D building models so they cannot block the camera.
+            map.setConfigProperty('basemap', 'show3dObjects', false);
+
+            // THE INTERIOR DIVE
             map.flyTo({
                 center: coords,
-                zoom: 21,       
-                pitch: 80,      
-                bearing: -40,   
+                zoom: 20.8,       
+                pitch: 82,      
+                bearing: -45,   
                 speed: 0.35,     
                 essential: true
-            });
-
-            // THE CORE SOLUTION: After the flyTo finishes, we must trigger the "Interior" view.
-            // Mapbox Standard style handles indoor levels via the Zoom threshold.
-            map.once('moveend', () => {
-                console.log("Mission Guidance: Penetrating Building Layer...");
             });
         }
 
