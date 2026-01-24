@@ -11,9 +11,10 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
         
+        /* THE 3D CHEVRON - Pro-Grade Sharp Design */
         .passenger-chevron {
-            width: 60px; height: 60px;
-            filter: drop-shadow(0px 10px 15px rgba(0, 251, 255, 0.6));
+            width: 50px; height: 50px;
+            filter: drop-shadow(0px 8px 12px rgba(0, 251, 255, 0.7));
             display: flex; align-items: center; justify-content: center;
         }
 
@@ -28,7 +29,7 @@
         
         header { position: absolute; top: 0; width: 100%; height: 64px; background: var(--glass); border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; box-sizing: border-box; }
         #airline-img { height: 32px; margin-right: 14px; display: none; }
-        #status-pill { display: none; background: #000; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        #status-pill { display: none; background: #000; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
@@ -36,7 +37,7 @@
     <div id="overlay">
         <div class="card">
             <h1 style="font-weight:900;">VELOCIS<span style="font-weight:200; color:var(--v-blue);">™</span></h1>
-            <p style="color:#8E8E93; font-size: 13px; margin-bottom: 30px;">INDOOR NAVIGATION SYNC</p>
+            <p style="color:#8E8E93; font-size: 13px; margin-bottom: 30px;">INDOOR DEPARTURE SYNC</p>
             <input type="text" id="flightNum" placeholder="AA 2402">
             <button onclick="startMission()">BEGIN JOURNEY</button>
         </div>
@@ -59,8 +60,22 @@
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v12',
-            center: [-80.2818, 25.7960], // CENTER ON TERMINAL D
-            zoom: 18, pitch: 65, antialias: true
+            center: [-80.2818, 25.7960], 
+            zoom: 17, pitch: 65, antialias: true
+        });
+
+        map.on('load', () => {
+            // Restore 3D Buildings
+            map.addLayer({
+                'id': '3d-buildings',
+                'source': 'composite', 'source-layer': 'building',
+                'type': 'fill-extrusion',
+                'paint': {
+                    'fill-extrusion-color': '#F2F2F7',
+                    'fill-extrusion-height': ['get', 'height'],
+                    'fill-extrusion-opacity': 0.6
+                }
+            });
         });
 
         let passengerMarker;
@@ -85,72 +100,72 @@
             setTimeout(() => { 
                 document.getElementById('overlay').style.display = 'none'; 
                 document.getElementById('status-pill').style.display = 'flex';
-                document.getElementById('status-pill').innerText = `${flightCode} • DEPARTURES LEVEL • GATE ${gate}`;
+                document.getElementById('status-pill').innerText = `${flightCode} • CONCOURSE D • GATE ${gate}`;
             }, 800);
 
-            // 2. THE PRECISION INDOOR THREAD (Concourse D Floorplan)
-            const indoorMission = [
+            // 2. THE PRO-THREAD (Direct concourse routing, no maze)
+            const indoorCoords = [
                 [-80.2845, 25.7955], // AA Check-in Entrance
                 [-80.2835, 25.7958], // Concourse Security Entry
-                [-80.2825, 25.7961], // Main Hall Corridor
-                [-80.2818, 25.7964]  // Gate D20 Door
+                [-80.2825, 25.7961], // Concourse Hallway Center
+                [-80.2818, 25.7964]  // Target Gate Node
             ];
 
-            map.addSource('indoor-thread', {
+            map.addSource('guide-path', {
                 'type': 'geojson',
-                'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': indoorMission } }
+                'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': indoorCoords } }
             });
 
             map.addLayer({
-                'id': 'indoor-glow',
+                'id': 'glow-guide',
                 'type': 'line',
-                'source': 'indoor-thread',
+                'source': 'guide-path',
                 'paint': {
                     'line-color': '#00FBFF',
                     'line-width': 2.5,
-                    'line-opacity': 0.9,
+                    'line-opacity': 0.8,
                     'line-blur': 1.5
                 }
             });
 
-            // 3. THE 3D CHEVRON
+            // 3. THE 3D CHEVRON PASSENGER
             const chevronEl = document.createElement('div');
             chevronEl.className = 'passenger-chevron';
             chevronEl.innerHTML = `
-                <svg width="60" height="60" viewBox="0 0 100 100">
-                    <path d="M50 0 L95 100 L50 82 L5 100 Z" fill="#00FBFF" stroke="#fff" stroke-width="4"/>
+                <svg width="50" height="50" viewBox="0 0 100 100">
+                    <path d="M50 0 L90 100 L50 80 L10 100 Z" fill="#00FBFF" stroke="#fff" stroke-width="3"/>
                 </svg>`;
             
             passengerMarker = new mapboxgl.Marker({ element: chevronEl, rotationAlignment: 'map' })
-                .setLngLat(indoorMission[0])
+                .setLngLat(indoorCoords[0])
                 .addTo(map);
 
-            // 4. ANIMATED JOURNEY
+            // 4. THE SMOOTH INDOOR MARCH
             let step = 0;
-            const speed = 0.005;
-
             function animate() {
                 if (step < 1) {
-                    const segmentCount = indoorMission.length - 1;
+                    const segmentCount = indoorCoords.length - 1;
                     const segment = Math.floor(step * segmentCount);
                     const next = Math.min(segment + 1, segmentCount);
                     const t = (step * segmentCount) - segment;
 
-                    const lng = indoorMission[segment][0] + (indoorMission[next][0] - indoorMission[segment][0]) * t;
-                    const lat = indoorMission[segment][1] + (indoorMission[next][1] - indoorMission[segment][1]) * t;
+                    const lng = indoorCoords[segment][0] + (indoorCoords[next][0] - indoorCoords[segment][0]) * t;
+                    const lat = indoorCoords[segment][1] + (indoorCoords[next][1] - indoorCoords[segment][1]) * t;
 
                     passengerMarker.setLngLat([lng, lat]);
-                    const bearing = Math.atan2(indoorMission[next][0] - indoorMission[segment][0], indoorMission[next][1] - indoorMission[segment][1]) * 180 / Math.PI;
-                    passengerMarker.setRotation(bearing);
 
-                    step += speed;
+                    // Dynamic rotation to follow the path
+                    const angle = Math.atan2(indoorCoords[next][0] - indoorCoords[segment][0], indoorCoords[next][1] - indoorCoords[segment][1]) * 180 / Math.PI;
+                    passengerMarker.setRotation(angle);
+
+                    step += 0.003;
                     requestAnimationFrame(animate);
                 }
             }
             animate();
 
-            // 5. LOCK ON TO INDOOR DEPARTURES
-            map.flyTo({ center: indoorMission[2], zoom: 19.5, pitch: 70, bearing: -20, speed: 1.5 });
+            // 5. THE PRO VIEW (High-altitude follow)
+            map.flyTo({ center: indoorCoords[2], zoom: 19.5, pitch: 70, bearing: -20, speed: 1.5 });
         }
     </script>
 </body>
