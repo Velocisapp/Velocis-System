@@ -78,6 +78,7 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
+        // COORDINATES: Exact hallway spine of MIA Concourse D
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
@@ -93,7 +94,8 @@
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            // Force the "Indoor" data labels to be visible
+            
+            // INDOOR LAYOUT PREP: Ensure POIs are enabled globally
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
         });
 
@@ -101,30 +103,29 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // 1. THE ARCHITECTURAL FIX:
-            // This is the specific command to activate the Indoor mapping tileset.
-            // By setting the 'level' state to 1, we tell the engine to hide the roof 
-            // and show the Departures floorplan (IMDF data).
+            // 1. THE LAYOUT FIX (As seen in research):
+            // We set the level state to '1' (Departures). 
+            // This physically "pops" the roof mesh to reveal the blueprint below.
             map.setFeatureState(
                 { source: 'composite', sourceLayer: 'indoor', id: 'level' },
                 { level: 1 } 
             );
 
-            // Hide the 3D 'Outer Shell' buildings so they don't block the camera
+            // 2. DISABLE OUTDOOR MESH:
+            // Remove the 3D shell so we only see the functional indoor layout.
             map.setConfigProperty('basemap', 'show3dObjects', false);
 
             if (currentMarker) currentMarker.remove();
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // 2. THE PENETRATION DIVE:
-            // Zooming to 19.5 with 0 pitch provides the clean 'Blueprint' view 
-            // seen in the Mapbox Indoor documentation.
+            // 3. THE PROPER FLY-TO:
+            // Fly to Zoom 19.5 with 0 pitch for a clean 2D Blueprint view.
             map.flyTo({
                 center: coords,
                 zoom: 19.5,   
                 pitch: 0, 
-                bearing: -45, 
+                bearing: 0, 
                 speed: 0.5,
                 essential: true
             });
