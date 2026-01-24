@@ -78,8 +78,8 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Centered exactly on the interior concourse spine of MIA Terminal D
-        const MIA_INTERIOR = [-80.2818, 25.7965];
+        // THE ANALYSIS FIX: Use coordinates that land on the Concourse D hallway spine.
+        const MIA_HUB = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
             container: 'map',
@@ -94,10 +94,8 @@
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            
-            // PRE-LOAD INDOOR LABELS
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-            
+
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
             map.addLayer({
                 'id': 'route-line', 'type': 'line', 'source': 'route',
@@ -110,7 +108,7 @@
             if (val.length < 2) return;
             
             if (val.includes("AA")) {
-                executeGlobalDive(MIA_INTERIOR, "D48C", "STANDBY");
+                executeGlobalDive(MIA_HUB, "D48C", "STANDBY");
                 return;
             }
         }
@@ -119,7 +117,7 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // DRAW ROUTE
+            // NEON SPINE
             const path = [[coords[0] - 0.0007, coords[1] - 0.0007], [coords[0] - 0.0003, coords[1] - 0.0003], coords];
             map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
@@ -127,8 +125,9 @@
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // THE KILL-SWITCH SOLUTION:
+            // THE CORE SOLUTION:
             // Physically deactivate 3D building models so they cannot block the camera.
+            // This forces Mapbox to render the "Indoor" labels sitting below the mesh.
             map.setConfigProperty('basemap', 'show3dObjects', false);
 
             // THE INTERIOR DIVE
