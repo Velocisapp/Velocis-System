@@ -78,7 +78,6 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Locked to the main Concourse D hallway spine at MIA
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
@@ -94,7 +93,9 @@
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            // Enable shop/gate labels globally
+            
+            // WAKE UP INDOOR ENGINE:
+            // This enables the indoor tileset as shown in your research.
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
         });
 
@@ -102,22 +103,28 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // THE KILL-SWITCH:
-            // Physically remove 3D buildings before flight starts.
-            // This prevents the camera look-at point from being blocked by the roof mesh.
+            // THE AUTHENTIC FIX:
+            // Select the correct floor level (Level 1 = Departures).
+            // This is the trigger that "peels" the roof as shown in your screenshot.
+            map.setFeatureState(
+                { source: 'composite', sourceLayer: 'indoor', id: 'level' },
+                { level: 1 } 
+            );
+
+            // Hide the 3D "Outer Shell" so we only see the floor plan.
             map.setConfigProperty('basemap', 'show3dObjects', false);
 
             if (currentMarker) currentMarker.remove();
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // THE PENETRATION DIVE:
-            // Zoom 20.8 triggers the "Interior" label priority in the Standard engine.
+            // BLUEPRINT FLY:
+            // Zooming to 19.5 with 0 pitch provides the clean blueprint view.
             map.flyTo({
                 center: coords,
-                zoom: 20.8,       
-                pitch: 45,      // Reduced pitch to avoid "clipping" through the ground
-                bearing: -45,   
+                zoom: 19.5,
+                pitch: 0, 
+                bearing: 0, 
                 speed: 0.5,
                 essential: true
             });
