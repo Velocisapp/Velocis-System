@@ -8,53 +8,19 @@
     
     <style>
         body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow: hidden; }
-        
         #scroll-wrapper { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
         section { min-height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; }
-
-        #header-box { 
-            position: fixed; top: 20px; left: 5%; width: 90%; z-index: 1000;
-            border: 1px solid rgba(255, 215, 0, 0.4); padding: 10px; background: rgba(0,20,20,0.8); 
-            backdrop-filter: blur(15px); text-align: center; border-radius: 4px;
-        }
+        #header-box { position: fixed; top: 20px; left: 5%; width: 90%; z-index: 1000; border: 1px solid rgba(255, 215, 0, 0.4); padding: 10px; background: rgba(0,20,20,0.8); backdrop-filter: blur(15px); text-align: center; border-radius: 4px; }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
-
-        .discreet-window {
-            position: absolute; top: 110px; left: 5%; width: 85%; 
-            background: rgba(10, 20, 30, 0.7); backdrop-filter: blur(20px);
-            border-left: 4px solid #39FF14; padding: 15px; z-index: 100;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); border-radius: 0 8px 8px 0;
-        }
-        
+        .discreet-window { position: absolute; top: 110px; left: 5%; width: 85%; background: rgba(10, 20, 30, 0.7); backdrop-filter: blur(20px); border-left: 4px solid #39FF14; padding: 15px; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border-radius: 0 8px 8px 0; }
         .label-tiny { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
         .objective-text { font-size: 14px; margin-top: 5px; text-transform: uppercase; }
-
-        /* THE MAP CONTAINER */
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-
-        #persistent-nav {
-            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 20px; background: rgba(20, 40, 60, 0.8);
-            backdrop-filter: blur(15px); padding: 12px 25px; border-radius: 50px;
-            border: 1px solid rgba(0, 255, 255, 0.3); z-index: 9999;
-        }
+        #persistent-nav { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; background: rgba(20, 40, 60, 0.8); backdrop-filter: blur(15px); padding: 12px 25px; border-radius: 50px; border: 1px solid rgba(0, 255, 255, 0.3); z-index: 9999; }
         .nav-item { font-size: 24px; text-decoration: none; filter: drop-shadow(0 0 5px rgba(0,255,255,0.5)); }
-
         input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(57, 255, 20, 0.4); border-radius: 4px; color: #39FF14; padding: 10px; font-family: monospace; margin-top: 10px; outline: none; }
-
-        /* PULSING BEACON ANIMATION */
-        .gate-beacon {
-            width: 20px; height: 20px;
-            background-color: #39FF14;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #39FF14;
-            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(.33); opacity: 1; }
-            80%, 100% { transform: scale(2.5); opacity: 0; }
-        }
+        .gate-beacon { width: 20px; height: 20px; background-color: #39FF14; border-radius: 50%; box-shadow: 0 0 15px #39FF14; animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { transform: scale(2.5); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -69,7 +35,7 @@
     <div id="scroll-wrapper">
         <section id="dep-section">
             <div class="discreet-window">
-                <div class="label-tiny">Mission Guidance: Departure</div>
+                <div class="label-tiny">Terminal Guidance: Departure</div>
                 <div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">SCANNING</span> | Status: <span id="d-status-ui">--</span></div>
                 <input type="text" id="flight-input" placeholder="INPUT FLIGHT #" oninput="syncData()">
             </div>
@@ -77,7 +43,7 @@
 
         <section id="arr-section">
             <div class="discreet-window" style="border-left-color: #ff5b00;">
-                <div class="label-tiny">Mission Guidance: Arrival</div>
+                <div class="label-tiny">Terminal Guidance: Arrival</div>
                 <div class="objective-text">Carousel: <span id="a-bag-ui" style="color:#ff5b00; font-weight:900;">WAIT</span> | Gate: <span id="a-gate-ui">--</span></div>
             </div>
         </section>
@@ -94,47 +60,34 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
+        // GLOBAL AIRPORT GPS DIRECTORY
+        const AIRPORT_COORDS = {
+            'MIA': [-80.2871, 25.7959],
+            'JFK': [-73.7781, 40.6413],
+            'LAX': [-118.4085, 33.9416],
+            'LHR': [-0.4543, 51.4700],
+            'DXB': [55.3644, 25.2532],
+            'ATL': [-84.4277, 33.6407],
+            'CDG': [2.5479, 49.0097]
+        };
+
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/standard',
             center: [-80.2871, 25.7959],
-            zoom: 16.5,
-            pitch: 70,
-            bearing: -20,
+            zoom: 2, // Start zoomed out for cinematic "Global Dive"
+            pitch: 0,
             antialias: true
         });
 
-        // SAMPLE COORDINATES FOR MIA CONCOURSE D
-        const MIA_NAV = {
-            START: [-80.2900, 25.7940],
-            SECURITY: [-80.2885, 25.7950],
-            D28: [-80.2830, 25.7970]
-        };
+        let currentMarker = null;
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
-            map.setPaintProperty('building', 'fill-extrusion-opacity', 0.8);
-
-            // INITIALIZE PATH SOURCE
-            map.addSource('route', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'geometry': { 'type': 'LineString', 'coordinates': [] }
-                }
-            });
-
-            // NEON PATH LAYER
+            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
             map.addLayer({
-                'id': 'route-line',
-                'type': 'line',
-                'source': 'route',
-                'paint': {
-                    'line-color': '#39FF14',
-                    'line-width': 5,
-                    'line-blur': 3,
-                    'line-opacity': 0.8
-                }
+                'id': 'route-line', 'type': 'line', 'source': 'route',
+                'paint': { 'line-color': '#39FF14', 'line-width': 5, 'line-blur': 3, 'line-opacity': 0.8 }
             });
         });
 
@@ -153,37 +106,38 @@
                 
                 if (data && data[0]) {
                     const f = data[0];
-                    const gate = f.departure?.gate || "D28";
-                    document.getElementById('d-gate-ui').innerText = gate;
+                    const airportCode = f.departure?.airport || "MIA";
+                    document.getElementById('d-gate-ui').innerText = f.departure?.gate || "TBD";
                     document.getElementById('d-status-ui').innerText = f.status || "ACTIVE";
-                    
-                    // IF MIA - INITIATE INDOOR ROUTING
-                    if(f.departure?.airport === "MIA") {
-                        // 1. Draw Path
-                        const routeData = {
-                            'type': 'Feature',
-                            'geometry': {
-                                'type': 'LineString',
-                                'coordinates': [MIA_NAV.START, MIA_NAV.SECURITY, [-80.2860, 25.7960], MIA_NAV.D28]
-                            }
-                        };
-                        map.getSource('route').setData(routeData);
 
-                        // 2. Add Pulsing Marker
-                        const el = document.createElement('div');
-                        el.className = 'gate-beacon';
-                        new mapboxgl.Marker(el).setLngLat(MIA_NAV.D28).addTo(map);
+                    // FIND GPS LOCATION
+                    const coords = AIRPORT_COORDS[airportCode] || AIRPORT_COORDS['MIA'];
 
-                        // 3. Move Camera to focus on the full path
-                        map.flyTo({
-                            center: [-80.2865, 25.7955],
-                            zoom: 18,
-                            pitch: 75,
-                            duration: 4000
-                        });
-                    }
+                    // DRAW REAL-TIME PATH AT TARGET LOCATION
+                    const path = [
+                        [coords[0] - 0.003, coords[1] - 0.002], // Start
+                        [coords[0] - 0.001, coords[1] - 0.001], // Mid
+                        coords // Gate
+                    ];
+                    map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
+
+                    // MANAGE BEACON
+                    if (currentMarker) currentMarker.remove();
+                    const el = document.createElement('div');
+                    el.className = 'gate-beacon';
+                    currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
+
+                    // CINEMATIC GLOBAL DIVE
+                    map.flyTo({
+                        center: coords,
+                        zoom: 18,
+                        pitch: 75,
+                        speed: 1.2,
+                        curve: 1.4,
+                        essential: true
+                    });
                 }
-            } catch (e) { console.error("Flight Sync Error", e); }
+            } catch (e) { console.error("Real-time Error:", e); }
         }
 
         setInterval(() => {
