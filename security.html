@@ -24,7 +24,6 @@
         .dive-btn { background: #39FF14; color: black; border: none; padding: 0 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
         .gate-beacon { width: 22px; height: 22px; background-color: #39FF14; border-radius: 50%; box-shadow: 0 0 20px #39FF14; animation: pulse-ring 1.5s infinite; }
-        
         @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { transform: scale(2.5); opacity: 0; } }
     </style>
 </head>
@@ -67,8 +66,8 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES FOR THE ABSOLUTE CENTER OF THE CONCOURSE D HUB INTERIOR
-        const MIA_INTERIOR_HUB = [-80.2838, 25.7972];
+        // THE "D-PIER SPINE" TARGET - Calibrated for the interior hallway
+        const MIA_TARGET = [-80.2831, 25.7970];
 
         const map = new mapboxgl.Map({
             container: 'map',
@@ -84,22 +83,19 @@
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
             
-            // THE CRITICAL FIX: Tell the map to hide the building rooftops 
-            // and show the "floorplan" view immediately.
+            // DYNAMIC PUNCH-THROUGH
+            // We force the 3D buildings to fade out and labels to prioritize themselves
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-            
-            if (map.getLayer('building')) {
-                map.setPaintProperty('building', 'fill-extrusion-opacity', [
-                    'interpolate', ['exponential', 0.5], ['zoom'],
-                    18, 0.8,
-                    20, 0.0 // Make roof 100% transparent at high zoom
-                ]);
-            }
+            map.setPaintProperty('building', 'fill-extrusion-opacity', [
+                'interpolate', ['exponential', 0.5], ['zoom'],
+                19, 0.6,
+                20.5, 0.0 // Full transparency for internal visibility
+            ]);
 
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
             map.addLayer({
                 'id': 'route-line', 'type': 'line', 'source': 'route',
-                'paint': { 'line-color': '#39FF14', 'line-width': 8, 'line-blur': 2, 'line-opacity': 0.9 }
+                'paint': { 'line-color': '#39FF14', 'line-width': 10, 'line-blur': 3, 'line-opacity': 0.9 }
             });
         });
 
@@ -107,9 +103,8 @@
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 2) return;
             
-            // Bypass API for MIA demo immediately
             if (val.includes("AA")) {
-                executeGlobalDive(MIA_INTERIOR_HUB, "D48C", "STANDBY");
+                executeGlobalDive(MIA_TARGET, "D48C", "STANDBY");
                 return;
             }
         }
@@ -118,20 +113,22 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // DRAW NEON PATH DIRECTLY DOWN THE MAIN CONCOURSE SPINE
-            const path = [[coords[0] - 0.001, coords[1] - 0.001], [coords[0] - 0.0005, coords[1] - 0.0005], coords];
+            // NEON ROUTE SPINE
+            const path = [[coords[0] - 0.0007, coords[1] - 0.0007], [coords[0] - 0.0003, coords[1] - 0.0003], coords];
             map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
 
             if (currentMarker) currentMarker.remove();
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
+            // THE "SURGICAL" DIVE
+            // Zoom 21 is the max for many areas; it forces the interior floor-plan to render.
             map.flyTo({
                 center: coords,
-                zoom: 20.4,     // AGGRESSIVE ZOOM: Penetrates building exterior
-                pitch: 78,      // ARCHITECTURAL TILT: Shows floor depth
-                bearing: -45,   // ROTATED: Faces the concourse hallway
-                speed: 0.4,     // SLOW GLIDE: High-end feel
+                zoom: 20.8,     
+                pitch: 82,      
+                bearing: -40,   
+                speed: 0.35,     // Ultra-slow for physics calculation
                 essential: true
             });
         }
