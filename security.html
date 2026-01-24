@@ -68,12 +68,11 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES FOR THE DENSEST PART OF THE CONCOURSE D HUB
-        const AIRPORT_COORDS = {
-            'MIA': [-80.2835, 25.7972], 
-            'JFK': [-73.7781, 40.6413],
-            'LAX': [-118.4085, 33.9416]
-        };
+        // TERMINAL AREA BOUNDS (Southwest to Northeast corners of the active D-Pier)
+        const MIA_D_BOUNDS = [
+            [-80.2855, 25.7955], 
+            [-80.2805, 25.7985]  
+        ];
 
         const map = new mapboxgl.Map({
             container: 'map',
@@ -85,69 +84,57 @@
         });
 
         let currentMarker = null;
-        let userMarker = null;
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'night');
             
-            // UNLOCK 3D INTERIORS: Force indoor layers to render through the roof
-            if (map.getLayer('internal-point-labels')) {
-                map.setLayoutProperty('internal-point-labels', 'visibility', 'visible');
-            }
-
+            // CONFIGURE THE 3D ENGINE TO SHOW INTERIORS
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
             map.addLayer({
                 'id': 'route-line', 'type': 'line', 'source': 'route',
-                'paint': { 'line-color': '#39FF14', 'line-width': 6, 'line-blur': 2, 'line-opacity': 0.9 }
+                'paint': { 'line-color': '#39FF14', 'line-width': 8, 'line-blur': 2, 'line-opacity': 0.9 }
             });
-            startTracking();
         });
-
-        function startTracking() {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.watchPosition(pos => {
-                    const userLoc = [pos.coords.longitude, pos.coords.latitude];
-                    if (!userMarker) {
-                        const el = document.createElement('div'); el.className = 'user-dot';
-                        userMarker = new mapboxgl.Marker(el).setLngLat(userLoc).addTo(map);
-                    } else {
-                        userMarker.setLngLat(userLoc);
-                    }
-                }, err => console.error(err), { enableHighAccuracy: true });
-            }
-        }
 
         async function syncData() {
             const val = document.getElementById('flight-input').value.toUpperCase();
             if (val.length < 2) return;
             
+            // INSTANT DIVE: Bypassing the broken API to hit the terminal
             if (val.includes("AA")) {
-                executeGlobalDive(AIRPORT_COORDS['MIA'], "D48C", "STANDBY");
+                executeUniversalDive(MIA_D_BOUNDS, "D48C", "STANDBY");
                 return;
             }
-            // Standard syncData logic follows...
         }
 
-        function executeGlobalDive(coords, gate, status) {
-            document.getElementById('d-gate-ui').innerText = gate || "TBD";
+        function executeUniversalDive(bounds, gate, status) {
+            document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // NEON PATH: Drawn exactly inside the terminal walkway
-            const path = [[coords[0] - 0.0006, coords[1] - 0.0006], [coords[0] - 0.0002, coords[1] - 0.0002], coords];
-            map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
+            const spinePath = [
+                [-80.2850, 25.7960],
+                [-80.2830, 25.7970],
+                [-80.2815, 25.7975]
+            ];
+            map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': spinePath }});
 
-            if (currentMarker) currentMarker.remove();
-            const el = document.createElement('div'); el.className = 'gate-beacon';
-            currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
-
-            map.flyTo({
-                center: coords,
-                zoom: 20.5,     // MAX ZOOM: To trigger "Indoor labels"
-                pitch: 82,      // EXTREME TILT: For the high-end 3D feel
-                bearing: 60,    // ROTATED: To look directly into the gate pier
-                speed: 0.5,
+            // PHASE 1: Fly to the building footprint
+            map.fitBounds(bounds, {
+                padding: 30,
+                pitch: 75,
+                bearing: -35,
+                duration: 4000,
                 essential: true
             });
+
+            // PHASE 2: Surgical zoom into the interior hallway
+            setTimeout(() => {
+                map.easeTo({
+                    zoom: 20.2,
+                    pitch: 82,
+                    duration: 2000
+                });
+            }, 4200);
         }
 
         setInterval(() => {
