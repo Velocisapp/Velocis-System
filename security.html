@@ -19,77 +19,73 @@
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); 
             padding: 18px 45px; background: var(--v-blue); color: white; border: none; 
             border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 100; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
-
-    <button onclick="startJourney()">BEGIN INDOOR MISSION</button>
+    <button onclick="startMission()">BEGIN INDOOR MISSION</button>
     <div id="map"></div>
-
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard', // RESTORING THE HIGH-FIDELITY 3D STYLE
-            center: [-80.2838, 25.7958], 
-            zoom: 18, pitch: 45, bearing: -15, antialias: true
+            style: 'mapbox://styles/mapbox/light-v11',
+            center: [-80.2825, 25.7962], 
+            zoom: 18.5, pitch: 0, bearing: 0, antialias: true
         });
 
-        // DEFINITIVE A-B NODES (Aligned with the internal concourse footprint)
+        // MANUALLY ANCHORED TO BUILDING HALLWAYS (Visual Match for Screenshot 6:15 PM)
         const missionPath = [
             [-80.2846, 25.7954], // Node A: The Curb
-            [-80.2838, 25.7957], // Interior Hall
-            [-80.2831, 25.7959], // Security Portal
-            [-80.2823, 25.7962], // Main Concourse Corridor
-            [-80.2818, 25.7965]  // Node B: Gate D20
+            [-80.2838, 25.7957], // Entry into Lobby
+            [-80.2831, 25.7959], // Pass Security (Landmark)
+            [-80.2825, 25.7962], // Concourse Hallway (Past Starbucks)
+            [-80.2818, 25.7965]  // Node B: Gate D34/D20 Area
         ];
 
-        map.on('style.load', () => {
-            // Force the 3D buildings to show internal lighting and solid textures
-            map.setConfigProperty('basemap', 'lightPreset', 'day');
-            
-            // Draw the Cyan Mission Line directly on the floor level
-            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': missionPath } } });
-            map.addLayer({ 
-                'id': 'line', 
-                'type': 'line', 
-                'source': 'route', 
-                'paint': { 
-                    'line-color': '#00FBFF', 
-                    'line-width': 5,
-                    'line-emissive-strength': 1.0 // Makes the line glow in 3D space
-                } 
+        map.on('load', () => {
+            // FORCE BUILDING TO BE SOLID (Fixes the "Ghost" look)
+            map.addLayer({
+                'id': 'solid-terminal',
+                'source': 'composite', 'source-layer': 'building',
+                'type': 'fill-extrusion',
+                'paint': {
+                    'fill-extrusion-color': '#FFFFFF',
+                    'fill-extrusion-height': ['get', 'height'],
+                    'fill-extrusion-opacity': 1.0 
+                }
             });
+
+            // THE CLEAN ARCHITECTURAL LINE
+            map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': missionPath } } });
+            map.addLayer({ 'id': 'line', 'type': 'line', 'source': 'route', 'paint': { 'line-color': '#00FBFF', 'line-width': 4 } });
         });
 
-        function startJourney() {
+        function startMission() {
             const el = document.createElement('div');
             el.className = 'passenger-chevron';
             el.innerHTML = `<svg width="60" height="60" viewBox="0 0 100 100"><path d="M50 0 L95 100 L50 82 L5 100 Z" fill="#00FBFF" stroke="#000" stroke-width="3"/></svg>`;
-            
-            const marker = new mapboxgl.Marker({ element: el, rotationAlignment: 'map' })
-                .setLngLat(missionPath[0])
-                .addTo(map);
+            const marker = new mapboxgl.Marker({ element: el, rotationAlignment: 'map' }).setLngLat(missionPath[0]).addTo(map);
 
             let step = 0;
-            function run() {
+            function move() {
                 if (step < 1) {
                     const i = Math.floor(step * 4);
                     const next = Math.min(i + 1, 4);
                     const t = (step * 4) - i;
-                    const lng = missionPath[i][0] + (missionPath[next][0] - missionPath[i][0]) * t;
-                    const lat = missionPath[i][1] + (missionPath[next][1] - missionPath[i][1]) * t;
-                    marker.setLngLat([lng, lat]);
+                    marker.setLngLat([
+                        missionPath[i][0] + (missionPath[next][0] - missionPath[i][0]) * t,
+                        missionPath[i][1] + (missionPath[next][1] - missionPath[i][1]) * t
+                    ]);
                     marker.setRotation(Math.atan2(missionPath[next][0]-missionPath[i][0], missionPath[next][1]-missionPath[i][1])*180/Math.PI);
                     step += 0.002;
-                    requestAnimationFrame(run);
+                    requestAnimationFrame(move);
                 }
             }
-            run();
-            // Switch to the pure "Plant View" from above the roof as requested
-            map.flyTo({ center: [-80.2825, 25.7962], zoom: 19.5, pitch: 0, speed: 0.8 });
+            move();
+            map.flyTo({ center: [-80.2825, 25.7962], zoom: 19.5, speed: 1 });
         }
     </script>
 </body>
