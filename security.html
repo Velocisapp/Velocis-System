@@ -3,41 +3,44 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ Journey Hub</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
+    
     <style>
-        /* PALETTE: Deep Slate & Charcoal (Warmer than Black) */
-        body { margin: 0; background: #1a1c1e; font-family: 'Courier New', monospace; color: white; overflow-x: hidden; }
+        body { margin: 0; background: #010406; font-family: 'Courier New', monospace; color: white; overflow: hidden; }
         
         #scroll-wrapper { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
-        section { min-height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        section { min-height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; }
 
         #header-box { 
             position: fixed; top: 20px; left: 5%; width: 90%; z-index: 1000;
-            border: 1px solid rgba(255, 215, 0, 0.3); padding: 10px; background: rgba(30,34,38,0.8); 
-            backdrop-filter: blur(20px); text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.4); padding: 10px; background: rgba(0,20,20,0.8); 
+            backdrop-filter: blur(15px); text-align: center; border-radius: 4px;
         }
         #clock { color: #FFD700; font-size: 20px; font-weight: bold; }
 
         .discreet-window {
             position: absolute; top: 110px; left: 5%; width: 85%; 
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
-            border-left: 4px solid #39FF14; padding: 12px; z-index: 100;
-            text-align: left; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            background: rgba(10, 20, 30, 0.7); backdrop-filter: blur(20px);
+            border-left: 4px solid #39FF14; padding: 15px; z-index: 100;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); border-radius: 0 8px 8px 0;
         }
-        .arr-window { border-left-color: #ff5b00; }
         
-        .label-tiny { font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; }
-        .objective-text { font-size: 13px; color: #fff; margin-top: 4px; text-transform: uppercase; }
+        .label-tiny { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
+        .objective-text { font-size: 14px; margin-top: 5px; text-transform: uppercase; }
+
+        /* THE MAP CONTAINER */
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
         #persistent-nav {
             position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; background: rgba(40, 45, 50, 0.7);
-            backdrop-filter: blur(15px); padding: 10px 20px; border-radius: 50px;
-            border: 1px solid rgba(0, 255, 255, 0.2); z-index: 9999;
+            display: flex; gap: 20px; background: rgba(20, 40, 60, 0.8);
+            backdrop-filter: blur(15px); padding: 12px 25px; border-radius: 50px;
+            border: 1px solid rgba(0, 255, 255, 0.3); z-index: 9999;
         }
-        .nav-item { font-size: 24px; text-decoration: none; }
+        .nav-item { font-size: 24px; text-decoration: none; filter: drop-shadow(0 0 5px rgba(0,255,255,0.5)); }
 
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
-        input { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(57, 255, 20, 0.3); border-radius: 4px; color: #39FF14; padding: 8px; font-family: monospace; font-size: 12px; margin-top: 10px; outline: none; }
+        input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(57, 255, 20, 0.4); border-radius: 4px; color: #39FF14; padding: 10px; font-family: monospace; margin-top: 10px; outline: none; }
     </style>
 </head>
 <body>
@@ -47,18 +50,19 @@
         <div id="clock">TIME: --:--:--</div>
     </div>
 
+    <div id="map"></div>
+
     <div id="scroll-wrapper">
         <section id="dep-section">
             <div class="discreet-window">
                 <div class="label-tiny">Terminal Guidance: Departure</div>
-                <div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">TBD</span> | Status: <span id="d-status-ui">SCANNING</span></div>
+                <div class="objective-text">Gate: <span id="d-gate-ui" style="color:#39FF14; font-weight:900;">SCANNING</span> | Status: <span id="d-status-ui">--</span></div>
                 <input type="text" id="flight-input" placeholder="INPUT FLIGHT #" oninput="syncData()">
             </div>
-            <canvas id="blueprint-canvas"></canvas>
         </section>
 
         <section id="arr-section">
-            <div class="discreet-window arr-window">
+            <div class="discreet-window" style="border-left-color: #ff5b00;">
                 <div class="label-tiny">Terminal Guidance: Arrival</div>
                 <div class="objective-text">Carousel: <span id="a-bag-ui" style="color:#ff5b00; font-weight:900;">WAIT</span> | Gate: <span id="a-gate-ui">--</span></div>
             </div>
@@ -74,82 +78,62 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('blueprint-canvas');
-        const ctx = canvas.getContext('2d');
-        const scrollBox = document.getElementById('scroll-wrapper');
-        
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
+        // 1. INITIALIZE MAPBOX
+        mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        const shops = [
-            { name: "SINDANCE CAFE", y: 0.2, side: -1 },
-            { name: "PREMIUM LOUNGE", y: 0.5, side: 1 }
-        ];
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/standard', // The Professional 3D Standard
+            center: [-80.2871, 25.7959], // Default: Miami (MIA)
+            zoom: 16.5,
+            pitch: 70, // Architectural 3D Perspective
+            bearing: -20,
+            antialias: true
+        });
 
-        function draw() {
-            // 1. MATERIAL: Deep Slate Base
-            ctx.fillStyle = '#1a1c1e'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 2. APPLY ARCHITECTURAL NIGHT THEME
+        map.on('style.load', () => {
+            // "Night" preset provides the airy, blue-glass look from your reference
+            map.setConfigProperty('basemap', 'lightPreset', 'night');
             
-            const scrollY = scrollBox.scrollTop;
-            const themeColor = scrollY < (canvas.height/2) ? '57, 255, 20' : '255, 91, 0';
-            const time = Date.now() * 0.0001; // SLOW GLIDE
-            const centerX = canvas.width / 2;
+            // Set building materials to high-class slate/extrusion
+            map.setPaintProperty('building', 'fill-extrusion-opacity', 0.8);
+        });
 
-            // 2. ATMOSPHERIC FLOOR (Reflective Polished Concrete)
-            let floorGrad = ctx.createLinearGradient(0, canvas.height * 0.3, 0, canvas.height);
-            floorGrad.addColorStop(0, '#25282c');
-            floorGrad.addColorStop(1, '#1a1c1e');
-            ctx.fillStyle = floorGrad;
-            ctx.fillRect(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7);
+        // 3. FLIGHT DATA INTEGRATION & SMART CAMERA
+        async function syncData() {
+            const val = document.getElementById('flight-input').value.toUpperCase();
+            if (val.length < 3) return;
+            
+            const API_KEY = '6973cc1546ac0bf801777b1e'; // flightAPI.io key
+            const airline = val.match(/[A-Z]+/)?.[0];
+            const num = val.match(/[0-9]+/)?.[0];
+            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
-            // 3. ARCHITECTURAL PYLONS (Brushed Metal Structure)
-            for (let i = 0; i < 3; i++) {
-                let zPos = (i * 300 + (time * 1500) % 300);
-                let opacity = (1 - zPos / 900) * 0.6;
-                let xOffset = (zPos * 1.8) + 140;
-                let colWidth = 28;
-
-                // Solid Pylon with Gradient
-                let colGrad = ctx.createLinearGradient(centerX - xOffset, 0, centerX - xOffset + colWidth, 0);
-                colGrad.addColorStop(0, '#333');
-                colGrad.addColorStop(0.5, '#5a5e62');
-                colGrad.addColorStop(1, '#333');
+            try {
+                const res = await fetch(`https://api.flightapi.io/airline/${API_KEY}?num=${num}&name=${airline}&date=${today}`);
+                const data = await res.json();
                 
-                ctx.globalAlpha = opacity;
-                ctx.fillStyle = colGrad;
-                ctx.fillRect(centerX - xOffset, canvas.height * 0.2, colWidth, canvas.height);
-                ctx.fillRect(centerX + xOffset - colWidth, canvas.height * 0.2, colWidth, canvas.height);
-                ctx.globalAlpha = 1.0;
-            }
-
-            // 4. THE 3D CHEVRON LEAD (Hyper-Sleek)
-            const cy = canvas.height * 0.8;
-            ctx.shadowBlur = 40;
-            ctx.shadowColor = `rgba(${themeColor}, 0.6)`;
-            ctx.fillStyle = `rgba(${themeColor}, 1)`;
-            
-            ctx.beginPath();
-            ctx.moveTo(centerX, cy - 30);
-            ctx.lineTo(centerX - 22, cy + 12);
-            ctx.lineTo(centerX, cy + 2);
-            ctx.lineTo(centerX + 22, cy + 12);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Inner Highlight for Realism
-            ctx.fillStyle = 'rgba(255,255,255,0.35)';
-            ctx.beginPath();
-            ctx.moveTo(centerX, cy - 25);
-            ctx.lineTo(centerX - 10, cy + 6);
-            ctx.lineTo(centerX + 10, cy + 6);
-            ctx.fill();
-
-            ctx.shadowBlur = 0;
-            requestAnimationFrame(draw);
+                if (data && data[0]) {
+                    const f = data[0];
+                    document.getElementById('d-gate-ui').innerText = f.departure?.gate || "TBD";
+                    document.getElementById('d-status-ui').innerText = f.status || "ACTIVE";
+                    
+                    // SMART CAMERA: If airport is MIA, fly the drone camera to the gate
+                    if(f.departure?.airport === "MIA") {
+                        map.flyTo({
+                            center: [-80.2871, 25.7959],
+                            zoom: 18.5,
+                            pitch: 75,
+                            duration: 5000,
+                            essential: true
+                        });
+                    }
+                }
+            } catch (e) { console.error("Flight Sync Error", e); }
         }
-        draw();
 
+        // 4. PERSISTENT CLOCK
         setInterval(() => {
             const c = document.getElementById('clock');
             if(c) c.innerText = `TIME: ${new Date().toLocaleTimeString('en-GB')}`;
