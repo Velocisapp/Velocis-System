@@ -78,7 +78,7 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-        // COORDINATES: Exact hallway spine of MIA Concourse D
+        // COORDINATES: Exact hallway spine of MIA Concourse D (Center of shops/gates)
         const MIA_INTERIOR = [-80.2818, 25.7965];
 
         const map = new mapboxgl.Map({
@@ -93,8 +93,9 @@
         let currentMarker = null;
 
         map.on('style.load', () => {
-            // OFFICIAL API: Set lighting and force labels to register
             map.setConfigProperty('basemap', 'lightPreset', 'night');
+            
+            // PRE-LOAD: Force the indoor engine to wake up before we move
             map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
 
             map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': [] }}});
@@ -108,23 +109,23 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // Update Neon Path
-            const path = [[coords[0] - 0.0007, coords[1] - 0.0007], coords];
-            map.getSource('route').setData({ 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': path }});
+            // THE KILL-SWITCH: 
+            // We physically disable 3D objects BEFORE we fly. 
+            // This ensures the camera look-at point penetrates the floor level.
+            map.setConfigProperty('basemap', 'show3dObjects', false);
 
             if (currentMarker) currentMarker.remove();
             const el = document.createElement('div'); el.className = 'gate-beacon';
             currentMarker = new mapboxgl.Marker(el).setLngLat(coords).addTo(map);
 
-            // THE X-RAY GLIDE:
-            // We fly to Zoom 19.5. This is the threshold where Mapbox Standard 
-            // automatically prioritizes indoor POIs (shops/gates) over roofs.
+            // THE PENETRATION DIVE:
+            // Zoom 21 is the hardcoded threshold for high-detail indoor mapping.
             map.flyTo({
                 center: coords,
-                zoom: 19.5,
-                pitch: 65,      // Cinematic angle that keeps the building visible but shows labels
+                zoom: 21,       
+                pitch: 80,      
                 bearing: -45,   
-                speed: 0.5,
+                speed: 0.4,
                 essential: true
             });
         }
