@@ -43,12 +43,12 @@
             document.getElementById('d-gate-ui').innerText = gate || "D48C";
             document.getElementById('d-status-ui').innerText = status || "ACTIVE";
 
-            // PROPER LAYOUT TRANSITION: 
-            // Swapping to streets-v12 physically enables the 'composite' source your console needs.
-            map.setStyle('mapbox://styles/mapbox/streets-v12');
+            // CHANGE LOGIC: We swap styles to physically unlock the 'composite' source.
+            // This is how real apps remove the 3D "lid" you see in your tarmac shots.
+            map.setStyle('mapbox://styles/mapbox/light-v11');
 
             map.once('style.load', () => {
-                // Now the source is unlocked. We set floor level to 1 (Departures).
+                // Now the source exists. We set the floor level to 1 (Departures).
                 map.setFeatureState(
                     { source: 'composite', sourceLayer: 'indoor', id: 'level' },
                     { level: 1 } 
@@ -56,8 +56,8 @@
 
                 map.flyTo({
                     center: coords,
-                    zoom: 19.5,   
-                    pitch: 0,     // Flat blueprint view for clarity
+                    zoom: 19.5,   // Threshold for high-density blueprint labels
+                    pitch: 0,     // Top-down view for blueprint clarity
                     bearing: 0, 
                     speed: 0.7,
                     essential: true
