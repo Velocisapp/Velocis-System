@@ -1,90 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VELOCIS™ | Full Mission Engine</title>
+    <title>VELOCIS™ | Concourse D Matrix</title>
     <style>
-        body { margin: 0; background: #0b0e14; font-family: -apple-system, sans-serif; color: #00f2ff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        #terminal-view { flex: 1; position: relative; background: #0b0e14; border: 1px solid #1a1f26; margin: 15px; border-radius: 24px; box-shadow: inset 0 0 50px #000; cursor: crosshair; }
+        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* THE X-RAY MATRIX */
-        svg { width: 100%; height: 100%; transition: transform 0.5s ease-out; }
-        .wall { stroke: #1a1f26; stroke-width: 3; fill: rgba(26, 31, 38, 0.5); }
-        .path-guide { stroke: #007AFF; stroke-width: 3; stroke-dasharray: 6; fill: none; opacity: 0.4; }
-        .partner-shop { fill: #1a1f26; stroke: #ffd700; stroke-width: 2; transition: 0.5s; }
-        .pulse { filter: drop-shadow(0 0 10px #ffd700); stroke-width: 4; }
+        /* THE BLUEPRINT (NO TARMAC) */
+        #matrix-container { flex: 1; position: relative; background: #05070a; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        svg { width: 120%; height: 120%; transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* ARCHITECTURAL ELEMENTS */
+        .concourse-shell { fill: #0b0e14; stroke: #1a1f26; stroke-width: 2; }
+        .walkway { fill: #0d1117; }
+        .gate-area { fill: rgba(0, 242, 255, 0.03); stroke: rgba(0, 242, 255, 0.1); }
+        .guidance-path { stroke: #007AFF; stroke-width: 4; stroke-dasharray: 10; fill: none; opacity: 0.6; }
         
         /* THE BRAIN (CYAN DOT) */
-        #passenger-dot { fill: #00f2ff; filter: drop-shadow(0 0 12px #00f2ff); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        #passenger-dot { fill: #00f2ff; filter: drop-shadow(0 0 15px #00f2ff); transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* PASSENGER HUD */
-        #hud { padding: 25px; background: rgba(11, 14, 20, 0.95); border-top: 1px solid #1a1f26; backdrop-filter: blur(10px); }
-        .status-chip { display: inline-block; padding: 4px 12px; border-radius: 50px; background: rgba(0, 242, 255, 0.1); font-size: 10px; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; border: 1px solid #00f2ff; }
-        .instruction { font-size: 22px; font-weight: 500; color: #fff; margin-bottom: 15px; }
-        #altimeter-readout { position: absolute; top: 30px; right: 30px; font-family: monospace; font-size: 12px; color: #555; }
+        /* THE MISSION HUD (AUTOMATED) */
+        #hud { padding: 30px; background: #0b0e14; border-top: 1px solid #1a1f26; }
+        .mission-text { font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 5px; }
+        .sub-text { font-size: 14px; color: #00f2ff; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-<div id="terminal-view">
-    <div id="altimeter-readout">ALT: 12.0m (LOCKED)</div>
-    <svg id="matrix-svg" viewBox="0 0 1000 500">
-        <rect class="wall" x="50" y="50" width="900" height="400" rx="20" />
+<div id="matrix-container">
+    <svg id="viewbox" viewBox="0 0 1000 400">
+        <path class="concourse-shell" d="M 50 100 L 950 100 L 950 300 L 50 300 Z" />
+        <rect class="gate-area" x="700" y="100" width="200" height="200" />
         
-        <path id="guide" class="path-guide" d="M 100 250 L 300 250 L 500 150 L 900 150" />
+        <path class="guidance-path" d="M 100 200 L 350 200 L 550 150 L 850 150" />
+        
+        <text x="100" y="240" fill="#555" font-size="12">ENTRANCE</text>
+        <text x="350" y="240" fill="#555" font-size="12">CHECK-IN</text>
+        <text x="550" y="130" fill="#555" font-size="12">SECURITY D</text>
+        <text x="850" y="130" fill="#00f2ff" font-size="14" font-weight="bold">GATE D34</text>
 
-        <rect id="shop-starbucks" class="partner-shop" x="520" y="80" width="100" height="50" rx="8" />
-        <text x="535" y="110" fill="#ffd700" font-size="12" font-weight="bold">STARBUCKS</text>
-
-        <circle id="passenger-dot" cx="100" cy="250" r="10" />
+        <circle id="passenger-dot" cx="100" cy="200" r="12" />
     </svg>
 </div>
 
 <div id="hud">
-    <div id="mission-chip" class="status-chip">CHECK-IN PHASE</div>
-    <div id="instruction" class="instruction">Welcome to MIA. Move to Counter 4.</div>
-    <button onclick="simulateMovement()" style="padding: 12px 24px; background: #00f2ff; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">SIMULATE ADVANCE</button>
+    <div id="sub-instruction" class="sub-text">Current State: Arrival</div>
+    <div id="instruction" class="mission-text">Welcome to MIA. Move to Counter 4.</div>
+    <button onclick="autoPilot()" style="margin-top: 15px; padding: 12px 30px; background: #00f2ff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #000;">START AUTOMATED GUIDANCE</button>
 </div>
 
 <script>
-    const MissionBrain = {
-        state: 0,
-        checkpoints: [
-            { x: 300, y: 250, label: "TSA PHASE", text: "Check-in done. Move to Security D.", zoom: 1.2 },
-            { x: 550, y: 150, label: "RETAIL PHASE", text: "Security cleared. 10% Off Coffee ahead!", zoom: 1.5 },
-            { x: 900, y: 150, label: "GATE PHASE", text: "Arriving at Gate D34. Safe flight!", zoom: 1.1 }
-        ],
+    let currentStep = 0;
+    const mission = [
+        { x: 350, y: 200, state: "Check-In", text: "Proceed to American Airlines Counter.", scale: 1.2, transX: -100 },
+        { x: 550, y: 150, state: "Security", text: "Next stop: Security D. Have ID ready.", scale: 1.5, transX: -250 },
+        { x: 850, y: 150, state: "In-Transit", text: "Security cleared. Walking to Gate D34.", scale: 1.8, transX: -450 },
+        { x: 850, y: 150, state: "Arrived", text: "You are at Gate D34. Safe flight!", scale: 1.8, transX: -450 }
+    ];
 
-        checkProximity(x, y) {
-            // Invisible sensor for the Starbucks (8% commission trigger)
-            const shop = document.getElementById('shop-starbucks');
-            const distance = Math.sqrt(Math.pow(x - 570, 2) + Math.pow(y - 105, 2));
-            
-            if (distance < 100) {
-                shop.classList.add('pulse');
-            } else {
-                shop.classList.remove('pulse');
-            }
-        }
-    };
-
-    function simulateMovement() {
-        if (MissionBrain.state < MissionBrain.checkpoints.length) {
-            const data = MissionBrain.checkpoints[MissionBrain.state];
+    function autoPilot() {
+        if (currentStep < mission.length) {
+            const step = mission[currentStep];
             const dot = document.getElementById('passenger-dot');
-            const svg = document.getElementById('matrix-svg');
+            const view = document.getElementById('viewbox');
             
-            // Move the Brain
-            dot.setAttribute('cx', data.x);
-            dot.setAttribute('cy', data.y);
+            // AUTOMATED MOVEMENT
+            dot.setAttribute('cx', step.x);
+            dot.setAttribute('cy', step.y);
             
-            // Update HUD (No jargon)
-            document.getElementById('mission-chip').innerText = data.label;
-            document.getElementById('instruction').innerText = data.text;
+            // DYNAMIC CAMERA (The "Pan")
+            view.style.transform = `scale(${step.scale}) translateX(${step.transX}px)`;
             
-            // Check sensors
-            MissionBrain.checkProximity(data.x, data.y);
+            // HUD UPDATE
+            document.getElementById('sub-instruction').innerText = `Current State: ${step.state}`;
+            document.getElementById('instruction').innerText = step.text;
             
-            MissionBrain.state++;
+            currentStep++;
+            setTimeout(autoPilot, 3000); // Automate the flow every 3 seconds
         }
     }
 </script>
