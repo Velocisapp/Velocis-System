@@ -1,81 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VELOCIS™ | Concourse D Matrix</title>
+    <title>VELOCIS™ | Logic-Driven Guidance</title>
     <style>
-        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; overflow: hidden; }
         
-        /* THE BLUEPRINT (NO TARMAC) */
-        #matrix-container { flex: 1; position: relative; background: #05070a; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        svg { width: 120%; height: 120%; transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* THE BLUEPRINT (Architectural Logic) */
+        #viewport { height: 70vh; position: relative; background: #0b0e14; display: flex; align-items: center; justify-content: center; }
+        svg { width: 90%; height: auto; }
+        .hallway { fill: #13171f; stroke: #1a1f26; stroke-width: 2; }
+        .guide-line { stroke: #007AFF; stroke-width: 5; fill: none; stroke-dasharray: 12; opacity: 0.8; }
         
-        /* ARCHITECTURAL ELEMENTS */
-        .concourse-shell { fill: #0b0e14; stroke: #1a1f26; stroke-width: 2; }
-        .walkway { fill: #0d1117; }
-        .gate-area { fill: rgba(0, 242, 255, 0.03); stroke: rgba(0, 242, 255, 0.1); }
-        .guidance-path { stroke: #007AFF; stroke-width: 4; stroke-dasharray: 10; fill: none; opacity: 0.6; }
-        
-        /* THE BRAIN (CYAN DOT) */
-        #passenger-dot { fill: #00f2ff; filter: drop-shadow(0 0 15px #00f2ff); transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* SIGN-DRIVEN MARKERS */
+        .sign-post { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); }
+        .label { fill: #555; font-size: 14px; font-weight: bold; text-transform: uppercase; }
 
-        /* THE MISSION HUD (AUTOMATED) */
-        #hud { padding: 30px; background: #0b0e14; border-top: 1px solid #1a1f26; }
-        .mission-text { font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 5px; }
-        .sub-text { font-size: 14px; color: #00f2ff; text-transform: uppercase; letter-spacing: 1px; }
+        /* HUD */
+        #hud { height: 30vh; background: #0b0e14; border-top: 2px solid #00f2ff; padding: 30px; box-sizing: border-box; }
+        .instruction { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
+        .sub-mission { color: #00f2ff; font-size: 12px; letter-spacing: 2px; font-weight: 800; }
     </style>
 </head>
 <body>
 
-<div id="matrix-container">
-    <svg id="viewbox" viewBox="0 0 1000 400">
-        <path class="concourse-shell" d="M 50 100 L 950 100 L 950 300 L 50 300 Z" />
-        <rect class="gate-area" x="700" y="100" width="200" height="200" />
+<div id="viewport">
+    <svg viewBox="0 0 800 300">
+        <path class="hallway" d="M 50 100 L 750 100 L 750 200 L 50 200 Z" />
         
-        <path class="guidance-path" d="M 100 200 L 350 200 L 550 150 L 850 150" />
+        <path class="guide-line" d="M 80 150 L 250 150 L 450 150 L 700 150" />
         
-        <text x="100" y="240" fill="#555" font-size="12">ENTRANCE</text>
-        <text x="350" y="240" fill="#555" font-size="12">CHECK-IN</text>
-        <text x="550" y="130" fill="#555" font-size="12">SECURITY D</text>
-        <text x="850" y="130" fill="#00f2ff" font-size="14" font-weight="bold">GATE D34</text>
+        <circle id="marker-kiosk" class="sign-post" cx="250" cy="150" r="8" opacity="0.2" />
+        <circle id="marker-tsa" class="sign-post" cx="450" cy="150" r="8" opacity="0.2" />
+        <circle id="marker-gate" class="sign-post" cx="700" cy="150" r="8" opacity="0.2" />
 
-        <circle id="passenger-dot" cx="100" cy="200" r="12" />
+        <text x="220" y="190" class="label">Kiosks</text>
+        <text x="420" y="190" class="label">Security</text>
+        <text x="670" y="190" class="label" style="fill:#00f2ff">Gate D34</text>
     </svg>
 </div>
 
 <div id="hud">
-    <div id="sub-instruction" class="sub-text">Current State: Arrival</div>
-    <div id="instruction" class="mission-text">Welcome to MIA. Move to Counter 4.</div>
-    <button onclick="autoPilot()" style="margin-top: 15px; padding: 12px 30px; background: #00f2ff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #000;">START AUTOMATED GUIDANCE</button>
+    <div id="status" class="sub-mission">PHASE 1: ARRIVAL</div>
+    <div id="instruction" class="instruction">Follow signs to Kiosk Block 4.</div>
+    <button onclick="advanceMission()" style="margin-top:20px; padding: 15px 40px; background: #00f2ff; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">NEXT SIGN RECOGNIZED</button>
 </div>
 
 <script>
-    let currentStep = 0;
-    const mission = [
-        { x: 350, y: 200, state: "Check-In", text: "Proceed to American Airlines Counter.", scale: 1.2, transX: -100 },
-        { x: 550, y: 150, state: "Security", text: "Next stop: Security D. Have ID ready.", scale: 1.5, transX: -250 },
-        { x: 850, y: 150, state: "In-Transit", text: "Security cleared. Walking to Gate D34.", scale: 1.8, transX: -450 },
-        { x: 850, y: 150, state: "Arrived", text: "You are at Gate D34. Safe flight!", scale: 1.8, transX: -450 }
+    let step = 0;
+    const path = [
+        { status: "PHASE 2: CHECK-IN", text: "Kiosk Recognized. Head to Security D.", target: "marker-tsa" },
+        { status: "PHASE 3: SECURITY", text: "Security Cleared. Follow signs to D34.", target: "marker-gate" },
+        { status: "PHASE 4: BOARDING", text: "You have arrived at Gate D34.", target: "none" }
     ];
 
-    function autoPilot() {
-        if (currentStep < mission.length) {
-            const step = mission[currentStep];
-            const dot = document.getElementById('passenger-dot');
-            const view = document.getElementById('viewbox');
+    function advanceMission() {
+        if (step < path.length) {
+            const current = path[step];
+            document.getElementById('status').innerText = current.status;
+            document.getElementById('instruction').innerText = current.text;
             
-            // AUTOMATED MOVEMENT
-            dot.setAttribute('cx', step.x);
-            dot.setAttribute('cy', step.y);
-            
-            // DYNAMIC CAMERA (The "Pan")
-            view.style.transform = `scale(${step.scale}) translateX(${step.transX}px)`;
-            
-            // HUD UPDATE
-            document.getElementById('sub-instruction').innerText = `Current State: ${step.state}`;
-            document.getElementById('instruction').innerText = step.text;
-            
-            currentStep++;
-            setTimeout(autoPilot, 3000); // Automate the flow every 3 seconds
+            if (current.target !== "none") {
+                document.getElementById(current.target).style.opacity = "1";
+            }
+            step++;
         }
     }
 </script>
