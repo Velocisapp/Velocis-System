@@ -29,16 +29,12 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.1);
             position: relative; overflow: hidden;
         }
-        /* BACKGROUND AIRPLANE DECORATION */
         .bg-airplane {
             position: absolute; top: -10px; right: -10px; font-size: 100px; 
             opacity: 0.15; color: white; transform: rotate(-15deg); pointer-events: none;
             animation: float 5s ease-in-out infinite;
         }
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(-15deg); }
-            50% { transform: translate(-10px, -10px) rotate(-12deg); }
-        }
+        @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(-15deg); } 50% { transform: translate(-10px, -10px) rotate(-12deg); } }
 
         .logo-main { font-size: 48px; font-weight: 900; color: white; margin-bottom: 5px; letter-spacing: -2.5px; z-index: 2; }
         .cta-sub { color: rgba(255,255,255,0.95); font-size: 14px; font-weight: 600; margin-bottom: 30px; z-index: 2; }
@@ -48,26 +44,17 @@
             font-size: 26px; text-align: center; margin-bottom: 20px; 
             background: white; color: #1c1c1e; font-weight: 700; outline: none; z-index: 2;
         }
-        .start-btn { 
-            width: 100%; height: 65px; background: #1c1c1e; color: white; 
-            border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 2;
-        }
+        .start-btn { width: 100%; height: 65px; background: #1c1c1e; color: white; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 2; }
 
         /* 2. THE PANORAMIC STAGE */
         #map { flex: 1; width: 100%; height: 45vh; pointer-events: none; }
         
         /* 3. SCROLL CTA BAR */
-        .scroll-cta { 
-            background: #fff; padding: 12px; text-align: center; 
-            font-size: 11px; font-weight: 800; color: var(--v-blue); 
-            letter-spacing: 1.5px; border-bottom: 1px solid #eee; z-index: 20;
-        }
+        .scroll-cta { background: #fff; padding: 12px; text-align: center; font-size: 11px; font-weight: 800; color: var(--v-blue); letter-spacing: 1.5px; border-bottom: 1px solid #eee; z-index: 20; }
 
         /* 4. SOVEREIGN MISSION TRAY */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; }
-        
         .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
-        
         .arrival-mission { background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%); }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -78,7 +65,7 @@
         .title { font-size: 38px; font-weight: 900; color: white; margin-top: 5px; line-height: 1.1; letter-spacing: -1px; }
         .subtitle { font-size: 18px; color: rgba(255,255,255,0.7); margin-top: 10px; line-height: 1.5; font-weight: 500; }
 
-        /* PARTNER PERK CARD STYLE */
+        /* PARTNER & TRANSPORT CARDS */
         .partner-perk {
             margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px;
             display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255,255,255,0.1);
@@ -86,10 +73,12 @@
         .partner-header { display: flex; align-items: center; gap: 10px; }
         .partner-logo { width: 32px; height: 32px; border-radius: 8px; background: white; padding: 4px; }
         .partner-name { color: white; font-weight: 700; font-size: 14px; }
-        .perk-text { color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.3; }
+        .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; box-shadow: 0 0 8px #4caf50; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+
         .code-btn { 
-            background: var(--v-blue); color: white; border: none; padding: 12px; 
-            border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; margin-top: 5px;
+            background: var(--v-blue); color: white; border: none; padding: 14px; 
+            border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; margin-top: 5px;
         }
         
         #mission-tray::-webkit-scrollbar { display: none; }
@@ -108,8 +97,7 @@
 </div>
 
 <div id="map"></div>
-
-<div class="scroll-cta" id="cta-bar">↓ SCROLL FOR PARTNER PERKS & ARRIVAL INFO ↓</div>
+<div class="scroll-cta" id="cta-bar">↓ SCROLL FOR PARTNER PERKS & TRANSPORT ↓</div>
 
 <div id="mission-tray" onscroll="engine.handleScroll()">
     <div class="mission-step">
@@ -125,7 +113,7 @@
     <div class="mission-step">
         <div class="top-row"><div class="tag">03. Security</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Screening is just past the counters. Stay in the North terminal flow and follow the ceiling signs.</div>
+        <div class="subtitle">Screening is just past the counters. Follow the ceiling signs to stay in the North terminal flow.</div>
     </div>
     <div class="mission-step">
         <div class="top-row"><div class="tag">04. Relax</div><div class="airline-box" id="logo-4">----</div></div>
@@ -135,22 +123,22 @@
             <div class="partner-header">
                 <img class="partner-logo" src="https://www.google.com/s2/favicons?domain=starbucks.com&sz=64">
                 <div class="partner-name">Starbucks® Coffee</div>
+                <div class="live-pulse"></div>
             </div>
-            <div class="perk-text">Enjoy 15% off while you wait for boarding.</div>
-            <button class="code-btn" onclick="alert('Code VELOCIS copied!')">COPY CODE: VELOCIS</button>
+            <button class="code-btn" onclick="alert('Code VELOCIS copied!')">COPY 15% OFF CODE: VELOCIS</button>
         </div>
     </div>
     <div class="mission-step arrival-mission">
         <div class="top-row"><div class="tag" style="color:#80c1ff;">05. Welcome Home</div><div class="airline-box" id="logo-5">----</div></div>
         <div class="title">Carousel 12</div>
-        <div class="subtitle">Welcome to Miami! Head to Level 1. It's a great time to check your eSIM while you wait for your bags.</div>
-        <div class="partner-perk" style="background: rgba(0,0,0,0.2);">
+        <div class="subtitle">Welcome to Miami! Your bags are arriving at Carousel 12. Let's get your ride ready.</div>
+        <div class="partner-perk" style="background: rgba(0,0,0,0.25);">
             <div class="partner-header">
-                <img class="partner-logo" src="https://www.google.com/s2/favicons?domain=uber.com&sz=64">
-                <div class="partner-name">Uber Transport</div>
+                <div class="partner-logo" style="background: #fff; color:#000; display:flex; align-items:center; justify-content:center; font-weight:900;">V</div>
+                <div class="partner-name">VELOCIS™ Ground Transport</div>
+                <div class="live-pulse"></div>
             </div>
-            <div class="perk-text">$10 off your first ride into the city.</div>
-            <button class="code-btn" style="background: #000;" onclick="alert('Opening Uber...')">CLAIM DISCOUNT</button>
+            <button class="code-btn" style="background: #fff; color: #000;" onclick="window.location.href='/transport-database'">VIEW TRANSPORT HUB</button>
         </div>
     </div>
 </div>
