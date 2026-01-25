@@ -1,82 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VELOCIS™ | Concourse D Matrix</title>
+    <title>VELOCIS™ | Matrix Rebuild</title>
     <style>
-        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        #viewport { flex: 1; position: relative; background: #0b0e14; display: flex; align-items: center; justify-content: center; }
+        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* THE X-RAY MATRIX SHELL */
-        svg { width: 100%; height: 100%; transition: all 1s ease-in-out; }
-        .terminal-walls { fill: #13171f; stroke: #1a1f26; stroke-width: 3; }
-        .guidance-line { stroke: #007AFF; stroke-width: 4; stroke-dasharray: 8; fill: none; opacity: 0.3; }
+        /* THE VISUAL SHELL (Replacing the black void) */
+        #matrix-viewport { flex: 1; position: relative; background: #0b111a; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        svg { width: 100%; height: 100%; transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* THE MANEUVER ARROW (From Mapbox Documentation) */
-        .maneuver-arrow { fill: #00f2ff; filter: drop-shadow(0 0 12px #00f2ff); opacity: 0; transition: opacity 0.5s, transform 0.5s; }
-        .active-arrow { opacity: 1; }
+        /* ARCHITECTURAL LAYERS */
+        .terminal-floor { fill: #131b26; stroke: #1f2937; stroke-width: 3; }
+        .active-path { stroke: #007AFF; stroke-width: 5; fill: none; stroke-dasharray: 10; opacity: 0.5; }
+        
+        /* MANEUVER ARROWS (Mapbox SDK Implementation) */
+        .guidance-arrow { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); opacity: 0; transition: opacity 0.5s; }
+        .active { opacity: 1 !important; }
 
-        /* HUD & MISSION CONTROL */
-        #hud { padding: 30px; background: #0b0e14; border-top: 2px solid #00f2ff; }
-        .instruction { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
-        .phase-label { color: #00f2ff; font-size: 11px; letter-spacing: 2px; font-weight: 800; text-transform: uppercase; }
-        button { margin-top: 15px; padding: 12px 30px; background: #00f2ff; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; color: #000; }
+        /* THE MISSION HUD */
+        #hud { height: 25vh; background: #0b111a; border-top: 3px solid #00f2ff; padding: 25px; box-sizing: border-box; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+        .phase-tag { color: #00f2ff; font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+        .instruction-main { font-size: 24px; font-weight: 700; color: #ffffff; }
+        button { margin-top: 15px; padding: 12px 35px; background: #00f2ff; color: #000; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div id="viewport">
-    <svg id="matrix" viewBox="0 0 1000 400">
-        <path class="terminal-walls" d="M 50 100 L 950 100 L 950 300 L 50 300 Z" />
-        <path class="guidance-line" d="M 100 200 L 300 200 L 550 150 L 850 150" />
+<div id="matrix-viewport">
+    <svg id="matrix-svg" viewBox="0 0 1000 400">
+        <path class="terminal-floor" d="M 50 100 L 950 100 L 950 300 L 50 300 Z" />
         
-        <polygon id="arrow-kiosk" class="maneuver-arrow" points="280,190 310,200 280,210" />
-        <polygon id="arrow-tsa" class="maneuver-arrow" points="530,140 560,150 530,160" />
-        <polygon id="arrow-gate" class="maneuver-arrow" points="830,140 860,150 830,160" />
+        <path class="active-path" d="M 80 200 L 250 200 L 500 150 L 900 150" />
 
-        <text x="100" y="190" fill="#555" font-size="12">ENTRANCE</text>
-        <circle id="passenger-dot" fill="#00f2ff" cx="100" cy="200" r="10" />
+        <polygon id="arrow-kiosk" class="guidance-arrow" points="230,190 260,200 230,210" />
+        <polygon id="arrow-tsa" class="guidance-arrow active" points="480,140 510,150 480,160" />
+        <polygon id="arrow-gate" class="guidance-arrow" points="880,140 910,150 880,160" />
+
+        <text x="70" y="235" fill="#4b5563" font-size="12" font-weight="bold">ENTRANCE</text>
+        <text x="220" y="235" fill="#4b5563" font-size="12" font-weight="bold">KIOSKS</text>
+        <text x="470" y="130" fill="#4b5563" font-size="12" font-weight="bold">SECURITY D</text>
+        <text x="870" y="130" fill="#00f2ff" font-size="14" font-weight="bold">GATE D34</text>
+
+        <circle id="passenger-dot" cx="80" cy="200" r="10" fill="#00f2ff" />
     </svg>
 </div>
 
 <div id="hud">
-    <div id="phase" class="phase-label">Status: Arrival</div>
-    <div id="instruction" class="instruction">Welcome. Move to Kiosk Block 4.</div>
-    <button onclick="triggerNextManeuver()">MANEUVER RECOGNIZED</button>
+    <div id="phase-tag" class="phase-tag">Mission: Arrival</div>
+    <div id="instruction" class="instruction-main">Follow signs to Kiosk Block 4.</div>
+    <button onclick="advanceMission()">Simulate Next Sign</button>
 </div>
 
 <script>
-    /* THE MISSION BRAIN
-       Implementing Mapbox Navigation SDK RouteProgress logic
-    */
-    let currentStep = 0;
-    const missionPath = [
-        { x: 300, y: 200, arrow: "arrow-kiosk", phase: "Check-In", text: "Kiosk Identified. Proceed to Security D.", view: "100 50 800 300" },
-        { x: 550, y: 150, arrow: "arrow-tsa", phase: "Security", text: "TSA Cleared. Follow Corridor to D34.", view: "250 50 800 300" },
-        { x: 850, y: 150, arrow: "arrow-gate", phase: "Boarding", text: "Gate D34 reached. Safe flight.", view: "400 50 800 300" }
+    let missionStep = 0;
+    const missionData = [
+        { cx: 250, cy: 200, arrow: "arrow-kiosk", tag: "CHECK-IN", text: "Kiosks reached. Head to Security D.", view: "0 50 1000 400" },
+        { cx: 500, cy: 150, arrow: "arrow-tsa", tag: "SECURITY", text: "Security D Cleared. Proceed to D34.", view: "200 50 800 300" },
+        { cx: 900, cy: 150, arrow: "arrow-gate", tag: "GATE REACHED", text: "Welcome to Gate D34. Safe Flight!", view: "400 50 600 300" }
     ];
 
-    function triggerNextManeuver() {
-        if (currentStep < missionPath.length) {
-            const step = missionPath[currentStep];
+    function advanceMission() {
+        if (missionStep < missionData.length) {
+            const data = missionData[missionStep];
+            
+            // 1. Move the Brain
             const dot = document.getElementById('passenger-dot');
-            const svg = document.getElementById('matrix');
+            dot.setAttribute('cx', data.cx);
+            dot.setAttribute('cy', data.cy);
 
-            // 1. Update Position (Simulating RouteProgressObserver)
-            dot.setAttribute('cx', step.x);
-            dot.setAttribute('cy', step.y);
+            // 2. Update Arrows (ManeuverArrow Logic)
+            document.querySelectorAll('.guidance-arrow').forEach(a => a.classList.remove('active'));
+            document.getElementById(data.arrow).classList.add('active');
 
-            // 2. Render Maneuver Arrow (Using Mapbox Arrow logic)
-            document.querySelectorAll('.maneuver-arrow').forEach(a => a.classList.remove('active-arrow'));
-            document.getElementById(step.arrow).classList.add('active-arrow');
+            // 3. Update Camera (The Auto-Pan)
+            document.getElementById('matrix-svg').setAttribute('viewBox', data.view);
 
-            // 3. Update HUD
-            document.getElementById('phase').innerText = `Status: ${step.phase}`;
-            document.getElementById('instruction').innerText = step.text;
+            // 4. Update HUD
+            document.getElementById('phase-tag').innerText = `Mission: ${data.tag}`;
+            document.getElementById('instruction').innerText = data.text;
 
-            // 4. Update Viewport (Focusing the Mission)
-            svg.setAttribute('viewBox', step.view);
-
-            currentStep++;
+            missionStep++;
         }
     }
 </script>
