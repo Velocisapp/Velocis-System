@@ -7,22 +7,22 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, system-ui, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        #search-overlay { position: absolute; top: 20px; left: 20px; z-index: 100; background: #fff; padding: 12px; border-radius: 12px; display: flex; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #search-overlay { position: absolute; top: 20px; left: 20px; z-index: 100; background: #fff; padding: 15px; border-radius: 12px; display: flex; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input { border: 1px solid #ddd; padding: 10px; border-radius: 6px; width: 180px; outline: none; font-size: 16px; }
         button { background: #007AFF; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
-        /* TARGET LOCK DESIGN */
-        .cyan-beacon { width: 30px; height: 30px; border: 4px solid #00f2ff; border-radius: 50%; box-shadow: 0 0 20px #00f2ff; }
-        .cyan-beacon::after { content: ''; position: absolute; width: 30px; height: 30px; background: #00f2ff; border-radius: 50%; animation: p 1.5s infinite; }
-        @keyframes p { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(4); opacity: 0; } }
+        /* THE CYAN BEACON - TARGET LOCK */
+        .cyan-beacon { width: 30px; height: 30px; border: 4px solid #00f2ff; border-radius: 50%; box-shadow: 0 0 20px #00f2ff; position: relative; }
+        .cyan-beacon::after { content: ''; position: absolute; width: 30px; height: 30px; background: #00f2ff; border-radius: 50%; animation: pulse 1.5s infinite; left: -4px; top: -4px; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
     </style>
 </head>
 <body>
 
 <div id="search-overlay">
-    <input type="text" id="target-gate" placeholder="Target Gate (D34)">
+    <input type="text" id="gate-input" placeholder="Enter Gate (D34)">
     <button id="lock-btn">LOCK ON</button>
 </div>
 <div id="map"></div>
@@ -40,39 +40,33 @@
     const el = document.createElement('div'); el.className = 'cyan-beacon';
     const marker = new mapboxgl.Marker(el);
 
-    // THE PHANTOM BREACH ALGORITHM
+    // THE PRODUCTION-GRADE ALGORITHM
     async function executeMission(gateID) {
-        // 1. FIRST DESCENT: Go to the roof to wake up 3D tiles
-        map.flyTo({ center: [-80.2831, 25.7960], zoom: 18.5, pitch: 45, duration: 2000 });
+        // STEP 1: MOVE TO AIRSPACE (Forces building to start loading)
+        map.easeTo({ center: [-80.2831, 25.7960], zoom: 18.2, duration: 1000 });
 
-        // 2. WAIT FOR "IDLE" (Browser confirms data is downloaded)
+        // STEP 2: LISTEN FOR DATA (Wait until 3D interior is ready)
         map.once('idle', () => {
+            // STEP 3: FEATURE EXTRACTION (No guessing)
             const features = map.queryRenderedFeatures({ layers: ['label-sm', 'label-md', 'label-lg', 'poi-label'] });
             const target = features.find(f => f.properties.name && f.properties.name.toUpperCase().includes(gateID));
 
             if (target) {
                 const loc = target.geometry.coordinates;
-                
-                // 3. THE "JUMP" FIX: Bypasses the collision engine
-                map.jumpTo({
-                    center: loc,
-                    zoom: 19.8,
-                    pitch: 65,
-                    bearing: -15
-                });
-                
+                // STEP 4: THE TELEPORT JUMP (Bypasses tarmac collision)
+                map.jumpTo({ center: loc, zoom: 19.8, pitch: 65, bearing: -15 });
                 marker.setLngLat(loc).addTo(map);
             } else {
-                // LAST RESORT: Manual Concourse Anchor (Level 2 Floor)
-                const anchor = [-80.28315, 25.7963];
-                map.jumpTo({ center: anchor, zoom: 19.5, pitch: 60 });
-                marker.setLngLat(anchor).addTo(map);
+                // FALLBACK: Anchor to the Level 2 Concourse Hallway
+                const fallback = [-80.28315, 25.7963];
+                map.jumpTo({ center: fallback, zoom: 19.5, pitch: 60 });
+                marker.setLngLat(fallback).addTo(map);
             }
         });
     }
 
     document.getElementById('lock-btn').addEventListener('click', () => {
-        const id = document.getElementById('target-gate').value.toUpperCase().trim();
+        const id = document.getElementById('gate-input').value.toUpperCase().trim();
         executeMission(id);
     });
 
