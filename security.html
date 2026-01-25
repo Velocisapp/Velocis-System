@@ -77,6 +77,20 @@
 
         .title { font-size: 38px; font-weight: 900; color: white; margin-top: 5px; line-height: 1.1; letter-spacing: -1px; }
         .subtitle { font-size: 18px; color: rgba(255,255,255,0.7); margin-top: 10px; line-height: 1.5; font-weight: 500; }
+
+        /* PARTNER PERK CARD STYLE */
+        .partner-perk {
+            margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .partner-header { display: flex; align-items: center; gap: 10px; }
+        .partner-logo { width: 32px; height: 32px; border-radius: 8px; background: white; padding: 4px; }
+        .partner-name { color: white; font-weight: 700; font-size: 14px; }
+        .perk-text { color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.3; }
+        .code-btn { 
+            background: var(--v-blue); color: white; border: none; padding: 12px; 
+            border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; margin-top: 5px;
+        }
         
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
@@ -95,7 +109,7 @@
 
 <div id="map"></div>
 
-<div class="scroll-cta" id="cta-bar">↓ SCROLL FOR OPTIONS & ARRIVAL INFO ↓</div>
+<div class="scroll-cta" id="cta-bar">↓ SCROLL FOR PARTNER PERKS & ARRIVAL INFO ↓</div>
 
 <div id="mission-tray" onscroll="engine.handleScroll()">
     <div class="mission-step">
@@ -117,11 +131,27 @@
         <div class="top-row"><div class="tag">04. Relax</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="title">Gate D32</div>
         <div class="subtitle">You're all set. Grab a coffee at Duty-Free while you wait—it's just a few steps from your gate.</div>
+        <div class="partner-perk">
+            <div class="partner-header">
+                <img class="partner-logo" src="https://www.google.com/s2/favicons?domain=starbucks.com&sz=64">
+                <div class="partner-name">Starbucks® Coffee</div>
+            </div>
+            <div class="perk-text">Enjoy 15% off while you wait for boarding.</div>
+            <button class="code-btn" onclick="alert('Code VELOCIS copied!')">COPY CODE: VELOCIS</button>
+        </div>
     </div>
     <div class="mission-step arrival-mission">
-        <div class="top-row"><div class="tag" style="color:#80c1ff;">05. Welcome Home</div><div class="airline-box" id="logo-5" style="background:rgba(255,255,255,0.25)">----</div></div>
+        <div class="top-row"><div class="tag" style="color:#80c1ff;">05. Welcome Home</div><div class="airline-box" id="logo-5">----</div></div>
         <div class="title">Carousel 12</div>
         <div class="subtitle">Welcome to Miami! Head to Level 1. It's a great time to check your eSIM while you wait for your bags.</div>
+        <div class="partner-perk" style="background: rgba(0,0,0,0.2);">
+            <div class="partner-header">
+                <img class="partner-logo" src="https://www.google.com/s2/favicons?domain=uber.com&sz=64">
+                <div class="partner-name">Uber Transport</div>
+            </div>
+            <div class="perk-text">$10 off your first ride into the city.</div>
+            <button class="code-btn" style="background: #000;" onclick="alert('Opening Uber...')">CLAIM DISCOUNT</button>
+        </div>
     </div>
 </div>
 
