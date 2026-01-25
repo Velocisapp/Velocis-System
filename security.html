@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Stable Vision Guide</title>
+    <title>VELOCIS™ | Cinematic Panorama</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
@@ -10,12 +10,12 @@
         :root { --v-blue: #007AFF; --v-gray: #f2f2f7; }
         body { margin: 0; padding: 0; background: var(--v-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. ATTRACTIVE ENTRY WINDOW (SKY THEME) */
+        /* THE SKY ENTRY WINDOW */
         #entry-screen { 
             position: fixed; inset: 0; 
             background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
             z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            padding: 40px; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1); 
+            padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px);
@@ -26,23 +26,29 @@
         #flight-input { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 700; }
         .start-btn { width: 100%; height: 60px; background: #1c1c1e; color: white; border: none; border-radius: 15px; font-weight: 700; cursor: pointer; }
 
-        /* 2. THE MAP & TRAY */
-        #map { flex: 1; width: 100%; height: 45vh; }
-        .scroll-cta { background: #fff; padding: 12px; text-align: center; font-size: 11px; font-weight: 800; color: var(--v-blue); letter-spacing: 1.5px; border-bottom: 1px solid #eee; }
-
-        #mission-tray { height: 55vh; background: white; overflow-y: scroll; border-radius: 30px 30px 0 0; z-index: 10; }
-        .mission-step { padding: 35px; border-bottom: 1px solid #f2f2f7; display: flex; flex-direction: column; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .tag { color: var(--v-blue); font-size: 12px; font-weight: 800; text-transform: uppercase; }
-        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: #f2f2f7; padding: 6px 12px; border-radius: 8px; }
-        .title { font-size: 32px; font-weight: 800; color: #1c1c1e; margin-bottom: 8px; }
-        .subtitle { font-size: 17px; color: #636366; margin-bottom: 20px; line-height: 1.4; }
+        /* PANORAMIC MAP - THE STAGE */
+        #map { flex: 1; width: 100%; height: 50vh; pointer-events: none; /* Map is purely visual reference */ }
         
-        .view-map-btn { 
-            background: var(--v-blue); color: white; border: none; padding: 15px 25px; 
-            border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; 
-            align-self: flex-start; box-shadow: 0 4px 15px rgba(0,122,255,0.3);
+        /* SCROLLABLE MISSION TRAY */
+        #mission-tray { 
+            height: 50vh; background: white; overflow-y: scroll; 
+            scroll-snap-type: y mandatory; border-radius: 30px 30px 0 0; z-index: 10; 
+            box-shadow: 0 -15px 45px rgba(0,0,0,0.1);
         }
+        .mission-step { 
+            height: 100%; padding: 40px; box-sizing: border-box; 
+            scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; 
+        }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: #f2f2f7; padding: 6px 12px; border-radius: 8px; }
+        
+        .title { font-size: 36px; font-weight: 900; color: #1c1c1e; margin-top: 5px; letter-spacing: -0.5px; }
+        .subtitle { font-size: 18px; color: #636366; margin-top: 10px; line-height: 1.4; font-weight: 500; }
+        
+        /* FOOTER CTA */
+        .cta-footer { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 10px; color: #ccc; z-index: 5; }
+
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -57,43 +63,46 @@
 </div>
 
 <div id="map"></div>
-<div class="scroll-cta">↓ SCROLL FOR COMPLETE GUIDANCE ↓</div>
 
-<div id="mission-tray">
+<div id="mission-tray" onscroll="engine.handleScroll()">
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Arrival</div><div class="airline-box" id="tray-flight">----</div></div>
+        <div class="top-row"><div class="tag">Step 1: Arrival</div><div class="airline-box" id="tray-flight">----</div></div>
         <div class="title">Door D3</div>
-        <div class="subtitle">Main entrance at MIA North terminal. Look for the blue sidewalk canopy.</div>
-        <button class="view-map-btn" onclick="engine.glideTo(0)">View 3D Context</button>
+        <div class="subtitle">Enter the terminal through the main doors at Concourse D. Look for the blue sidewalk canopy.</div>
     </div>
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Bag Drop</div><div class="airline-box">AA2405</div></div>
+        <div class="top-row"><div class="tag">Step 2: Check-In</div><div class="airline-box">AA2405</div></div>
         <div class="title">Counters 22-34</div>
-        <div class="subtitle">American Airlines check-in. Located on Level 2 (Departures).</div>
-        <button class="view-map-btn" onclick="engine.glideTo(1)">View 3D Context</button>
+        <div class="subtitle">Head to the American Airlines bag drop zone on Level 2 (Departures).</div>
     </div>
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Security</div><div class="airline-box">AA2405</div></div>
+        <div class="top-row"><div class="tag">Step 3: Security</div><div class="airline-box">AA2405</div></div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Security screening is straight ahead past the counters.</div>
-        <button class="view-map-btn" onclick="engine.glideTo(2)">View 3D Context</button>
+        <div class="subtitle">Follow the hallway past the counters to the main screening area.</div>
     </div>
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Boarding</div><div class="airline-box">AA2405</div></div>
+        <div class="top-row"><div class="tag">Step 4: Boarding</div><div class="airline-box">AA2405</div></div>
         <div class="title">Gate D32</div>
-        <div class="subtitle">Your flight boards here. Follow Concourse D signs.</div>
-        <button class="view-map-btn" onclick="engine.glideTo(3)">View 3D Context</button>
+        <div class="subtitle">Proceed to your boarding area. Follow overhead signs for Concourse D. Safe flight!</div>
     </div>
 </div>
+
+<div class="cta-footer">SCROLL TO NAVIGATE THE TERMINAL</div>
 
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
     class VelocisEngine {
         constructor() {
-            this.marker = null;
-            // Ground-anchored coordinates for MIA terminal
-            this.coords = [[-80.2828, 25.7952], [-80.2852, 25.7958], [-80.2868, 25.7964], [-80.2915, 25.7981]];
+            this.activeStep = -1;
+            this.scrollTimeout = null;
+            // Strategic panoramic angles for MIA Terminal North
+            this.views = [
+                { center: [-80.2820, 25.7948], zoom: 16.8, pitch: 65, bearing: -20 },
+                { center: [-80.2845, 25.7954], zoom: 17.0, pitch: 60, bearing: -15 },
+                { center: [-80.2865, 25.7960], zoom: 17.2, pitch: 65, bearing: -10 },
+                { center: [-80.2910, 25.7978], zoom: 17.0, pitch: 60, bearing: -30 }
+            ];
             this.initMap();
         }
 
@@ -101,7 +110,7 @@
             this.map = new mapboxgl.Map({
                 container: 'map', 
                 style: 'mapbox://styles/mapbox/standard',
-                center: this.coords[0], 
+                center: this.views[0].center, 
                 zoom: 16, 
                 pitch: 60
             });
@@ -114,19 +123,32 @@
                 el.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=aa.com&sz=32" style="height:14px"> ${val}`;
             });
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            this.glideTo(0);
+            this.updateView(0);
         }
 
-        glideTo(index) {
-            const loc = this.coords[index];
-            // CINEMATIC GLIDE: Slower movement stops the jumping
-            this.map.flyTo({ center: loc, zoom: 18.5, pitch: 70, speed: 0.45 });
-            
-            if (!this.marker) {
-                this.marker = new mapboxgl.Marker({ color: "#007AFF" }).setLngLat(loc).addTo(this.map);
-            } else {
-                this.marker.setLngLat(loc);
-            }
+        handleScroll() {
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
+                const tray = document.getElementById('mission-tray');
+                const newStep = Math.round(tray.scrollTop / tray.clientHeight);
+                if (newStep !== this.activeStep && newStep < this.views.length) {
+                    this.updateView(newStep);
+                }
+            }, 100);
+        }
+
+        updateView(index) {
+            this.activeStep = index;
+            const view = this.views[index];
+            // NO PINS. Just a beautiful, smooth panoramic camera move.
+            this.map.flyTo({ 
+                center: view.center, 
+                zoom: view.zoom, 
+                pitch: view.pitch, 
+                bearing: view.bearing,
+                speed: 0.35, // Slow, cinematic drift
+                curve: 1.2 
+            });
         }
     }
     const engine = new VelocisEngine();
