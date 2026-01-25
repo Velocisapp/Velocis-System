@@ -9,31 +9,26 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        
         header { 
             position: absolute; top: 0; width: 100%; background: rgba(255,255,255,0.95); 
             padding: 15px; z-index: 10; text-align: center; font-weight: 900; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
         #search-container {
             position: absolute; top: 75px; left: 20px; z-index: 20; 
             background: white; padding: 10px; border-radius: 12px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; gap: 8px;
             border: 1px solid rgba(0,0,0,0.1);
         }
-
         #gate-search {
             padding: 10px; border: 1px solid #ddd; border-radius: 6px; 
             outline: none; width: 180px; font-size: 14px;
         }
-
         #fly-button {
             background: #007AFF; color: white; border: none; 
             padding: 10px 18px; border-radius: 6px; cursor: pointer; 
             font-weight: bold; transition: background 0.2s;
         }
-
         #info-panel {
             position: absolute; right: -320px; top: 75px; width: 280px;
             background: rgba(255, 255, 255, 0.98); z-index: 30;
@@ -44,24 +39,14 @@
         .info-header { font-weight: 900; color: #007AFF; margin-bottom: 5px; }
         .info-body { font-size: 13px; color: #333; line-height: 1.4; }
 
-        /* PULSATING BEACON STYLE */
         .pulse-marker {
-            width: 20px;
-            height: 20px;
-            background: #007AFF;
-            border: 3px solid white;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0,122,255,0.8);
+            width: 22px; height: 22px; background: rgba(0, 122, 255, 1);
+            border: 3px solid white; border-radius: 50%;
         }
         .pulse-marker::after {
-            content: '';
-            width: 20px;
-            height: 20px;
-            background: #007AFF;
-            border-radius: 50%;
-            position: absolute;
-            animation: beacon-pulse 1.8s infinite;
+            content: ''; width: 22px; height: 22px; background: #007AFF;
+            border-radius: 50%; position: absolute;
+            animation: beacon-pulse 1.5s infinite;
         }
         @keyframes beacon-pulse {
             0% { transform: scale(1); opacity: 0.8; }
@@ -94,45 +79,49 @@
             zoom: 17, pitch: 0, antialias: true
         });
 
-        // MANUALLY RECALIBRATED TARGETS (Based on your visual screenshots)
-        const gateRegistry = {
-            'D34': {
-                name: "GATE D34",
-                center: [-80.28315, 25.79625], // Exact hallway anchor
-                description: "Target Locked. Interior guidance active."
-            }
-        };
-
-        // Create the Pulsating Beacon Element
         const el = document.createElement('div');
         el.className = 'pulse-marker';
-
-        // Initialize Marker (Hidden until Fly)
         const marker = new mapboxgl.Marker(el);
 
+        // DISCOVERY ALGORITHM
         document.getElementById('fly-button').addEventListener('click', () => {
-            const userInput = document.getElementById('gate-search').value.toUpperCase().trim();
-            const destination = gateRegistry[userInput];
+            const gateID = document.getElementById('gate-search').value.toUpperCase().trim();
+            
+            // 1. Force the map to the general area to ensure 3D layers are "awake"
+            map.easeTo({ center: [-80.2831, 25.7960], zoom: 18 });
 
-            if (destination) {
-                // Fly to the visual hallway
-                map.flyTo({
-                    center: destination.center,
-                    zoom: 19.5,
-                    pitch: 65,
-                    bearing: -15,
-                    duration: 3000,
-                    essential: true
+            setTimeout(() => {
+                // 2. Query rendered features for the ID
+                const features = map.queryRenderedFeatures({
+                    layers: ['label-sm', 'label-md', 'label-lg', 'poi-label']
                 });
 
-                // Drop the beacon
-                marker.setLngLat(destination.center).addTo(map);
+                // 3. Analytic match
+                const target = features.find(f => 
+                    f.properties.name && f.properties.name.toUpperCase().includes(gateID)
+                );
 
-                // Update info window
-                updateInfoPanel(destination.name, destination.description);
-            } else {
-                alert("Gate not in visual registry. Try D34.");
-            }
+                if (target) {
+                    const coords = target.geometry.coordinates;
+                    
+                    // 4. Target lock
+                    map.flyTo({
+                        center: coords,
+                        zoom: 19.8,
+                        pitch: 65,
+                        bearing: -15,
+                        duration: 3500,
+                        essential: true
+                    });
+
+                    // Place the pulsating beacon at the exact geometric center
+                    marker.setLngLat(coords).addTo(map);
+
+                    updateInfoPanel(gateID, "GATE IDENTIFIED. Interior floorplans synchronized. Mission active.");
+                } else {
+                    alert("Gate ID not found. Ensure you are searching for 'D34'.");
+                }
+            }, 500);
         });
 
         function updateInfoPanel(title, desc) {
@@ -144,6 +133,7 @@
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'day');
+            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
         });
     </script>
 </body>
