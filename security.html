@@ -7,111 +7,86 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        :root { --velocis-blue: #007AFF; --ui-bg: rgba(255, 255, 255, 0.98); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, system-ui, sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        header { position: absolute; top: 0; width: 100%; background: rgba(255,255,255,0.95); padding: 15px; z-index: 10; text-align: center; font-weight: 900; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        #search-container { position: absolute; top: 75px; left: 20px; z-index: 20; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; gap: 8px; }
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 180px; font-size: 14px; outline: none; }
-        button { background: var(--velocis-blue); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        #info-panel { position: absolute; right: -350px; top: 75px; width: 300px; background: var(--ui-bg); z-index: 30; padding: 24px; border-radius: 16px; box-shadow: -10px 0 40px rgba(0,0,0,0.2); transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
-        #info-panel.active { right: 20px; }
-        .algo-log { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-family: monospace; font-size: 11px; color: #888; }
-        .pulse-marker { width: 24px; height: 24px; background: var(--velocis-blue); border: 4px solid white; border-radius: 50%; box-shadow: 0 0 20px rgba(0,122,255,0.6); }
-        .pulse-marker::after { content: ''; width: 24px; height: 24px; background: var(--velocis-blue); border-radius: 50%; position: absolute; animation: beacon-pulse 2s infinite; }
-        @keyframes beacon-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(4); opacity: 0; } }
+        #search-container { position: absolute; top: 20px; left: 20px; z-index: 100; background: white; padding: 15px; border-radius: 12px; display: flex; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 200px; font-size: 16px; }
+        button { background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        
+        /* THE PULSATING TARGET LOCK */
+        .target-lock {
+            width: 40px; height: 40px; border: 4px solid #00f2ff;
+            border-radius: 50%; position: absolute;
+            animation: target-pulse 1s infinite alternate;
+            box-shadow: 0 0 20px #00f2ff;
+        }
+        @keyframes target-pulse {
+            from { transform: scale(0.8); opacity: 1; }
+            to { transform: scale(1.2); opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
-    <header>VELOCIS<span style="font-weight:200; color:#007AFF;">™</span> | SENSOR-FUSED GUIDANCE</header>
+
     <div id="search-container">
-        <input type="text" id="gate-search" placeholder="Search Gate (D34)">
-        <button id="fly-button">FLY</button>
+        <input type="text" id="gate-input" placeholder="ENTER GATE (D34)">
+        <button id="lock-btn">LOCK ON</button>
     </div>
-    <div id="info-panel">
-        <div style="font-weight: 900; color: #007AFF; font-size: 22px;" id="panel-title">MISSION DETAIL</div>
-        <div id="panel-desc" style="font-size: 14px; color: #444; margin-top: 8px;">Waiting...</div>
-        <div class="algo-log" id="algo-status">ENGINE IDLE</div>
-    </div>
+
     <div id="map"></div>
 
-<script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/standard', 
-        center: [-80.2831, 25.7960], 
-        zoom: 17, pitch: 0, antialias: true
-    });
-
-    const el = document.createElement('div');
-    el.className = 'pulse-marker';
-    const marker = new mapboxgl.Marker(el);
-
-    // RECURSIVE PROBE ALGORITHM
-    function probeMeshForTarget(gateID, attempts) {
-        const log = document.getElementById('algo-status');
-        
-        // Scan for the actual label in 3D space
-        const features = map.queryRenderedFeatures({ layers: ['label-sm', 'label-md', 'label-lg', 'poi-label'] });
-        const match = features.find(f => f.properties.name && f.properties.name.toUpperCase().includes(gateID));
-
-        if (match) {
-            log.innerHTML += "<br>SUCCESS: SPATIAL DATA ACQUIRED.";
-            const targetCoords = match.geometry.coordinates;
-            
-            // FINAL SNAP: Jump to the interior level
-            map.easeTo({
-                center: targetCoords,
-                zoom: 19.8,
-                pitch: 65,
-                duration: 1000
-            });
-            marker.setLngLat(targetCoords).addTo(map);
-            return true;
-        } else if (attempts > 0) {
-            log.innerHTML += ".";
-            setTimeout(() => probeMeshForTarget(gateID, attempts - 1), 150);
-            return false;
-        } else {
-            log.innerHTML += "<br>FAILED: USING SAFETY ANCHOR.";
-            const safety = [-80.28315, 25.79625];
-            map.flyTo({ center: safety, zoom: 19.2, pitch: 55 });
-            marker.setLngLat(safety).addTo(map);
-        }
-    }
-
-    document.getElementById('fly-button').addEventListener('click', () => {
-        const gateID = document.getElementById('gate-search').value.toUpperCase().trim();
-        const log = document.getElementById('algo-status');
-        
-        log.innerHTML = "PHASE 1: INITIATING APPROACH...";
-        
-        // APPROACH: Fly to a "Safe Zone" 30m away to trigger terminal rendering
-        map.flyTo({
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/standard',
             center: [-80.2831, 25.7960],
-            zoom: 18.8,
-            pitch: 45,
-            duration: 2500,
-            essential: true
+            zoom: 17, pitch: 0, antialias: true
         });
 
-        // PHASE 2: Start the Recursive Probe halfway through the flight
-        setTimeout(() => {
-            log.innerHTML += "<br>PHASE 2: PROBING MESH";
-            probeMeshForTarget(gateID, 20); // Try 20 times over 3 seconds
-        }, 1500);
+        const markerEl = document.createElement('div');
+        markerEl.className = 'target-lock';
+        const marker = new mapboxgl.Marker(markerEl);
 
-        document.getElementById('panel-title').innerText = gateID;
-        document.getElementById('panel-desc').innerText = "Interior Mission Active.";
-        document.getElementById('info-panel').classList.add('active');
-    });
+        document.getElementById('lock-btn').addEventListener('click', () => {
+            const gateID = document.getElementById('gate-input').value.toUpperCase().trim();
 
-    map.on('style.load', () => {
-        map.setConfigProperty('basemap', 'lightPreset', 'day');
-        map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-    });
-</script>
+            // STEP 1: INTERROGATE THE MAP SOURCE (Not just the screen)
+            // We search the 'composite' source which contains all the airport IDs
+            const features = map.queryRenderedFeatures({ layers: ['label-sm', 'label-md', 'label-lg', 'poi-label'] });
+            
+            // STEP 2: FIND THE GATE ID IN THE METADATA
+            const gateFeature = features.find(f => 
+                f.properties.name && f.properties.name.toUpperCase().includes(gateID)
+            );
+
+            if (gateFeature) {
+                const targetLocation = gateFeature.geometry.coordinates;
+
+                // STEP 3: EXECUTE PRECISION JUMP (Avoids the "collision" with the roof)
+                map.flyTo({
+                    center: targetLocation,
+                    zoom: 19.5,
+                    pitch: 60,
+                    bearing: -15,
+                    duration: 3000,
+                    essential: true
+                });
+
+                // STEP 4: APPLY THE CYAN PULSE
+                marker.setLngLat(targetLocation).addTo(map);
+            } else {
+                // FALLBACK: If labels aren't loaded, force a zoom to the concourse to trigger them
+                map.easeTo({ center: [-80.2835, 25.7962], zoom: 19 });
+                alert("Scanning MIA Database... please click LOCK ON again in 1 second.");
+            }
+        });
+
+        map.on('style.load', () => {
+            map.setConfigProperty('basemap', 'lightPreset', 'day');
+            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+        });
+    </script>
 </body>
 </html>
