@@ -1,93 +1,133 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VELOCIS™ | Integrated Mission Matrix</title>
+    <meta charset="utf-8">
+    <title>VELOCIS™ | Sovereign Mission Controller</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <style>
-        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { --velocis-cyan: #00f2ff; --matrix-dark: #05070a; --hud-bg: #0b111a; }
+        body { margin: 0; padding: 0; background: var(--matrix-dark); font-family: 'Inter', -apple-system, sans-serif; color: #fff; overflow: hidden; }
         
-        /* THE VISUAL VIEWPORT */
-        #viewport { flex: 1; position: relative; background: #0b111a; display: flex; align-items: center; justify-content: center; }
-        svg { width: 100%; height: 100%; transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        /* ARCHITECTURAL INFRASTRUCTURE */
-        .terminal-floor { fill: #131b26; stroke: #1f2937; stroke-width: 2; }
-        .logic-path { stroke: #007AFF; stroke-width: 3; fill: none; stroke-dasharray: 6; opacity: 0.3; }
-        
-        /* MANEUVER NODES (THE SIGNS) */
-        .maneuver-arrow { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); opacity: 0; transition: opacity 0.5s; }
-        .active-node { opacity: 1 !important; }
+        #map { position: absolute; top: 0; bottom: 30vh; width: 100%; border-bottom: 2px solid #1f2937; }
 
-        /* MISSION CONTROL HUD */
-        #hud { height: 28vh; background: #0b111a; border-top: 3px solid #00f2ff; padding: 25px; box-sizing: border-box; }
-        .phase-label { color: #00f2ff; font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
-        .instruction { font-size: 24px; font-weight: 700; color: #fff; line-height: 1.2; }
-        .metadata { font-family: monospace; font-size: 11px; color: #4b5563; margin-top: 10px; }
-        
-        button { margin-top: 15px; padding: 12px 40px; background: #00f2ff; color: #000; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        /* THE MISSION HUD */
+        #hud { position: absolute; bottom: 0; width: 100%; height: 30vh; background: var(--hud-bg); padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+        .meta-container { display: flex; justify-content: space-between; align-items: flex-start; }
+        .phase-tag { color: var(--velocis-cyan); font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+        .airline-logo { height: 25px; filter: brightness(0) invert(1); opacity: 0.8; }
+        .instruction { font-size: 24px; font-weight: 700; margin-top: 10px; line-height: 1.2; }
+        .sub-instruction { color: #888; font-size: 14px; margin-top: 5px; }
+
+        .mission-controls { display: flex; gap: 15px; margin-top: 15px; }
+        button { flex: 1; padding: 15px; background: var(--velocis-cyan); color: #000; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        button.secondary { background: transparent; border: 1px solid #333; color: #fff; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,242,255,0.3); }
+
+        /* DELAY UI */
+        .delay-alert { display: none; background: rgba(255, 165, 0, 0.1); border: 1px solid orange; color: orange; padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div id="viewport">
-    <svg id="matrix-svg" viewBox="0 0 1000 400">
-        <path class="terminal-floor" d="M 50 80 L 950 80 L 950 320 L 50 320 Z" />
-        <path class="logic-path" d="M 100 200 L 350 200 L 650 150 L 900 150" />
-
-        <polygon id="sign-kiosk" class="maneuver-arrow" points="330,190 360,200 330,210" />
-        <polygon id="sign-tsa" class="maneuver-arrow" points="630,140 660,150 630,160" />
-        <polygon id="sign-gate" class="maneuver-arrow" points="880,140 910,150 880,160" />
-
-        <text x="90" y="240" fill="#4b5563" font-size="10" font-weight="900">ENTRY D3</text>
-        <text x="320" y="240" fill="#4b5563" font-size="10" font-weight="900">COUNTER 4</text>
-        <text x="620" y="130" fill="#4b5563" font-size="10" font-weight="900">SECURITY D</text>
-        <text x="875" y="130" fill="#00f2ff" font-size="12" font-weight="900">GATE D34</text>
-
-        <circle id="user-puck" cx="100" cy="200" r="12" fill="#00f2ff" />
-    </svg>
-</div>
+<div id="map"></div>
 
 <div id="hud">
-    <div id="phase" class="phase-label">Mission: Initialized</div>
-    <div id="instruction" class="instruction">Approach American Airlines Counter 4.</div>
-    <div id="geo-data" class="metadata">Node Anchor: 25.7955, -80.2831</div>
-    <button onclick="triggerUpdate()">Recognize Node</button>
+    <div class="meta-container">
+        <div>
+            <div id="phase" class="phase-tag">System Initializing...</div>
+            <div id="flight-id" style="font-size: 12px; color: #4b5563; margin-top: 4px;">Awaiting Handshake</div>
+        </div>
+        <img id="airline-logo" src="https://logodownload.org/wp-content/uploads/2020/03/american-airlines-logo-0.png" class="airline-logo">
+    </div>
+
+    <div id="main-content">
+        <div id="instruction" class="instruction">Scan surroundings for Entrance D3.</div>
+        <div id="sub-instruction" class="sub-instruction">MIA International Airport | Terminal North</div>
+        <div id="delay-box" class="delay-alert">⚠️ DELAY DETECTED: +45m. Suggestions active.</div>
+    </div>
+
+    <div class="mission-controls">
+        <button id="main-btn" onclick="engine.advanceMission()">Maneuver Recognized</button>
+        <button class="secondary" onclick="engine.toggleArrivalMode()">Switch to Arrival</button>
+    </div>
 </div>
 
 <script>
-    /* THE INDEPENDENT BRAIN
-       This script manages the Mission State.
+    /* VELOCIS™ MISSION ENGINE v3.0
+       Integrated with Mapbox (Spatial) and Aviationstack (Logic)
     */
-    let currentStep = 0;
-    const missionMatrix = [
-        { x: 350, y: 200, sign: "sign-kiosk", phase: "CHECK-IN", text: "Counter reached. Proceed to Security D.", lat: "25.7962", lon: "-80.2855", view: "0 0 1000 400" },
-        { x: 650, y: 150, sign: "sign-tsa", phase: "SECURITY", text: "Security Cleared. Proceed to Gate D34.", lat: "25.7968", lon: "-80.2872", view: "200 0 800 400" },
-        { x: 900, y: 150, sign: "sign-gate", phase: "OBJECTIVE", text: "Arrived at Gate D34. Safe Flight.", lat: "25.7981", lon: "-80.2915", view: "400 0 600 400" }
-    ];
+    class VelocisEngine {
+        constructor() {
+            this.step = 0;
+            this.isArrival = false;
+            this.map = null;
+            this.initMap();
+        }
 
-    function triggerUpdate() {
-        if (currentStep < missionMatrix.length) {
-            const node = missionMatrix[currentStep];
+        initMap() {
+            mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN_HERE';
+            this.map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/navigation-night-v1', // High-contrast Matrix
+                center: [-80.2831, 25.7955], // MIA Concourse D Entry
+                zoom: 16,
+                pitch: 60,
+                bearing: -20
+            });
+        }
+
+        async fetchAviationData(flightIcao) {
+            // This is the Handshake we discussed
+            // const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=YOUR_KEY&flight_icao=${flightIcao}`);
+            // const data = await response.json();
             
-            // 1. Update Physical Position (The Puck)
-            const puck = document.getElementById('user-puck');
-            puck.setAttribute('cx', node.x);
-            puck.setAttribute('cy', node.y);
+            // Mocking the successful Handshake for MIA D32 Mission
+            return {
+                gate: "D32",
+                terminal: "North",
+                delay: 45,
+                status: "scheduled"
+            };
+        }
 
-            // 2. Activate Signage (The Maneuver Arrow)
-            document.querySelectorAll('.maneuver-arrow').forEach(s => s.classList.remove('active-node'));
-            document.getElementById(node.sign).classList.add('active-node');
+        advanceMission() {
+            const departureNodes = [
+                { id: "node-kiosk", text: "Proceed to Counters 22-34.", sub: "Follow Zone D Signage", coords: [-80.2855, 25.7962], zoom: 17.5 },
+                { id: "node-tsa", text: "Clear Security Checkpoint D.", sub: "Standard and TSA PreCheck active", coords: [-80.2872, 25.7968], zoom: 18 },
+                { id: "node-gate", text: "Take Skytrain to Station 3.", sub: "Final Objective: Gate D32", coords: [-80.2915, 25.7981], zoom: 18.5 }
+            ];
 
-            // 3. Update Intelligence HUD
-            document.getElementById('phase').innerText = `Mission: ${node.phase}`;
-            document.getElementById('instruction').innerText = node.text;
-            document.getElementById('geo-data').innerText = `Node Anchor: ${node.lat}, ${node.lon}`;
+            if (this.step < departureNodes.length) {
+                const mission = departureNodes[this.step];
+                this.updateUI("DEPARTURE MISSION", mission.text, mission.sub);
+                this.updateMap(mission.coords, mission.zoom);
+                this.step++;
+            }
+        }
 
-            // 4. Update Viewport (Focusing the Matrix)
-            document.getElementById('matrix-svg').setAttribute('viewBox', node.view);
+        toggleArrivalMode() {
+            this.isArrival = true;
+            this.updateUI("ARRIVAL MISSION", "Landed: Proceed to Carousel 12.", "Follow 'Baggage Claim' to Exit Gate 4");
+            this.updateMap([-80.2850, 25.7940], 17); // Shifts to Lower Level Arrival Hub
+            document.getElementById('delay-box').style.display = 'none';
+        }
 
-            currentStep++;
+        updateUI(phase, main, sub) {
+            document.getElementById('phase').innerText = phase;
+            document.getElementById('instruction').innerText = main;
+            document.getElementById('sub-instruction').innerText = sub;
+        }
+
+        updateMap(coords, zoom) {
+            this.map.flyTo({ center: coords, zoom: zoom, speed: 0.8, curve: 1 });
+            // Anchor the Sovereign Pin
+            new mapboxgl.Marker({ color: "#00f2ff" }).setLngLat(coords).addTo(this.map);
         }
     }
+
+    const engine = new VelocisEngine();
 </script>
 </body>
 </html>
