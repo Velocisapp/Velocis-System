@@ -3,31 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VELOCIS™ | ARCHITECTURAL VISION</title>
+    <title>VELOCIS™ | MISSION CONTROL</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        header { position: absolute; top: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 15px; z-index: 10; text-align: center; font-weight: 900; }
+        header { 
+            position: absolute; top: 0; width: 100%; background: rgba(255,255,255,0.95); 
+            padding: 15px; z-index: 10; text-align: center; font-weight: 900; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
-    <header>VELOCIS<span style="font-weight:200; color:#007AFF;">™</span> | MIA TERMINAL D</header>
+    <header>VELOCIS<span style="font-weight:200; color:#007AFF;">™</span> | SENSOR-FUSED GUIDANCE</header>
     <div id="map"></div>
+
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard', // RESTORING THE HIGH-FIDELITY 3D MESH
+            style: 'mapbox://styles/mapbox/standard', // 3D Mesh with native MIA floorplans
             center: [-80.2831, 25.7960], 
-            zoom: 18.2, pitch: 45, bearing: -15, antialias: true
+            zoom: 18.5, pitch: 45, bearing: -15, antialias: true
         });
 
+        // INITIALIZE THE "STAY SPOTTED" ENGINE
+        const geolocate = new mapboxgl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true, // Forces the use of Wi-Fi RTT and internal sensors
+                maximumAge: 0,           // Ensures real-time position with no lag
+                timeout: 10000
+            },
+            trackUserLocation: true,
+            showUserHeading: true,       // The "Flashlight" beam for orientation
+            showAccuracyCircle: false    // Keeps the UI focused on the 3D hallways
+        });
+
+        map.addControl(geolocate);
+
         map.on('style.load', () => {
-            // Setting the light to 'day' brings out the shop names and architectural details
             map.setConfigProperty('basemap', 'lightPreset', 'day');
+            
+            // Trigger spotting as soon as the map is ready
+            map.on('load', () => {
+                geolocate.trigger();
+                console.log("VELOCIS™ | Indoor Positioning Initialized");
+            });
+        });
+
+        // CREATIVE FIX: Use the phone's Compass to keep the 3D perspective locked
+        window.addEventListener('deviceorientation', (event) => {
+            if (event.webkitCompassHeading) {
+                // For iOS devices to sync the map rotation with the passenger's body
+                map.setBearing(event.webkitCompassHeading);
+            }
         });
     </script>
 </body>
