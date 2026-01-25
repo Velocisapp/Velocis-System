@@ -34,7 +34,6 @@
             font-weight: bold; transition: background 0.2s;
         }
 
-        /* NEW INFO PANEL STYLING */
         #info-panel {
             position: absolute; right: -320px; top: 75px; width: 280px;
             background: rgba(255, 255, 255, 0.98); z-index: 30;
@@ -71,51 +70,53 @@
             zoom: 17, pitch: 0, antialias: true
         });
 
-        // RE-ENGINEERED DATA ENGINE: Boundaries instead of Points
-        const gateRegistry = {
-            'D34': {
-                name: "GATE D34",
-                bounds: [[-80.2830, 25.7958], [-80.2820, 25.7965]],
-                description: "Terminal D - International Concourse. Floor: Level 2. Status: MISSION READY."
-            },
-            'SUBWAY': {
-                name: "SUBWAY",
-                bounds: [[-80.2835, 25.7955], [-80.2828, 25.7962]],
-                description: "Food Court - Central Hub. Real-time pathfinding active."
-            }
-        };
+        map.on('style.load', () => {
+            // Reconfigure the Basemap to force Point of Interest labels to stay visible
+            map.setConfigProperty('basemap', 'lightPreset', 'day');
+            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+        });
 
         document.getElementById('fly-button').addEventListener('click', () => {
-            const userInput = document.getElementById('gate-search').value.toUpperCase().trim();
-            const destination = gateRegistry[userInput];
+            const searchGate = document.getElementById('gate-search').value.toUpperCase().trim();
+            
+            // THE INTERROGATION: Query the map's live labels for a match
+            const features = map.queryRenderedFeatures({ layers: ['label-sm', 'label-md', 'label-lg', 'poi-label'] });
+            const match = features.find(f => f.properties.name && f.properties.name.toUpperCase().includes(searchGate));
 
-            if (destination) {
-                // STEP 1: Communication - Fly to Boundary Box (Zero Tarmac Drop)
-                map.fitBounds(destination.bounds, {
-                    padding: 60,
-                    pitch: 60,
+            if (match) {
+                // If a live data match is found, fly to that feature's exact geometry
+                map.flyTo({
+                    center: match.geometry.coordinates,
+                    zoom: 19.5,
+                    pitch: 65,
                     bearing: -20,
                     duration: 3000,
                     essential: true
                 });
-
-                // STEP 2: Trigger the Information Window
-                updateInfoPanel(destination);
+                updateInfoPanel(match.properties.name, "Dynamic match identified from MIA indoor database.");
             } else {
-                alert("Location not in registry. Try D34.");
+                // FALLBACK: Manual Interior Nodes if the label isn't rendered yet
+                const emergencyNodes = { 
+                    'D34': { coords: [-80.2827, 25.7961], desc: "Terminal D Hallway. Manual node lock active." },
+                    'SUBWAY': { coords: [-80.2831, 25.7958], desc: "Central Food Court area." }
+                };
+                
+                if (emergencyNodes[searchGate]) {
+                    const node = emergencyNodes[searchGate];
+                    map.flyTo({ center: node.coords, zoom: 19.2, pitch: 55, duration: 3000 });
+                    updateInfoPanel(searchGate, node.desc);
+                } else {
+                    alert("Scanning... Gate label not found in current map view.");
+                }
             }
         });
 
-        function updateInfoPanel(data) {
+        function updateInfoPanel(title, desc) {
             const panel = document.getElementById('info-panel');
-            document.getElementById('panel-title').innerText = data.name;
-            document.getElementById('panel-desc').innerText = data.description;
+            document.getElementById('panel-title').innerText = title;
+            document.getElementById('panel-desc').innerText = desc;
             panel.classList.add('active');
         }
-
-        map.on('style.load', () => {
-            map.setConfigProperty('basemap', 'lightPreset', 'day');
-        });
     </script>
 </body>
 </html>
