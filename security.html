@@ -1,33 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <title>VELOCIS™ | Mission Simulator</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background: #0b0e14; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: white; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
         
-        #search-overlay {
-            position: absolute; top: 20px; left: 20px; z-index: 100;
-            background: white; padding: 12px; border-radius: 12px;
-            display: flex; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* THE X-RAY OVERLAY */
+        #mission-control {
+            position: absolute; top: 20px; left: 20px; z-index: 10;
+            background: rgba(11, 14, 20, 0.9); padding: 20px; border-radius: 16px;
+            width: 320px; border: 1px solid rgba(0, 242, 255, 0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
         }
-        input { border: 1px solid #ddd; padding: 12px; border-radius: 8px; width: 200px; outline: none; }
-        button { background: #007AFF; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .status-header { color: #00f2ff; font-size: 12px; font-weight: 800; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; }
+        #instruction { font-size: 18px; font-weight: 500; margin-bottom: 20px; line-height: 1.4; color: #fff; }
         
-        /* THE DYNAMIC BEACON */
-        .velocis-marker {
-            width: 20px; height: 20px; background: #00f2ff; border: 3px solid white;
-            border-radius: 50%; box-shadow: 0 0 15px #00f2ff;
+        .mission-step { 
+            display: flex; align-items: center; gap: 12px; padding: 12px; 
+            background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px;
+            cursor: pointer; border: 1px solid transparent; transition: 0.3s;
+        }
+        .mission-step:hover { background: rgba(0, 242, 255, 0.1); border-color: #00f2ff; }
+        .mission-step.active { background: rgba(0, 242, 255, 0.2); border-color: #00f2ff; box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); }
+        .step-num { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #00f2ff; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #00f2ff; }
+
+        /* MERCHANT HUD */
+        #merchant-toast {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 10; background: #ffd700; color: #000; padding: 15px 30px;
+            border-radius: 50px; font-weight: 700; display: none;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        /* CUSTOM BEACON */
+        .velocis-beacon {
+            width: 20px; height: 20px; background: #00f2ff; border: 3px solid #fff;
+            border-radius: 50%; box-shadow: 0 0 20px #00f2ff;
         }
     </style>
 </head>
 <body>
 
-<div id="search-overlay">
-    <input type="text" id="user-query" placeholder="Search Gate or Shop...">
-    <button id="search-btn">NAVIGATE</button>
+<div id="mission-control">
+    <div class="status-header">Mission Status</div>
+    <div id="instruction">Welcome to MIA. Entering Concourse D.</div>
+    
+    <div class="mission-step" id="step-1" onclick="runStep(1)">
+        <div class="step-num">1</div>
+        <div>Check-in / Kiosks</div>
+    </div>
+    <div class="mission-step" id="step-2" onclick="runStep(2)">
+        <div class="step-num">2</div>
+        <div>Security Checkpoint</div>
+    </div>
+    <div class="mission-step" id="step-3" onclick="runStep(3)">
+        <div class="step-num">3</div>
+        <div>Retail Corridor</div>
+    </div>
+    <div class="mission-step" id="step-4" onclick="runStep(4)">
+        <div class="step-num">4</div>
+        <div>Arrival at Gate</div>
+    </div>
 </div>
+
+<div id="merchant-toast">VELOCIS PARTNER: 10% OFF COFFEE</div>
 <div id="map"></div>
 
 <script>
@@ -35,56 +77,91 @@
 
     const map = new mapboxgl.Map({
         container: 'map',
-        style: 'mapbox://styles/mapbox/light-v11', // Optimized for POI visibility
-        center: [-80.2831, 25.7960],
-        zoom: 17, pitch: 60, antialias: true
+        style: 'mapbox://styles/mapbox/light-v11', // Optimized for Clean X-Ray
+        center: [-80.2842, 25.7954],
+        zoom: 17,
+        pitch: 45,
+        antialias: true
     });
 
     const marker = new mapboxgl.Marker(document.createElement('div'));
+    const el = marker.getElement();
+    el.className = 'velocis-beacon';
 
-    // THE DYNAMIC SEARCH ALGORITHM
-    async function searchMapRegistry(query) {
-        // 1. Zoom to the general airport area to force the 3D data to download
-        map.easeTo({ center: [-80.2831, 25.7960], zoom: 18 });
+    const locations = {
+        entry: [-80.2842, 25.7954],
+        kiosk: [-80.2838, 25.7956],
+        security: [-80.2831, 25.7958],
+        shops: [-80.2825, 25.7960],
+        gate: [-80.2828, 25.7961]
+    };
 
-        // 2. Wait for the map to be "Idle" (Data is finished downloading)
-        map.once('idle', () => {
-            // 3. UNIVERSAL HARVESTING: Look through all active labels (Gates + Shops)
-            const features = map.queryRenderedFeatures();
+    function runStep(step) {
+        // Reset active UI
+        document.querySelectorAll('.mission-step').forEach(s => s.classList.remove('active'));
+        document.getElementById(`step-${step}`).classList.add('active');
+        document.getElementById('merchant-toast').style.display = 'none';
+
+        if (step === 1) {
+            // STEP 1: ALTIMETER TRIGGER + KIOSK LOCK
+            document.getElementById('instruction').innerText = "Arriving at Departures. Floor 2. Use Kiosk Block 4.";
+            map.flyTo({ center: locations.kiosk, zoom: 19.5, pitch: 60, duration: 2000 });
+            marker.setLngLat(locations.kiosk).addTo(map);
+            applyXRayEffect(0.3); // Partial X-Ray
+        } 
+        else if (step === 2) {
+            // STEP 2: TRANSITION TO TSA
+            document.getElementById('instruction').innerText = "Next: Security D. Estimated wait: 12 mins.";
+            map.flyTo({ center: locations.security, zoom: 19, pitch: 50, duration: 2000 });
+            marker.setLngLat(locations.security).addTo(map);
+        }
+        else if (step === 3) {
+            // STEP 3: RETAIL CORRIDOR (THE REVENUE STATE)
+            document.getElementById('instruction').innerText = "Security Cleared. Gate D34 is a 4 min walk.";
+            map.flyTo({ center: locations.shops, zoom: 20, pitch: 70, duration: 2500 });
+            marker.setLngLat(locations.shops).addTo(map);
             
-            const match = features.find(f => 
-                f.properties.name && f.properties.name.toUpperCase().includes(query.toUpperCase())
-            );
-
-            if (match) {
-                const coords = match.geometry.coordinates;
-                
-                // 4. THE GUIDANCE SNAP
-                map.flyTo({
-                    center: coords,
-                    zoom: 20,
-                    pitch: 75,
-                    duration: 3000,
-                    essential: true
-                });
-
-                // Drop the beacon on the dynamic result
-                const el = document.createElement('div');
-                el.className = 'velocis-marker';
-                marker.setElement(el).setLngLat(coords).addTo(map);
-            } else {
-                alert("Target not found. Please ensure you are looking for a Gate (D34) or a Shop (Starbucks).");
-            }
-        });
+            // Trigger the "Invisible Merchant"
+            setTimeout(() => {
+                document.getElementById('merchant-toast').style.display = 'block';
+                applyXRayEffect(0.1); // Deep X-Ray for Shop visibility
+            }, 1000);
+        }
+        else if (step === 4) {
+            // STEP 4: FINAL GATE ARRIVAL
+            document.getElementById('instruction').innerText = "Gate D34 reached. Enjoy your flight.";
+            map.flyTo({ center: locations.gate, zoom: 20, pitch: 80, duration: 2000 });
+            marker.setLngLat(locations.gate).addTo(map);
+        }
     }
 
-    document.getElementById('search-btn').addEventListener('click', () => {
-        const query = document.getElementById('user-query').value.trim();
-        if (query) searchMapRegistry(query);
-    });
+    function applyXRayEffect(opacity) {
+        // Here we simulate the "Brain" adjusting the Mapbox Layers
+        // Professionally, we target 'building' or '3d-structures'
+        if (map.getLayer('add-3d-buildings')) {
+            map.setPaintProperty('add-3d-buildings', 'fill-extrusion-opacity', opacity);
+        }
+    }
 
-    map.on('style.load', () => {
-        map.setConfigProperty('basemap', 'lightPreset', 'day');
+    map.on('load', () => {
+        // Add the building layer that we will "X-Ray"
+        map.addLayer({
+            'id': 'add-3d-buildings',
+            'source': 'composite',
+            'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'],
+            'type': 'fill-extrusion',
+            'minzoom': 15,
+            'paint': {
+                'fill-extrusion-color': '#aaa',
+                'fill-extrusion-height': ['get', 'height'],
+                'fill-extrusion-base': ['get', 'min_height'],
+                'fill-extrusion-opacity': 0.6
+            }
+        });
+        
+        // Start the Mission
+        marker.setLngLat(locations.entry).addTo(map);
     });
 </script>
 </body>
