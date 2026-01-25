@@ -43,6 +43,30 @@
         #info-panel.active { right: 20px; }
         .info-header { font-weight: 900; color: #007AFF; margin-bottom: 5px; }
         .info-body { font-size: 13px; color: #333; line-height: 1.4; }
+
+        /* PULSATING BEACON STYLE */
+        .pulse-marker {
+            width: 20px;
+            height: 20px;
+            background: #007AFF;
+            border: 3px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,122,255,0.8);
+        }
+        .pulse-marker::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: #007AFF;
+            border-radius: 50%;
+            position: absolute;
+            animation: beacon-pulse 1.8s infinite;
+        }
+        @keyframes beacon-pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(4); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -70,44 +94,44 @@
             zoom: 17, pitch: 0, antialias: true
         });
 
-        map.on('style.load', () => {
-            // Reconfigure the Basemap to force Point of Interest labels to stay visible
-            map.setConfigProperty('basemap', 'lightPreset', 'day');
-            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-        });
+        // MANUALLY RECALIBRATED TARGETS (Based on your visual screenshots)
+        const gateRegistry = {
+            'D34': {
+                name: "GATE D34",
+                center: [-80.28315, 25.79625], // Exact hallway anchor
+                description: "Target Locked. Interior guidance active."
+            }
+        };
+
+        // Create the Pulsating Beacon Element
+        const el = document.createElement('div');
+        el.className = 'pulse-marker';
+
+        // Initialize Marker (Hidden until Fly)
+        const marker = new mapboxgl.Marker(el);
 
         document.getElementById('fly-button').addEventListener('click', () => {
-            const searchGate = document.getElementById('gate-search').value.toUpperCase().trim();
-            
-            // THE INTERROGATION: Query the map's live labels for a match
-            const features = map.queryRenderedFeatures({ layers: ['label-sm', 'label-md', 'label-lg', 'poi-label'] });
-            const match = features.find(f => f.properties.name && f.properties.name.toUpperCase().includes(searchGate));
+            const userInput = document.getElementById('gate-search').value.toUpperCase().trim();
+            const destination = gateRegistry[userInput];
 
-            if (match) {
-                // If a live data match is found, fly to that feature's exact geometry
+            if (destination) {
+                // Fly to the visual hallway
                 map.flyTo({
-                    center: match.geometry.coordinates,
+                    center: destination.center,
                     zoom: 19.5,
                     pitch: 65,
-                    bearing: -20,
+                    bearing: -15,
                     duration: 3000,
                     essential: true
                 });
-                updateInfoPanel(match.properties.name, "Dynamic match identified from MIA indoor database.");
+
+                // Drop the beacon
+                marker.setLngLat(destination.center).addTo(map);
+
+                // Update info window
+                updateInfoPanel(destination.name, destination.description);
             } else {
-                // FALLBACK: Manual Interior Nodes if the label isn't rendered yet
-                const emergencyNodes = { 
-                    'D34': { coords: [-80.2827, 25.7961], desc: "Terminal D Hallway. Manual node lock active." },
-                    'SUBWAY': { coords: [-80.2831, 25.7958], desc: "Central Food Court area." }
-                };
-                
-                if (emergencyNodes[searchGate]) {
-                    const node = emergencyNodes[searchGate];
-                    map.flyTo({ center: node.coords, zoom: 19.2, pitch: 55, duration: 3000 });
-                    updateInfoPanel(searchGate, node.desc);
-                } else {
-                    alert("Scanning... Gate label not found in current map view.");
-                }
+                alert("Gate not in visual registry. Try D34.");
             }
         });
 
@@ -117,6 +141,10 @@
             document.getElementById('panel-desc').innerText = desc;
             panel.classList.add('active');
         }
+
+        map.on('style.load', () => {
+            map.setConfigProperty('basemap', 'lightPreset', 'day');
+        });
     </script>
 </body>
 </html>
