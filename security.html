@@ -2,48 +2,55 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Integrated Guide</title>
+    <title>VELOCIS™ | 3D Mission Matrix</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <style>
-        :root { --v-blue: #007AFF; --v-cyan: #00f2ff; --bg-gray: #f2f2f7; --text-main: #1c1c1e; }
-        body { margin: 0; padding: 0; background: var(--bg-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { --v-blue: #007AFF; --v-gray: #f2f2f7; }
+        body { margin: 0; padding: 0; background: var(--v-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* Map Container - Optimized for 3D visibility */
-        #map { flex: 1; width: 100%; height: 65vh; background: #d1d1d6; }
+        #map { flex: 1; width: 100%; height: 60vh; }
 
-        /* HUD - Clean, Apple-style card with depth */
-        #hud { height: 35vh; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); z-index: 10; border-top: 1px solid rgba(0,0,0,0.05); }
-        
-        .top-row { display: flex; justify-content: space-between; align-items: center; }
+        /* FLIGHT ENTRY OVERLAY */
+        #entry-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: 0.5s ease-out; }
+        .logo-placeholder { font-size: 32px; font-weight: 900; letter-spacing: -1.5px; color: var(--v-blue); margin-bottom: 40px; }
+        #flight-input { width: 100%; max-width: 300px; padding: 20px; border: 2px solid var(--v-gray); border-radius: 16px; font-size: 24px; text-align: center; margin-bottom: 20px; outline: none; transition: 0.3s; }
+        #flight-input:focus { border-color: var(--v-blue); }
+
+        /* HUD CARD */
+        #hud { height: 40vh; background: white; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.05); z-index: 10; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
-        .flight { font-size: 12px; font-weight: 700; color: #8e8e93; background: #f2f2f7; padding: 4px 10px; border-radius: 6px; }
+        .flight-code { font-size: 12px; font-weight: 700; color: #8e8e93; background: var(--v-gray); padding: 4px 10px; border-radius: 6px; }
+        .instruction { font-size: 28px; font-weight: 800; color: #1c1c1e; line-height: 1.1; margin-top: 5px; }
+        .detail { font-size: 16px; color: #636366; margin-top: 8px; font-weight: 500; }
 
-        .instruction { font-size: 28px; font-weight: 800; margin-top: 10px; color: var(--text-main); letter-spacing: -0.8px; line-height: 1.1; }
-        .detail { font-size: 16px; color: #636366; margin-top: 6px; font-weight: 500; }
-
-        .btn-group { display: flex; gap: 12px; margin-top: 20px; }
-        button { flex: 1; padding: 18px; background: var(--v-blue); color: #fff; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-group { display: flex; gap: 12px; margin-top: auto; padding-bottom: 10px; }
+        button { flex: 1; padding: 20px; background: var(--v-blue); color: #fff; border: none; border-radius: 18px; font-size: 17px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         button.alt { background: #e9e9eb; color: var(--v-blue); }
-        button:active { transform: scale(0.96); opacity: 0.9; }
+        button:active { transform: scale(0.96); }
     </style>
 </head>
 <body>
+
+<div id="entry-screen">
+    <div class="logo-placeholder">VELOCIS™</div>
+    <input type="text" id="flight-input" placeholder="Enter Flight #" maxlength="7">
+    <button onclick="engine.startMission()" style="max-width: 300px;">Start Mission</button>
+</div>
 
 <div id="map"></div>
 
 <div id="hud">
     <div class="top-row">
-        <div id="phase" class="tag">Departure Mission</div>
-        <div id="flight-tag" class="flight">AA2405</div>
+        <div id="phase" class="tag">System Initializing</div>
+        <div id="display-flight" class="flight-code">----</div>
     </div>
-
     <div>
-        <div id="main-text" class="instruction">Walk to Departures.</div>
-        <div id="sub-text" class="detail">Miami Int'l Airport | Terminal North</div>
+        <div id="main-text" class="instruction">Map Loading...</div>
+        <div id="sub-text" class="detail">Miami Int'l Airport | North</div>
     </div>
-
     <div class="btn-group">
         <button onclick="engine.next()">Got it, Next</button>
         <button class="alt" onclick="engine.arrival()">Landing Info</button>
@@ -51,41 +58,51 @@
 </div>
 
 <script>
-    // Sovereign Key Integration
     mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
     class VelocisEngine {
         constructor() {
             this.step = 0;
+            this.activeMarker = null; // Fix for double markers
             this.initMap();
         }
 
         initMap() {
             this.map = new mapboxgl.Map({
                 container: 'map',
-                style: 'mapbox://styles/mapbox/light-v11', 
+                style: 'mapbox://styles/mapbox/standard', 
                 center: [-80.2831, 25.7955], 
                 zoom: 16,
-                pitch: 50,
+                pitch: 65,
                 bearing: -20
             });
-
             this.map.on('style.load', () => {
-                // Adding a color tint to the airport surfaces to avoid the "bleached" look
-                this.map.setPaintProperty('building', 'fill-color', '#e5e5ea');
-                this.map.setPaintProperty('landuse', 'fill-color', '#d1d1d6');
+                this.map.setConfigProperty('basemap', 'lightPreset', 'day');
             });
         }
 
+        startMission() {
+            const input = document.getElementById('flight-input').value.toUpperCase();
+            if(!input) return;
+            
+            document.getElementById('display-flight').innerText = input;
+            document.getElementById('entry-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('entry-screen').style.display = 'none';
+                this.next(); // Start first step
+            }, 500);
+        }
+
         next() {
-            const missionNodes = [
-                { tag: "CHECK-IN", main: "Head to Counters 22-34.", sub: "American Airlines Zone", loc: [-80.2855, 25.7962] },
-                { tag: "SECURITY", main: "Go to Security D.", sub: "Follow overhead signs", loc: [-80.2872, 25.7968] },
-                { tag: "GATE", main: "Proceed to Gate D32.", sub: "Skytrain Station 3", loc: [-80.2915, 25.7981] }
+            const nodes = [
+                { tag: "DEPARTURE", main: "Head to Entrance D3.", sub: "Scan surroundings for terminal entry", loc: [-80.2831, 25.7955] },
+                { tag: "CHECK-IN", main: "Counters 22-34.", sub: "American Airlines Zone", loc: [-80.2855, 25.7962] },
+                { tag: "SECURITY", main: "Go to Security D.", sub: "Follow overhead signage", loc: [-80.2872, 25.7968] },
+                { tag: "GATE", main: "Go to Gate D32.", sub: "Skytrain Station 3", loc: [-80.2915, 25.7981] }
             ];
 
-            if (this.step < missionNodes.length) {
-                const n = missionNodes[this.step];
+            if (this.step < nodes.length) {
+                const n = nodes[this.step];
                 this.updateUI(n.tag, n.main, n.sub);
                 this.moveMap(n.loc);
                 this.step++;
@@ -104,10 +121,14 @@
         }
 
         moveMap(coords) {
-            this.map.flyTo({ center: coords, zoom: 18, pitch: 60, speed: 0.7 });
+            this.map.flyTo({ center: coords, zoom: 18, pitch: 70, speed: 0.6 });
+
+            // FIX: Remove old marker before creating new one
+            if (this.activeMarker) this.activeMarker.remove();
             
-            // Marker with custom vibrant blue
-            new mapboxgl.Marker({ color: "#007AFF" }).setLngLat(coords).addTo(this.map);
+            this.activeMarker = new mapboxgl.Marker({ color: "#007AFF" })
+                .setLngLat(coords)
+                .addTo(this.map);
         }
     }
 
