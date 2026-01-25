@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | 3D Mission Matrix</title>
+    <title>VELOCIS™ | Clear Path Guide</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
@@ -12,18 +12,18 @@
         
         #map { flex: 1; width: 100%; height: 60vh; background: #d1d1d6; }
 
-        /* FLIGHT ENTRY - FIXED BUTTON STRETCH */
+        /* WELCOME SCREEN - SIMPLE & CLEAN */
         #entry-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: opacity 0.5s ease; }
-        .logo-text { font-size: 38px; font-weight: 900; letter-spacing: -1.5px; color: var(--v-blue); margin-bottom: 30px; }
+        .logo-text { font-size: 38px; font-weight: 900; color: var(--v-blue); margin-bottom: 30px; letter-spacing: -1.5px; }
         #flight-input { width: 80%; max-width: 280px; padding: 18px; border: 2px solid var(--v-gray); border-radius: 14px; font-size: 22px; text-align: center; margin-bottom: 20px; outline: none; }
         .start-btn { width: 80%; max-width: 280px; height: 60px; background: var(--v-blue); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 18px; cursor: pointer; }
 
-        /* HUD CARD */
-        #hud { height: 40vh; background: white; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 28px 28px 0 0; box-shadow: 0 -12px 45px rgba(0,0,0,0.08); z-index: 10; border-top: 1px solid rgba(0,0,0,0.05); }
+        /* INFO CARD */
+        #hud { height: 40vh; background: white; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 28px 28px 0 0; box-shadow: 0 -12px 45px rgba(0,0,0,0.08); z-index: 10; }
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
         .flight-code { font-size: 13px; font-weight: 700; color: #8e8e93; background: var(--v-gray); padding: 5px 12px; border-radius: 8px; }
-        .instruction { font-size: 28px; font-weight: 800; color: #1c1c1e; line-height: 1.1; margin-top: 5px; letter-spacing: -0.5px; }
+        .instruction { font-size: 28px; font-weight: 800; color: #1c1c1e; line-height: 1.1; margin-top: 5px; }
         .detail { font-size: 16px; color: #636366; margin-top: 10px; font-weight: 500; }
 
         .btn-group { display: flex; gap: 12px; margin-top: auto; padding-bottom: 15px; }
@@ -62,7 +62,7 @@
     class VelocisEngine {
         constructor() {
             this.step = 0;
-            this.activeMarker = null; 
+            this.activeMarker = null; // This is the "brain" that remembers the pin
             this.initMap();
         }
 
@@ -100,14 +100,14 @@
             if (this.step < nodes.length) {
                 const n = nodes[this.step];
                 this.updateUI(n.tag, n.main, n.sub);
-                this.moveMap(n.loc);
+                this.placeSinglePin(n.loc);
                 this.step++;
             }
         }
 
         arrival() {
             this.updateUI("ARRIVAL", "Carousel 12.", "Baggage Claim Level");
-            this.moveMap([-80.2850, 25.7940]);
+            this.placeSinglePin([-80.2850, 25.7940]);
         }
 
         updateUI(tag, main, sub) {
@@ -116,10 +116,18 @@
             document.getElementById('sub-text').innerText = sub;
         }
 
-        moveMap(coords) {
-            this.map.flyTo({ center: coords, zoom: 18, pitch: 72, speed: 0.65 });
-            if (this.activeMarker) this.activeMarker.remove();
-            this.activeMarker = new mapboxgl.Marker({ color: "#007AFF" }).setLngLat(coords).addTo(this.map);
+        placeSinglePin(coords) {
+            this.map.flyTo({ center: coords, zoom: 18, pitch: 70, speed: 0.6 });
+
+            // PLAIN ENGLISH FIX: Remove the old pin if it exists
+            if (this.activeMarker) {
+                this.activeMarker.remove();
+            }
+            
+            // Create the only pin the user will see
+            this.activeMarker = new mapboxgl.Marker({ color: "#007AFF" })
+                .setLngLat(coords)
+                .addTo(this.map);
         }
     }
     const engine = new VelocisEngine();
