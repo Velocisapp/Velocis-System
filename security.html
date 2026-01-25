@@ -7,46 +7,57 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
+        :root { --velocis-blue: #007AFF; --ui-bg: rgba(255, 255, 255, 0.98); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        
         header { 
             position: absolute; top: 0; width: 100%; background: rgba(255,255,255,0.95); 
             padding: 15px; z-index: 10; text-align: center; font-weight: 900; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+
         #search-container {
             position: absolute; top: 75px; left: 20px; z-index: 20; 
             background: white; padding: 10px; border-radius: 12px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; gap: 8px;
             border: 1px solid rgba(0,0,0,0.1);
         }
+
         #gate-search {
             padding: 10px; border: 1px solid #ddd; border-radius: 6px; 
             outline: none; width: 180px; font-size: 14px;
         }
+
         #fly-button {
-            background: #007AFF; color: white; border: none; 
+            background: var(--velocis-blue); color: white; border: none; 
             padding: 10px 18px; border-radius: 6px; cursor: pointer; 
             font-weight: bold; transition: background 0.2s;
         }
+
         #info-panel {
-            position: absolute; right: -320px; top: 75px; width: 280px;
-            background: rgba(255, 255, 255, 0.98); z-index: 30;
-            padding: 20px; border-radius: 12px; box-shadow: -5px 0 20px rgba(0,0,0,0.2);
-            transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; right: -350px; top: 75px; width: 300px;
+            background: var(--ui-bg); z-index: 30; padding: 24px;
+            border-radius: 16px; box-shadow: -10px 0 40px rgba(0,0,0,0.2);
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
         }
         #info-panel.active { right: 20px; }
-        .info-header { font-weight: 900; color: #007AFF; margin-bottom: 5px; }
-        .info-body { font-size: 13px; color: #333; line-height: 1.4; }
+        .info-header { font-weight: 900; color: var(--velocis-blue); font-size: 22px; margin-bottom: 8px; }
+        .info-body { font-size: 14px; color: #444; line-height: 1.5; }
+        
+        .algo-log { 
+            margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;
+            font-family: monospace; font-size: 11px; color: #888;
+        }
 
         .pulse-marker {
-            width: 22px; height: 22px; background: rgba(0, 122, 255, 1);
-            border: 3px solid white; border-radius: 50%;
+            width: 24px; height: 24px; background: var(--velocis-blue);
+            border: 4px solid white; border-radius: 50%; box-shadow: 0 0 20px rgba(0,122,255,0.6);
         }
         .pulse-marker::after {
-            content: ''; width: 22px; height: 22px; background: #007AFF;
+            content: ''; width: 24px; height: 24px; background: var(--velocis-blue);
             border-radius: 50%; position: absolute;
-            animation: beacon-pulse 1.5s infinite;
+            animation: beacon-pulse 2s infinite;
         }
         @keyframes beacon-pulse {
             0% { transform: scale(1); opacity: 0.8; }
@@ -65,6 +76,7 @@
     <div id="info-panel">
         <div class="info-header" id="panel-title">MISSION DETAIL</div>
         <div class="info-body" id="panel-desc">Waiting for destination...</div>
+        <div class="algo-log" id="algo-status">ENGINE IDLE</div>
     </div>
 
     <div id="map"></div>
@@ -83,45 +95,63 @@
         el.className = 'pulse-marker';
         const marker = new mapboxgl.Marker(el);
 
-        // DISCOVERY ALGORITHM
-        document.getElementById('fly-button').addEventListener('click', () => {
-            const gateID = document.getElementById('gate-search').value.toUpperCase().trim();
-            
-            // 1. Force the map to the general area to ensure 3D layers are "awake"
-            map.easeTo({ center: [-80.2831, 25.7960], zoom: 18 });
+        // LAYER 1: DETERMINISTIC REGISTRY (Geometric Anchors)
+        const GRID_LOCK_REGISTRY = {
+            'D34': { center: [-80.28315, 25.79625], meta: "Concourse D North • Level 2" },
+            'SUBWAY': { center: [-80.2831, 25.7958], meta: "Dining Area • Level 2" }
+        };
 
+        // THE GRID-LOCK ALGORITHM
+        async function runGridLockAlgorithm(targetID) {
+            const log = document.getElementById('algo-status');
+            const destination = GRID_LOCK_REGISTRY[targetID];
+            
+            log.innerHTML = "INITIALIZING GRID-LOCK...";
+
+            if (!destination) {
+                log.innerHTML = "ERROR: ID NOT IN REGISTRY";
+                alert("Gate not found in registry."); return;
+            }
+
+            // STAGE 1: GEOMETRIC DESCENT
+            log.innerHTML += "<br>STAGE 1: DESCENT TO REGISTRY ANCHOR...";
+            map.flyTo({
+                center: destination.center,
+                zoom: 19.2,
+                pitch: 60,
+                bearing: -15,
+                duration: 3000,
+                essential: true
+            });
+
+            // STAGE 2: SPATIAL HANDSHAKE (Mesh Scan)
             setTimeout(() => {
-                // 2. Query rendered features for the ID
+                log.innerHTML += "<br>STAGE 2: INTERROGATING 3D MESH...";
                 const features = map.queryRenderedFeatures({
                     layers: ['label-sm', 'label-md', 'label-lg', 'poi-label']
                 });
 
-                // 3. Analytic match
-                const target = features.find(f => 
-                    f.properties.name && f.properties.name.toUpperCase().includes(gateID)
+                const meshMatch = features.find(f => 
+                    f.properties.name && f.properties.name.toUpperCase().includes(targetID)
                 );
 
-                if (target) {
-                    const coords = target.geometry.coordinates;
-                    
-                    // 4. Target lock
-                    map.flyTo({
-                        center: coords,
-                        zoom: 19.8,
-                        pitch: 65,
-                        bearing: -15,
-                        duration: 3500,
-                        essential: true
-                    });
-
-                    // Place the pulsating beacon at the exact geometric center
-                    marker.setLngLat(coords).addTo(map);
-
-                    updateInfoPanel(gateID, "GATE IDENTIFIED. Interior floorplans synchronized. Mission active.");
+                if (meshMatch) {
+                    log.innerHTML += "<br>SUCCESS: MESH SYNCED. SNAPPING TO ID.";
+                    const finalCoords = meshMatch.geometry.coordinates;
+                    map.easeTo({ center: finalCoords, zoom: 19.8, duration: 800 });
+                    marker.setLngLat(finalCoords).addTo(map);
                 } else {
-                    alert("Gate ID not found. Ensure you are searching for 'D34'.");
+                    log.innerHTML += "<br>NOTICE: MESH TIMEOUT. LOCKING ANCHOR.";
+                    marker.setLngLat(destination.center).addTo(map);
                 }
-            }, 500);
+
+                updateInfoPanel(targetID, destination.meta);
+            }, 2600);
+        }
+
+        document.getElementById('fly-button').addEventListener('click', () => {
+            const gateID = document.getElementById('gate-search').value.toUpperCase().trim();
+            runGridLockAlgorithm(gateID);
         });
 
         function updateInfoPanel(title, desc) {
