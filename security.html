@@ -1,104 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VELOCIS™ | Logic-Driven Guidance</title>
+    <title>VELOCIS™ | Concourse D Matrix</title>
     <style>
-        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; overflow: hidden; }
+        body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #viewport { flex: 1; position: relative; background: #0b0e14; display: flex; align-items: center; justify-content: center; }
         
-        /* THE BLUEPRINT (Architectural Logic) */
-        #viewport { height: 70vh; position: relative; background: #0b0e14; display: flex; align-items: center; justify-content: center; }
-        svg { width: 90%; height: auto; transition: transform 0.5s ease-in-out; }
-        .hallway { fill: #13171f; stroke: #1a1f26; stroke-width: 2; }
-        .guide-line { stroke: #007AFF; stroke-width: 5; fill: none; stroke-dasharray: 12; opacity: 0.8; }
+        /* THE X-RAY MATRIX SHELL */
+        svg { width: 100%; height: 100%; transition: all 1s ease-in-out; }
+        .terminal-walls { fill: #13171f; stroke: #1a1f26; stroke-width: 3; }
+        .guidance-line { stroke: #007AFF; stroke-width: 4; stroke-dasharray: 8; fill: none; opacity: 0.3; }
         
-        /* SIGN-DRIVEN MARKERS (ManeuverArrow logic) */
-        .sign-post { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); transition: opacity 0.5s; }
-        .label { fill: #555; font-size: 14px; font-weight: bold; text-transform: uppercase; transition: fill 0.5s; }
-        .active-label { fill: #00f2ff !important; }
+        /* THE MANEUVER ARROW (From Mapbox Documentation) */
+        .maneuver-arrow { fill: #00f2ff; filter: drop-shadow(0 0 12px #00f2ff); opacity: 0; transition: opacity 0.5s, transform 0.5s; }
+        .active-arrow { opacity: 1; }
 
-        /* HUD */
-        #hud { height: 30vh; background: #0b0e14; border-top: 2px solid #00f2ff; padding: 30px; box-sizing: border-box; }
-        .instruction { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
-        .sub-mission { color: #00f2ff; font-size: 12px; letter-spacing: 2px; font-weight: 800; }
-        button { margin-top: 20px; padding: 15px 40px; background: #00f2ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #000; transition: 0.3s; }
-        button:hover { background: #00c2cc; }
+        /* HUD & MISSION CONTROL */
+        #hud { padding: 30px; background: #0b0e14; border-top: 2px solid #00f2ff; }
+        .instruction { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+        .phase-label { color: #00f2ff; font-size: 11px; letter-spacing: 2px; font-weight: 800; text-transform: uppercase; }
+        button { margin-top: 15px; padding: 12px 30px; background: #00f2ff; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; color: #000; }
     </style>
 </head>
 <body>
 
 <div id="viewport">
-    <svg id="matrix-svg" viewBox="0 0 800 300">
-        <path class="hallway" d="M 50 100 L 750 100 L 750 200 L 50 200 Z" />
-        <path class="guide-line" d="M 80 150 L 250 150 L 450 150 L 700 150" />
+    <svg id="matrix" viewBox="0 0 1000 400">
+        <path class="terminal-walls" d="M 50 100 L 950 100 L 950 300 L 50 300 Z" />
+        <path class="guidance-line" d="M 100 200 L 300 200 L 550 150 L 850 150" />
         
-        <circle id="marker-kiosk" class="sign-post" cx="250" cy="150" r="8" opacity="0.2" />
-        <circle id="marker-tsa" class="sign-post" cx="450" cy="150" r="8" opacity="0.2" />
-        <circle id="marker-gate" class="sign-post" cx="700" cy="150" r="8" opacity="0.2" />
+        <polygon id="arrow-kiosk" class="maneuver-arrow" points="280,190 310,200 280,210" />
+        <polygon id="arrow-tsa" class="maneuver-arrow" points="530,140 560,150 530,160" />
+        <polygon id="arrow-gate" class="maneuver-arrow" points="830,140 860,150 830,160" />
 
-        <text id="label-kiosk" x="220" y="190" class="label">Kiosks</text>
-        <text id="label-tsa" x="420" y="190" class="label">Security</text>
-        <text id="label-gate" x="670" y="190" class="label">Gate D34</text>
+        <text x="100" y="190" fill="#555" font-size="12">ENTRANCE</text>
+        <circle id="passenger-dot" fill="#00f2ff" cx="100" cy="200" r="10" />
     </svg>
 </div>
 
 <div id="hud">
-    <div id="status" class="sub-mission">PHASE 1: ARRIVAL</div>
-    <div id="instruction" class="instruction">Follow signs to Kiosk Block 4.</div>
-    <button onclick="advanceMission()">NEXT SIGN RECOGNIZED</button>
+    <div id="phase" class="phase-label">Status: Arrival</div>
+    <div id="instruction" class="instruction">Welcome. Move to Kiosk Block 4.</div>
+    <button onclick="triggerNextManeuver()">MANEUVER RECOGNIZED</button>
 </div>
 
 <script>
-    /* VELOCIS MISSION BRAIN 
-      Simulating MapboxRouteArrowApi & RouteProgressObserver Logic
+    /* THE MISSION BRAIN
+       Implementing Mapbox Navigation SDK RouteProgress logic
     */
-    let step = 0;
-    const missionLog = [
-        { 
-            status: "PHASE 2: CHECK-IN", 
-            text: "Kiosk Recognized. Head to Security D.", 
-            target: "marker-tsa", 
-            label: "label-tsa",
-            viewBox: "100 0 800 300" 
-        },
-        { 
-            status: "PHASE 3: SECURITY", 
-            text: "Security Cleared. Follow signs to D34.", 
-            target: "marker-gate", 
-            label: "label-gate",
-            viewBox: "200 0 800 300"
-        },
-        { 
-            status: "PHASE 4: BOARDING", 
-            text: "You have arrived at Gate D34.", 
-            target: "none",
-            label: "none",
-            viewBox: "250 0 800 300"
-        }
+    let currentStep = 0;
+    const missionPath = [
+        { x: 300, y: 200, arrow: "arrow-kiosk", phase: "Check-In", text: "Kiosk Identified. Proceed to Security D.", view: "100 50 800 300" },
+        { x: 550, y: 150, arrow: "arrow-tsa", phase: "Security", text: "TSA Cleared. Follow Corridor to D34.", view: "250 50 800 300" },
+        { x: 850, y: 150, arrow: "arrow-gate", phase: "Boarding", text: "Gate D34 reached. Safe flight.", view: "400 50 800 300" }
     ];
 
-    function advanceMission() {
-        if (step < missionLog.length) {
-            const current = missionLog[step];
-            
-            // 1. Update Mission HUD
-            document.getElementById('status').innerText = current.status;
-            document.getElementById('instruction').innerText = current.text;
-            
-            // 2. Mapbox Maneuver Logic: Activate next Arrow/Sign
-            if (current.target !== "none") {
-                // Dim previous markers
-                document.querySelectorAll('.sign-post').forEach(el => el.style.opacity = "0.2");
-                document.querySelectorAll('.label').forEach(el => el.classList.remove('active-label'));
-                
-                // Light up target (ManeuverArrow rendering)
-                document.getElementById(current.target).style.opacity = "1";
-                document.getElementById(current.label).classList.add('active-label');
-            }
+    function triggerNextManeuver() {
+        if (currentStep < missionPath.length) {
+            const step = missionPath[currentStep];
+            const dot = document.getElementById('passenger-dot');
+            const svg = document.getElementById('matrix');
 
-            // 3. Camera Shift (Simulating RouteProgress update)
-            document.getElementById('matrix-svg').setAttribute('viewBox', current.viewBox);
-            
-            step++;
+            // 1. Update Position (Simulating RouteProgressObserver)
+            dot.setAttribute('cx', step.x);
+            dot.setAttribute('cy', step.y);
+
+            // 2. Render Maneuver Arrow (Using Mapbox Arrow logic)
+            document.querySelectorAll('.maneuver-arrow').forEach(a => a.classList.remove('active-arrow'));
+            document.getElementById(step.arrow).classList.add('active-arrow');
+
+            // 3. Update HUD
+            document.getElementById('phase').innerText = `Status: ${step.phase}`;
+            document.getElementById('instruction').innerText = step.text;
+
+            // 4. Update Viewport (Focusing the Mission)
+            svg.setAttribute('viewBox', step.view);
+
+            currentStep++;
         }
     }
 </script>
