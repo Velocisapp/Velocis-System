@@ -7,61 +7,97 @@
         
         /* THE BLUEPRINT (Architectural Logic) */
         #viewport { height: 70vh; position: relative; background: #0b0e14; display: flex; align-items: center; justify-content: center; }
-        svg { width: 90%; height: auto; }
+        svg { width: 90%; height: auto; transition: transform 0.5s ease-in-out; }
         .hallway { fill: #13171f; stroke: #1a1f26; stroke-width: 2; }
         .guide-line { stroke: #007AFF; stroke-width: 5; fill: none; stroke-dasharray: 12; opacity: 0.8; }
         
-        /* SIGN-DRIVEN MARKERS */
-        .sign-post { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); }
-        .label { fill: #555; font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        /* SIGN-DRIVEN MARKERS (ManeuverArrow logic) */
+        .sign-post { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); transition: opacity 0.5s; }
+        .label { fill: #555; font-size: 14px; font-weight: bold; text-transform: uppercase; transition: fill 0.5s; }
+        .active-label { fill: #00f2ff !important; }
 
         /* HUD */
         #hud { height: 30vh; background: #0b0e14; border-top: 2px solid #00f2ff; padding: 30px; box-sizing: border-box; }
         .instruction { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
         .sub-mission { color: #00f2ff; font-size: 12px; letter-spacing: 2px; font-weight: 800; }
+        button { margin-top: 20px; padding: 15px 40px; background: #00f2ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #000; transition: 0.3s; }
+        button:hover { background: #00c2cc; }
     </style>
 </head>
 <body>
 
 <div id="viewport">
-    <svg viewBox="0 0 800 300">
+    <svg id="matrix-svg" viewBox="0 0 800 300">
         <path class="hallway" d="M 50 100 L 750 100 L 750 200 L 50 200 Z" />
-        
         <path class="guide-line" d="M 80 150 L 250 150 L 450 150 L 700 150" />
         
         <circle id="marker-kiosk" class="sign-post" cx="250" cy="150" r="8" opacity="0.2" />
         <circle id="marker-tsa" class="sign-post" cx="450" cy="150" r="8" opacity="0.2" />
         <circle id="marker-gate" class="sign-post" cx="700" cy="150" r="8" opacity="0.2" />
 
-        <text x="220" y="190" class="label">Kiosks</text>
-        <text x="420" y="190" class="label">Security</text>
-        <text x="670" y="190" class="label" style="fill:#00f2ff">Gate D34</text>
+        <text id="label-kiosk" x="220" y="190" class="label">Kiosks</text>
+        <text id="label-tsa" x="420" y="190" class="label">Security</text>
+        <text id="label-gate" x="670" y="190" class="label">Gate D34</text>
     </svg>
 </div>
 
 <div id="hud">
     <div id="status" class="sub-mission">PHASE 1: ARRIVAL</div>
     <div id="instruction" class="instruction">Follow signs to Kiosk Block 4.</div>
-    <button onclick="advanceMission()" style="margin-top:20px; padding: 15px 40px; background: #00f2ff; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">NEXT SIGN RECOGNIZED</button>
+    <button onclick="advanceMission()">NEXT SIGN RECOGNIZED</button>
 </div>
 
 <script>
+    /* VELOCIS MISSION BRAIN 
+      Simulating MapboxRouteArrowApi & RouteProgressObserver Logic
+    */
     let step = 0;
-    const path = [
-        { status: "PHASE 2: CHECK-IN", text: "Kiosk Recognized. Head to Security D.", target: "marker-tsa" },
-        { status: "PHASE 3: SECURITY", text: "Security Cleared. Follow signs to D34.", target: "marker-gate" },
-        { status: "PHASE 4: BOARDING", text: "You have arrived at Gate D34.", target: "none" }
+    const missionLog = [
+        { 
+            status: "PHASE 2: CHECK-IN", 
+            text: "Kiosk Recognized. Head to Security D.", 
+            target: "marker-tsa", 
+            label: "label-tsa",
+            viewBox: "100 0 800 300" 
+        },
+        { 
+            status: "PHASE 3: SECURITY", 
+            text: "Security Cleared. Follow signs to D34.", 
+            target: "marker-gate", 
+            label: "label-gate",
+            viewBox: "200 0 800 300"
+        },
+        { 
+            status: "PHASE 4: BOARDING", 
+            text: "You have arrived at Gate D34.", 
+            target: "none",
+            label: "none",
+            viewBox: "250 0 800 300"
+        }
     ];
 
     function advanceMission() {
-        if (step < path.length) {
-            const current = path[step];
+        if (step < missionLog.length) {
+            const current = missionLog[step];
+            
+            // 1. Update Mission HUD
             document.getElementById('status').innerText = current.status;
             document.getElementById('instruction').innerText = current.text;
             
+            // 2. Mapbox Maneuver Logic: Activate next Arrow/Sign
             if (current.target !== "none") {
+                // Dim previous markers
+                document.querySelectorAll('.sign-post').forEach(el => el.style.opacity = "0.2");
+                document.querySelectorAll('.label').forEach(el => el.classList.remove('active-label'));
+                
+                // Light up target (ManeuverArrow rendering)
                 document.getElementById(current.target).style.opacity = "1";
+                document.getElementById(current.label).classList.add('active-label');
             }
+
+            // 3. Camera Shift (Simulating RouteProgress update)
+            document.getElementById('matrix-svg').setAttribute('viewBox', current.viewBox);
+            
             step++;
         }
     }
