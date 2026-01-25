@@ -1,85 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VELOCIS™ | Matrix Rebuild</title>
+    <title>VELOCIS™ | Integrated Mission Matrix</title>
     <style>
         body { margin: 0; background: #05070a; font-family: -apple-system, sans-serif; color: #fff; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* THE VISUAL SHELL (Replacing the black void) */
-        #matrix-viewport { flex: 1; position: relative; background: #0b111a; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        /* THE VISUAL VIEWPORT */
+        #viewport { flex: 1; position: relative; background: #0b111a; display: flex; align-items: center; justify-content: center; }
         svg { width: 100%; height: 100%; transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* ARCHITECTURAL LAYERS */
-        .terminal-floor { fill: #131b26; stroke: #1f2937; stroke-width: 3; }
-        .active-path { stroke: #007AFF; stroke-width: 5; fill: none; stroke-dasharray: 10; opacity: 0.5; }
+        /* ARCHITECTURAL INFRASTRUCTURE */
+        .terminal-floor { fill: #131b26; stroke: #1f2937; stroke-width: 2; }
+        .logic-path { stroke: #007AFF; stroke-width: 3; fill: none; stroke-dasharray: 6; opacity: 0.3; }
         
-        /* MANEUVER ARROWS (Mapbox SDK Implementation) */
-        .guidance-arrow { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); opacity: 0; transition: opacity 0.5s; }
-        .active { opacity: 1 !important; }
+        /* MANEUVER NODES (THE SIGNS) */
+        .maneuver-arrow { fill: #00f2ff; filter: drop-shadow(0 0 10px #00f2ff); opacity: 0; transition: opacity 0.5s; }
+        .active-node { opacity: 1 !important; }
 
-        /* THE MISSION HUD */
-        #hud { height: 25vh; background: #0b111a; border-top: 3px solid #00f2ff; padding: 25px; box-sizing: border-box; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
-        .phase-tag { color: #00f2ff; font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
-        .instruction-main { font-size: 24px; font-weight: 700; color: #ffffff; }
-        button { margin-top: 15px; padding: 12px 35px; background: #00f2ff; color: #000; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+        /* MISSION CONTROL HUD */
+        #hud { height: 28vh; background: #0b111a; border-top: 3px solid #00f2ff; padding: 25px; box-sizing: border-box; }
+        .phase-label { color: #00f2ff; font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .instruction { font-size: 24px; font-weight: 700; color: #fff; line-height: 1.2; }
+        .metadata { font-family: monospace; font-size: 11px; color: #4b5563; margin-top: 10px; }
+        
+        button { margin-top: 15px; padding: 12px 40px; background: #00f2ff; color: #000; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div id="matrix-viewport">
+<div id="viewport">
     <svg id="matrix-svg" viewBox="0 0 1000 400">
-        <path class="terminal-floor" d="M 50 100 L 950 100 L 950 300 L 50 300 Z" />
-        
-        <path class="active-path" d="M 80 200 L 250 200 L 500 150 L 900 150" />
+        <path class="terminal-floor" d="M 50 80 L 950 80 L 950 320 L 50 320 Z" />
+        <path class="logic-path" d="M 100 200 L 350 200 L 650 150 L 900 150" />
 
-        <polygon id="arrow-kiosk" class="guidance-arrow" points="230,190 260,200 230,210" />
-        <polygon id="arrow-tsa" class="guidance-arrow active" points="480,140 510,150 480,160" />
-        <polygon id="arrow-gate" class="guidance-arrow" points="880,140 910,150 880,160" />
+        <polygon id="sign-kiosk" class="maneuver-arrow" points="330,190 360,200 330,210" />
+        <polygon id="sign-tsa" class="maneuver-arrow" points="630,140 660,150 630,160" />
+        <polygon id="sign-gate" class="maneuver-arrow" points="880,140 910,150 880,160" />
 
-        <text x="70" y="235" fill="#4b5563" font-size="12" font-weight="bold">ENTRANCE</text>
-        <text x="220" y="235" fill="#4b5563" font-size="12" font-weight="bold">KIOSKS</text>
-        <text x="470" y="130" fill="#4b5563" font-size="12" font-weight="bold">SECURITY D</text>
-        <text x="870" y="130" fill="#00f2ff" font-size="14" font-weight="bold">GATE D34</text>
+        <text x="90" y="240" fill="#4b5563" font-size="10" font-weight="900">ENTRY D3</text>
+        <text x="320" y="240" fill="#4b5563" font-size="10" font-weight="900">COUNTER 4</text>
+        <text x="620" y="130" fill="#4b5563" font-size="10" font-weight="900">SECURITY D</text>
+        <text x="875" y="130" fill="#00f2ff" font-size="12" font-weight="900">GATE D34</text>
 
-        <circle id="passenger-dot" cx="80" cy="200" r="10" fill="#00f2ff" />
+        <circle id="user-puck" cx="100" cy="200" r="12" fill="#00f2ff" />
     </svg>
 </div>
 
 <div id="hud">
-    <div id="phase-tag" class="phase-tag">Mission: Arrival</div>
-    <div id="instruction" class="instruction-main">Follow signs to Kiosk Block 4.</div>
-    <button onclick="advanceMission()">Simulate Next Sign</button>
+    <div id="phase" class="phase-label">Mission: Initialized</div>
+    <div id="instruction" class="instruction">Approach American Airlines Counter 4.</div>
+    <div id="geo-data" class="metadata">Node Anchor: 25.7955, -80.2831</div>
+    <button onclick="triggerUpdate()">Recognize Node</button>
 </div>
 
 <script>
-    let missionStep = 0;
-    const missionData = [
-        { cx: 250, cy: 200, arrow: "arrow-kiosk", tag: "CHECK-IN", text: "Kiosks reached. Head to Security D.", view: "0 50 1000 400" },
-        { cx: 500, cy: 150, arrow: "arrow-tsa", tag: "SECURITY", text: "Security D Cleared. Proceed to D34.", view: "200 50 800 300" },
-        { cx: 900, cy: 150, arrow: "arrow-gate", tag: "GATE REACHED", text: "Welcome to Gate D34. Safe Flight!", view: "400 50 600 300" }
+    /* THE INDEPENDENT BRAIN
+       This script manages the Mission State.
+    */
+    let currentStep = 0;
+    const missionMatrix = [
+        { x: 350, y: 200, sign: "sign-kiosk", phase: "CHECK-IN", text: "Counter reached. Proceed to Security D.", lat: "25.7962", lon: "-80.2855", view: "0 0 1000 400" },
+        { x: 650, y: 150, sign: "sign-tsa", phase: "SECURITY", text: "Security Cleared. Proceed to Gate D34.", lat: "25.7968", lon: "-80.2872", view: "200 0 800 400" },
+        { x: 900, y: 150, sign: "sign-gate", phase: "OBJECTIVE", text: "Arrived at Gate D34. Safe Flight.", lat: "25.7981", lon: "-80.2915", view: "400 0 600 400" }
     ];
 
-    function advanceMission() {
-        if (missionStep < missionData.length) {
-            const data = missionData[missionStep];
+    function triggerUpdate() {
+        if (currentStep < missionMatrix.length) {
+            const node = missionMatrix[currentStep];
             
-            // 1. Move the Brain
-            const dot = document.getElementById('passenger-dot');
-            dot.setAttribute('cx', data.cx);
-            dot.setAttribute('cy', data.cy);
+            // 1. Update Physical Position (The Puck)
+            const puck = document.getElementById('user-puck');
+            puck.setAttribute('cx', node.x);
+            puck.setAttribute('cy', node.y);
 
-            // 2. Update Arrows (ManeuverArrow Logic)
-            document.querySelectorAll('.guidance-arrow').forEach(a => a.classList.remove('active'));
-            document.getElementById(data.arrow).classList.add('active');
+            // 2. Activate Signage (The Maneuver Arrow)
+            document.querySelectorAll('.maneuver-arrow').forEach(s => s.classList.remove('active-node'));
+            document.getElementById(node.sign).classList.add('active-node');
 
-            // 3. Update Camera (The Auto-Pan)
-            document.getElementById('matrix-svg').setAttribute('viewBox', data.view);
+            // 3. Update Intelligence HUD
+            document.getElementById('phase').innerText = `Mission: ${node.phase}`;
+            document.getElementById('instruction').innerText = node.text;
+            document.getElementById('geo-data').innerText = `Node Anchor: ${node.lat}, ${node.lon}`;
 
-            // 4. Update HUD
-            document.getElementById('phase-tag').innerText = `Mission: ${data.tag}`;
-            document.getElementById('instruction').innerText = data.text;
+            // 4. Update Viewport (Focusing the Matrix)
+            document.getElementById('matrix-svg').setAttribute('viewBox', node.view);
 
-            missionStep++;
+            currentStep++;
         }
     }
 </script>
