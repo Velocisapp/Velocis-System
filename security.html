@@ -2,24 +2,32 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Integrated Mission Controller</title>
+    <title>VELOCIS™ | Clean Travel Guide</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <style>
-        :root { --cyan: #00f2ff; --bg: #05070a; --hud: #0b111a; }
-        body { margin: 0; background: var(--bg); font-family: -apple-system, sans-serif; color: #fff; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { --velocis-blue: #007AFF; --text-main: #1d1d1f; --bg-light: #f5f5f7; }
+        body { margin: 0; padding: 0; background: var(--bg-light); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text-main); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* FIX: Absolute height ensures the 3D Matrix renders immediately */
-        #map { flex: 1; width: 100%; height: 70vh; background: #000; }
+        /* The Visual Map - Bright & Clear */
+        #map { flex: 1; width: 100%; height: 65vh; background: #e5e5e5; }
 
-        /* THE MISSION HUD */
-        #hud { height: 30vh; background: var(--hud); border-top: 2px solid var(--cyan); padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
-        .phase-tag { color: var(--cyan); font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-        .instruction { font-size: 24px; font-weight: 700; margin-top: 8px; line-height: 1.2; }
-        .meta { color: #4b5563; font-size: 12px; font-family: monospace; margin-top: 5px; }
+        /* The Mission Card - Modern Light Theme */
+        #hud { height: 35vh; background: #ffffff; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border-radius: 20px 20px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 10; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .phase-tag { color: var(--velocis-blue); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .airline-info { font-size: 13px; font-weight: 600; color: #86868b; }
 
-        button { margin-top: 15px; width: 100%; padding: 15px; background: var(--cyan); color: #000; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        .instruction { font-size: 26px; font-weight: 700; margin-top: 10px; color: var(--text-main); line-height: 1.1; letter-spacing: -0.5px; }
+        .sub-text { font-size: 15px; color: #86868b; margin-top: 8px; font-weight: 500; }
+
+        /* Action Buttons */
+        .controls { display: flex; gap: 12px; margin-top: 20px; }
+        button { flex: 1; padding: 18px; background: var(--velocis-blue); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        button.secondary { background: #f2f2f7; color: var(--velocis-blue); }
+        button:active { transform: scale(0.98); opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -27,58 +35,79 @@
 <div id="map"></div>
 
 <div id="hud">
-    <div>
-        <div id="phase" class="phase-tag">Mission Status: Initialized</div>
-        <div id="instruction" class="instruction">Scan for Entrance D3 at MIA North.</div>
-        <div id="metadata" class="meta">Node Anchor: 25.7955, -80.2831</div>
+    <div class="header">
+        <div id="phase" class="phase-tag">Mission Started</div>
+        <div class="airline-info">FLIGHT AA2405</div>
     </div>
-    <button onclick="engine.advance()">Validate Current Node</button>
+
+    <div>
+        <div id="instruction" class="instruction">Walk inside toward Departures.</div>
+        <div id="sub-instruction" class="sub-text">Miami International Airport | Terminal North</div>
+    </div>
+
+    <div class="controls">
+        <button id="main-btn" onclick="guide.next()">Got it, Next Step</button>
+        <button class="secondary" onclick="guide.arrival()">Landing info</button>
+    </div>
 </div>
 
 <script>
-    // 1. YOUR TOKEN INTEGRATION (Sovereign Key)
+    // YOUR SOVEREIGN KEY
     mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-    class VelocisEngine {
+    class VelocisGuide {
         constructor() {
             this.step = 0;
-            this.map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/navigation-night-v1', // High-contrast Matrix style
-                center: [-80.2831, 25.7955], // MIA Concourse D Entry
-                zoom: 16,
-                pitch: 60,
-                bearing: -20
-            });
-
-            this.nodes = [
-                { name: "CHECK-IN", text: "Proceed to Counters 22-34.", coords: [-80.2855, 25.7962], zoom: 17.5 },
-                { name: "SECURITY", text: "Clear Security Checkpoint D.", coords: [-80.2872, 25.7968], zoom: 18 },
-                { name: "OBJECTIVE", text: "Take Skytrain to Gate D32.", coords: [-80.2915, 25.7981], zoom: 18.5 }
-            ];
+            this.initMap();
         }
 
-        advance() {
-            if (this.step < this.nodes.length) {
-                const mission = this.nodes[this.step];
-                
-                // Update the Matrix View
-                this.map.flyTo({ center: mission.coords, zoom: mission.zoom, speed: 0.8 });
-                
-                // Add the Cyan Node Pin
-                new mapboxgl.Marker({ color: "#00f2ff" }).setLngLat(mission.coords).addTo(this.map);
+        initMap() {
+            this.map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/light-v11', // BRIGHT DAYLIGHT STYLE
+                center: [-80.2831, 25.7955], // MIA Entry
+                zoom: 16.5,
+                pitch: 45,
+                antialias: true
+            });
+        }
 
-                // Update the HUD Intelligence
-                document.getElementById('phase').innerText = `Mission Status: ${mission.name}`;
-                document.getElementById('instruction').innerText = mission.text;
-                document.getElementById('metadata').innerText = `Node Anchor: ${mission.coords[1]}, ${mission.coords[0]}`;
+        next() {
+            const steps = [
+                { title: "CHECK-IN", text: "Head to Counters 22-34.", sub: "American Airlines Zone", coords: [-80.2855, 25.7962] },
+                { title: "SECURITY", text: "Go to Security Checkpoint D.", sub: "Follow overhead signs", coords: [-80.2872, 25.7968] },
+                { title: "BOARDING", text: "Walk to Gate D32.", sub: "Skytrain is available", coords: [-80.2915, 25.7981] }
+            ];
 
+            if (this.step < steps.length) {
+                const s = steps[this.step];
+                this.updateUI(s.title, s.text, s.sub);
+                this.updateMap(s.coords);
                 this.step++;
             }
         }
+
+        arrival() {
+            this.updateUI("ARRIVAL", "Go to Carousel 12.", "Baggage Claim Level");
+            this.updateMap([-80.2850, 25.7940]);
+        }
+
+        updateUI(title, main, sub) {
+            document.getElementById('phase').innerText = title;
+            document.getElementById('instruction').innerText = main;
+            document.getElementById('sub-instruction').innerText = sub;
+        }
+
+        updateMap(coords) {
+            // Smooth "Fly-To" camera movement
+            this.map.flyTo({ center: coords, zoom: 18, pitch: 60, speed: 0.8 });
+            
+            // Bright Blue Marker
+            new mapboxgl.Marker({ color: "#007AFF" }).setLngLat(coords).addTo(this.map);
+        }
     }
 
-    const engine = new VelocisEngine();
+    const guide = new VelocisGuide();
 </script>
 </body>
 </html>
