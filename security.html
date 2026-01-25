@@ -47,9 +47,10 @@
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard', 
+            // Using Light-v11 as a base to ensure manual 3D extrusions stand out
+            style: 'mapbox://styles/mapbox/light-v11', 
             center: [-80.2831, 25.7960], 
-            zoom: 18.5, pitch: 45, bearing: -15, antialias: true
+            zoom: 17, pitch: 45, bearing: -15, antialias: true
         });
 
         const geolocate = new mapboxgl.GeolocateControl({
@@ -61,18 +62,47 @@
 
         map.addControl(geolocate);
 
-        map.on('style.load', () => {
-            map.setConfigProperty('basemap', 'lightPreset', 'day');
-            map.on('load', () => {
-                geolocate.trigger();
+        map.on('load', () => {
+            // FORCE 3D BUILDINGS TO APPEAR OVER THE TARMAC
+            map.addLayer({
+                'id': '3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
+                    'fill-extrusion-color': '#aaa',
+                    // Use an 'interpolate' expression to add a smooth transition effect to the buildings
+                    'fill-extrusion-height': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        15,
+                        0,
+                        15.05,
+                        ['get', 'height']
+                    ],
+                    'fill-extrusion-base': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        15,
+                        0,
+                        15.05,
+                        ['get', 'min_height']
+                    ],
+                    'fill-extrusion-opacity': 0.6
+                }
             });
+
+            geolocate.trigger();
         });
 
         // RE-ENGINEERED FLY-TO ENGINE
         document.getElementById('fly-button').addEventListener('click', () => {
             const gate = document.getElementById('gate-search').value.toUpperCase().trim();
             
-            // Refined Coordinates for Interior Spacing
             const locations = {
                 'D34': [-80.2825, 25.7963],
                 'SUBWAY': [-80.2831, 25.7958],
@@ -84,9 +114,9 @@
             if (locations[gate]) {
                 map.flyTo({
                     center: locations[gate],
-                    zoom: 19.2,   // Reduced zoom slightly to prevent "Tarmac" clipping
-                    pitch: 55,    // Better angle for indoor visibility
-                    bearing: 0,   // Standardized North-up for search
+                    zoom: 18.5, // Slightly further back to ensure the 3D walls don't clip
+                    pitch: 55,  // Good perspective angle
+                    bearing: 0,
                     essential: true,
                     duration: 3000
                 });
