@@ -7,17 +7,40 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
         header { 
             position: absolute; top: 0; width: 100%; background: rgba(255,255,255,0.95); 
             padding: 15px; z-index: 10; text-align: center; font-weight: 900; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        /* SEARCH BOX STYLING */
+        #search-container {
+            position: absolute; top: 75px; left: 20px; z-index: 20; 
+            background: white; padding: 10px; border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; gap: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        #gate-search {
+            padding: 10px; border: 1px solid #ddd; border-radius: 6px; 
+            outline: none; width: 180px; font-size: 14px;
+        }
+        #fly-button {
+            background: #007AFF; color: white; border: none; 
+            padding: 10px 18px; border-radius: 6px; cursor: pointer; 
+            font-weight: bold; transition: background 0.2s;
+        }
+        #fly-button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
     <header>VELOCIS<span style="font-weight:200; color:#007AFF;">™</span> | SENSOR-FUSED GUIDANCE</header>
+
+    <div id="search-container">
+        <input type="text" id="gate-search" placeholder="Search Gate (e.g. D34)">
+        <button id="fly-button">FLY</button>
+    </div>
+
     <div id="map"></div>
 
     <script>
@@ -25,39 +48,57 @@
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/standard', // 3D Mesh with native MIA floorplans
+            style: 'mapbox://styles/mapbox/standard', 
             center: [-80.2831, 25.7960], 
             zoom: 18.5, pitch: 45, bearing: -15, antialias: true
         });
 
-        // INITIALIZE THE "STAY SPOTTED" ENGINE
         const geolocate = new mapboxgl.GeolocateControl({
-            positionOptions: {
-                enableHighAccuracy: true, // Forces the use of Wi-Fi RTT and internal sensors
-                maximumAge: 0,           // Ensures real-time position with no lag
-                timeout: 10000
-            },
+            positionOptions: { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 },
             trackUserLocation: true,
-            showUserHeading: true,       // The "Flashlight" beam for orientation
-            showAccuracyCircle: false    // Keeps the UI focused on the 3D hallways
+            showUserHeading: true,
+            showAccuracyCircle: false
         });
 
         map.addControl(geolocate);
 
         map.on('style.load', () => {
             map.setConfigProperty('basemap', 'lightPreset', 'day');
-            
-            // Trigger spotting as soon as the map is ready
             map.on('load', () => {
                 geolocate.trigger();
                 console.log("VELOCIS™ | Indoor Positioning Initialized");
             });
         });
 
-        // CREATIVE FIX: Use the phone's Compass to keep the 3D perspective locked
+        // FLY-TO ENGINE
+        document.getElementById('fly-button').addEventListener('click', () => {
+            const gate = document.getElementById('gate-search').value.toUpperCase().trim();
+            
+            // MIA Terminal D Key Coordinates
+            const locations = {
+                'D34': [-80.2823, 25.7968],
+                'SUBWAY': [-80.2831, 25.7958],
+                'D20': [-80.2862, 25.7952],
+                'D50': [-80.2785, 25.7978],
+                'SECURITY': [-80.2842, 25.7954]
+            };
+
+            if (locations[gate]) {
+                map.flyTo({
+                    center: locations[gate],
+                    zoom: 19.8,   // Zoom in deep to see the shop/gate clearly
+                    pitch: 65,    // Aggressive 3D angle
+                    bearing: 30,  // Slight rotation for cinematic effect
+                    essential: true,
+                    duration: 3500 // Smooth 3.5 second glide
+                });
+            } else {
+                alert("Location not mapped yet. Try 'D34', 'D20', 'D50', or 'SUBWAY'.");
+            }
+        });
+
         window.addEventListener('deviceorientation', (event) => {
             if (event.webkitCompassHeading) {
-                // For iOS devices to sync the map rotation with the passenger's body
                 map.setBearing(event.webkitCompassHeading);
             }
         });
