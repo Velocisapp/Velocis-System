@@ -2,31 +2,41 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Smooth Path</title>
+    <title>VELOCIS™ | Smooth 3D Guide</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <style>
         :root { --v-blue: #007AFF; --v-gray: #f2f2f7; }
         body { margin: 0; padding: 0; background: var(--v-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        #map { flex: 1; width: 100%; height: 60vh; background: #d1d1d6; }
         
-        #entry-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: opacity 0.5s ease; }
-        .logo-text { font-size: 38px; font-weight: 900; color: var(--v-blue); margin-bottom: 30px; }
+        #map { flex: 1; width: 100%; height: 60vh; }
+
+        /* START SCREEN */
+        #entry-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: 0.5s; }
+        .logo { font-size: 38px; font-weight: 900; color: var(--v-blue); margin-bottom: 30px; letter-spacing: -1.5px; }
         #flight-input { width: 80%; max-width: 280px; padding: 18px; border: 2px solid var(--v-gray); border-radius: 14px; font-size: 22px; text-align: center; margin-bottom: 20px; outline: none; }
         .start-btn { width: 80%; max-width: 280px; height: 60px; background: var(--v-blue); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 18px; cursor: pointer; }
 
+        /* HUD CARD */
         #hud { height: 40vh; background: white; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 28px 28px 0 0; box-shadow: 0 -12px 45px rgba(0,0,0,0.08); z-index: 10; }
-        .instruction { font-size: 28px; font-weight: 800; color: #1c1c1e; line-height: 1.1; margin-top: 15px; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: var(--v-gray); padding: 5px 12px; border-radius: 8px; }
+        .airline-logo { height: 16px; width: auto; }
+
+        .instruction { font-size: 28px; font-weight: 800; color: #1c1c1e; line-height: 1.1; margin-top: 5px; }
         .detail { font-size: 16px; color: #636366; margin-top: 10px; font-weight: 500; }
+
         .btn-group { display: flex; gap: 12px; margin-top: auto; padding-bottom: 15px; }
         .action-btn { flex: 1; height: 65px; background: var(--v-blue); color: #fff; border: none; border-radius: 18px; font-size: 17px; font-weight: 700; cursor: pointer; }
+        .action-btn.alt { background: #e9e9eb; color: var(--v-blue); }
     </style>
 </head>
 <body>
 
 <div id="entry-screen">
-    <div class="logo-text">VELOCIS™</div>
+    <div class="logo">VELOCIS™</div>
     <input type="text" id="flight-input" placeholder="Enter Flight #">
     <button class="start-btn" onclick="engine.startMission()">Start Mission</button>
 </div>
@@ -34,14 +44,20 @@
 <div id="map"></div>
 
 <div id="hud">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div id="phase" style="color:var(--v-blue); font-weight:800; font-size:11px; letter-spacing:1.5px; text-transform:uppercase;">Ready</div>
-        <div id="display-flight" style="font-size:13px; font-weight:700; color:#8e8e93; background:var(--v-gray); padding:5px 12px; border-radius:8px;">----</div>
+    <div class="top-row">
+        <div id="phase" class="tag">Mission Ready</div>
+        <div class="airline-box">
+            <img id="logo-img" class="airline-logo" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">
+            <span id="display-flight">----</span>
+        </div>
     </div>
-    <div id="main-text" class="instruction">Welcome</div>
-    <div id="sub-text" class="detail">Miami Int'l Airport</div>
+    <div>
+        <div id="main-text" class="instruction">Welcome</div>
+        <div id="sub-text" class="detail">Miami Int'l Airport | North</div>
+    </div>
     <div class="btn-group">
         <button class="action-btn" onclick="engine.next()">Got it, Next</button>
+        <button class="action-btn alt" onclick="engine.arrival()">Landing Info</button>
     </div>
 </div>
 
@@ -58,10 +74,11 @@
         initMap() {
             this.map = new mapboxgl.Map({
                 container: 'map',
-                style: 'mapbox://styles/mapbox/standard',
-                center: [-80.2831, 25.7955],
+                style: 'mapbox://styles/mapbox/standard', 
+                center: [-80.2828, 25.7952], 
                 zoom: 16.5,
-                pitch: 60
+                pitch: 65,
+                bearing: -20
             });
             this.map.on('style.load', () => {
                 this.map.setConfigProperty('basemap', 'lightPreset', 'day');
@@ -77,35 +94,43 @@
         }
 
         next() {
-            // NUDGED COORDINATES: Moved slightly away from building walls to stay on the ground
+            // NUDGED NODES: Positions adjusted to avoid roof-landing
             const nodes = [
-                { tag: "ENTRANCE", main: "Head to Door D3.", sub: "Look for the Departures sign", loc: [-80.2828, 25.7952] },
-                { tag: "CHECK-IN", main: "Counters 22-34.", sub: "Follow the sidewalk to Zone D", loc: [-80.2852, 25.7958] },
-                { tag: "SECURITY", main: "Security Check D.", sub: "Enter through the glass doors", loc: [-80.2868, 25.7964] }
+                { tag: "ENTRANCE", main: "Head to Door D3.", sub: "Follow signs for Departures", loc: [-80.2828, 25.7952] },
+                { tag: "CHECK-IN", main: "Counters 22-34.", sub: "Proceed to Level 2 (Departures)", loc: [-80.2852, 25.7958] },
+                { tag: "SECURITY", main: "Security Check D.", sub: "Enter through the main hall", loc: [-80.2868, 25.7964] },
+                { tag: "GATE", main: "Gate D32.", sub: "Final Stop: Boarding Area", loc: [-80.2915, 25.7981] }
             ];
 
             if (this.step < nodes.length) {
                 const n = nodes[this.step];
-                document.getElementById('phase').innerText = n.tag;
-                document.getElementById('main-text').innerText = n.main;
-                document.getElementById('sub-text').innerText = n.sub;
-                
-                this.updateMarkerAndCamera(n.loc);
+                this.updateUI(n.tag, n.main, n.sub);
+                this.placeSmoothPin(n.loc);
                 this.step++;
             }
         }
 
-        updateMarkerAndCamera(coords) {
-            // Camera slides smoothly
-            this.map.flyTo({ center: coords, zoom: 18, pitch: 65, speed: 0.5 });
+        arrival() {
+            this.updateUI("ARRIVAL", "Carousel 12.", "Proceed to Level 1 (Arrivals)");
+            this.placeSmoothPin([-80.2850, 25.7940]);
+        }
 
-            // PIN FIX: If marker exists, just slide it. If not, create it.
+        updateUI(tag, main, sub) {
+            document.getElementById('phase').innerText = tag;
+            document.getElementById('main-text').innerText = main;
+            document.getElementById('sub-text').innerText = sub;
+        }
+
+        placeSmoothPin(coords) {
+            this.map.flyTo({ center: coords, zoom: 18, pitch: 70, speed: 0.6 });
+
+            // SLIDE FIX: Move existing pin instead of creating a new one
             if (!this.activeMarker) {
                 this.activeMarker = new mapboxgl.Marker({ color: "#007AFF" })
                     .setLngLat(coords)
                     .addTo(this.map);
             } else {
-                this.activeMarker.setLngLat(coords); // This "slides" the pin instead of jumping
+                this.activeMarker.setLngLat(coords); // Slides smoothly
             }
         }
     }
