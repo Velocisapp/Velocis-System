@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Stable Guide</title>
+    <title>VELOCIS™ | Smooth 3D Journey</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
@@ -10,79 +10,86 @@
         :root { --v-blue: #007AFF; --v-gray: #f2f2f7; }
         body { margin: 0; padding: 0; background: var(--v-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        #map { flex: 1; width: 100%; height: 55vh; }
-
-        /* THE STABLE SCROLL TRAY */
-        #mission-tray { 
-            height: 45vh; 
-            background: white; 
-            overflow-y: scroll; 
-            scroll-snap-type: y mandatory; /* This locks the window in place */
-            border-radius: 28px 28px 0 0; 
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
-            z-index: 10;
+        /* 1. ATTRACTIVE ENTRY WINDOW */
+        #entry-screen { 
+            position: fixed; inset: 0; 
+            background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
+            z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 40px; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1); 
         }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
+            display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 320px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .logo-main { font-size: 42px; font-weight: 900; color: white; margin-bottom: 10px; letter-spacing: -2px; }
+        .logo-sub { color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 30px; font-weight: 500; }
         
-        .mission-step { 
-            height: 100%; /* Each step takes the full tray height for stability */
-            padding: 30px; 
-            box-sizing: border-box;
-            scroll-snap-align: center; /* Ensures it stays put */
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
+        #flight-input { 
+            width: 100%; padding: 18px; border: none; border-radius: 15px; 
+            font-size: 24px; text-align: center; margin-bottom: 20px; 
+            background: white; color: #1c1c1e; font-weight: 700;
+        }
+        .start-btn { 
+            width: 100%; height: 60px; background: #1c1c1e; color: white; 
+            border: none; border-radius: 15px; font-weight: 700; font-size: 18px; cursor: pointer; 
         }
 
-        .top-info { display: flex; justify-content: space-between; align-items: center; }
-        .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
-        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: var(--v-gray); padding: 6px 12px; border-radius: 8px; }
-        .logo-icon { height: 16px; }
-
-        .title { font-size: 32px; font-weight: 800; color: #1c1c1e; margin-top: 10px; line-height: 1.1; }
-        .subtitle { font-size: 17px; color: #636366; margin-top: 8px; font-weight: 500; }
+        /* 2. THE MAP & TRAY */
+        #map { flex: 1; width: 100%; height: 55vh; }
+        #mission-tray { 
+            height: 45vh; background: white; overflow-y: scroll; 
+            scroll-snap-type: y mandatory; border-radius: 30px 30px 0 0; 
+            z-index: 10; box-shadow: 0 -15px 40px rgba(0,0,0,0.05);
+        }
+        .mission-step { 
+            height: 100%; padding: 40px; box-sizing: border-box; 
+            scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; 
+        }
+        .top-row { display: flex; justify-content: space-between; align-items: center; }
+        .tag { color: var(--v-blue); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: #f2f2f7; padding: 6px 12px; border-radius: 8px; }
+        .title { font-size: 34px; font-weight: 800; color: #1c1c1e; margin-top: 10px; }
+        .subtitle { font-size: 17px; color: #636366; margin-top: 8px; }
 
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
+<div id="entry-screen">
+    <div class="glass-card">
+        <div class="logo-main">VELOCIS</div>
+        <div class="logo-sub">PERSONAL AIRPORT GUIDE</div>
+        <input type="text" id="flight-input" placeholder="AA2405" maxlength="7">
+        <button class="start-btn" onclick="engine.start()">START JOURNEY</button>
+    </div>
+</div>
+
 <div id="map"></div>
 
 <div id="mission-tray" onscroll="engine.handleScroll()">
-    <div class="mission-step" id="step-0">
-        <div class="top-info">
-            <div class="tag">Arrival at MIA</div>
-            <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
-        </div>
+    <div class="mission-step">
+        <div class="top-row"><div class="tag">Arrival</div><div class="airline-box" id="tray-flight">----</div></div>
         <div class="title">Door D3</div>
-        <div class="subtitle">Main terminal entrance. Look for the blue sidewalk canopy.</div>
+        <div class="subtitle">Main terminal entrance at MIA North.</div>
     </div>
-
-    <div class="mission-step" id="step-1">
-        <div class="top-info">
-            <div class="tag">Step 1: Bag Drop</div>
-            <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
-        </div>
+    <div class="mission-step">
+        <div class="top-row"><div class="tag">Step 1</div><div class="airline-box">AA2405</div></div>
         <div class="title">Counters 22-34</div>
-        <div class="subtitle">Proceed to the American Airlines zone on Level 2.</div>
+        <div class="subtitle">Proceed to American Airlines on Level 2.</div>
     </div>
-
-    <div class="mission-step" id="step-2">
-        <div class="top-info">
-            <div class="tag">Step 2: Security</div>
-            <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
-        </div>
+    <div class="mission-step">
+        <div class="top-row"><div class="tag">Step 2</div><div class="airline-box">AA2405</div></div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Keep walking straight past the check-in counters.</div>
+        <div class="subtitle">Security entrance is just past the counters.</div>
     </div>
-
-    <div class="mission-step" id="step-3">
-        <div class="top-info">
-            <div class="tag">Final Step: Gate</div>
-            <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
-        </div>
+    <div class="mission-step">
+        <div class="top-row"><div class="tag">Step 3</div><div class="airline-box">AA2405</div></div>
         <div class="title">Gate D32</div>
-        <div class="subtitle">Take the Skytrain or follow the concourse signs.</div>
+        <div class="subtitle">Your final destination. Have a safe flight!</div>
     </div>
 </div>
 
@@ -93,54 +100,50 @@
         constructor() {
             this.activeStep = -1;
             this.marker = null;
-            this.coords = [
-                [-80.2828, 25.7952], 
-                [-80.2852, 25.7958], 
-                [-80.2868, 25.7964], 
-                [-80.2915, 25.7981]  
-            ];
+            this.scrollTimeout = null;
+            this.coords = [[-80.2828, 25.7952], [-80.2852, 25.7958], [-80.2868, 25.7964], [-80.2915, 25.7981]];
             this.initMap();
         }
 
         initMap() {
             this.map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/standard',
-                center: this.coords[0],
-                zoom: 16.5,
-                pitch: 65
+                container: 'map', style: 'mapbox://styles/mapbox/standard',
+                center: this.coords[0], zoom: 16.5, pitch: 65
             });
-            this.map.on('style.load', () => {
-                this.map.setConfigProperty('basemap', 'lightPreset', 'day');
-                this.updateMission(0); 
-            });
+            this.map.on('style.load', () => this.map.setConfigProperty('basemap', 'lightPreset', 'day'));
+        }
+
+        start() {
+            const val = document.getElementById('flight-input').value.toUpperCase() || "AA2405";
+            document.getElementById('tray-flight').innerText = val;
+            document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+            this.updateMission(0);
         }
 
         handleScroll() {
-            const tray = document.getElementById('mission-tray');
-            // Calculate which step is centered based on height
-            const newStep = Math.round(tray.scrollTop / tray.clientHeight);
-
-            if (newStep !== this.activeStep && newStep < this.coords.length) {
-                this.updateMission(newStep);
-            }
+            // "BUNNY PIN" FIX: Use a timeout so it only moves once the scroll stops
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
+                const tray = document.getElementById('mission-tray');
+                const newStep = Math.round(tray.scrollTop / tray.clientHeight);
+                if (newStep !== this.activeStep && newStep < this.coords.length) {
+                    this.updateMission(newStep);
+                }
+            }, 100); // 100ms delay to ensure stability
         }
 
         updateMission(index) {
             this.activeStep = index;
             const loc = this.coords[index];
-
-            // Smooth glide - no snapping or jumping
             this.map.flyTo({ center: loc, zoom: 18, pitch: 70, speed: 0.4 });
-
+            
             if (!this.marker) {
                 this.marker = new mapboxgl.Marker({ color: "#007AFF" }).setLngLat(loc).addTo(this.map);
             } else {
-                this.marker.setLngLat(loc);
+                this.marker.setLngLat(loc); // Smooth slide, no jumping
             }
         }
     }
-
     const engine = new VelocisEngine();
 </script>
 </body>
