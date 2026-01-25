@@ -73,6 +73,8 @@
         .partner-header { display: flex; align-items: center; gap: 10px; }
         .partner-logo { width: 32px; height: 32px; border-radius: 8px; background: white; padding: 4px; }
         .partner-name { color: white; font-weight: 700; font-size: 14px; }
+        
+        /* LIVE PULSE COMPONENT */
         .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; box-shadow: 0 0 8px #4caf50; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
@@ -80,6 +82,9 @@
             background: var(--v-blue); color: white; border: none; padding: 14px; 
             border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; margin-top: 5px;
         }
+
+        /* eSIM STATUS */
+        .esim-status { display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 12px; font-weight: 700; color: #4caf50; }
         
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
@@ -105,20 +110,24 @@
         <div class="title">Door D3</div>
         <div class="subtitle">You've made it! Head inside through Door D3 under the blue canopy. You're in the right place.</div>
     </div>
+
     <div class="mission-step">
         <div class="top-row"><div class="tag">02. Logistics</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="title">Level 2 Drop</div>
         <div class="subtitle">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
     </div>
+
     <div class="mission-step">
         <div class="top-row"><div class="tag">03. Security</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Screening is just past the counters. Follow the ceiling signs to stay in the North terminal flow.</div>
+        <div class="subtitle">Screening is just past the counters. Follow the signs and stay in the North terminal flow.</div>
     </div>
+
     <div class="mission-step">
-        <div class="top-row"><div class="tag">04. Relax</div><div class="airline-box" id="logo-4">----</div></div>
+        <div class="top-row"><div class="tag">04. Boarding</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="title">Gate D32</div>
         <div class="subtitle">You're all set. Grab a coffee at Duty-Free while you wait—it's just a few steps from your gate.</div>
+        <div class="esim-status"><div class="live-pulse"></div> eSIM STANDBY: AUTO-ACTIVE ON LANDING</div>
         <div class="partner-perk">
             <div class="partner-header">
                 <img class="partner-logo" src="https://www.google.com/s2/favicons?domain=starbucks.com&sz=64">
@@ -128,17 +137,19 @@
             <button class="code-btn" onclick="alert('Code VELOCIS copied!')">COPY 15% OFF CODE: VELOCIS</button>
         </div>
     </div>
+
     <div class="mission-step arrival-mission">
         <div class="top-row"><div class="tag" style="color:#80c1ff;">05. Welcome Home</div><div class="airline-box" id="logo-5">----</div></div>
         <div class="title">Carousel 12</div>
         <div class="subtitle">Welcome to Miami! Your bags are arriving at Carousel 12. Let's get your ride ready.</div>
+        <div class="esim-status" style="color:white;"><div class="live-pulse" style="background:white; box-shadow: 0 0 8px #fff;"></div> eSIM ACTIVE: 5G SECURED</div>
         <div class="partner-perk" style="background: rgba(0,0,0,0.25);">
             <div class="partner-header">
                 <div class="partner-logo" style="background: #fff; color:#000; display:flex; align-items:center; justify-content:center; font-weight:900;">V</div>
-                <div class="partner-name">VELOCIS™ Transport Hub</div>
+                <div class="partner-name">Ground Transport Database</div>
                 <div class="live-pulse"></div>
             </div>
-            <button class="code-btn" style="background: #fff; color: #000;" onclick="window.location.href='index.html'">VIEW GROUND TRANSPORT</button>
+            <button class="code-btn" style="background: #fff; color: #000;" onclick="window.location.href='index.html#ground-transport-market'">VIEW TRANSPORT HUB</button>
         </div>
     </div>
 </div>
