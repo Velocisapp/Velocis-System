@@ -9,75 +9,77 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        #search-container { position: absolute; top: 20px; left: 20px; z-index: 100; background: white; padding: 15px; border-radius: 12px; display: flex; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 180px; font-size: 16px; }
-        button { background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        #search-overlay { position: absolute; top: 20px; left: 20px; z-index: 100; background: #fff; padding: 12px; border-radius: 12px; display: flex; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { border: 1px solid #ddd; padding: 10px; border-radius: 6px; width: 180px; outline: none; font-size: 16px; }
+        button { background: #007AFF; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
-        .target-lock {
-            width: 35px; height: 35px; border: 4px solid #00f2ff;
-            border-radius: 50%; position: absolute;
-            animation: target-pulse 1s infinite alternate;
-            box-shadow: 0 0 15px #00f2ff;
-        }
-        @keyframes target-pulse { from { transform: scale(0.9); } to { transform: scale(1.1); } }
+        /* TARGET LOCK DESIGN */
+        .cyan-beacon { width: 30px; height: 30px; border: 4px solid #00f2ff; border-radius: 50%; box-shadow: 0 0 20px #00f2ff; }
+        .cyan-beacon::after { content: ''; position: absolute; width: 30px; height: 30px; background: #00f2ff; border-radius: 50%; animation: p 1.5s infinite; }
+        @keyframes p { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(4); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="search-container">
-        <input type="text" id="gate-input" placeholder="GATE ID (D34)">
-        <button id="lock-btn">LOCK ON</button>
-    </div>
+<div id="search-overlay">
+    <input type="text" id="target-gate" placeholder="Target Gate (D34)">
+    <button id="lock-btn">LOCK ON</button>
+</div>
+<div id="map"></div>
 
-    <div id="map"></div>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-    <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/standard',
+        center: [-80.2831, 25.7960],
+        zoom: 17, pitch: 0, antialias: true
+    });
 
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/standard',
-            center: [-80.2831, 25.7960],
-            zoom: 17, pitch: 0, antialias: true
-        });
+    const el = document.createElement('div'); el.className = 'cyan-beacon';
+    const marker = new mapboxgl.Marker(el);
 
-        const markerEl = document.createElement('div');
-        markerEl.className = 'target-lock';
-        const marker = new mapboxgl.Marker(markerEl);
+    // THE PHANTOM BREACH ALGORITHM
+    async function executeMission(gateID) {
+        // 1. FIRST DESCENT: Go to the roof to wake up 3D tiles
+        map.flyTo({ center: [-80.2831, 25.7960], zoom: 18.5, pitch: 45, duration: 2000 });
 
-        function executeLockOn(gateID) {
-            // SCAN THE RENDERED MESH
+        // 2. WAIT FOR "IDLE" (Browser confirms data is downloaded)
+        map.once('idle', () => {
             const features = map.queryRenderedFeatures({ layers: ['label-sm', 'label-md', 'label-lg', 'poi-label'] });
-            const match = features.find(f => f.properties.name && f.properties.name.toUpperCase().includes(gateID));
+            const target = features.find(f => f.properties.name && f.properties.name.toUpperCase().includes(gateID));
 
-            if (match) {
-                const loc = match.geometry.coordinates;
-                map.flyTo({ center: loc, zoom: 19.8, pitch: 65, bearing: -15, duration: 2500, essential: true });
+            if (target) {
+                const loc = target.geometry.coordinates;
+                
+                // 3. THE "JUMP" FIX: Bypasses the collision engine
+                map.jumpTo({
+                    center: loc,
+                    zoom: 19.8,
+                    pitch: 65,
+                    bearing: -15
+                });
+                
                 marker.setLngLat(loc).addTo(map);
             } else {
-                // FALLBACK: Hard hallway anchor if the mesh label is still invisible
-                const fallback = [-80.28315, 25.7963];
-                map.flyTo({ center: fallback, zoom: 19.5, pitch: 60, duration: 3000 });
-                marker.setLngLat(fallback).addTo(map);
+                // LAST RESORT: Manual Concourse Anchor (Level 2 Floor)
+                const anchor = [-80.28315, 25.7963];
+                map.jumpTo({ center: anchor, zoom: 19.5, pitch: 60 });
+                marker.setLngLat(anchor).addTo(map);
             }
-        }
-
-        document.getElementById('lock-btn').addEventListener('click', () => {
-            const gateID = document.getElementById('gate-input').value.toUpperCase().trim();
-            
-            // 1. First, wake up the building by zooming into the concourse
-            map.easeTo({ center: [-80.2835, 25.7962], zoom: 18.5, duration: 1000 });
-
-            // 2. Wait for the 'idle' event (map is done loading tiles)
-            map.once('idle', () => {
-                executeLockOn(gateID);
-            });
         });
+    }
 
-        map.on('style.load', () => {
-            map.setConfigProperty('basemap', 'lightPreset', 'day');
-            map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-        });
-    </script>
+    document.getElementById('lock-btn').addEventListener('click', () => {
+        const id = document.getElementById('target-gate').value.toUpperCase().trim();
+        executeMission(id);
+    });
+
+    map.on('style.load', () => {
+        map.setConfigProperty('basemap', 'lightPreset', 'day');
+        map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+    });
+</script>
 </body>
 </html>
