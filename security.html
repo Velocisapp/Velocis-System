@@ -2,15 +2,15 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Cinematic Panorama</title>
+    <title>VELOCIS™ | Sovereign Guidance Engine</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <style>
-        :root { --v-blue: #007AFF; --v-gray: #f2f2f7; }
-        body { margin: 0; padding: 0; background: var(--v-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { --v-blue: #007AFF; --v-gray: #f2f2f7; --v-glass: rgba(255, 255, 255, 0.2); }
+        body { margin: 0; padding: 0; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* THE SKY ENTRY WINDOW */
+        /* SKY-ENTRY SCREEN */
         #entry-screen { 
             position: fixed; inset: 0; 
             background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
@@ -18,37 +18,50 @@
             padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px);
-            padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
-            display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 320px;
+            background: var(--v-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 45px 30px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.3);
+            display: flex; flex-direction: column; align-items: center; width: 85%; max-width: 340px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
         }
-        .logo-main { font-size: 42px; font-weight: 900; color: white; margin-bottom: 30px; letter-spacing: -2px; }
-        #flight-input { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 700; }
-        .start-btn { width: 100%; height: 60px; background: #1c1c1e; color: white; border: none; border-radius: 15px; font-weight: 700; cursor: pointer; }
+        .logo-main { font-size: 48px; font-weight: 900; color: white; margin-bottom: 5px; letter-spacing: -2.5px; }
+        .logo-sub { color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 35px; }
+        #flight-input { 
+            width: 100%; padding: 20px; border: none; border-radius: 18px; 
+            font-size: 26px; text-align: center; margin-bottom: 20px; 
+            background: white; color: #1c1c1e; font-weight: 700; outline: none;
+        }
+        .start-btn { 
+            width: 100%; height: 65px; background: #1c1c1e; color: white; 
+            border: none; border-radius: 18px; font-weight: 700; font-size: 18px; cursor: pointer; 
+            transition: transform 0.2s ease;
+        }
+        .start-btn:active { transform: scale(0.96); }
 
-        /* PANORAMIC MAP - THE STAGE */
-        #map { flex: 1; width: 100%; height: 50vh; pointer-events: none; /* Map is purely visual reference */ }
+        /* CINEMATIC MAP STAGE */
+        #map { flex: 1; width: 100%; height: 48vh; background: #1a1a1a; pointer-events: none; }
         
-        /* SCROLLABLE MISSION TRAY */
+        /* MISSION TRAY */
         #mission-tray { 
-            height: 50vh; background: white; overflow-y: scroll; 
-            scroll-snap-type: y mandatory; border-radius: 30px 30px 0 0; z-index: 10; 
-            box-shadow: 0 -15px 45px rgba(0,0,0,0.1);
+            height: 52vh; background: white; overflow-y: scroll; 
+            scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; 
+            z-index: 10; box-shadow: 0 -15px 45px rgba(0,0,0,0.12);
         }
         .mission-step { 
             height: 100%; padding: 40px; box-sizing: border-box; 
             scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; 
         }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
-        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: #f2f2f7; padding: 6px 12px; border-radius: 8px; }
-        
-        .title { font-size: 36px; font-weight: 900; color: #1c1c1e; margin-top: 5px; letter-spacing: -0.5px; }
-        .subtitle { font-size: 18px; color: #636366; margin-top: 10px; line-height: 1.4; font-weight: 500; }
-        
-        /* FOOTER CTA */
-        .cta-footer { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 10px; color: #ccc; z-index: 5; }
+        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #8e8e93; background: var(--v-gray); padding: 6px 14px; border-radius: 10px; }
+        .airline-logo { height: 16px; width: auto; }
 
+        .title { font-size: 38px; font-weight: 900; color: #1c1c1e; margin-top: 5px; letter-spacing: -1px; line-height: 1.1; }
+        .subtitle { font-size: 19px; color: #636366; margin-top: 12px; line-height: 1.5; font-weight: 500; }
+        
+        .eSIM-status { margin-top: 25px; padding: 12px; background: #e8f5e9; color: #2e7d32; border-radius: 12px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+        .pulse { width: 8px; height: 8px; background: #2e7d32; border-radius: 50%; animation: blink 1.5s infinite; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -57,8 +70,9 @@
 <div id="entry-screen">
     <div class="glass-card">
         <div class="logo-main">VELOCIS</div>
-        <input type="text" id="flight-input" placeholder="AA2405">
-        <button class="start-btn" onclick="engine.start()">START JOURNEY</button>
+        <div class="logo-sub">Sovereign Guide</div>
+        <input type="text" id="flight-input" placeholder="AA2405" maxlength="7">
+        <button class="start-btn" onclick="engine.start()">START MISSION</button>
     </div>
 </div>
 
@@ -66,42 +80,49 @@
 
 <div id="mission-tray" onscroll="engine.handleScroll()">
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Step 1: Arrival</div><div class="airline-box" id="tray-flight">----</div></div>
+        <div class="top-row"><div class="tag">01. Departure</div><div class="airline-box" id="tray-flight-1">----</div></div>
         <div class="title">Door D3</div>
-        <div class="subtitle">Enter the terminal through the main doors at Concourse D. Look for the blue sidewalk canopy.</div>
+        <div class="subtitle">Enter the terminal through the main North doors. Look for the blue sidewalk canopy.</div>
     </div>
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Step 2: Check-In</div><div class="airline-box">AA2405</div></div>
+        <div class="top-row"><div class="tag">02. Logistics</div><div class="airline-box" id="tray-flight-2">----</div></div>
         <div class="title">Counters 22-34</div>
-        <div class="subtitle">Head to the American Airlines bag drop zone on Level 2 (Departures).</div>
+        <div class="subtitle">American Airlines bag drop is on Level 2. Follow signs for Zone D.</div>
     </div>
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Step 3: Security</div><div class="airline-box">AA2405</div></div>
+        <div class="top-row"><div class="tag">03. Security</div><div class="airline-box" id="tray-flight-3">----</div></div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Follow the hallway past the counters to the main screening area.</div>
+        <div class="subtitle">Security entrance is located just past the check-in counters.</div>
     </div>
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Step 4: Boarding</div><div class="airline-box">AA2405</div></div>
+        <div class="top-row"><div class="tag">04. Boarding</div><div class="airline-box" id="tray-flight-4">----</div></div>
         <div class="title">Gate D32</div>
-        <div class="subtitle">Proceed to your boarding area. Follow overhead signs for Concourse D. Safe flight!</div>
+        <div class="subtitle">Proceed to Concourse D. Your eSIM is monitoring your connection status.</div>
+        <div class="eSIM-status"><div class="pulse"></div> eSIM STANDBY: AUTO-ACTIVATE ON LANDING</div>
+    </div>
+    <div class="mission-step" style="background: #fdfdfd;">
+        <div class="top-row"><div class="tag">05. Arrival</div><div class="airline-box" id="tray-flight-5">----</div></div>
+        <div class="title" id="arrival-carousel">Carousel --</div>
+        <div class="subtitle">Welcome to Miami. Your bags are expected shortly at Baggage Claim Level 1.</div>
+        <div class="eSIM-status" style="background: #e3f2fd; color: #1565c0;"><div class="pulse" style="background: #1565c0;"></div> eSIM ACTIVE: 5G SECURED</div>
     </div>
 </div>
 
-<div class="cta-footer">SCROLL TO NAVIGATE THE TERMINAL</div>
-
 <script>
+    // ACCESS TOKEN
     mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
 
-    class VelocisEngine {
+    class VelocisSovereign {
         constructor() {
             this.activeStep = -1;
             this.scrollTimeout = null;
-            // Strategic panoramic angles for MIA Terminal North
+            // Cinematic panoramic views of MIA (Departure to Arrival Gates)
             this.views = [
                 { center: [-80.2820, 25.7948], zoom: 16.8, pitch: 65, bearing: -20 },
                 { center: [-80.2845, 25.7954], zoom: 17.0, pitch: 60, bearing: -15 },
                 { center: [-80.2865, 25.7960], zoom: 17.2, pitch: 65, bearing: -10 },
-                { center: [-80.2910, 25.7978], zoom: 17.0, pitch: 60, bearing: -30 }
+                { center: [-80.2910, 25.7978], zoom: 17.5, pitch: 60, bearing: -30 },
+                { center: [-80.2855, 25.7940], zoom: 16.5, pitch: 45, bearing: 180 }
             ];
             this.initMap();
         }
@@ -111,19 +132,20 @@
                 container: 'map', 
                 style: 'mapbox://styles/mapbox/standard',
                 center: this.views[0].center, 
-                zoom: 16, 
-                pitch: 60
+                zoom: 15, 
+                pitch: 45
             });
             this.map.on('style.load', () => this.map.setConfigProperty('basemap', 'lightPreset', 'day'));
         }
 
         start() {
-            const val = document.getElementById('flight-input').value.toUpperCase() || "AA2405";
-            document.querySelectorAll('.airline-box').forEach(el => {
-                el.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=aa.com&sz=32" style="height:14px"> ${val}`;
-            });
+            const flight = document.getElementById('flight-input').value.toUpperCase() || "AA2405";
+            for(let i=1; i<=5; i++) {
+                document.getElementById(`tray-flight-${i}`).innerHTML = `<img class="airline-logo" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32"> ${flight}`;
+            }
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             this.updateView(0);
+            this.fetchAviationstack(flight);
         }
 
         handleScroll() {
@@ -139,19 +161,19 @@
 
         updateView(index) {
             this.activeStep = index;
-            const view = this.views[index];
-            // NO PINS. Just a beautiful, smooth panoramic camera move.
-            this.map.flyTo({ 
-                center: view.center, 
-                zoom: view.zoom, 
-                pitch: view.pitch, 
-                bearing: view.bearing,
-                speed: 0.35, // Slow, cinematic drift
-                curve: 1.2 
-            });
+            const v = this.views[index];
+            this.map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, speed: 0.4, curve: 1.2 });
+        }
+
+        async fetchAviationstack(flightNum) {
+            // Placeholder for your PAID Aviationstack API integration
+            // In production, this updates the "arrival-carousel" ID with real data
+            console.log(`Polling Aviationstack for ${flightNum}...`);
+            // document.getElementById('arrival-carousel').innerText = `Carousel ${apiData.baggage}`;
         }
     }
-    const engine = new VelocisEngine();
+
+    const engine = new VelocisSovereign();
 </script>
 </body>
 </html>
