@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | True Anchor Guide</title>
+    <title>VELOCIS™ | Photo-Grounded Guide</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
@@ -10,7 +10,7 @@
         :root { --v-blue: #007AFF; --v-gray: #f2f2f7; }
         body { margin: 0; padding: 0; background: var(--v-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* ATTRACTIVE ENTRY WINDOW (SKY THEME) */
+        /* ATTRACTIVE SKY ENTRY */
         #entry-screen { 
             position: fixed; inset: 0; 
             background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
@@ -23,25 +23,35 @@
             display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 320px;
         }
         .logo-main { font-size: 42px; font-weight: 900; color: white; margin-bottom: 30px; letter-spacing: -2px; }
-        #flight-input { 
-            width: 100%; padding: 18px; border: none; border-radius: 15px; 
-            font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 700;
-        }
+        #flight-input { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 700; }
         .start-btn { width: 100%; height: 60px; background: #1c1c1e; color: white; border: none; border-radius: 15px; font-weight: 700; cursor: pointer; }
 
         /* MAP AREA */
-        #map { flex: 1; width: 100%; height: 50vh; }
+        #map { flex: 1; width: 100%; height: 45vh; }
         .scroll-cta { background: #fff; padding: 12px; text-align: center; font-size: 11px; font-weight: 800; color: var(--v-blue); letter-spacing: 1.5px; border-bottom: 1px solid #eee; }
 
-        /* MISSION TRAY - SCROLLABLE */
-        #mission-tray { height: 50vh; background: white; overflow-y: scroll; border-radius: 30px 30px 0 0; z-index: 10; }
-        .mission-step { padding: 35px; border-bottom: 1px solid #f2f2f7; display: flex; flex-direction: column; }
+        /* SCROLLABLE MISSION TRAY */
+        #mission-tray { height: 55vh; background: white; overflow-y: scroll; border-radius: 30px 30px 0 0; z-index: 10; }
+        .mission-step { padding: 30px; border-bottom: 1px solid #f2f2f7; display: flex; flex-direction: column; }
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .tag { color: var(--v-blue); font-size: 12px; font-weight: 800; text-transform: uppercase; }
         .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: #f2f2f7; padding: 6px 12px; border-radius: 8px; }
-        .title { font-size: 32px; font-weight: 800; color: #1c1c1e; margin-bottom: 8px; }
-        .subtitle { font-size: 17px; color: #636366; margin-bottom: 20px; line-height: 1.4; }
         
+        .title { font-size: 30px; font-weight: 800; color: #1c1c1e; margin-bottom: 5px; }
+        .subtitle { font-size: 16px; color: #636366; margin-bottom: 15px; line-height: 1.4; }
+
+        /* REAL PHOTO CONTAINER */
+        .ground-photo { 
+            width: 100%; height: 160px; border-radius: 18px; 
+            background-size: cover; background-position: center;
+            margin-bottom: 15px; border: 1px solid #eee;
+        }
+        
+        .view-map-btn { 
+            background: var(--v-blue); color: white; border: none; padding: 14px 20px; 
+            border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; align-self: flex-start;
+        }
+
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -56,28 +66,37 @@
 </div>
 
 <div id="map"></div>
-<div class="scroll-cta">↓ SCROLL FOR STEP-BY-STEP GUIDANCE ↓</div>
+<div class="scroll-cta">↓ SCROLL FOR PHOTO GUIDANCE ↓</div>
 
-<div id="mission-tray" onscroll="engine.handleScroll()">
+<div id="mission-tray">
     <div class="mission-step">
         <div class="top-row"><div class="tag">Arrival</div><div class="airline-box" id="tray-flight">----</div></div>
+        <div class="ground-photo" style="background-image: url('http://googleusercontent.com/image_collection/image_retrieval/15249878855040631679_0')"></div>
         <div class="title">Door D3</div>
-        <div class="subtitle">Main terminal entrance. Look for the blue sidewalk canopy.</div>
+        <div class="subtitle">Look for the Large 'D' sign and Number 3. This is the main North Terminal entrance.</div>
+        <button class="view-map-btn" onclick="engine.lookAt(0)">View 3D Context</button>
     </div>
+
     <div class="mission-step">
-        <div class="top-row"><div class="tag">Check-In</div><div class="airline-box">AA2405</div></div>
+        <div class="top-row"><div class="tag">Bag Drop</div><div class="airline-box">AA2405</div></div>
+        <div class="ground-photo" style="background-image: url('http://googleusercontent.com/image_collection/image_retrieval/9590597547887554508_0')"></div>
         <div class="title">Counters 22-34</div>
-        <div class="subtitle">American Airlines bag drop on Level 2 (Departures).</div>
+        <div class="subtitle">Proceed to American Airlines Level 2. Follow the overhead signs for Bag Drop.</div>
+        <button class="view-map-btn" onclick="engine.lookAt(1)">View 3D Context</button>
     </div>
+
     <div class="mission-step">
         <div class="top-row"><div class="tag">Security</div><div class="airline-box">AA2405</div></div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Enter security through the main hall. Follow the ceiling signs.</div>
+        <div class="subtitle">Located just past the check-in zone. The hallway funnels into the screening area.</div>
+        <button class="view-map-btn" onclick="engine.lookAt(2)">View 3D Context</button>
     </div>
+
     <div class="mission-step">
         <div class="top-row"><div class="tag">Boarding</div><div class="airline-box">AA2405</div></div>
         <div class="title">Gate D32</div>
-        <div class="subtitle">Proceed to boarding area. Have a safe flight!</div>
+        <div class="subtitle">Boarding area for Concourse D. Your final destination. Safe flight!</div>
+        <button class="view-map-btn" onclick="engine.lookAt(3)">View 3D Context</button>
     </div>
 </div>
 
@@ -86,10 +105,6 @@
 
     class VelocisEngine {
         constructor() {
-            this.activeStep = -1;
-            this.marker = null;
-            this.scrollTimeout = null;
-            // TRUE GROUND ANCHORS: Nudged to the exact curb/entrance of MIA
             this.coords = [[-80.2825, 25.7950], [-80.2850, 25.7956], [-80.2865, 25.7962], [-80.2915, 25.7981]];
             this.initMap();
         }
@@ -109,31 +124,17 @@
             const val = document.getElementById('flight-input').value.toUpperCase() || "AA2405";
             document.querySelectorAll('.airline-box').forEach(el => el.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=aa.com&sz=32" style="height:14px"> ${val}`);
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            this.updateLocation(0);
+            this.lookAt(0);
         }
 
-        handleScroll() {
-            // "BUNNY PIN" FIX: Only move the pin once scrolling stops completely
-            clearTimeout(this.scrollTimeout);
-            this.scrollTimeout = setTimeout(() => {
-                const tray = document.getElementById('mission-tray');
-                const newStep = Math.round(tray.scrollTop / (tray.scrollHeight / 4));
-                if (newStep !== this.activeStep && newStep < this.coords.length) {
-                    this.updateLocation(newStep);
-                }
-            }, 150); // Delay allows for smoother "glide" instead of "jump"
-        }
-
-        updateLocation(index) {
-            this.activeStep = index;
+        lookAt(index) {
             const loc = this.coords[index];
-            this.map.flyTo({ center: loc, zoom: 18, pitch: 70, speed: 0.4 });
-            
-            if (!this.marker) {
-                this.marker = new mapboxgl.Marker({ color: "#007AFF" }).setLngLat(loc).addTo(this.map);
-            } else {
-                this.marker.setLngLat(loc); // Slides smoothly to the grounded spot
-            }
+            this.map.flyTo({ 
+                center: loc, 
+                zoom: 19, 
+                pitch: 75, 
+                speed: 0.5 
+            });
         }
     }
     const engine = new VelocisEngine();
