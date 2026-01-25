@@ -65,6 +65,15 @@
         .title { font-size: 38px; font-weight: 900; color: white; margin-top: 5px; line-height: 1.1; letter-spacing: -1px; }
         .subtitle { font-size: 18px; color: rgba(255,255,255,0.7); margin-top: 10px; line-height: 1.5; font-weight: 500; }
 
+        /* INTERNATIONAL eSIM CTA */
+        .esim-cta {
+            margin-top: 25px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%);
+            border-radius: 20px; padding: 22px; color: white; display: flex; flex-direction: column; gap: 8px;
+            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3); border: 1px solid rgba(255,255,255,0.2);
+        }
+        .esim-cta-title { font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .esim-button { background: white; color: var(--v-blue); border: none; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 12px; margin-top: 5px; cursor: pointer; }
+
         /* PARTNER & TRANSPORT CARDS */
         .partner-perk {
             margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px;
@@ -73,19 +82,11 @@
         .partner-header { display: flex; align-items: center; gap: 10px; }
         .partner-logo { width: 32px; height: 32px; border-radius: 8px; background: white; padding: 4px; }
         .partner-name { color: white; font-weight: 700; font-size: 14px; }
-        
-        /* LIVE PULSE COMPONENT */
         .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; box-shadow: 0 0 8px #4caf50; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
-        .code-btn { 
-            background: var(--v-blue); color: white; border: none; padding: 14px; 
-            border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; margin-top: 5px;
-        }
+        .code-btn { background: var(--v-blue); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; margin-top: 5px; }
 
-        /* eSIM STATUS */
-        .esim-status { display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 12px; font-weight: 700; color: #4caf50; }
-        
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -126,8 +127,12 @@
     <div class="mission-step">
         <div class="top-row"><div class="tag">04. Boarding</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="title">Gate D32</div>
-        <div class="subtitle">You're all set. Grab a coffee at Duty-Free while you wait—it's just a few steps from your gate.</div>
-        <div class="esim-status"><div class="live-pulse"></div> eSIM STANDBY: AUTO-ACTIVE ON LANDING</div>
+        <div class="subtitle">You're all set. Grab a coffee—it's just a few steps from your gate.</div>
+        <div class="esim-cta">
+            <div class="esim-cta-title">Traveling International?</div>
+            <div class="esim-cta-text">Stay connected. Secure your eSIM now for 5G data the second you touch down.</div>
+            <button class="esim-button">GET GLOBAL eSIM</button>
+        </div>
         <div class="partner-perk">
             <div class="partner-header">
                 <img class="partner-logo" src="https://www.google.com/s2/favicons?domain=starbucks.com&sz=64">
@@ -142,14 +147,13 @@
         <div class="top-row"><div class="tag" style="color:#80c1ff;">05. Welcome Home</div><div class="airline-box" id="logo-5">----</div></div>
         <div class="title">Carousel 12</div>
         <div class="subtitle">Welcome to Miami! Your bags are arriving at Carousel 12. Let's get your ride ready.</div>
-        <div class="esim-status" style="color:white;"><div class="live-pulse" style="background:white; box-shadow: 0 0 8px #fff;"></div> eSIM ACTIVE: 5G SECURED</div>
         <div class="partner-perk" style="background: rgba(0,0,0,0.25);">
             <div class="partner-header">
                 <div class="partner-logo" style="background: #fff; color:#000; display:flex; align-items:center; justify-content:center; font-weight:900;">V</div>
-                <div class="partner-name">Ground Transport Database</div>
+                <div class="partner-name">Transport Hub</div>
                 <div class="live-pulse"></div>
             </div>
-            <button class="code-btn" style="background: #fff; color: #000;" onclick="window.location.href='index.html#ground-transport-market'">VIEW TRANSPORT HUB</button>
+            <button class="code-btn" style="background: #fff; color: #000;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
         </div>
     </div>
 </div>
