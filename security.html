@@ -1,168 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>VELOCIS™ | Mission Simulator</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
+    <title>VELOCIS™ | Full Mission Engine</title>
     <style>
-        body { margin: 0; padding: 0; background: #0b0e14; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: white; overflow: hidden; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        body { margin: 0; background: #0b0e14; font-family: -apple-system, sans-serif; color: #00f2ff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #terminal-view { flex: 1; position: relative; background: #0b0e14; border: 1px solid #1a1f26; margin: 15px; border-radius: 24px; box-shadow: inset 0 0 50px #000; cursor: crosshair; }
         
-        /* THE X-RAY OVERLAY */
-        #mission-control {
-            position: absolute; top: 20px; left: 20px; z-index: 10;
-            background: rgba(11, 14, 20, 0.9); padding: 20px; border-radius: 16px;
-            width: 320px; border: 1px solid rgba(0, 242, 255, 0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .status-header { color: #00f2ff; font-size: 12px; font-weight: 800; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; }
-        #instruction { font-size: 18px; font-weight: 500; margin-bottom: 20px; line-height: 1.4; color: #fff; }
+        /* THE X-RAY MATRIX */
+        svg { width: 100%; height: 100%; transition: transform 0.5s ease-out; }
+        .wall { stroke: #1a1f26; stroke-width: 3; fill: rgba(26, 31, 38, 0.5); }
+        .path-guide { stroke: #007AFF; stroke-width: 3; stroke-dasharray: 6; fill: none; opacity: 0.4; }
+        .partner-shop { fill: #1a1f26; stroke: #ffd700; stroke-width: 2; transition: 0.5s; }
+        .pulse { filter: drop-shadow(0 0 10px #ffd700); stroke-width: 4; }
         
-        .mission-step { 
-            display: flex; align-items: center; gap: 12px; padding: 12px; 
-            background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px;
-            cursor: pointer; border: 1px solid transparent; transition: 0.3s;
-        }
-        .mission-step:hover { background: rgba(0, 242, 255, 0.1); border-color: #00f2ff; }
-        .mission-step.active { background: rgba(0, 242, 255, 0.2); border-color: #00f2ff; box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); }
-        .step-num { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #00f2ff; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #00f2ff; }
+        /* THE BRAIN (CYAN DOT) */
+        #passenger-dot { fill: #00f2ff; filter: drop-shadow(0 0 12px #00f2ff); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* MERCHANT HUD */
-        #merchant-toast {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            z-index: 10; background: #ffd700; color: #000; padding: 15px 30px;
-            border-radius: 50px; font-weight: 700; display: none;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
-        }
-
-        /* CUSTOM BEACON */
-        .velocis-beacon {
-            width: 20px; height: 20px; background: #00f2ff; border: 3px solid #fff;
-            border-radius: 50%; box-shadow: 0 0 20px #00f2ff;
-        }
+        /* PASSENGER HUD */
+        #hud { padding: 25px; background: rgba(11, 14, 20, 0.95); border-top: 1px solid #1a1f26; backdrop-filter: blur(10px); }
+        .status-chip { display: inline-block; padding: 4px 12px; border-radius: 50px; background: rgba(0, 242, 255, 0.1); font-size: 10px; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; border: 1px solid #00f2ff; }
+        .instruction { font-size: 22px; font-weight: 500; color: #fff; margin-bottom: 15px; }
+        #altimeter-readout { position: absolute; top: 30px; right: 30px; font-family: monospace; font-size: 12px; color: #555; }
     </style>
 </head>
 <body>
 
-<div id="mission-control">
-    <div class="status-header">Mission Status</div>
-    <div id="instruction">Welcome to MIA. Entering Concourse D.</div>
-    
-    <div class="mission-step" id="step-1" onclick="runStep(1)">
-        <div class="step-num">1</div>
-        <div>Check-in / Kiosks</div>
-    </div>
-    <div class="mission-step" id="step-2" onclick="runStep(2)">
-        <div class="step-num">2</div>
-        <div>Security Checkpoint</div>
-    </div>
-    <div class="mission-step" id="step-3" onclick="runStep(3)">
-        <div class="step-num">3</div>
-        <div>Retail Corridor</div>
-    </div>
-    <div class="mission-step" id="step-4" onclick="runStep(4)">
-        <div class="step-num">4</div>
-        <div>Arrival at Gate</div>
-    </div>
+<div id="terminal-view">
+    <div id="altimeter-readout">ALT: 12.0m (LOCKED)</div>
+    <svg id="matrix-svg" viewBox="0 0 1000 500">
+        <rect class="wall" x="50" y="50" width="900" height="400" rx="20" />
+        
+        <path id="guide" class="path-guide" d="M 100 250 L 300 250 L 500 150 L 900 150" />
+
+        <rect id="shop-starbucks" class="partner-shop" x="520" y="80" width="100" height="50" rx="8" />
+        <text x="535" y="110" fill="#ffd700" font-size="12" font-weight="bold">STARBUCKS</text>
+
+        <circle id="passenger-dot" cx="100" cy="250" r="10" />
+    </svg>
 </div>
 
-<div id="merchant-toast">VELOCIS PARTNER: 10% OFF COFFEE</div>
-<div id="map"></div>
+<div id="hud">
+    <div id="mission-chip" class="status-chip">CHECK-IN PHASE</div>
+    <div id="instruction" class="instruction">Welcome to MIA. Move to Counter 4.</div>
+    <button onclick="simulateMovement()" style="padding: 12px 24px; background: #00f2ff; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">SIMULATE ADVANCE</button>
+</div>
 
 <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
+    const MissionBrain = {
+        state: 0,
+        checkpoints: [
+            { x: 300, y: 250, label: "TSA PHASE", text: "Check-in done. Move to Security D.", zoom: 1.2 },
+            { x: 550, y: 150, label: "RETAIL PHASE", text: "Security cleared. 10% Off Coffee ahead!", zoom: 1.5 },
+            { x: 900, y: 150, label: "GATE PHASE", text: "Arriving at Gate D34. Safe flight!", zoom: 1.1 }
+        ],
 
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/light-v11', // Optimized for Clean X-Ray
-        center: [-80.2842, 25.7954],
-        zoom: 17,
-        pitch: 45,
-        antialias: true
-    });
-
-    const marker = new mapboxgl.Marker(document.createElement('div'));
-    const el = marker.getElement();
-    el.className = 'velocis-beacon';
-
-    const locations = {
-        entry: [-80.2842, 25.7954],
-        kiosk: [-80.2838, 25.7956],
-        security: [-80.2831, 25.7958],
-        shops: [-80.2825, 25.7960],
-        gate: [-80.2828, 25.7961]
+        checkProximity(x, y) {
+            // Invisible sensor for the Starbucks (8% commission trigger)
+            const shop = document.getElementById('shop-starbucks');
+            const distance = Math.sqrt(Math.pow(x - 570, 2) + Math.pow(y - 105, 2));
+            
+            if (distance < 100) {
+                shop.classList.add('pulse');
+            } else {
+                shop.classList.remove('pulse');
+            }
+        }
     };
 
-    function runStep(step) {
-        // Reset active UI
-        document.querySelectorAll('.mission-step').forEach(s => s.classList.remove('active'));
-        document.getElementById(`step-${step}`).classList.add('active');
-        document.getElementById('merchant-toast').style.display = 'none';
-
-        if (step === 1) {
-            // STEP 1: ALTIMETER TRIGGER + KIOSK LOCK
-            document.getElementById('instruction').innerText = "Arriving at Departures. Floor 2. Use Kiosk Block 4.";
-            map.flyTo({ center: locations.kiosk, zoom: 19.5, pitch: 60, duration: 2000 });
-            marker.setLngLat(locations.kiosk).addTo(map);
-            applyXRayEffect(0.3); // Partial X-Ray
-        } 
-        else if (step === 2) {
-            // STEP 2: TRANSITION TO TSA
-            document.getElementById('instruction').innerText = "Next: Security D. Estimated wait: 12 mins.";
-            map.flyTo({ center: locations.security, zoom: 19, pitch: 50, duration: 2000 });
-            marker.setLngLat(locations.security).addTo(map);
-        }
-        else if (step === 3) {
-            // STEP 3: RETAIL CORRIDOR (THE REVENUE STATE)
-            document.getElementById('instruction').innerText = "Security Cleared. Gate D34 is a 4 min walk.";
-            map.flyTo({ center: locations.shops, zoom: 20, pitch: 70, duration: 2500 });
-            marker.setLngLat(locations.shops).addTo(map);
+    function simulateMovement() {
+        if (MissionBrain.state < MissionBrain.checkpoints.length) {
+            const data = MissionBrain.checkpoints[MissionBrain.state];
+            const dot = document.getElementById('passenger-dot');
+            const svg = document.getElementById('matrix-svg');
             
-            // Trigger the "Invisible Merchant"
-            setTimeout(() => {
-                document.getElementById('merchant-toast').style.display = 'block';
-                applyXRayEffect(0.1); // Deep X-Ray for Shop visibility
-            }, 1000);
-        }
-        else if (step === 4) {
-            // STEP 4: FINAL GATE ARRIVAL
-            document.getElementById('instruction').innerText = "Gate D34 reached. Enjoy your flight.";
-            map.flyTo({ center: locations.gate, zoom: 20, pitch: 80, duration: 2000 });
-            marker.setLngLat(locations.gate).addTo(map);
-        }
-    }
-
-    function applyXRayEffect(opacity) {
-        // Here we simulate the "Brain" adjusting the Mapbox Layers
-        // Professionally, we target 'building' or '3d-structures'
-        if (map.getLayer('add-3d-buildings')) {
-            map.setPaintProperty('add-3d-buildings', 'fill-extrusion-opacity', opacity);
+            // Move the Brain
+            dot.setAttribute('cx', data.x);
+            dot.setAttribute('cy', data.y);
+            
+            // Update HUD (No jargon)
+            document.getElementById('mission-chip').innerText = data.label;
+            document.getElementById('instruction').innerText = data.text;
+            
+            // Check sensors
+            MissionBrain.checkProximity(data.x, data.y);
+            
+            MissionBrain.state++;
         }
     }
-
-    map.on('load', () => {
-        // Add the building layer that we will "X-Ray"
-        map.addLayer({
-            'id': 'add-3d-buildings',
-            'source': 'composite',
-            'source-layer': 'building',
-            'filter': ['==', 'extrude', 'true'],
-            'type': 'fill-extrusion',
-            'minzoom': 15,
-            'paint': {
-                'fill-extrusion-color': '#aaa',
-                'fill-extrusion-height': ['get', 'height'],
-                'fill-extrusion-base': ['get', 'min_height'],
-                'fill-extrusion-opacity': 0.6
-            }
-        });
-        
-        // Start the Mission
-        marker.setLngLat(locations.entry).addTo(map);
-    });
 </script>
 </body>
 </html>
