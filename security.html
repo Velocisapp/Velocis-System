@@ -2,46 +2,54 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Dynamic Guide</title>
+    <title>VELOCIS™ | Sovereign Engine</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <style>
-        :root { --v-blue: #007AFF; --v-arrival-blue: #f0f7ff; --v-gray: #f2f2f7; }
-        body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { 
+            --v-blue: #007AFF; 
+            --v-dark: #1c1c1e; 
+            --v-bg: #000;
+            --v-arrival: #0052cc;
+        }
+        body { margin: 0; padding: 0; background: var(--v-bg); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* SKY-ENTRY WINDOW */
+        /* HIGH-END SKY ENTRY */
         #entry-screen { 
             position: fixed; inset: 0; 
-            background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
+            background: linear-gradient(135deg, #051937 0%, #004d7a 100%); 
             z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; 
             padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
         }
-        .glass-card { background: rgba(255,255,255,0.2); backdrop-filter: blur(20px); padding: 40px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.3); width: 85%; max-width: 340px; text-align: center; }
-        .logo-main { font-size: 42px; font-weight: 900; color: white; margin-bottom: 25px; letter-spacing: -2px; }
-        #flight-input { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 24px; text-align: center; margin-bottom: 20px; font-weight: 700; outline: none; }
-        .start-btn { width: 100%; height: 60px; background: #1c1c1e; color: white; border: none; border-radius: 15px; font-weight: 700; font-size: 18px; cursor: pointer; }
+        .logo-main { font-size: 48px; font-weight: 900; color: white; margin-bottom: 30px; letter-spacing: -2px; }
+        #flight-input { 
+            width: 80%; max-width: 300px; padding: 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 18px; 
+            font-size: 26px; text-align: center; margin-bottom: 20px; font-weight: 700; background: rgba(255,255,255,0.1); color: white;
+        }
+        .start-btn { width: 80%; max-width: 300px; height: 65px; background: white; color: #000; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; }
 
         /* THE PANORAMIC STAGE */
-        #map { flex: 1; width: 100%; height: 50vh; pointer-events: none; }
+        #map { flex: 1; width: 100%; height: 48vh; pointer-events: none; }
         
-        /* DYNAMIC SCROLLABLE TRAY */
-        #mission-tray { height: 50vh; background: white; overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; box-shadow: 0 -15px 40px rgba(0,0,0,0.1); }
+        /* SOVEREIGN SCROLLABLE TRAY */
+        #mission-tray { height: 52vh; background: var(--v-dark); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; border-top: 1px solid rgba(255,255,255,0.1); }
         
-        .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid #f2f2f7; }
+        .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; transition: 0.5s; }
         
-        /* ARRIVAL SPECIFIC COLORING */
-        .arrival-section { background-color: var(--v-arrival-blue); }
-        .arrival-tag { color: #1565c0 !important; background: #e3f2fd; padding: 4px 10px; border-radius: 6px; }
+        /* DEPARTURE DESIGN (DARK & PROFESSIONAL) */
+        .departure-step { color: white; }
+        
+        /* ARRIVAL DESIGN (BLUE & DISTINCT) */
+        .arrival-section { background: linear-gradient(180deg, var(--v-arrival) 0%, #003366 100%); color: white; }
 
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
-        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: #f2f2f7; padding: 6px 12px; border-radius: 8px; }
-        
-        .title { font-size: 34px; font-weight: 900; color: #1c1c1e; margin-top: 5px; line-height: 1.1; }
-        .subtitle { font-size: 17px; color: #636366; margin-top: 10px; line-height: 1.4; font-weight: 500; }
-        
-        .cta-text { text-align: center; font-size: 11px; font-weight: 800; color: var(--v-blue); padding: 10px; background: #fff; border-bottom: 1px solid #eee; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .tag { color: var(--v-blue); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 12px; }
+        .airline-logo { height: 18px; filter: brightness(0) invert(1); }
+
+        .title { font-size: 40px; font-weight: 900; margin-top: 5px; line-height: 1.1; letter-spacing: -1px; }
+        .subtitle { font-size: 18px; color: rgba(255,255,255,0.7); margin-top: 12px; line-height: 1.5; font-weight: 500; }
 
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
@@ -49,41 +57,33 @@
 <body>
 
 <div id="entry-screen">
-    <div class="glass-card">
-        <div class="logo-main">VELOCIS</div>
-        <input type="text" id="flight-input" placeholder="AA2405">
-        <button class="start-btn" onclick="engine.start()">START MISSION</button>
-    </div>
+    <div class="logo-main">VELOCIS™</div>
+    <input type="text" id="flight-input" placeholder="AA2405">
+    <button class="start-btn" onclick="engine.start()">START JOURNEY</button>
 </div>
 
 <div id="map"></div>
-<div class="cta-text">↓ SCROLL FOR STEP-BY-STEP GUIDANCE ↓</div>
 
 <div id="mission-tray" onscroll="engine.handleScroll()">
-    <div class="mission-step">
-        <div class="top-row"><div class="tag">01. Entrance</div><div class="airline-box" id="tray-flight-1">----</div></div>
+    <div class="mission-step departure-step">
+        <div class="top-row"><div class="tag">01. Entrance</div><div class="airline-box" id="f-logo-1">----</div></div>
         <div class="title">Door D3</div>
-        <div class="subtitle">Main terminal entrance at MIA North. Look for the blue canopy.</div>
+        <div class="subtitle">Enter through Miami North Departures. Look for the blue canopy.</div>
     </div>
-    <div class="mission-step">
-        <div class="top-row"><div class="tag">02. Logistics</div><div class="airline-box" id="tray-flight-2">----</div></div>
+    <div class="mission-step departure-step">
+        <div class="top-row"><div class="tag">02. Bag Drop</div><div class="airline-box" id="f-logo-2">----</div></div>
         <div class="title">Counters 22-34</div>
-        <div class="subtitle">American Airlines bag drop is on Level 2. Follow Zone D signs.</div>
+        <div class="subtitle">American Airlines priority and main bag drop. Located on Level 2.</div>
     </div>
-    <div class="mission-step">
-        <div class="top-row"><div class="tag">03. Security</div><div class="airline-box" id="tray-flight-3">----</div></div>
+    <div class="mission-step departure-step">
+        <div class="top-row"><div class="tag">03. Security</div><div class="airline-box" id="f-logo-3">----</div></div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Security screening is straight past the counters. Follow the ceiling signs.</div>
-    </div>
-    <div class="mission-step">
-        <div class="top-row"><div class="tag">04. Boarding</div><div class="airline-box" id="tray-flight-4">----</div></div>
-        <div class="title">Gate D32</div>
-        <div class="subtitle">Your final departure stop. Your eSIM is monitoring the connection.</div>
+        <div class="subtitle">Proceed past the counters to the main screening hall.</div>
     </div>
     <div class="mission-step arrival-section">
-        <div class="top-row"><div class="tag arrival-tag">05. Arrival Mission</div><div class="airline-box" id="tray-flight-5">----</div></div>
+        <div class="top-row"><div class="tag" style="color:#80c1ff;">04. Welcome Home</div><div class="airline-box" id="f-logo-4" style="background:rgba(255,255,255,0.2)">----</div></div>
         <div class="title">Carousel 12</div>
-        <div class="subtitle">Welcome to Miami. Proceed to Level 1 to collect your luggage.</div>
+        <div class="subtitle">Welcome to Miami. Proceed to Level 1 Arrivals for luggage collection.</div>
     </div>
 </div>
 
@@ -94,11 +94,11 @@
         constructor() {
             this.activeStep = -1;
             this.scrollTimeout = null;
+            // Cinematic panoramic views of MIA
             this.views = [
                 { center: [-80.2820, 25.7948], zoom: 16.8, pitch: 65, bearing: -20 },
                 { center: [-80.2845, 25.7954], zoom: 17.0, pitch: 60, bearing: -15 },
                 { center: [-80.2865, 25.7960], zoom: 17.2, pitch: 65, bearing: -10 },
-                { center: [-80.2910, 25.7978], zoom: 17.5, pitch: 60, bearing: -30 },
                 { center: [-80.2855, 25.7940], zoom: 16.5, pitch: 45, bearing: 180 }
             ];
             this.initMap();
@@ -117,7 +117,9 @@
 
         start() {
             const flight = document.getElementById('flight-input').value.toUpperCase() || "AA2405";
-            for(let i=1; i<=5; i++) { document.getElementById(`tray-flight-${i}`).innerText = flight; }
+            for(let i=1; i<=4; i++) { 
+                document.getElementById(`f-logo-${i}`).innerHTML = `<img class="airline-logo" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32"> ${flight}`; 
+            }
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             this.updateView(0);
         }
