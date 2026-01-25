@@ -14,19 +14,38 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. SKY-ENTRY WINDOW */
+        /* 1. WARM & FRIENDLY ENTRY WINDOW */
         #entry-screen { 
             position: fixed; inset: 0; 
-            background: linear-gradient(135deg, #051937 0%, #004d7a 100%); 
+            background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
             z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; 
             padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
         }
-        .logo-main { font-size: 48px; font-weight: 900; color: white; margin-bottom: 30px; letter-spacing: -2px; }
-        #flight-input { 
-            width: 80%; max-width: 300px; padding: 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 18px; 
-            font-size: 26px; text-align: center; margin-bottom: 20px; font-weight: 700; background: rgba(255,255,255,0.1); color: white; outline: none;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            padding: 45px 30px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4);
+            display: flex; flex-direction: column; align-items: center; width: 85%; max-width: 340px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            position: relative; overflow: hidden;
         }
-        .start-btn { width: 80%; max-width: 300px; height: 65px; background: white; color: #000; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; }
+        /* BACKGROUND AIRPLANE DECORATION */
+        .bg-airplane {
+            position: absolute; top: -20px; right: -20px; font-size: 120px; 
+            opacity: 0.1; color: white; transform: rotate(-15deg); pointer-events: none;
+        }
+        .logo-main { font-size: 48px; font-weight: 900; color: white; margin-bottom: 5px; letter-spacing: -2.5px; z-index: 2; }
+        .cta-sub { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; margin-bottom: 30px; z-index: 2; }
+        
+        #flight-input { 
+            width: 100%; padding: 18px; border: none; border-radius: 18px; 
+            font-size: 26px; text-align: center; margin-bottom: 20px; 
+            background: white; color: #1c1c1e; font-weight: 700; outline: none; z-index: 2;
+        }
+        .start-btn { 
+            width: 100%; height: 65px; background: #1c1c1e; color: white; 
+            border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 2;
+        }
 
         /* 2. THE PANORAMIC STAGE */
         #map { flex: 1; width: 100%; height: 45vh; pointer-events: none; }
@@ -60,9 +79,13 @@
 <body>
 
 <div id="entry-screen">
-    <div class="logo-main">VELOCIS™</div>
-    <input type="text" id="flight-input" placeholder="AA2405">
-    <button class="start-btn" onclick="engine.start()">START JOURNEY</button>
+    <div class="glass-card">
+        <div class="bg-airplane">✈</div>
+        <div class="logo-main">VELOCIS</div>
+        <div class="cta-sub">Enter your flight number below</div>
+        <input type="text" id="flight-input" placeholder="AA2405">
+        <button class="start-btn" onclick="engine.start()">CONTINUE TO FLIGHT</button>
+    </div>
 </div>
 
 <div id="map"></div>
@@ -108,8 +131,8 @@
                 { center: [-80.2820, 25.7948], zoom: 16.8, pitch: 65, bearing: -20 },
                 { center: [-80.2845, 25.7954], zoom: 17.0, pitch: 60, bearing: -15 },
                 { center: [-80.2865, 25.7960], zoom: 17.2, pitch: 65, bearing: -10 },
-                { center: [-80.2910, 25.7978], zoom: 17.5, pitch: 60, bearing: -30 }, // Gate View
-                { center: [-80.2855, 25.7940], zoom: 16.5, pitch: 45, bearing: 180 }  // Arrival View
+                { center: [-80.2910, 25.7978], zoom: 17.5, pitch: 60, bearing: -30 }, 
+                { center: [-80.2855, 25.7940], zoom: 16.5, pitch: 45, bearing: 180 } 
             ];
             this.initMap();
         }
