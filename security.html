@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Scrollable Mission</title>
+    <title>VELOCIS™ | Stable Guide</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
@@ -10,23 +10,37 @@
         :root { --v-blue: #007AFF; --v-gray: #f2f2f7; }
         body { margin: 0; padding: 0; background: var(--v-gray); font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        #map { flex: 1; width: 100%; height: 50vh; }
+        #map { flex: 1; width: 100%; height: 55vh; }
 
-        /* SCROLLABLE MISSION TRAY */
-        #mission-tray { height: 50vh; background: white; overflow-y: scroll; border-radius: 28px 28px 0 0; box-shadow: 0 -12px 45px rgba(0,0,0,0.1); z-index: 10; padding: 20px; scroll-snap-type: y mandatory; }
+        /* THE STABLE SCROLL TRAY */
+        #mission-tray { 
+            height: 45vh; 
+            background: white; 
+            overflow-y: scroll; 
+            scroll-snap-type: y mandatory; /* This locks the window in place */
+            border-radius: 28px 28px 0 0; 
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
         
-        .mission-step { height: 140px; padding: 20px; border-bottom: 1px solid #eee; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; transition: 0.3s; opacity: 0.4; }
-        .mission-step.active { opacity: 1; border-left: 4px solid var(--v-blue); }
+        .mission-step { 
+            height: 100%; /* Each step takes the full tray height for stability */
+            padding: 30px; 
+            box-sizing: border-box;
+            scroll-snap-align: center; /* Ensures it stays put */
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
 
         .top-info { display: flex; justify-content: space-between; align-items: center; }
-        .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .airline-box { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #8e8e93; background: var(--v-gray); padding: 4px 10px; border-radius: 6px; }
-        .logo-icon { height: 14px; }
+        .tag { color: var(--v-blue); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .airline-box { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #8e8e93; background: var(--v-gray); padding: 6px 12px; border-radius: 8px; }
+        .logo-icon { height: 16px; }
 
-        .title { font-size: 24px; font-weight: 800; color: #1c1c1e; margin-top: 5px; }
-        .subtitle { font-size: 15px; color: #636366; margin-top: 4px; }
+        .title { font-size: 32px; font-weight: 800; color: #1c1c1e; margin-top: 10px; line-height: 1.1; }
+        .subtitle { font-size: 17px; color: #636366; margin-top: 8px; font-weight: 500; }
 
-        /* Hiding scrollbar but keeping function */
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -35,39 +49,42 @@
 <div id="map"></div>
 
 <div id="mission-tray" onscroll="engine.handleScroll()">
-    <div class="mission-step active" id="step-0">
+    <div class="mission-step" id="step-0">
         <div class="top-info">
-            <div class="tag">Entrance</div>
+            <div class="tag">Arrival at MIA</div>
             <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
         </div>
         <div class="title">Door D3</div>
-        <div class="subtitle">Main Departures Entrance</div>
+        <div class="subtitle">Main terminal entrance. Look for the blue sidewalk canopy.</div>
     </div>
+
     <div class="mission-step" id="step-1">
         <div class="top-info">
-            <div class="tag">Check-In</div>
+            <div class="tag">Step 1: Bag Drop</div>
             <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
         </div>
         <div class="title">Counters 22-34</div>
-        <div class="subtitle">Level 2 - Bag Drop</div>
+        <div class="subtitle">Proceed to the American Airlines zone on Level 2.</div>
     </div>
+
     <div class="mission-step" id="step-2">
         <div class="top-info">
-            <div class="tag">Security</div>
+            <div class="tag">Step 2: Security</div>
             <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
         </div>
         <div class="title">Checkpoint D</div>
-        <div class="subtitle">Follow the main hall</div>
+        <div class="subtitle">Keep walking straight past the check-in counters.</div>
     </div>
+
     <div class="mission-step" id="step-3">
         <div class="top-info">
-            <div class="tag">Gate</div>
+            <div class="tag">Final Step: Gate</div>
             <div class="airline-box"><img class="logo-icon" src="https://www.google.com/s2/favicons?domain=aa.com&sz=32">AA2405</div>
         </div>
         <div class="title">Gate D32</div>
-        <div class="subtitle">Boarding Area</div>
+        <div class="subtitle">Take the Skytrain or follow the concourse signs.</div>
     </div>
-    <div style="height: 100px;"></div> </div>
+</div>
 
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
@@ -77,10 +94,10 @@
             this.activeStep = -1;
             this.marker = null;
             this.coords = [
-                [-80.2828, 25.7952], // Entrance
-                [-80.2852, 25.7958], // Counters
-                [-80.2868, 25.7964], // Security
-                [-80.2915, 25.7981]  // Gate
+                [-80.2828, 25.7952], 
+                [-80.2852, 25.7958], 
+                [-80.2868, 25.7964], 
+                [-80.2915, 25.7981]  
             ];
             this.initMap();
         }
@@ -95,14 +112,14 @@
             });
             this.map.on('style.load', () => {
                 this.map.setConfigProperty('basemap', 'lightPreset', 'day');
-                this.updateMission(0); // Set initial state
+                this.updateMission(0); 
             });
         }
 
         handleScroll() {
             const tray = document.getElementById('mission-tray');
-            const stepHeight = 140;
-            const newStep = Math.round(tray.scrollTop / stepHeight);
+            // Calculate which step is centered based on height
+            const newStep = Math.round(tray.scrollTop / tray.clientHeight);
 
             if (newStep !== this.activeStep && newStep < this.coords.length) {
                 this.updateMission(newStep);
@@ -113,20 +130,14 @@
             this.activeStep = index;
             const loc = this.coords[index];
 
-            // 1. Smoothly slide the map
-            this.map.flyTo({ center: loc, zoom: 18, pitch: 70, speed: 0.5 });
+            // Smooth glide - no snapping or jumping
+            this.map.flyTo({ center: loc, zoom: 18, pitch: 70, speed: 0.4 });
 
-            // 2. Smoothly slide the pin (NO JUMPING)
             if (!this.marker) {
                 this.marker = new mapboxgl.Marker({ color: "#007AFF" }).setLngLat(loc).addTo(this.map);
             } else {
                 this.marker.setLngLat(loc);
             }
-
-            // 3. Visual highlight in the tray
-            document.querySelectorAll('.mission-step').forEach((el, i) => {
-                el.classList.toggle('active', i === index);
-            });
         }
     }
 
