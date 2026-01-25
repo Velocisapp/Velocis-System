@@ -1,29 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VELOCIS™ | MISSION CONTROL</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, system-ui, sans-serif; }
+        body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        #search-overlay { position: absolute; top: 20px; left: 20px; z-index: 100; background: #fff; padding: 15px; border-radius: 12px; display: flex; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input { border: 1px solid #ddd; padding: 10px; border-radius: 6px; width: 180px; outline: none; font-size: 16px; }
-        button { background: #007AFF; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
-        /* THE CYAN BEACON - TARGET LOCK */
-        .cyan-beacon { width: 30px; height: 30px; border: 4px solid #00f2ff; border-radius: 50%; box-shadow: 0 0 20px #00f2ff; position: relative; }
-        .cyan-beacon::after { content: ''; position: absolute; width: 30px; height: 30px; background: #00f2ff; border-radius: 50%; animation: pulse 1.5s infinite; left: -4px; top: -4px; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
+        #search-overlay {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            background: white; padding: 12px; border-radius: 12px;
+            display: flex; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        input { border: 1px solid #ddd; padding: 12px; border-radius: 8px; width: 200px; outline: none; }
+        button { background: #007AFF; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        /* THE DYNAMIC BEACON */
+        .velocis-marker {
+            width: 20px; height: 20px; background: #00f2ff; border: 3px solid white;
+            border-radius: 50%; box-shadow: 0 0 15px #00f2ff;
+        }
     </style>
 </head>
 <body>
 
 <div id="search-overlay">
-    <input type="text" id="gate-input" placeholder="Enter Gate (D34)">
-    <button id="lock-btn">LOCK ON</button>
+    <input type="text" id="user-query" placeholder="Search Gate or Shop...">
+    <button id="search-btn">NAVIGATE</button>
 </div>
 <div id="map"></div>
 
@@ -32,47 +35,56 @@
 
     const map = new mapboxgl.Map({
         container: 'map',
-        style: 'mapbox://styles/mapbox/standard',
+        style: 'mapbox://styles/mapbox/light-v11', // Optimized for POI visibility
         center: [-80.2831, 25.7960],
-        zoom: 17, pitch: 0, antialias: true
+        zoom: 17, pitch: 60, antialias: true
     });
 
-    const el = document.createElement('div'); el.className = 'cyan-beacon';
-    const marker = new mapboxgl.Marker(el);
+    const marker = new mapboxgl.Marker(document.createElement('div'));
 
-    // THE PRODUCTION-GRADE ALGORITHM
-    async function executeMission(gateID) {
-        // STEP 1: MOVE TO AIRSPACE (Forces building to start loading)
-        map.easeTo({ center: [-80.2831, 25.7960], zoom: 18.2, duration: 1000 });
+    // THE DYNAMIC SEARCH ALGORITHM
+    async function searchMapRegistry(query) {
+        // 1. Zoom to the general airport area to force the 3D data to download
+        map.easeTo({ center: [-80.2831, 25.7960], zoom: 18 });
 
-        // STEP 2: LISTEN FOR DATA (Wait until 3D interior is ready)
+        // 2. Wait for the map to be "Idle" (Data is finished downloading)
         map.once('idle', () => {
-            // STEP 3: FEATURE EXTRACTION (No guessing)
-            const features = map.queryRenderedFeatures({ layers: ['label-sm', 'label-md', 'label-lg', 'poi-label'] });
-            const target = features.find(f => f.properties.name && f.properties.name.toUpperCase().includes(gateID));
+            // 3. UNIVERSAL HARVESTING: Look through all active labels (Gates + Shops)
+            const features = map.queryRenderedFeatures();
+            
+            const match = features.find(f => 
+                f.properties.name && f.properties.name.toUpperCase().includes(query.toUpperCase())
+            );
 
-            if (target) {
-                const loc = target.geometry.coordinates;
-                // STEP 4: THE TELEPORT JUMP (Bypasses tarmac collision)
-                map.jumpTo({ center: loc, zoom: 19.8, pitch: 65, bearing: -15 });
-                marker.setLngLat(loc).addTo(map);
+            if (match) {
+                const coords = match.geometry.coordinates;
+                
+                // 4. THE GUIDANCE SNAP
+                map.flyTo({
+                    center: coords,
+                    zoom: 20,
+                    pitch: 75,
+                    duration: 3000,
+                    essential: true
+                });
+
+                // Drop the beacon on the dynamic result
+                const el = document.createElement('div');
+                el.className = 'velocis-marker';
+                marker.setElement(el).setLngLat(coords).addTo(map);
             } else {
-                // FALLBACK: Anchor to the Level 2 Concourse Hallway
-                const fallback = [-80.28315, 25.7963];
-                map.jumpTo({ center: fallback, zoom: 19.5, pitch: 60 });
-                marker.setLngLat(fallback).addTo(map);
+                alert("Target not found. Please ensure you are looking for a Gate (D34) or a Shop (Starbucks).");
             }
         });
     }
 
-    document.getElementById('lock-btn').addEventListener('click', () => {
-        const id = document.getElementById('gate-input').value.toUpperCase().trim();
-        executeMission(id);
+    document.getElementById('search-btn').addEventListener('click', () => {
+        const query = document.getElementById('user-query').value.trim();
+        if (query) searchMapRegistry(query);
     });
 
     map.on('style.load', () => {
         map.setConfigProperty('basemap', 'lightPreset', 'day');
-        map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
     });
 </script>
 </body>
