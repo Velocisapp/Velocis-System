@@ -14,6 +14,7 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
+        /* 1. ENTRY SCREEN */
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         
@@ -45,7 +46,7 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0; font-size:38px; font-weight:900;">VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:16px; margin: 10px 0;">READY FOR LIVE MISSION</div>
+        <div id="status-msg" style="color:white; font-weight:800; font-size:16px; margin: 10px 0;">SYSTEM ACTIVE | PRO TIER</div>
         
         <div id="reader"></div>
         <button id="scan-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
@@ -73,19 +74,17 @@
     <div class="mission-step" id="step-0">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Head inside through the designated entrance. You're in the right place.</div>
+        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Proceed to the designated terminal entrance. Everything is ready.</div>
     </div>
-
     <div class="mission-step" id="step-1">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">02. LOGISTICS</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Check-in</div>
-        <div id="logistics-guidance" class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Airline check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
+        <div id="logistics-guidance" style="color:rgba(255,255,255,0.8); margin-top:10px;">Airline check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
     </div>
-
     <div class="mission-step" id="step-3" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
-        <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Let's get your ride ready.</div>
+        <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Your logistics are synchronized.</div>
         <button class="start-btn" style="background: #fff; color: #000; width: 100%; margin-top:20px; font-size: 14px; height: 50px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
     </div>
 </div>
@@ -103,7 +102,6 @@
             reader.style.display = 'block';
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
-            
             try {
                 await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.parsePass(t));
             } catch (err) {
@@ -129,11 +127,9 @@
         }
 
         async handshake(fNum) {
-            const msg = document.getElementById('status-msg');
-            msg.innerText = "QUERYING GLOBAL HUB...";
-            
+            const status = document.getElementById('status-msg');
+            status.innerText = "QUERYING PRO-DATABASE...";
             try {
-                // THE REAL FIX: Proxy bridge to stop iPhone security from blocking the data
                 const target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
                 const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
                 const wrapper = await res.json();
@@ -144,23 +140,22 @@
                     this.flightData = {
                         flight: fNum,
                         airline: f.airline.name,
+                        orig: f.departure.iata,
+                        dest: f.arrival.iata,
+                        city: f.arrival.airport ? f.arrival.airport.split(' ')[0] : "Destination",
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD",
                         baggage: f.arrival.baggage || "TBD",
-                        city: f.arrival.airport.split(' ')[0],
-                        dest: f.arrival.iata,
-                        orig: f.departure.iata,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
-                    
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     document.getElementById('verify-briefing').style.display = 'block';
-                    msg.innerText = "FLIGHT DATA SECURED";
+                    status.innerText = "AUTHENTICATION SUCCESS";
                 } else {
-                    msg.innerText = "FLIGHT NOT ACTIVE TODAY";
+                    status.innerText = "FLIGHT ID NOT FOUND";
                 }
-            } catch(e) { msg.innerText = "CONNECTION FAILURE"; }
+            } catch(e) { status.innerText = "CONNECTION FAILURE"; }
         }
 
         start() {
@@ -176,7 +171,7 @@
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             document.getElementById('logistics-guidance').innerText = `${this.flightData.airline} check-in is right here. Once you drop your bags, you're halfway to the gate.`;
-            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Bags arriving at Carousel ${this.flightData.baggage}.`;
+            document.getElementById('arrival-msg').innerText = `Arrival Hub: ${this.flightData.city}. Logistics synchronized.`;
             const photoId = this.flightData.dest === "MAD" ? "1539037116277-4db20889f2d4" : "1506159904221-02894547b3d2";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
             document.getElementById('step-0').classList.add('active-guidance');
