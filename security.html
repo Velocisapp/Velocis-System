@@ -16,7 +16,7 @@
         
         /* 1. ENTRY SCREEN */
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
+        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         
         #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--v-gold); display: none; background: #000; }
         #scan-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 1px solid var(--v-gold); margin-bottom: 15px; width: 100%; height: 50px; border-radius: 15px; font-weight: 800; cursor: pointer; }
@@ -51,7 +51,7 @@
         /* UNTOUCHABLE CTAS */
         .esim-cta { margin-top: 25px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 20px; padding: 22px; color: white; }
         .esim-button { background: white; color: var(--v-blue); border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 13px; margin-top: 10px; cursor: pointer; }
-        .partner-perk { margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; }
+        .partner-perk { margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
         .code-btn { background: var(--v-blue); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 13px; font-weight: 800; width: 100%; cursor: pointer; }
         .start-btn { width: 100%; height: 65px; background: #1c1c1e; color: white; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; }
         #mission-tray::-webkit-scrollbar { display: none; }
@@ -97,7 +97,7 @@
     <div class="mission-step" id="step-1">
         <div class="top-row"><div style="color:var(--v-blue); font-weight:900;">02. LOGISTICS</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Check-in</div>
-        <div class="guidance-text">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
+        <div id="logistics-guidance" class="guidance-text">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
     </div>
 
     <div class="mission-step" id="step-2">
@@ -121,12 +121,16 @@
         <div class="top-row"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
         <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Let's get your ride ready.</div>
+        <button class="code-btn" style="background: #fff; color: #000; width: 100%; margin-top:20px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
     </div>
 </div>
 
 <script>
     class VelocisSovereign {
-        constructor() { this.flightData = null; }
+        constructor() { 
+            this.flightData = null; 
+            this.apiKey = '47b85994f385c378e90637384a65b83b'; // LIVE AVIATIONSTACK KEY
+        }
 
         startScanner() {
             document.getElementById('reader').style.display = 'block';
@@ -135,53 +139,75 @@
             this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: {width:300, height:150} }, (t) => this.parsePass(t));
         }
 
-        parsePass(data) {
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            const flightNum = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
-            const dest = data.substring(33, 36).trim() || "MAD";
-            const name = data.substring(2, 12).split('/')[0] || "Passenger";
-            this.updateIdentity(flightNum, dest, name, data.substring(58, 60).trim() || "4");
-            this.scanner.stop();
-            document.getElementById('reader').style.display = 'none';
+        async fetchAviationData(fNum) {
+            try {
+                const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`);
+                const json = await res.json();
+                if(json.data && json.data.length > 0) {
+                    const f = json.data[0];
+                    return {
+                        airline: f.airline.name,
+                        gate: f.departure.gate || "D12",
+                        terminal: f.departure.terminal || "4",
+                        baggage: f.arrival.baggage || "6",
+                        city: f.arrival.iata === "MAD" ? "Madrid" : f.arrival.airport.split(' ')[0],
+                        dest: f.arrival.iata,
+                        orig: f.departure.iata
+                    };
+                }
+            } catch(e) { console.error("API Fetch Error"); }
+            return null;
         }
 
-        validateFlight(val) {
-            if (val.length >= 2) {
-                this.updateIdentity(val.toUpperCase(), "MAD", "Passenger", "4");
+        async parsePass(data) {
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            const flightNum = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
+            const name = data.includes('/') ? data.substring(2, 12).split('/')[0] : "Yourden";
+            
+            const live = await this.fetchAviationData(flightNum);
+            if(live) {
+                this.flightData = { ...live, flight: flightNum, passenger: name, logo: `https://www.google.com/s2/favicons?domain=${live.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
+                document.getElementById('personal-welcome').innerText = `Welcome, ${name}`;
+                document.getElementById('dest-code').innerText = live.dest;
+                document.getElementById('orig-code').innerText = live.orig;
                 document.getElementById('verify-briefing').style.display = 'block';
+                if(this.scanner) this.scanner.stop();
+                document.getElementById('reader').style.display = 'none';
             }
         }
 
-        updateIdentity(fNum, dest, name, door) {
-            this.flightData = {
-                flight: fNum, dest: dest, name: name, door: door, gate: "D12",
-                logo: `https://www.google.com/s2/favicons?domain=${fNum.substring(0,2).toLowerCase()}air.com&sz=64`
-            };
-            document.getElementById('personal-welcome').innerText = `Welcome, ${name}`;
-            document.getElementById('dest-code').innerText = dest;
-            document.getElementById('orig-code').innerText = "MIA";
-            document.getElementById('verify-briefing').style.display = 'block';
+        async validateFlight(val) {
+            if (val.length >= 4) {
+                const live = await this.fetchAviationData(val.toUpperCase());
+                if(live) {
+                    this.flightData = { ...live, flight: val.toUpperCase(), passenger: "Yourden", logo: `https://www.google.com/s2/favicons?domain=${live.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
+                    document.getElementById('dest-code').innerText = live.dest;
+                    document.getElementById('orig-code').innerText = live.orig;
+                    document.getElementById('verify-briefing').style.display = 'block';
+                }
+            }
         }
 
         start() {
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // Dynamic UI Overwrite
             for(let i=1; i<=4; i++) { 
                 document.getElementById(`logo-${i}`).innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
             }
             
-            document.getElementById('hud-city').innerText = this.flightData.dest;
+            document.getElementById('hud-city').innerText = this.flightData.city;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
-            document.getElementById('hud-door').innerText = "DOOR " + this.flightData.door;
-            document.getElementById('card-door').innerText = "Door " + this.flightData.door;
+            document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
-            document.getElementById('card-carousel').innerText = "Carousel 6";
-            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.dest}! Let's get your ride ready.`;
+            document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
+            
+            document.getElementById('logistics-guidance').innerText = `${this.flightData.airline} check-in is right here. Once you drop your bags, you're halfway to the gate.`;
+            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Your bags are arriving at Carousel ${this.flightData.baggage}.`;
 
-            // High-res background photo logic
-            const photoId = this.flightData.dest === "MAD" ? "1539037116277-4db20889f2d4" : "1506159904221-02894547b3d2";
+            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "MIA": "1506159904221-02894547b3d2" };
+            const photoId = photoMap[this.flightData.dest] || "1539037116277-4db20889f2d4";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
             
             document.getElementById('step-0').classList.add('active-guidance');
