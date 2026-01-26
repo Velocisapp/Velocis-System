@@ -16,7 +16,7 @@
         
         /* 1. ENTRY SCREEN */
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
+        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         
         #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--v-gold); display: none; background: #000; }
         #scan-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 1px solid var(--v-gold); margin-bottom: 15px; width: 100%; height: 50px; border-radius: 15px; font-weight: 800; cursor: pointer; }
@@ -38,7 +38,7 @@
         .dest-stat-row { display: flex; justify-content: space-between; color: white; }
         .dest-pill { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 12px; font-size: 12px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* 3. MISSION TRAY (RESTORED TEXT VISIBILITY) */
+        /* 3. MISSION TRAY (VISIBLE WARM TEXT) */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; padding-bottom: 100px; }
         .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; border-left: 0px solid var(--v-gold); }
         .active-guidance { background: rgba(255, 215, 0, 0.05) !important; border-left: 8px solid var(--v-gold) !important; }
@@ -129,7 +129,7 @@
     class VelocisSovereign {
         constructor() { 
             this.flightData = null; 
-            this.apiKey = '47b85994f385c378e90637384a65b83b'; // LIVE AVIATIONSTACK KEY
+            this.apiKey = '47b85994f385c378e90637384a65b83b'; 
         }
 
         startScanner() {
@@ -141,7 +141,7 @@
 
         async fetchAviationData(fNum) {
             try {
-                const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`);
+                const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum.trim()}`);
                 const json = await res.json();
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
@@ -155,23 +155,19 @@
                         orig: f.departure.iata
                     };
                 }
-            } catch(e) { console.error("API Fetch Error"); }
+            } catch(e) { console.error("AviationStack Connection Error"); }
             return null;
         }
 
         async parsePass(data) {
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            const flightNum = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
+            const flightMatch = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
             const name = data.includes('/') ? data.substring(2, 12).split('/')[0] : "Yourden";
             
-            const live = await this.fetchAviationData(flightNum);
+            const live = await this.fetchAviationData(flightMatch);
             if(live) {
-                this.flightData = { ...live, flight: flightNum, passenger: name, logo: `https://www.google.com/s2/favicons?domain=${live.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
-                document.getElementById('personal-welcome').innerText = `Welcome, ${name}`;
-                document.getElementById('dest-code').innerText = live.dest;
-                document.getElementById('orig-code').innerText = live.orig;
-                document.getElementById('verify-briefing').style.display = 'block';
-                if(this.scanner) this.scanner.stop();
+                this.updateIdentity(flightMatch, live, name);
+                this.scanner.stop();
                 document.getElementById('reader').style.display = 'none';
             }
         }
@@ -180,12 +176,17 @@
             if (val.length >= 4) {
                 const live = await this.fetchAviationData(val.toUpperCase());
                 if(live) {
-                    this.flightData = { ...live, flight: val.toUpperCase(), passenger: "Yourden", logo: `https://www.google.com/s2/favicons?domain=${live.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
-                    document.getElementById('dest-code').innerText = live.dest;
-                    document.getElementById('orig-code').innerText = live.orig;
-                    document.getElementById('verify-briefing').style.display = 'block';
+                    this.updateIdentity(val.toUpperCase(), live, "Yourden");
                 }
             }
+        }
+
+        updateIdentity(fNum, live, name) {
+            this.flightData = { ...live, flight: fNum, passenger: name, logo: `https://www.google.com/s2/favicons?domain=${live.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
+            document.getElementById('personal-welcome').innerText = `Welcome, ${name}`;
+            document.getElementById('dest-code').innerText = live.dest;
+            document.getElementById('orig-code').innerText = live.orig;
+            document.getElementById('verify-briefing').style.display = 'block';
         }
 
         start() {
