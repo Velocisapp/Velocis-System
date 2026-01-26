@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,7 +40,7 @@ HTML
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
 
         /* 2. VISUALIZER - DYNAMIC BACKGROUND */
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111 center/cover no-repeat; transition: background 2s ease; }
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background-color: #111; background-position: center; background-repeat: no-repeat; background-size: cover; transition: background-image 1.5s ease; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent, rgba(0,0,0,0.85)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; }
         .dest-pill { background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -96,8 +95,8 @@ HTML
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
-            Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters at **Counter <span id="text-counter" style="color:var(--v-gold);">TBD</span>** to drop bags and verify your sovereign documents.
+            Head inside through entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters at **Counter <span id="text-counter" style="color:var(--v-gold);">TBD</span>** to drop bags and verify your documents.
         </div>
     </div>
 
@@ -105,10 +104,10 @@ HTML
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your global connectivity strategy:</div>
-        <div class="esim-cta" onclick="alert('Activating eSIM Strategic Portal...')">
+        <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
-            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px;">ACTIVATE NOW</button>
+            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px; cursor:pointer;">ACTIVATE NOW</button>
         </div>
     </div>
 
@@ -119,7 +118,7 @@ HTML
         <div class="perk-box">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
             <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
-            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight ritual. Show this code at the counter.</div>
+            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight coffee. Show this code at the counter.</div>
             <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
         </div>
     </div>
@@ -149,7 +148,7 @@ HTML
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
             await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t))
-                .catch(e => alert("Handshake Denied. Check Safari Settings."));
+                .catch(e => alert("Check Safari Settings."));
         }
 
         async handleScan(data) {
@@ -199,7 +198,7 @@ HTML
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // UI Sync
+            // Sync all labels and logos
             for(let i=1; i<=4; i++) {
                 const box = document.getElementById(`logo-${i}`);
                 if(box) box.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
@@ -210,7 +209,7 @@ HTML
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             
-            // Card Content
+            // Guidance Card Content
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
@@ -223,7 +222,7 @@ HTML
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // Visualizer Mapping
+            // Cityscape Engine Fix: Use backgroundImage and forced URL to ensure mapping
             const photoMap = { 
                 "ATL": "1540260906354-297ba6d2239e", 
                 "LAX": "1506159904221-02894547b3d2", 
@@ -233,7 +232,8 @@ HTML
                 "JFK": "1496442226664-5f449f10111d"
             };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
-            document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
+            const visualizer = document.getElementById('dest-visualizer');
+            visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
         }
     }
     const engine = new VelocisSovereign();
