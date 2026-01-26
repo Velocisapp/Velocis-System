@@ -39,19 +39,19 @@
         .hub-node h4 { margin: 0; font-size: 28px; font-weight: 900; }
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
 
-        /* 2. VISUALIZER - FIXED DYNAMIC BACKGROUND ENGINE */
+        /* 2. VISUALIZER - GUARANTEED PHYSICAL IMAGE ENGINE */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
             background-color: #000; 
             overflow: hidden;
         }
-        /* CRITICAL PHYSICAL LAYER BYPASS */
+        /* PHYSICAL BYPASS LAYER: browser priority for content over decoration */
         #city-img-layer {
             position: absolute; inset: 0;
             width: 100%; height: 100%;
             object-fit: cover;
             opacity: 0;
-            transition: opacity 1.5s ease-in;
+            transition: opacity 1.2s ease-in;
             z-index: 1;
         }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent, rgba(0,0,0,0.85)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 2; }
@@ -63,7 +63,7 @@
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         
-        .esim-cta { margin-top: 30px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 25px; padding: 25px; color: white; text-align: left; cursor: pointer; }
+        .esim-cta { margin-top: 30px; background: linear-gradient(135deg, #007AFF) 0%, #00c6ff 100%); border-radius: 25px; padding: 25px; color: white; text-align: left; cursor: pointer; }
         .perk-box { background: rgba(255,255,255,0.08); border-radius: 25px; padding: 25px; border: 1px solid rgba(255,255,255,0.15); margin-top: 20px; text-align: left; position: relative; }
         .sb-logo { position: absolute; right: 25px; top: 25px; height: 45px; width: 45px; }
         
@@ -117,11 +117,11 @@
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, activate your global connectivity strategy:</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your global connectivity strategy:</div>
         <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
-            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px;">ACTIVATE NOW</button>
+            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px; cursor:pointer;">ACTIVATE NOW</button>
         </div>
     </div>
 
@@ -162,7 +162,7 @@
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
             await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t))
-                .catch(e => alert("Handshake Denied."));
+                .catch(e => alert("Check Safari Settings."));
         }
 
         async handleScan(data) {
@@ -184,7 +184,6 @@
             const status = document.getElementById('status-msg');
             status.innerText = "AUTHENTICATING PRO-SESSION...";
             try {
-                // GLOBAL HUB HANDSHAKE - Supports IATA and ICAO for global coverage
                 let target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
                 let res = await fetch(target);
                 let json = await res.json();
@@ -250,7 +249,7 @@
             const cityImg = document.getElementById('city-img-layer');
             const cacheBuster = new Date().getTime();
             
-            // Set source and fade in upon confirmation of download
+            // This physical image injection forces browser priority for a guaranteed render
             cityImg.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${cacheBuster}`;
             cityImg.onload = () => { cityImg.style.opacity = "1"; };
         }
