@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="utf-8">
     <title>VELOCIS™ | Master Sovereign Engine</title>
@@ -135,9 +137,9 @@
             document.getElementById('reader').style.display = 'block';
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
-            // Optimized camera initialization for multi-lens support
+            // Lens fix: Use "ideal" facingMode to allow browser to pick best lens
             this.scanner.start({ facingMode: { ideal: "environment" } }, { fps: 15, qrbox: {width:250, height:250} }, (t) => this.parsePass(t))
-                .catch(err => alert("Camera error: Use manual entry."));
+                .catch(err => alert("Camera error: Lens conflict. Use manual entry."));
         }
 
         async fetchAviationData(fNum) {
@@ -156,7 +158,7 @@
                         orig: f.departure.iata
                     };
                 }
-            } catch(e) { console.error("AviationStack error"); }
+            } catch(e) { console.error("AviationStack Connection Error"); }
             return null;
         }
 
@@ -165,14 +167,17 @@
             this.isProcessing = true;
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             
+            // Standard IATA parsing with fallback
             const flightMatch = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
-            const name = data.includes('/') ? data.substring(2, 20).split('/')[0] : "Yourden";
+            const name = data.includes('/') ? data.substring(2, 20).split('/')[0] : "Passenger";
             
             const live = await this.fetchAviationData(flightMatch);
-            if(live) {
-                this.updateIdentity(flightMatch, live, name);
-                if(this.scanner) await this.scanner.stop();
-                document.getElementById('reader').style.display = 'none';
+            this.updateIdentity(flightMatch, live, name);
+            
+            if(this.scanner) {
+                this.scanner.stop().then(() => {
+                    document.getElementById('reader').style.display = 'none';
+                });
             }
             this.isProcessing = false;
         }
@@ -181,16 +186,18 @@
             if (val.length >= 4) {
                 const live = await this.fetchAviationData(val.toUpperCase());
                 if(live) {
-                    this.updateIdentity(val.toUpperCase(), live, "Yourden");
+                    this.updateIdentity(val.toUpperCase(), live, "Passenger");
                 }
             }
         }
 
         updateIdentity(fNum, live, name) {
-            this.flightData = { ...live, flight: fNum, passenger: name, logo: `https://www.google.com/s2/favicons?domain=${live.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
+            const data = live || { airline: "Airlines", gate: "TBD", terminal: "4", baggage: "6", city: "Destination", dest: "DST", orig: "ORG" };
+            this.flightData = { ...data, flight: fNum, passenger: name, logo: `https://www.google.com/s2/favicons?domain=${data.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
+            
             document.getElementById('personal-welcome').innerText = `Welcome, ${name}`;
-            document.getElementById('dest-code').innerText = live.dest;
-            document.getElementById('orig-code').innerText = live.orig;
+            document.getElementById('dest-code').innerText = this.flightData.dest;
+            document.getElementById('orig-code').innerText = this.flightData.orig;
             document.getElementById('verify-briefing').style.display = 'block';
         }
 
