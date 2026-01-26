@@ -155,7 +155,7 @@
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
             await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t))
-                .catch(e => alert("Handshake Denied."));
+                .catch(e => alert("Check Safari Settings."));
         }
 
         async handleScan(data) {
@@ -221,17 +221,17 @@
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('text-counter').innerText = this.flightData.counter;
-            document.getElementById('text-gate').innerText = this.flightData.gate;
-            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
+            document.getElementById('text-gate').innerText = this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // --- CITYSCAPE RE-RENDER ENGINE ---
+            // --- CITYSCAPE ENGINE FIX ---
             const photoMap = { 
                 "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
                 "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
@@ -242,9 +242,9 @@
             const visualizer = document.getElementById('dest-visualizer');
             const buster = new Date().getTime();
             
-            // Bypass logic: Force a reflow to ensure background renders on mobile
+            // Bypass logic: Force a reflow and reset background explicitly
             visualizer.style.backgroundImage = "none";
-            visualizer.offsetHeight; 
+            void visualizer.offsetWidth; // Trigger reflow
             visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${buster}')`;
         }
     }
