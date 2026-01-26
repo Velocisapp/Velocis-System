@@ -130,15 +130,14 @@
         constructor() { 
             this.flightData = null; 
             this.apiKey = '47b85994f385c378e90637384a65b83b'; 
+            this.isProcessing = false;
         }
 
         startScanner() {
             document.getElementById('reader').style.display = 'block';
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
-            // FIXED: Using "ideal" instead of "exact" facingMode for multi-camera phones
-            this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: {width:300, height:150} }, (t) => this.parsePass(t))
-                .catch(err => alert("Camera permission denied or lens conflict. Use manual entry."));
+            this.scanner.start({ facingMode: { ideal: "environment" } }, { fps: 15, qrbox: {width:250, height:250} }, (t) => this.parsePass(t));
         }
 
         async fetchAviationData(fNum) {
@@ -157,24 +156,28 @@
                         orig: f.departure.iata
                     };
                 }
-            } catch(e) { console.error("AviationStack error"); }
+            } catch(e) { console.error("AviationStack Connection Error"); }
             return null;
         }
 
         async parsePass(data) {
+            if (this.isProcessing) return;
+            this.isProcessing = true;
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            const flightNum = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
-            const name = data.includes('/') ? data.substring(2, 12).split('/')[0] : "Yourden";
-            const live = await this.fetchAviationData(flightNum);
+            
+            const flightMatch = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
+            const name = data.includes('/') ? data.substring(2, 20).split('/')[0] : "Yourden";
+            
+            const live = await this.fetchAviationData(flightMatch);
             if(live) {
-                this.updateIdentity(flightNum, live, name);
-                if(this.scanner) this.scanner.stop();
+                this.updateIdentity(flightMatch, live, name);
+                if(this.scanner) await this.scanner.stop();
                 document.getElementById('reader').style.display = 'none';
             }
+            this.isProcessing = false;
         }
 
         async validateFlight(val) {
-            // Typing triggers search at 4+ chars
             if (val.length >= 4) {
                 const live = await this.fetchAviationData(val.toUpperCase());
                 if(live) {
@@ -194,32 +197,21 @@
         start() {
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            
-            // Apply logos to top-row of cards
             for(let i=1; i<=4; i++) { 
                 const logoBox = document.getElementById(`logo-${i}`);
                 if(logoBox) logoBox.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
             }
-            
-            // Update HUD
             document.getElementById('hud-city').innerText = this.flightData.city;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-            
-            // Update Card Labels
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            
-            // Update Warm Guidance
             document.getElementById('logistics-guidance').innerText = `${this.flightData.airline} check-in is right here. Once you drop your bags, you're halfway to the gate.`;
             document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Your bags are arriving at Carousel ${this.flightData.baggage}.`;
-
-            // High-res background photo logic
             const photoMap = { "MAD": "1539037116277-4db20889f2d4", "MIA": "1506159904221-02894547b3d2" };
             const photoId = photoMap[this.flightData.dest] || "1539037116277-4db20889f2d4";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
-            
             document.getElementById('step-0').classList.add('active-guidance');
         }
     }
