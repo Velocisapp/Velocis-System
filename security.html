@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -17,8 +16,8 @@
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
         /* 1. DYNAMIC VERIFICATION ENTRY WINDOW */
-        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 90%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         
         #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--v-gold); display: none; background: #000; }
         #scan-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 1px solid var(--v-gold); margin-bottom: 15px; width: 100%; height: 50px; border-radius: 15px; font-weight: 800; cursor: pointer; }
@@ -73,9 +72,9 @@
 
 <div id="entry-screen">
     <div class="glass-card">
-        <h1 class="logo-main">VELOCIS</h1>
+        <div class="logo-main">VELOCIS</div>
         <div id="personal-welcome" style="color:white; font-weight:800; font-size:18px; margin-top:5px;"></div>
-        <div id="entry-cta" class="cta-sub" style="color:white; font-size:14px; font-weight:600; margin-bottom:20px;">Enter your flight number or scan pass</div>
+        <div id="entry-cta" class="cta-sub">Enter your flight number or scan pass</div>
         
         <div id="reader"></div>
         <button id="scan-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
@@ -168,25 +167,30 @@
             document.getElementById('reader').style.display = 'block';
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
-            this.scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => this.parsePass(text));
+            this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 320, height: 180 } }, (text) => this.parsePass(text));
         }
 
         parsePass(data) {
-            // HAPTIC HANDSHAKE: Double Pulse
+            // HAPTIC HANDSHAKE: Double Pulse for Sovereign Authority
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             
             try {
-                // BCBP Extraction
-                const namePart = data.substring(2, 22).trim().split('/');
-                const firstName = namePart[1] ? namePart[1].split(' ')[0] : 'Passenger';
-                const airline = data.substring(33, 35).trim();
-                const flight = data.substring(36, 40).trim();
+                // BCBP Name Extract & Flight Logic
+                if (data.startsWith('M1')) {
+                    const namePart = data.substring(2, 22).trim().split('/');
+                    const firstName = namePart[1] ? namePart[1].split(' ')[0] : 'Passenger';
+                    document.getElementById('personal-welcome').innerText = `Welcome, ${firstName}`;
+                } else {
+                    document.getElementById('personal-welcome').innerText = `Mission Validated`;
+                }
+
+                const flightMatch = data.match(/[A-Z]{2}\d{2,4}/);
+                const flightNum = flightMatch ? flightMatch[0] : data.substring(33, 35).trim() + data.substring(36, 40).trim();
                 
                 this.scanner.stop();
                 document.getElementById('reader').style.display = 'none';
-                document.getElementById('personal-welcome').innerText = `Welcome, ${firstName}`;
-                document.getElementById('flight-input').value = airline + flight;
-                this.validateFlight(airline + flight);
+                document.getElementById('flight-input').value = flightNum;
+                this.validateFlight(flightNum);
             } catch(e) { console.error("Scanner parsing fallback."); }
         }
 
@@ -197,7 +201,8 @@
                 orig: "LHR", origCity: "London",
                 dest: "MIA", destCity: "Miami",
                 airport: "Miami International Airport",
-                carousel: "12"
+                carousel: "12",
+                flight: val.toUpperCase()
             };
             document.getElementById('entry-cta').style.display = 'none';
             document.getElementById('verify-briefing').style.display = 'block';
@@ -243,8 +248,8 @@
                 const box = document.getElementById(`logo-${i}`);
                 if(box) box.innerHTML = `<img height="18" src="https://www.google.com/s2/favicons?domain=aa.com&sz=64"> ${flight}`; 
             }
-            document.getElementById('final-carousel').innerText = "Carousel " + this.flightData.carousel;
-            document.getElementById('arrival-city-text').innerText = `Welcome to ${this.flightData.destCity}! Your bags are arriving at Carousel 12.`;
+            document.getElementById('final-carousel').innerText = "Carousel " + (this.flightData ? this.flightData.carousel : "--");
+            document.getElementById('arrival-city-text').innerText = `Welcome to ${this.flightData ? this.flightData.destCity : 'Miami'}! Your bags are arriving at Carousel 12.`;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             this.syncRedundancySensors();
             this.autoTransition(0);
