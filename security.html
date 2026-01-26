@@ -16,17 +16,7 @@
         
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
-        
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
-        #scan-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 1px solid var(--v-gold); margin-bottom: 15px; width: 100%; height: 50px; border-radius: 15px; font-weight: 800; cursor: pointer; }
         #flight-input { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 20px; text-align: center; margin-bottom: 20px; background: white; color: #1c1c1e; font-weight: 700; outline: none; box-sizing: border-box; }
-
-        #verify-briefing { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3); text-align: left; width: 100%; animation: fadeIn 0.5s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .route-path { display: flex; align-items: center; justify-content: space-between; margin: 15px 0; color: white; }
-        .hub-node h4 { margin: 0; font-size: 24px; font-weight: 900; }
-        .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; }
 
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111 center/cover no-repeat; transition: background 1.5s ease; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; }
@@ -37,7 +27,11 @@
         .active-guidance { background: rgba(255, 215, 0, 0.05) !important; border-left: 8px solid var(--v-gold) !important; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 10px 18px; border-radius: 15px; font-size: 34px; font-weight: 900; color: var(--v-gold); margin-top: 10px; }
         .airline-box { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 12px; }
-        .start-btn { width: 100%; height: 65px; background: #1c1c1e; color: white; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; }
+        
+        .esim-cta { margin-top: 25px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 20px; padding: 22px; color: white; text-align: left; }
+        .perk-box { background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin-top: 15px; text-align: left; }
+        
+        .start-btn { width: 100%; height: 65px; background: white; color: black; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; }
         #mission-tray::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -47,17 +41,15 @@
     <div class="glass-card">
         <h1 style="color:white; margin:0; font-size:38px; font-weight:900;">VELOCIS</h1>
         <div id="status-msg" style="color:white; font-weight:800; font-size:16px; margin: 10px 0;">PRO TIER | SECURE ACCESS</div>
-        <div id="reader"></div>
-        <button id="scan-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
         
-        <div id="verify-briefing">
-            <div class="route-path">
-                <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
-                <div style="font-size:20px; color:white;">✈</div>
-                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><p>ARRIVAL</p></div>
+        <div id="verify-briefing" style="display:none; margin-top:20px;">
+            <div style="display:flex; justify-content:space-between; color:white; margin-bottom:15px;">
+                <div style="text-align:left;"><h4 id="orig-code" style="margin:0; font-size:24px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">DEPARTURE</p></div>
+                <div style="font-size:20px;">✈</div>
+                <div style="text-align:right;"><h4 id="dest-code" style="margin:0; font-size:24px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">ARRIVAL</p></div>
             </div>
-            <button class="start-btn" style="background: white; color: black;" onclick="engine.start()">INITIATE MISSION</button>
+            <button class="start-btn" onclick="engine.start()">INITIATE MISSION</button>
         </div>
     </div>
 </div>
@@ -71,28 +63,34 @@
 
 <div id="mission-tray">
     <div class="mission-step" id="step-0">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Proceed to the terminal entrance. Logistics are synchronized.</div>
+        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:15px; font-size:17px;">Head inside through the designated entrance. You're in the right place.</div>
     </div>
 
     <div class="mission-step" id="step-1">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">02. LOGISTICS</div><div class="airline-box" id="logo-2">----</div></div>
-        <div class="framed-title">Check-in</div>
-        <div id="logistics-text" class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Airline counter is ready for bag drop and verification.</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900;">02. STRATEGY</div><div class="airline-box" id="logo-2">----</div></div>
+        <div class="esim-cta">
+            <div style="font-weight:900; font-size:18px;">Global Connectivity</div>
+            <div style="font-size:13px; margin-top:5px; opacity:0.9;">Secure your eSIM now to bypass roaming fees upon arrival.</div>
+            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:12px; border-radius:12px; font-weight:800; margin-top:15px;">ACTIVATE ESIM</button>
+        </div>
     </div>
 
     <div class="mission-step" id="step-2">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
-        <div class="framed-title" id="card-gate">Gate --</div>
-        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Security cleared. Monitor gate for active boarding status.</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900;">03. PERK</div><div class="airline-box" id="logo-3">----</div></div>
+        <div class="perk-box">
+            <div style="color:var(--v-gold); font-weight:900; font-size:22px;">Starbucks Reward</div>
+            <div style="color:white; opacity:0.8; font-size:14px; margin-top:5px;">Enjoy 15% off your pre-flight coffee. Show this code at the terminal.</div>
+            <div style="background:var(--v-blue); color:white; padding:12px; border-radius:12px; text-align:center; font-weight:900; margin-top:15px;">CODE: VELOCIS15</div>
+        </div>
     </div>
 
     <div class="mission-step" id="step-3" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
-        <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Your mission is complete.</div>
-        <button class="start-btn" style="background: #fff; color: #000; width: 100%; margin-top:20px; font-size: 14px; height: 50px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
+        <div id="arrival-msg" style="color:white; margin-top:20px; font-size:20px; font-weight:700;">Welcome! Let's get your ride ready.</div>
+        <button class="start-btn" style="background:#fff; color:#000; height:50px; font-size:14px; margin-top:25px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
     </div>
 </div>
 
@@ -104,44 +102,16 @@
             this.busy = false;
         }
 
-        async startScanner() {
-            const reader = document.getElementById('reader');
-            reader.style.display = 'block';
-            document.getElementById('scan-btn').style.display = 'none';
-            this.scanner = new Html5Qrcode("reader");
-            try {
-                await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.parsePass(t));
-            } catch (err) {
-                this.scanner.start({}, { fps: 15, qrbox: 250 }, (t) => this.parsePass(t))
-                .catch(e => alert("Please allow camera in iPhone Settings > Safari."));
-            }
-        }
-
-        async parsePass(data) {
-            if (this.busy) return;
-            const flightMatch = data.match(/[A-Z]{2}\d{2,4}/)?.[0];
-            if(flightMatch) {
-                this.busy = true;
-                await this.handshake(flightMatch);
-                if(this.scanner) await this.scanner.stop();
-                document.getElementById('reader').style.display = 'none';
-                this.busy = false;
-            }
-        }
-
         async validateFlight(val) {
-            if (val.length >= 4 && !val.includes('<')) await this.handshake(val.toUpperCase().trim());
+            if (val.length >= 4) await this.handshake(val.toUpperCase().trim());
         }
 
         async handshake(fNum) {
             const msg = document.getElementById('status-msg');
-            msg.innerText = "AUTHENTICATING SECURE SESSION...";
+            msg.innerText = "AUTHENTICATING PRO-SESSION...";
             try {
-                // DIRECT HTTPS CONNECTION FOR PAID TIER (Removing proxy to prevent HTML injection errors)
-                const target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
-                const res = await fetch(target);
+                const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`);
                 const json = await res.json();
-                
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     this.flightData = {
@@ -159,31 +129,33 @@
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     document.getElementById('verify-briefing').style.display = 'block';
                     msg.innerText = "MISSION PARAMETERS SECURED";
-                } else {
-                    msg.innerText = "FLIGHT ID NOT FOUND";
                 }
-            } catch(e) { msg.innerText = "SECURE HANDSHAKE FAILED"; }
+            } catch(e) { msg.innerText = "HANDSHAKE ERROR"; }
         }
 
         start() {
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            for(let i of [1, 2, 3, 4]) { 
-                const box = document.getElementById(`logo-${i}`);
-                if(box) box.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
+            for(let i=1; i<=4; i++) {
+                const logoBox = document.getElementById(`logo-${i}`);
+                if(logoBox) logoBox.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             }
+            
             document.getElementById('hud-city').innerText = this.flightData.city;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            document.getElementById('logistics-text').innerText = `${this.flightData.airline} counter is ready for bag drop.`;
             document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Bags at Carousel ${this.flightData.baggage}.`;
-            
-            // DYNAMIC VISUAL MAPPING
-            const photoMap = { "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", "MIA": "1503891450247-eeaf07d19539" };
-            const photoId = photoMap[this.flightData.dest] || "1539037116277-4db20889f2d4";
+
+            // DYNAMIC VISUAL MAPPING - FIXED City matching
+            const photoMap = { 
+                "ATL": "1540260906354-297ba6d2239e", 
+                "LAX": "1506159904221-02894547b3d2", 
+                "MIA": "1503891450247-eeaf07d19539",
+                "MAD": "1539037116277-4db20889f2d4"
+            };
+            const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
             
             document.getElementById('step-0').classList.add('active-guidance');
