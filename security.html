@@ -45,7 +45,7 @@
             background-color: #000; 
             overflow: hidden;
         }
-        /* PHYSICAL BYPASS LAYER: browser priority for content over decoration */
+        /* PHYSICAL BYPASS LAYER: Forces browser to render content over decoration */
         #city-img-layer {
             position: absolute; inset: 0;
             width: 100%; height: 100%;
@@ -110,7 +110,7 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
             Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify your documents.
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify documents.
         </div>
     </div>
 
@@ -218,8 +218,34 @@
 
         start() {
             if(!this.flightData) return;
+            
+            // --- RE-PAINT ENGINE BYPASS ---
+            const visualizer = document.getElementById('dest-visualizer');
+            const cityImg = document.getElementById('city-img-layer');
+            const cacheBuster = new Date().getTime();
+            
+            const photoMap = { 
+                "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
+                "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
+                "LHR": "1486381464718-a30058a01560", "JFK": "1496442226664-5f449f10111d",
+                "SYD": "1506973031151-a3c1186d07ba", "ALC": "1559310804-069279093836"
+            };
+            const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
+            
+            // Physical injection logic
+            cityImg.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${cacheBuster}`;
+            
+            // Force browser to "forget" the previous black state and repaint
+            visualizer.style.display = 'none';
+            void visualizer.offsetHeight; // Trigger reflow
+            visualizer.style.display = 'block';
+
+            cityImg.onload = () => { cityImg.style.opacity = "1"; };
+
+            // Transition Entry Screen
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
+            // Populate GUIDANCE UI
             for(let i=1; i<=4; i++) {
                 const box = document.getElementById(`logo-${i}`);
                 if(box) box.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
@@ -237,21 +263,6 @@
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
-
-            // --- CITYSCAPE PHYSICAL BYPASS: Force loading the physical img tag ---
-            const photoMap = { 
-                "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
-                "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
-                "LHR": "1486381464718-a30058a01560", "JFK": "1496442226664-5f449f10111d",
-                "SYD": "1506973031151-a3c1186d07ba", "ALC": "1559310804-069279093836"
-            };
-            const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
-            const cityImg = document.getElementById('city-img-layer');
-            const cacheBuster = new Date().getTime();
-            
-            // Bypass CSS priorities by directly updating physical content
-            cityImg.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${cacheBuster}`;
-            cityImg.onload = () => { cityImg.style.opacity = "1"; };
         }
     }
     const engine = new VelocisSovereign();
