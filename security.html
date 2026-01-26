@@ -114,7 +114,7 @@
         <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
-            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px; cursor:pointer;">ACTIVATE NOW</button>
+            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px;">ACTIVATE NOW</button>
         </div>
     </div>
 
@@ -155,7 +155,7 @@
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
             await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t))
-                .catch(e => alert("Check Safari Settings."));
+                .catch(e => alert("Handshake Denied."));
         }
 
         async handleScan(data) {
@@ -177,6 +177,7 @@
             const status = document.getElementById('status-msg');
             status.innerText = "AUTHENTICATING PRO-SESSION...";
             try {
+                // HUB HANDSHAKE - Supports IATA and ICAO for global hubs like LEMD/MAD
                 let target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
                 let res = await fetch(target);
                 let json = await res.json();
@@ -221,17 +222,17 @@
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('text-counter').innerText = this.flightData.counter;
-            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('text-gate').innerText = this.flightData.gate;
+            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // --- CITYSCAPE ENGINE FIX ---
+            // --- CITYSCAPE RE-RENDER ENGINE ---
             const photoMap = { 
                 "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
                 "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
@@ -242,9 +243,9 @@
             const visualizer = document.getElementById('dest-visualizer');
             const buster = new Date().getTime();
             
-            // Bypass logic: Force a reflow and reset background explicitly
+            // Bypass logic: Force a physical reflow and clear old styles to ensure render
             visualizer.style.backgroundImage = "none";
-            void visualizer.offsetWidth; // Trigger reflow
+            void visualizer.offsetWidth; // This line forces the browser to re-paint
             visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${buster}')`;
         }
     }
