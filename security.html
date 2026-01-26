@@ -15,7 +15,7 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. WARM & FRIENDLY ENTRY WINDOW */
+        /* 1. WARM ENTRY SCREEN */
         #entry-screen { 
             position: fixed; inset: 0; 
             background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
@@ -23,37 +23,21 @@
             padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             padding: 45px 30px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4);
             display: flex; flex-direction: column; align-items: center; width: 85%; max-width: 340px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            position: relative; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; overflow: hidden;
         }
-        .bg-airplane {
-            position: absolute; top: -10px; right: -10px; font-size: 100px; 
-            opacity: 0.15; color: white; transform: rotate(-15deg); pointer-events: none;
-            animation: float 5s ease-in-out infinite;
-        }
+        .bg-airplane { position: absolute; top: -10px; right: -10px; font-size: 100px; opacity: 0.15; color: white; transform: rotate(-15deg); pointer-events: none; animation: float 5s infinite; }
         @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(-15deg); } 50% { transform: translate(-10px, -10px) rotate(-12deg); } }
-
         .logo-main { font-size: 48px; font-weight: 900; color: white; margin-bottom: 5px; letter-spacing: -2.5px; z-index: 2; }
         .cta-sub { color: rgba(255,255,255,0.95); font-size: 14px; font-weight: 600; margin-bottom: 30px; z-index: 2; }
-        
-        #flight-input { 
-            width: 100%; padding: 18px; border: none; border-radius: 18px; 
-            font-size: 26px; text-align: center; margin-bottom: 20px; 
-            background: white; color: #1c1c1e; font-weight: 700; outline: none; z-index: 2;
-        }
+        #flight-input { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 26px; text-align: center; margin-bottom: 20px; background: white; color: #1c1c1e; font-weight: 700; outline: none; z-index: 2; }
         .start-btn { width: 100%; height: 65px; background: #1c1c1e; color: white; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 2; }
 
-        /* 2. THE PANORAMIC STAGE */
+        /* 2. MAP & TRAY */
         #map { flex: 1; width: 100%; height: 45vh; pointer-events: none; }
-        
-        /* 3. SCROLL CTA BAR */
         .scroll-cta { background: #fff; padding: 12px; text-align: center; font-size: 11px; font-weight: 800; color: var(--v-blue); letter-spacing: 1.5px; border-bottom: 1px solid #eee; z-index: 20; }
-
-        /* 4. SOVEREIGN MISSION TRAY */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; padding-bottom: 100px; }
         .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .arrival-mission { background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%); }
@@ -76,30 +60,20 @@
         .tag { color: var(--v-blue); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
         .airline-box { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 12px; }
         .airline-logo { height: 18px; width: 18px; border-radius: 4px; }
-
         .subtitle { font-size: 17px; color: rgba(255,255,255,0.7); margin-top: 15px; line-height: 1.4; font-weight: 500; }
 
-        /* INTERNATIONAL eSIM CTA */
+        /* PARTNER CTA CARDS */
         .esim-cta {
             margin-top: 25px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%);
             border-radius: 20px; padding: 22px; color: white; display: flex; flex-direction: column; gap: 8px;
             box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3); border: 1px solid rgba(255,255,255,0.2);
         }
-        .esim-cta-title { font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .esim-cta-text { font-size: 12px; font-weight: 600; line-height: 1.3; opacity: 0.95; }
         .esim-button { background: white; color: var(--v-blue); border: none; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 12px; margin-top: 5px; cursor: pointer; }
-
-        /* PARTNER & TRANSPORT CARDS */
-        .partner-perk {
-            margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px;
-            display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255,255,255,0.1);
-        }
+        .partner-perk { margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
         .partner-header { display: flex; align-items: center; gap: 10px; }
         .partner-logo { width: 32px; height: 32px; border-radius: 8px; background: white; padding: 4px; }
-        .partner-name { color: white; font-weight: 700; font-size: 14px; }
-        .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; box-shadow: 0 0 8px #4caf50; animation: pulse 1.5s infinite; margin-left: auto; }
+        .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; animation: pulse 1.5s infinite; margin-left: auto; }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
-
         .code-btn { background: var(--v-blue); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; margin-top: 5px; }
 
         #mission-tray::-webkit-scrollbar { display: none; }
@@ -124,19 +98,19 @@
     <div class="mission-step">
         <div class="top-row"><div class="tag">01. Entrance</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title">Door D3</div>
-        <div class="subtitle">You've made it! Head inside through Door D3 under the blue canopy. You're in the right place.</div>
+        <div class="subtitle">Head inside through Door D3 under the blue canopy. You're in the right place.</div>
     </div>
 
     <div class="mission-step">
         <div class="top-row"><div class="tag">02. Logistics</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Level 2 Drop</div>
-        <div class="subtitle">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
+        <div class="subtitle">American Airlines check-in is right here. Drop your bags and you're set for security.</div>
     </div>
 
     <div class="mission-step">
         <div class="top-row"><div class="tag">03. Security</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="framed-title">Checkpoint D</div>
-        <div class="subtitle">Screening is just past the counters. Follow the ceiling signs to stay in the North terminal flow.</div>
+        <div class="subtitle">Screening is just past the counters. Follow the signs past the counters.</div>
     </div>
 
     <div class="mission-step">
@@ -144,17 +118,13 @@
         <div class="framed-title">Gate D32</div>
         <div class="subtitle">You're all set. Grab a coffee—it's just a few steps from your gate.</div>
         <div class="esim-cta">
-            <div class="esim-cta-title">Traveling International?</div>
-            <div class="esim-cta-text">Stay connected. Secure your eSIM now for 5G data the second you touch down.</div>
-            <button class="esim-button">GET GLOBAL eSIM</button>
+            <div style="font-weight:900; font-size:13px; text-transform:uppercase;">Traveling International?</div>
+            <div style="font-size:12px; font-weight:600; line-height:1.3;">Secure your eSIM now for 5G data the second you touch down.</div>
+            <button class="esim-button" onclick="engine.openPartner('esim')">GET GLOBAL eSIM</button>
         </div>
         <div class="partner-perk">
-            <div class="partner-header">
-                <img class="partner-logo" src="https://www.google.com/s2/favicons?domain=starbucks.com&sz=64">
-                <div class="partner-name">Starbucks® Coffee</div>
-                <div class="live-pulse"></div>
-            </div>
-            <button class="code-btn" onclick="alert('Code VELOCIS copied!')">COPY 15% OFF CODE: VELOCIS</button>
+            <div class="partner-header"><img class="partner-logo" src="https://www.google.com/s2/favicons?domain=starbucks.com&sz=64"><span style="color:white; font-weight:700;">Starbucks®</span><div class="live-pulse"></div></div>
+            <button class="code-btn" onclick="engine.copyDiscount('VELOCIS')">COPY 15% OFF: VELOCIS</button>
         </div>
     </div>
 
@@ -163,11 +133,7 @@
         <div class="framed-title" style="border-color: white; color: white;">Carousel 12</div>
         <div class="subtitle">Welcome to Miami! Your bags are arriving at Carousel 12. Let's get your ride ready.</div>
         <div class="partner-perk" style="background: rgba(0,0,0,0.25);">
-            <div class="partner-header">
-                <div class="partner-logo" style="background: #fff; color:#000; display:flex; align-items:center; justify-content:center; font-weight:900;">V</div>
-                <div class="partner-name">Transport Hub</div>
-                <div class="live-pulse"></div>
-            </div>
+            <div class="partner-header"><div class="partner-logo" style="display:flex; align-items:center; justify-content:center; font-weight:900;">V</div><span style="color:white; font-weight:700;">Transport Hub</span><div class="live-pulse"></div></div>
             <button class="code-btn" style="background: #fff; color: #000;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
         </div>
     </div>
@@ -175,6 +141,11 @@
 
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoidmVsb2Npc2RldmVsb3BlciIsImEiOiJjbWtyanA4NHcxNHk0M2twcXNibXhvdnVhIn0.9sLk_qMET9czvmbYPZ9Bkg';
+
+    const PARTNER_LINKS = {
+        esim: "https://www.airalo.com/", 
+        starbucks: "https://www.starbucks.com/menu"
+    };
 
     class VelocisSovereign {
         constructor() {
@@ -188,35 +159,23 @@
             ];
             this.initMap();
         }
-
+        openPartner(key) { window.open(PARTNER_LINKS[key], '_blank'); }
+        copyDiscount(code) { navigator.clipboard.writeText(code); alert(`Code ${code} copied!`); }
         initMap() {
-            this.map = new mapboxgl.Map({
-                container: 'map', 
-                style: 'mapbox://styles/mapbox/standard',
-                center: this.views[0].center, 
-                zoom: 16, 
-                pitch: 60
-            });
+            this.map = new mapboxgl.Map({ container: 'map', style: 'mapbox://styles/mapbox/standard', center: this.views[0].center, zoom: 16, pitch: 60 });
             this.map.on('style.load', () => this.map.setConfigProperty('basemap', 'lightPreset', 'day'));
         }
-
         start() {
             const flight = document.getElementById('flight-input').value.toUpperCase() || "AA2405";
-            for(let i=1; i<=5; i++) { 
-                document.getElementById(`logo-${i}`).innerHTML = `<img class="airline-logo" src="https://www.google.com/s2/favicons?domain=aa.com&sz=64"> ${flight}`; 
-            }
+            for(let i=1; i<=5; i++) { document.getElementById(`logo-${i}`).innerHTML = `<img class="airline-logo" src="https://www.google.com/s2/favicons?domain=aa.com&sz=64"> ${flight}`; }
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             this.updateView(0);
         }
-
         handleScroll() {
             const tray = document.getElementById('mission-tray');
             const newStep = Math.round(tray.scrollTop / tray.clientHeight);
-            if (newStep !== this.activeStep && newStep < this.views.length) {
-                this.updateView(newStep);
-            }
+            if (newStep !== this.activeStep && newStep < this.views.length) { this.updateView(newStep); }
         }
-
         updateView(index) {
             this.activeStep = index;
             const v = this.views[index];
