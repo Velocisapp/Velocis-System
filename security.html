@@ -42,7 +42,19 @@
 
         /* 3. SOVEREIGN MISSION TRAY */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; padding-bottom: 100px; }
-        .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; transition: background 0.5s ease; }
+        
+        /* ACTIVE GUIDANCE PULSE */
+        .active-guidance {
+            background: rgba(255, 215, 0, 0.05) !important;
+            box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.1);
+            animation: card-pulse 2.5s infinite ease-in-out;
+        }
+        @keyframes card-pulse {
+            0%, 100% { border-left: 0px solid var(--v-gold); }
+            50% { border-left: 8px solid var(--v-gold); }
+        }
+
         .arrival-mission { background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%); }
 
         /* GOLD FRAMED TITLES */
@@ -101,25 +113,25 @@
 <div class="scroll-cta" id="cta-bar">↓ SCROLL FOR ARRIVAL INFO & TRANSPORT ↓</div>
 
 <div id="mission-tray" onscroll="engine.handleScroll()">
-    <div class="mission-step">
+    <div class="mission-step" id="step-0">
         <div class="top-row"><div class="tag">01. Entrance</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title">Door D3</div>
         <div class="subtitle">Head inside through Door D3 under the blue canopy. You're in the right place.</div>
     </div>
 
-    <div class="mission-step">
+    <div class="mission-step" id="step-1">
         <div class="top-row"><div class="tag">02. Logistics</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Level 2 Drop</div>
         <div class="subtitle">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
     </div>
 
-    <div class="mission-step">
+    <div class="mission-step" id="step-2">
         <div class="top-row"><div class="tag">03. Security</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="framed-title">Checkpoint D</div>
         <div class="subtitle">Screening is just past the counters. Follow the ceiling signs past the counters.</div>
     </div>
 
-    <div class="mission-step">
+    <div class="mission-step" id="step-3">
         <div class="top-row"><div class="tag">04. Boarding</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title">Gate D32</div>
         <div class="subtitle">You're all set. Grab a coffee—it's just a few steps from your gate.</div>
@@ -134,7 +146,7 @@
         </div>
     </div>
 
-    <div class="mission-step arrival-mission">
+    <div class="mission-step arrival-mission" id="step-4">
         <div class="top-row"><div class="tag" style="color:#80c1ff; font-size: 14px; font-weight: 900;">Alright — You've Landed</div><div class="airline-box" id="logo-5">----</div></div>
         <div class="framed-title" style="border-color: white; color: white;">Carousel 12</div>
         <div class="subtitle">Welcome to Miami! Your bags are arriving at Carousel 12. Let's get your ride ready.</div>
@@ -164,26 +176,73 @@
                 { center: [-80.2855, 25.7940], zoom: 16.5, pitch: 45, bearing: 180 } 
             ];
             this.initMap();
+            this.startLocationWatch();
         }
+
         openPartner(key) { window.open(PARTNER_LINKS[key], '_blank'); }
         copyDiscount(code) { navigator.clipboard.writeText(code); alert(`Code ${code} copied!`); }
+
         initMap() {
             this.map = new mapboxgl.Map({ container: 'map', style: 'mapbox://styles/mapbox/standard', center: this.views[0].center, zoom: 16, pitch: 60 });
             this.map.on('style.load', () => this.map.setConfigProperty('basemap', 'lightPreset', 'day'));
         }
+
+        startLocationWatch() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition((pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    this.checkMissionGeofence(lat, lon);
+                }, null, { enableHighAccuracy: true });
+            }
+        }
+
+        checkMissionGeofence(lat, lon) {
+            // High-Authority Detection Logic
+            // Step 0: Door D3 Entrance
+            const distToEntrance = this.getDist(lat, lon, 25.7948, -80.2820);
+            // Step 2: Checkpoint D
+            const distToSecurity = this.getDist(lat, lon, 25.7960, -80.2865);
+
+            if (distToEntrance < 0.0005) this.autoTransition(0);
+            else if (distToSecurity < 0.0005) this.autoTransition(2);
+        }
+
+        getDist(lat1, lon1, lat2, lon2) {
+            return Math.sqrt(Math.pow(lat1-lat2, 2) + Math.pow(lon1-lon2, 2));
+        }
+
+        autoTransition(index) {
+            if (this.activeStep === index) return;
+            const tray = document.getElementById('mission-tray');
+            const stepCard = document.getElementById(`step-${index}`);
+            
+            // Remove previous pulses
+            document.querySelectorAll('.mission-step').forEach(s => s.classList.remove('active-guidance'));
+            
+            // Trigger Auto-Scroll & High-Authority Pulse
+            tray.scrollTo({ top: index * tray.clientHeight, behavior: 'smooth' });
+            stepCard.classList.add('active-guidance');
+            this.updateView(index);
+        }
+
         start() {
             const flight = document.getElementById('flight-input').value.toUpperCase() || "AA2405";
             for(let i=1; i<=5; i++) { document.getElementById(`logo-${i}`).innerHTML = `<img class="airline-logo" src="https://www.google.com/s2/favicons?domain=aa.com&sz=64"> ${flight}`; }
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            this.updateView(0);
+            this.autoTransition(0);
         }
+
         handleScroll() {
             const tray = document.getElementById('mission-tray');
             const newStep = Math.round(tray.scrollTop / tray.clientHeight);
-            if (newStep !== this.activeStep && newStep < this.views.length) { this.updateView(newStep); }
+            if (newStep !== this.activeStep && newStep < this.views.length) { 
+                this.activeStep = newStep;
+                this.updateView(newStep); 
+            }
         }
+
         updateView(index) {
-            this.activeStep = index;
             const v = this.views[index];
             this.map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, speed: 0.4 });
         }
