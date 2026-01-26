@@ -14,7 +14,6 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. ENTRY SCREEN */
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         
@@ -74,7 +73,7 @@
     <div class="mission-step" id="step-0">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Head inside through the designated entrance. You're in the right place.</div>
+        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Proceed to the terminal entrance. Everything is ready.</div>
     </div>
 
     <div class="mission-step" id="step-1">
@@ -86,7 +85,7 @@
     <div class="mission-step" id="step-3" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
-        <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Let's get your ride ready.</div>
+        <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Your logistics are synchronized.</div>
         <button class="start-btn" style="background: #fff; color: #000; width: 100%; margin-top:20px; font-size: 14px; height: 50px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
     </div>
 </div>
@@ -95,7 +94,8 @@
     class VelocisSovereign {
         constructor() { 
             this.flightData = null; 
-            this.apiKey = '47b85994f385c378e90637384a65b83b'; 
+            // UPDATED WITH YOUR VERIFIED BASIC PLAN KEY
+            this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
             this.busy = false;
         }
 
@@ -134,7 +134,7 @@
             msg.innerText = "AUTHENTICATING PRO-SESSION...";
             
             try {
-                // FORCE SECURE BRIDGE: Bypassing browser CORS blocks using a proxy
+                // THE PRO-FIX: Using HTTPS + AllOrigins Proxy to bypass browser CORS security
                 const target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
                 const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
                 const wrapper = await res.json();
