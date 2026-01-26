@@ -15,7 +15,7 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. WARM ENTRY SCREEN */
+        /* 1. WARM & FRIENDLY ENTRY WINDOW */
         #entry-screen { 
             position: fixed; inset: 0; 
             background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); 
@@ -30,29 +30,25 @@
         }
         .bg-airplane { position: absolute; top: -10px; right: -10px; font-size: 100px; opacity: 0.15; color: white; transform: rotate(-15deg); pointer-events: none; animation: float 5s infinite; }
         @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(-15deg); } 50% { transform: translate(-10px, -10px) rotate(-12deg); } }
+
         .logo-main { font-size: 48px; font-weight: 900; color: white; margin-bottom: 5px; letter-spacing: -2.5px; z-index: 2; }
         .cta-sub { color: rgba(255,255,255,0.95); font-size: 14px; font-weight: 600; margin-bottom: 30px; z-index: 2; }
         #flight-input { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 26px; text-align: center; margin-bottom: 20px; background: white; color: #1c1c1e; font-weight: 700; outline: none; z-index: 2; }
         .start-btn { width: 100%; height: 65px; background: #1c1c1e; color: white; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 2; }
 
-        /* 2. MAP & TRAY */
+        /* 2. THE PANORAMIC STAGE */
         #map { flex: 1; width: 100%; height: 45vh; pointer-events: none; }
         .scroll-cta { background: #fff; padding: 12px; text-align: center; font-size: 11px; font-weight: 800; color: var(--v-blue); letter-spacing: 1.5px; border-bottom: 1px solid #eee; z-index: 20; }
+
+        /* 3. SOVEREIGN MISSION TRAY */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; padding-bottom: 100px; }
         .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .arrival-mission { background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%); }
 
         /* GOLD FRAMED TITLES */
         .framed-title { 
-            display: inline-block; 
-            border: 2px solid var(--v-gold); 
-            padding: 10px 18px; 
-            border-radius: 15px; 
-            font-size: 34px; 
-            font-weight: 900; 
-            color: var(--v-gold); 
-            margin-top: 10px; 
-            letter-spacing: -1px; 
+            display: inline-block; border: 2px solid var(--v-gold); padding: 10px 18px; border-radius: 15px; 
+            font-size: 34px; font-weight: 900; color: var(--v-gold); margin-top: 10px; letter-spacing: -1px; 
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
 
@@ -62,17 +58,27 @@
         .airline-logo { height: 18px; width: 18px; border-radius: 4px; }
         .subtitle { font-size: 17px; color: rgba(255,255,255,0.7); margin-top: 15px; line-height: 1.4; font-weight: 500; }
 
-        /* PARTNER CTA CARDS */
+        /* eSIM CTA WITH GLOW PULSE */
         .esim-cta {
             margin-top: 25px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%);
             border-radius: 20px; padding: 22px; color: white; display: flex; flex-direction: column; gap: 8px;
             box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3); border: 1px solid rgba(255,255,255,0.2);
         }
-        .esim-button { background: white; color: var(--v-blue); border: none; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 12px; margin-top: 5px; cursor: pointer; }
+        .esim-button { 
+            background: white; color: var(--v-blue); border: none; padding: 12px; border-radius: 12px; 
+            font-weight: 800; font-size: 12px; margin-top: 5px; cursor: pointer;
+            animation: esim-glow 2s infinite ease-in-out;
+        }
+        @keyframes esim-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 20px rgba(255,255,255,0.7); transform: scale(1.02); }
+        }
+
+        /* PARTNER CARDS */
         .partner-perk { margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
         .partner-header { display: flex; align-items: center; gap: 10px; }
         .partner-logo { width: 32px; height: 32px; border-radius: 8px; background: white; padding: 4px; }
-        .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; animation: pulse 1.5s infinite; margin-left: auto; }
+        .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; box-shadow: 0 0 8px #4caf50; animation: pulse 1.5s infinite; margin-left: auto; }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
         .code-btn { background: var(--v-blue); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; margin-top: 5px; }
 
@@ -104,7 +110,7 @@
     <div class="mission-step">
         <div class="top-row"><div class="tag">02. Logistics</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Level 2 Drop</div>
-        <div class="subtitle">American Airlines check-in is right here. Drop your bags and you're set for security.</div>
+        <div class="subtitle">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
     </div>
 
     <div class="mission-step">
