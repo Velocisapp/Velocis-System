@@ -29,7 +29,7 @@
         .hub-node h4 { margin: 0; font-size: 24px; font-weight: 900; }
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; }
 
-        /* 2. THE PANORAMIC DESTINATION VISUALIZER */
+        /* 2. PANORAMIC DESTINATION VISUALIZER */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
             background: #111 url('https://images.unsplash.com/photo-1539037116277-4db20889f2d4?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
@@ -48,7 +48,7 @@
         .airline-box { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 12px; }
         .guidance-text { font-size: 17px; color: rgba(255,255,255,0.8); margin-top: 15px; line-height: 1.4; }
 
-        /* UNTOUCHABLE CTAS */
+        /* UNTOUCHABLES */
         .esim-cta { margin-top: 25px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 20px; padding: 22px; color: white; }
         .esim-button { background: white; color: var(--v-blue); border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 13px; margin-top: 10px; cursor: pointer; }
         .partner-perk { margin-top: 20px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
@@ -62,18 +62,17 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0; font-size:38px; font-weight:900;">VELOCIS</h1>
-        <div id="personal-welcome" style="color:white; font-weight:800; font-size:18px; margin: 10px 0;"></div>
-        <div id="entry-cta" style="color:white; font-size:14px; margin-bottom:15px;">Scan pass or type flight number</div>
+        <div id="personal-welcome" style="color:white; font-weight:800; font-size:18px; margin: 10px 0;">READY FOR LIVE MISSION</div>
         
         <div id="reader"></div>
         <button id="scan-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
-        <input type="text" id="flight-input" placeholder="AA2405" oninput="engine.validateFlight(this.value)">
+        <input type="text" id="flight-input" placeholder="FLIGHT NUMBER (e.g. IB6166)" oninput="engine.validateFlight(this.value)">
         
         <div id="verify-briefing">
             <div class="route-path">
-                <div class="hub-node"><h4 id="orig-code">---</h4><p>DEPARTURE</p></div>
+                <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
                 <div style="font-size:20px; color:white;">✈</div>
-                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">---</h4><p>ARRIVAL</p></div>
+                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><p>ARRIVAL</p></div>
             </div>
             <button class="start-btn" style="background: white; color: black;" onclick="engine.start()">INITIATE MISSION</button>
         </div>
@@ -82,8 +81,8 @@
 
 <div id="dest-visualizer">
     <div class="hud-overlay">
-        <div class="dest-stat-row"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill">ACTIVE</div></div>
-        <div class="dest-stat-row"><div class="dest-pill" id="hud-gate">GATE --</div><div class="dest-pill" id="hud-door">DOOR --</div></div>
+        <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill">ACTIVE</div></div>
+        <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-gate">GATE --</div><div class="dest-pill" id="hud-door">DOOR --</div></div>
     </div>
 </div>
 
@@ -97,24 +96,7 @@
     <div class="mission-step" id="step-1">
         <div class="top-row"><div style="color:var(--v-blue); font-weight:900; font-size:12px;">02. LOGISTICS</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Check-in</div>
-        <div id="logistics-guidance" class="guidance-text">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
-    </div>
-
-    <div class="mission-step" id="step-2">
-        <div class="top-row"><div style="color:var(--v-blue); font-weight:900; font-size:12px;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
-        <div class="framed-title" id="card-gate">Gate --</div>
-        <div class="guidance-text">You're all set. Grab a coffee—it's just a few steps from your gate.</div>
-        <div class="esim-cta">
-            <div style="font-weight:900; font-size:13px;">Traveling International?</div>
-            <button class="esim-button" onclick="window.open('https://www.airalo.com/', '_blank')">GET GLOBAL eSIM</button>
-        </div>
-        <div class="partner-perk">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <img style="width:24px; border-radius:5px;" src="https://www.google.com/s2/favicons?domain=starbucks.com&sz=64">
-                <span style="color:white; font-weight:700;">Starbucks®</span>
-            </div>
-            <button class="code-btn" onclick="alert('Code copied!')">15% OFF CODE: VELOCIS</button>
-        </div>
+        <div id="logistics-guidance" class="guidance-text">Airline check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
     </div>
 
     <div class="mission-step" id="step-3" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
@@ -130,7 +112,7 @@
         constructor() { 
             this.flightData = null; 
             this.apiKey = '47b85994f385c378e90637384a65b83b'; 
-            this.isProcessing = false;
+            this.busy = false;
         }
 
         async startScanner() {
@@ -138,94 +120,80 @@
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
             
-            // THE FIX: Generic constraints to allow iPhone security handshake
+            // Lens fix: Use broad constraint for iPhone Safari security handshake
             const config = { fps: 15, qrbox: {width:250, height:250} };
-            
             try {
-                // First try standard back camera request
                 await this.scanner.start({ facingMode: "environment" }, config, (t) => this.parsePass(t));
             } catch (err) {
-                // Second try: allow any camera to prevent "Blocked" error
-                console.warn("Retrying with broad constraints...");
                 this.scanner.start({}, config, (t) => this.parsePass(t))
-                .catch(e => alert("Please enable Camera in iPhone Settings > Safari > Camera."));
+                .catch(e => alert("Please allow camera in iPhone Settings > Safari."));
             }
         }
 
         async fetchAviationData(fNum) {
             try {
-                const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum.trim()}`);
+                const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum.trim().toUpperCase()}`);
                 const json = await res.json();
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     return {
                         airline: f.airline.name,
-                        gate: f.departure.gate || "D12",
-                        terminal: f.departure.terminal || "4",
-                        baggage: f.arrival.baggage || "6",
+                        gate: f.departure.gate || "TBD",
+                        terminal: f.departure.terminal || "TBD",
+                        baggage: f.arrival.baggage || "TBD",
                         city: f.arrival.iata === "MAD" ? "Madrid" : f.arrival.airport.split(' ')[0],
                         dest: f.arrival.iata,
                         orig: f.departure.iata
                     };
                 }
-            } catch(e) { console.error("API error"); }
+            } catch(e) { console.error("Handshake failure"); }
             return null;
         }
 
         async parsePass(data) {
-            if (this.isProcessing) return;
-            this.isProcessing = true;
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            
-            const flightMatch = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
-            const name = data.includes('/') ? data.substring(2, 20).split('/')[0] : "Passenger";
-            
-            const live = await this.fetchAviationData(flightMatch);
-            this.updateIdentity(flightMatch, live, name);
-            
-            if(this.scanner) {
-                this.scanner.stop().then(() => {
+            if (this.busy) return;
+            const flightMatch = data.match(/[A-Z]{2}\d{2,4}/)?.[0];
+            if(flightMatch) {
+                this.busy = true;
+                const live = await this.fetchAviationData(flightMatch);
+                if(live) {
+                    this.updateIdentity(flightMatch, live);
+                    if(this.scanner) await this.scanner.stop();
                     document.getElementById('reader').style.display = 'none';
-                });
+                }
+                this.busy = false;
             }
-            this.isProcessing = false;
         }
 
         async validateFlight(val) {
             if (val.length >= 4) {
-                const live = await this.fetchAviationData(val.toUpperCase());
-                // Force briefing card even with fallback if API is slow
-                this.updateIdentity(val.toUpperCase(), live, "Passenger");
+                const live = await this.fetchAviationData(val);
+                if(live) this.updateIdentity(val.toUpperCase(), live);
             }
         }
 
-        updateIdentity(fNum, live, name) {
-            const data = live || { airline: "Airlines", gate: "TBD", terminal: "4", baggage: "6", city: "Destination", dest: "DST", orig: "ORG" };
-            this.flightData = { ...data, flight: fNum, passenger: name, logo: `https://www.google.com/s2/favicons?domain=${data.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
-            
-            document.getElementById('personal-welcome').innerText = `Welcome, ${name}`;
-            document.getElementById('dest-code').innerText = this.flightData.dest;
-            document.getElementById('orig-code').innerText = this.flightData.orig;
+        updateIdentity(fNum, live) {
+            this.flightData = { ...live, flight: fNum, logo: `https://www.google.com/s2/favicons?domain=${live.airline.toLowerCase().replace(/\s/g, '')}.com&sz=64` };
+            document.getElementById('personal-welcome').innerText = `WELCOME ABOARD`;
+            document.getElementById('orig-code').innerText = live.orig;
+            document.getElementById('dest-code').innerText = live.dest;
             document.getElementById('verify-briefing').style.display = 'block';
         }
 
         start() {
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            for(let i=1; i<=4; i++) { 
-                const logoBox = document.getElementById(`logo-${i}`);
-                if(logoBox) logoBox.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
+            for(let i of [1, 2, 4]) { 
+                const box = document.getElementById(`logo-${i}`);
+                if(box) box.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
             }
             document.getElementById('hud-city').innerText = this.flightData.city;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            document.getElementById('logistics-guidance').innerText = `${this.flightData.airline} check-in is right here. Once you drop your bags, you're halfway to the gate.`;
-            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Your bags are arriving at Carousel ${this.flightData.baggage}.`;
-            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "MIA": "1506159904221-02894547b3d2" };
-            const photoId = photoMap[this.flightData.dest] || "1539037116277-4db20889f2d4";
+            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Bags arriving at Carousel ${this.flightData.baggage}.`;
+            const photoId = this.flightData.dest === "MAD" ? "1539037116277-4db20889f2d4" : "1506159904221-02894547b3d2";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
             document.getElementById('step-0').classList.add('active-guidance');
         }
