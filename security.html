@@ -15,7 +15,7 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. ENTRY SCREEN - FULL ELITE UI */
+        /* 1. ENTRY SCREEN - FULL ELITE UI PRESERVED */
         #entry-screen { 
             position: fixed; inset: 0; 
             background: linear-gradient(135deg, rgba(0,122,255,0.9) 0%, rgba(0,198,255,0.9) 100%), 
@@ -47,7 +47,6 @@
             overflow: hidden;
         }
         
-        /* THE ISOLATED WINDOW: Physically separated from the black canvas */
         #cockpit-window {
             width: 90%; height: 85%;
             background: #0a0a0a;
@@ -76,7 +75,7 @@
         }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 15px; border-radius: 12px; font-size: 11px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* 3. MISSION TRAY - 100% PRESERVED CARDS */
+        /* 3. MISSION TRAY - 100% PRESERVED ARCHITECTURE */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
@@ -138,7 +137,7 @@
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, activate your global connectivity strategy:</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your global connectivity strategy:</div>
         <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
@@ -196,7 +195,7 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     
-                    // STATUS PROTECTION logic
+                    // STATUS PROTECTION check
                     if(f.flight_status === "cancelled") {
                         status.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         status.style.color = "var(--v-red)";
@@ -222,17 +221,17 @@
         start() {
             if(!this.flightData) return;
             
-            // THE WINDOW INJECTION logic (Bypass for black canvas)
+            // WINDOW INJECTION for black canvas bypass
             const photoMap = { "ATL": "1540260906354-297ba6d2239e", "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836" };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const imgLayer = document.getElementById('city-img-layer');
             imgLayer.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${Date.now()}`;
             imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
 
-            // TRANSITION logic
+            // TRANSITION
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // FULL POPULATION logic (Unshortened)
+            // PRESERVED UNSHORTENED LOGO AND TEXT UPDATES
             const l1 = document.getElementById('logo-1'); l1.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             const l2 = document.getElementById('logo-2'); l2.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             const l3 = document.getElementById('logo-3'); l3.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
