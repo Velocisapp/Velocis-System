@@ -39,16 +39,22 @@
         .hub-node h4 { margin: 0; font-size: 28px; font-weight: 900; }
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
 
-        /* 2. VISUALIZER - FIXED DYNAMIC BACKGROUND */
+        /* 2. VISUALIZER - FIXED DYNAMIC BACKGROUND ENGINE */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
             background-color: #000; 
-            background-position: center; 
-            background-repeat: no-repeat; 
-            background-size: cover; 
-            transition: background-image 1.5s ease-in-out; 
+            overflow: hidden;
         }
-        .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent, rgba(0,0,0,0.85)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; }
+        /* CRITICAL PHYSICAL LAYER BYPASS */
+        #city-img-layer {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.5s ease-in;
+            z-index: 1;
+        }
+        .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent, rgba(0,0,0,0.85)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 2; }
         .dest-pill { background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
 
         /* 3. MISSION TRAY - HIGH FIDELITY CARDS */
@@ -81,9 +87,9 @@
         
         <div id="verify-briefing">
             <div class="route-path">
-                <div class="hub-node"><h4 id="orig-code">...</h4><div style="font-size:11px; opacity:0.8; font-weight:700;">DEPARTURE</div></div>
+                <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
                 <div style="font-size:24px; color:white; opacity:0.5;">✈</div>
-                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><div style="font-size:11px; opacity:0.8; font-weight:700;">ARRIVAL</div></div>
+                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><p>ARRIVAL</p></div>
             </div>
             <button class="start-btn" style="margin-top: 20px;" onclick="engine.start()">INITIATE MISSION</button>
         </div>
@@ -91,6 +97,7 @@
 </div>
 
 <div id="dest-visualizer">
+    <img id="city-img-layer" src="" alt="">
     <div class="hud-overlay">
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-gate">GATE --</div><div class="dest-pill" id="hud-door">DOOR --</div></div>
@@ -110,7 +117,7 @@
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your global connectivity strategy:</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, activate your global connectivity strategy:</div>
         <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
@@ -177,7 +184,7 @@
             const status = document.getElementById('status-msg');
             status.innerText = "AUTHENTICATING PRO-SESSION...";
             try {
-                // HUB HANDSHAKE - Supports IATA and ICAO for global hubs like LEMD/MAD
+                // GLOBAL HUB HANDSHAKE - Supports IATA and ICAO for global coverage
                 let target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
                 let res = await fetch(target);
                 let json = await res.json();
@@ -232,21 +239,20 @@
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // --- CITYSCAPE RE-RENDER ENGINE ---
+            // --- CITYSCAPE PHYSICAL BYPASS ENGINE ---
             const photoMap = { 
                 "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
                 "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
                 "LHR": "1486381464718-a30058a01560", "JFK": "1496442226664-5f449f10111d",
-                "ALC": "1559310804-069279093836"
+                "SYD": "1506973031151-a3c1186d07ba", "ALC": "1559310804-069279093836"
             };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
-            const visualizer = document.getElementById('dest-visualizer');
-            const buster = new Date().getTime();
+            const cityImg = document.getElementById('city-img-layer');
+            const cacheBuster = new Date().getTime();
             
-            // Bypass logic: Force a physical reflow and clear old styles to ensure render
-            visualizer.style.backgroundImage = "none";
-            void visualizer.offsetWidth; // This line forces the browser to re-paint
-            visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${buster}')`;
+            // Set source and fade in upon confirmation of download
+            cityImg.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${cacheBuster}`;
+            cityImg.onload = () => { cityImg.style.opacity = "1"; };
         }
     }
     const engine = new VelocisSovereign();
