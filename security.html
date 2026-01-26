@@ -42,7 +42,7 @@
         /* 2. VISUALIZER - FIXED DYNAMIC BACKGROUND */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
-            background-color: #000; /* Removed #111 conflict */
+            background-color: #000; 
             background-position: center; 
             background-repeat: no-repeat; 
             background-size: cover; 
@@ -103,7 +103,7 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
             Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify your documents.
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify your documents.
         </div>
     </div>
 
@@ -177,8 +177,18 @@
             const status = document.getElementById('status-msg');
             status.innerText = "AUTHENTICATING PRO-SESSION...";
             try {
-                const res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`);
-                const json = await res.json();
+                // GLOBAL HUB HANDSHAKE - Supports IATA and ICAO for European hubs like LEMD
+                const target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
+                let res = await fetch(target);
+                let json = await res.json();
+                
+                // Fallback for European/Spanish data latency
+                if(!json.data || json.data.length === 0) {
+                    const altTarget = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_icao=${fNum}`;
+                    res = await fetch(altTarget);
+                    json = await res.json();
+                }
+
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     this.flightData = {
@@ -190,7 +200,6 @@
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD",
                         baggage: f.arrival.baggage || "TBD",
-                        // FIXED COUNTER LOGIC - Logic fallback from hardcoded "A-G"
                         counter: f.departure.checkin_counter || "AIRLINE DESK",
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
@@ -206,18 +215,15 @@
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // Sync all labels and logos
             for(let i=1; i<=4; i++) {
                 const box = document.getElementById(`logo-${i}`);
                 if(box) box.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             }
             
-            // HUD Update
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             
-            // Guidance Card Content
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
@@ -226,24 +232,19 @@
             document.getElementById('text-gate').innerText = this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             
-            // Arrival Specifics
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // CITYSCAPE ENGINE FIX - Removed #111 conflict, added Cache-Buster
+            // CITYSCAPE ENGINE - FORCED UPDATE WITH CACHE BUSTER
             const photoMap = { 
-                "ATL": "1540260906354-297ba6d2239e", 
-                "LAX": "1506159904221-02894547b3d2", 
-                "MIA": "1503891450247-eeaf07d19539",
-                "MAD": "1539037116277-4db20889f2d4",
-                "LHR": "1486381464718-a30058a01560",
-                "JFK": "1496442226664-5f449f10111d"
+                "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
+                "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
+                "LHR": "1486381464718-a30058a01560", "JFK": "1496442226664-5f449f10111d"
             };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const visualizer = document.getElementById('dest-visualizer');
-            // Adding timestamp to force browser to ignore cache and render immediately
-            const cacheBuster = new Date().getTime();
-            visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${cacheBuster}')`;
+            const buster = new Date().getTime();
+            visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${buster}')`;
         }
     }
     const engine = new VelocisSovereign();
