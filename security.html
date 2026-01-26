@@ -39,8 +39,15 @@
         .hub-node h4 { margin: 0; font-size: 28px; font-weight: 900; }
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
 
-        /* 2. VISUALIZER - DYNAMIC BACKGROUND */
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background-color: #111; background-position: center; background-repeat: no-repeat; background-size: cover; transition: background-image 1.5s ease; }
+        /* 2. VISUALIZER - FIXED DYNAMIC BACKGROUND */
+        #dest-visualizer { 
+            flex: 1; width: 100%; height: 45vh; position: relative; 
+            background-color: #000; /* Removed #111 conflict */
+            background-position: center; 
+            background-repeat: no-repeat; 
+            background-size: cover; 
+            transition: background-image 1.5s ease-in-out; 
+        }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent, rgba(0,0,0,0.85)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; }
         .dest-pill { background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -95,8 +102,8 @@
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
-            Head inside through entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters at **Counter <span id="text-counter" style="color:var(--v-gold);">TBD</span>** to drop bags and verify your documents.
+            Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify your documents.
         </div>
     </div>
 
@@ -183,7 +190,8 @@
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD",
                         baggage: f.arrival.baggage || "TBD",
-                        counter: f.departure.checkin_counter || "A-G",
+                        // FIXED COUNTER LOGIC - Logic fallback from hardcoded "A-G"
+                        counter: f.departure.checkin_counter || "AIRLINE DESK",
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
                     document.getElementById('orig-code').innerText = this.flightData.orig;
@@ -222,7 +230,7 @@
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // Cityscape Engine Fix: Use backgroundImage and forced URL to ensure mapping
+            // CITYSCAPE ENGINE FIX - Removed #111 conflict, added Cache-Buster
             const photoMap = { 
                 "ATL": "1540260906354-297ba6d2239e", 
                 "LAX": "1506159904221-02894547b3d2", 
@@ -233,7 +241,9 @@
             };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const visualizer = document.getElementById('dest-visualizer');
-            visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
+            // Adding timestamp to force browser to ignore cache and render immediately
+            const cacheBuster = new Date().getTime();
+            visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${cacheBuster}')`;
         }
     }
     const engine = new VelocisSovereign();
