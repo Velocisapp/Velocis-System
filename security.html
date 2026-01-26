@@ -89,19 +89,19 @@
 
 <div id="mission-tray">
     <div class="mission-step" id="step-0">
-        <div class="top-row"><div style="color:var(--v-blue); font-weight:900;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
+        <div class="top-row"><div style="color:var(--v-blue); font-weight:900; font-size:12px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
         <div class="guidance-text">Head inside through the designated entrance. You're in the right place.</div>
     </div>
 
     <div class="mission-step" id="step-1">
-        <div class="top-row"><div style="color:var(--v-blue); font-weight:900;">02. LOGISTICS</div><div class="airline-box" id="logo-2">----</div></div>
+        <div class="top-row"><div style="color:var(--v-blue); font-weight:900; font-size:12px;">02. LOGISTICS</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Check-in</div>
         <div id="logistics-guidance" class="guidance-text">American Airlines check-in is right here. Once you drop your bags, you're halfway to the gate.</div>
     </div>
 
     <div class="mission-step" id="step-2">
-        <div class="top-row"><div style="color:var(--v-blue); font-weight:900;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
+        <div class="top-row"><div style="color:var(--v-blue); font-weight:900; font-size:12px;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="framed-title" id="card-gate">Gate --</div>
         <div class="guidance-text">You're all set. Grab a coffee—it's just a few steps from your gate.</div>
         <div class="esim-cta">
@@ -118,7 +118,7 @@
     </div>
 
     <div class="mission-step" id="step-3" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
-        <div class="top-row"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
+        <div class="top-row"><div style="color:white; font-weight:900; font-size:12px;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
         <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Let's get your ride ready.</div>
         <button class="code-btn" style="background: #fff; color: #000; width: 100%; margin-top:20px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
@@ -136,7 +136,9 @@
             document.getElementById('reader').style.display = 'block';
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
-            this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: {width:300, height:150} }, (t) => this.parsePass(t));
+            // FIXED: Using "ideal" instead of "exact" facingMode for multi-camera phones
+            this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: {width:300, height:150} }, (t) => this.parsePass(t))
+                .catch(err => alert("Camera permission denied or lens conflict. Use manual entry."));
         }
 
         async fetchAviationData(fNum) {
@@ -155,24 +157,24 @@
                         orig: f.departure.iata
                     };
                 }
-            } catch(e) { console.error("AviationStack Connection Error"); }
+            } catch(e) { console.error("AviationStack error"); }
             return null;
         }
 
         async parsePass(data) {
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            const flightMatch = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
+            const flightNum = data.match(/[A-Z]{2}\d{2,4}/)?.[0] || "UX098";
             const name = data.includes('/') ? data.substring(2, 12).split('/')[0] : "Yourden";
-            
-            const live = await this.fetchAviationData(flightMatch);
+            const live = await this.fetchAviationData(flightNum);
             if(live) {
-                this.updateIdentity(flightMatch, live, name);
-                this.scanner.stop();
+                this.updateIdentity(flightNum, live, name);
+                if(this.scanner) this.scanner.stop();
                 document.getElementById('reader').style.display = 'none';
             }
         }
 
         async validateFlight(val) {
+            // Typing triggers search at 4+ chars
             if (val.length >= 4) {
                 const live = await this.fetchAviationData(val.toUpperCase());
                 if(live) {
@@ -193,20 +195,27 @@
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
+            // Apply logos to top-row of cards
             for(let i=1; i<=4; i++) { 
-                document.getElementById(`logo-${i}`).innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
+                const logoBox = document.getElementById(`logo-${i}`);
+                if(logoBox) logoBox.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
             }
             
+            // Update HUD
             document.getElementById('hud-city').innerText = this.flightData.city;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            
+            // Update Card Labels
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             
+            // Update Warm Guidance
             document.getElementById('logistics-guidance').innerText = `${this.flightData.airline} check-in is right here. Once you drop your bags, you're halfway to the gate.`;
             document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Your bags are arriving at Carousel ${this.flightData.baggage}.`;
 
+            // High-res background photo logic
             const photoMap = { "MAD": "1539037116277-4db20889f2d4", "MIA": "1506159904221-02894547b3d2" };
             const photoId = photoMap[this.flightData.dest] || "1539037116277-4db20889f2d4";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
