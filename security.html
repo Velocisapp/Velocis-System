@@ -17,8 +17,8 @@
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
         /* 1. DYNAMIC VERIFICATION ENTRY WINDOW */
-        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 90%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         
         #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--v-gold); display: none; background: #000; }
         #scan-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 1px solid var(--v-gold); margin-bottom: 15px; width: 100%; height: 50px; border-radius: 15px; font-weight: 800; cursor: pointer; }
@@ -73,9 +73,9 @@
 
 <div id="entry-screen">
     <div class="glass-card">
-        <div class="logo-main">VELOCIS</div>
+        <h1 class="logo-main">VELOCIS</h1>
         <div id="personal-welcome" style="color:white; font-weight:800; font-size:18px; margin-top:5px;"></div>
-        <div id="entry-cta" class="cta-sub">Enter your flight number or scan pass</div>
+        <div id="entry-cta" class="cta-sub" style="color:white; font-size:14px; font-weight:600; margin-bottom:20px;">Enter your flight number or scan pass</div>
         
         <div id="reader"></div>
         <button id="scan-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
@@ -85,7 +85,7 @@
         <div id="verify-briefing">
             <div class="route-path">
                 <div class="hub-node"><h4 id="orig-code">---</h4><p id="orig-city">DEPARTURE</p></div>
-                <div style="font-size:20px; color:white;">✈</div>
+                <div style="font-size:20px; color:white;" class="plane-icon">✈</div>
                 <div class="hub-node" style="text-align:right;"><h4 id="dest-code">---</h4><p id="dest-city">ARRIVAL</p></div>
             </div>
             <p id="verified-airline" style="font-size:14px; font-weight:800; color:white; margin:0; text-transform:uppercase;"></p>
@@ -172,8 +172,11 @@
         }
 
         parsePass(data) {
+            // HAPTIC HANDSHAKE: Double Pulse
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            
             try {
-                // BCBP Name Extract
+                // BCBP Extraction
                 const namePart = data.substring(2, 22).trim().split('/');
                 const firstName = namePart[1] ? namePart[1].split(' ')[0] : 'Passenger';
                 const airline = data.substring(33, 35).trim();
@@ -184,7 +187,7 @@
                 document.getElementById('personal-welcome').innerText = `Welcome, ${firstName}`;
                 document.getElementById('flight-input').value = airline + flight;
                 this.validateFlight(airline + flight);
-            } catch(e) { console.error("Parse failed, manual fallback."); }
+            } catch(e) { console.error("Scanner parsing fallback."); }
         }
 
         validateFlight(val) {
@@ -209,28 +212,18 @@
         syncRedundancySensors() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition((pos) => {
-                    this.fusionEngine('gps', pos.coords);
+                    const distToEntrance = Math.sqrt(Math.pow(pos.coords.latitude - 25.7948, 2) + Math.pow(pos.coords.longitude - (-80.2820), 2));
+                    if (pos.coords.accuracy < 30 && distToEntrance < 0.0005) this.autoTransition(0);
                 }, null, { enableHighAccuracy: true });
             }
-            if (navigator.connection) {
-                navigator.connection.addEventListener('change', () => this.fusionEngine('wifi'));
-            }
+            if (navigator.connection) { navigator.connection.addEventListener('change', () => this.autoTransition(1)); }
             if ('PressureSensor' in window) {
                 const sensor = new PressureSensor({frequency: 1});
-                sensor.onreading = () => this.fusionEngine('pressure', sensor);
+                sensor.onreading = () => {
+                    if (this.lastPressure && (this.lastPressure - sensor.pressure) > 0.4) this.autoTransition(2);
+                    this.lastPressure = sensor.pressure;
+                };
                 sensor.start();
-            }
-        }
-
-        fusionEngine(source, data) {
-            if (source === 'gps' && data.accuracy < 30) {
-                const distToEntrance = Math.sqrt(Math.pow(data.latitude - 25.7948, 2) + Math.pow(data.longitude - (-80.2820), 2));
-                if (distToEntrance < 0.0005) this.autoTransition(0);
-            }
-            if (source === 'wifi') { if (this.activeStep === 0) this.autoTransition(1); }
-            if (source === 'pressure') {
-                if (this.lastPressure && (this.lastPressure - data.pressure) > 0.4) this.autoTransition(2);
-                this.lastPressure = data.pressure;
             }
         }
 
