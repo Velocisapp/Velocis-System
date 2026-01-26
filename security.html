@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -82,9 +81,9 @@ HTML
         
         <div id="verify-briefing">
             <div class="route-path">
-                <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
+                <div class="hub-node"><h4 id="orig-code">...</h4><div style="font-size:11px; opacity:0.8; font-weight:700;">DEPARTURE</div></div>
                 <div style="font-size:24px; color:white; opacity:0.5;">✈</div>
-                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><p>ARRIVAL</p></div>
+                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><div style="font-size:11px; opacity:0.8; font-weight:700;">ARRIVAL</div></div>
             </div>
             <button class="start-btn" style="margin-top: 20px;" onclick="engine.start()">INITIATE MISSION</button>
         </div>
@@ -104,7 +103,7 @@ HTML
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
             Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify your documents.
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify documents.
         </div>
     </div>
 
@@ -156,7 +155,7 @@ HTML
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
             await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t))
-                .catch(e => alert("Check Safari Settings."));
+                .catch(e => alert("Handshake Denied."));
         }
 
         async handleScan(data) {
@@ -178,12 +177,10 @@ HTML
             const status = document.getElementById('status-msg');
             status.innerText = "AUTHENTICATING PRO-SESSION...";
             try {
-                // GLOBAL LOGIC: Primary IATA search
                 let target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
                 let res = await fetch(target);
                 let json = await res.json();
                 
-                // Fallback for European data latency (specifically LEMD/MAD hubs)
                 if(!json.data || json.data.length === 0) {
                     target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_icao=${fNum}`;
                     res = await fetch(target);
@@ -224,34 +221,30 @@ HTML
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-            
-            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('text-counter').innerText = this.flightData.counter;
-            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('text-gate').innerText = this.flightData.gate;
+            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // CITYSCAPE ENGINE: Forced update logic with cache-buster
+            // --- CITYSCAPE RE-RENDER ENGINE ---
             const photoMap = { 
-                "ATL": "1540260906354-297ba6d2239e", 
-                "LAX": "1506159904221-02894547b3d2", 
-                "MIA": "1503891450247-eeaf07d19539",
-                "MAD": "1539037116277-4db20889f2d4",
-                "LHR": "1486381464718-a30058a01560",
-                "JFK": "1496442226664-5f449f10111d"
+                "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
+                "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
+                "LHR": "1486381464718-a30058a01560", "JFK": "1496442226664-5f449f10111d",
+                "ALC": "1559310804-069279093836"
             };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const visualizer = document.getElementById('dest-visualizer');
             const buster = new Date().getTime();
             
-            // Force browser to re-render background bypass
+            // Bypass logic: Force a reflow to ensure background renders on mobile
             visualizer.style.backgroundImage = "none";
-            visualizer.offsetHeight; // Force reflow
+            visualizer.offsetHeight; 
             visualizer.style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${buster}')`;
         }
     }
