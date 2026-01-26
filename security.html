@@ -110,7 +110,7 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
             Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify documents.
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify your documents.
         </div>
     </div>
 
@@ -238,7 +238,7 @@
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // --- PHYSICAL BYPASS: Force load img tag to break through black background ---
+            // --- CITYSCAPE PHYSICAL BYPASS: Force loading the physical img tag ---
             const photoMap = { 
                 "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
                 "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
@@ -249,7 +249,7 @@
             const cityImg = document.getElementById('city-img-layer');
             const cacheBuster = new Date().getTime();
             
-            // Set source and fade in only when fully loaded
+            // Bypass CSS priorities by directly updating physical content
             cityImg.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${cacheBuster}`;
             cityImg.onload = () => { cityImg.style.opacity = "1"; };
         }
