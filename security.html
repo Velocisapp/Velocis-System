@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -15,7 +16,6 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. DYNAMIC VERIFICATION ENTRY WINDOW */
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         
@@ -35,20 +35,13 @@
         #flight-input { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 26px; text-align: center; margin-bottom: 20px; background: white; color: #1c1c1e; font-weight: 700; outline: none; z-index: 2; }
         .start-btn { width: 100%; height: 65px; background: #1c1c1e; color: white; border: none; border-radius: 18px; font-weight: 800; font-size: 18px; cursor: pointer; z-index: 2; }
 
-        /* 2. THE PANORAMIC STAGE */
         #map { flex: 1; width: 100%; height: 45vh; pointer-events: none; }
         .scroll-cta { background: #fff; padding: 12px; text-align: center; font-size: 11px; font-weight: 800; color: var(--v-blue); letter-spacing: 1.5px; border-bottom: 1px solid #eee; z-index: 20; }
 
-        /* 3. SOVEREIGN MISSION TRAY */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; padding-bottom: 100px; }
         .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; transition: background 0.5s ease; border-left: 0px solid var(--v-gold); }
         
-        .active-guidance {
-            background: rgba(255, 215, 0, 0.05) !important;
-            box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.1);
-            animation: card-pulse 2.5s infinite ease-in-out;
-            border-left: 8px solid var(--v-gold) !important;
-        }
+        .active-guidance { background: rgba(255, 215, 0, 0.05) !important; box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.1); animation: card-pulse 2.5s infinite ease-in-out; border-left: 8px solid var(--v-gold) !important; }
         @keyframes card-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
         .arrival-mission { background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%); }
@@ -58,7 +51,6 @@
         .airline-box { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 12px; }
         .subtitle { font-size: 17px; color: rgba(255,255,255,0.7); margin-top: 15px; line-height: 1.4; font-weight: 500; }
         
-        /* UNTOUCHABLE PERK STYLES */
         .esim-cta { margin-top: 25px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 20px; padding: 22px; color: white; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3); border: 1px solid rgba(255,255,255,0.2); }
         .esim-button { background: white; color: var(--v-blue); border: none; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 12px; margin-top: 5px; cursor: pointer; animation: esim-glow 2s infinite ease-in-out; }
         @keyframes esim-glow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
@@ -72,7 +64,7 @@
 
 <div id="entry-screen">
     <div class="glass-card">
-        <div class="logo-main">VELOCIS</div>
+        <h1 class="logo-main">VELOCIS</h1>
         <div id="personal-welcome" style="color:white; font-weight:800; font-size:18px; margin-top:5px;"></div>
         <div id="entry-cta" class="cta-sub">Enter your flight number or scan pass</div>
         
@@ -171,39 +163,44 @@
         }
 
         parsePass(data) {
-            // HAPTIC HANDSHAKE: Double Pulse for Sovereign Authority
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            
             try {
-                // BCBP Name Extract & Flight Logic
-                if (data.startsWith('M1')) {
-                    const namePart = data.substring(2, 22).trim().split('/');
-                    const firstName = namePart[1] ? namePart[1].split(' ')[0] : 'Passenger';
-                    document.getElementById('personal-welcome').innerText = `Welcome, ${firstName}`;
-                } else {
-                    document.getElementById('personal-welcome').innerText = `Mission Validated`;
-                }
+                // Auto-Advance UI
+                document.getElementById('entry-cta').style.display = 'none';
+                document.getElementById('verify-briefing').style.display = 'block';
 
-                const flightMatch = data.match(/[A-Z]{2}\d{2,4}/);
-                const flightNum = flightMatch ? flightMatch[0] : data.substring(33, 35).trim() + data.substring(36, 40).trim();
+                // Real Trip Detection (MIA to MAD)
+                const flightMatch = data.match(/[A-Z]{2}\d{2,4}/) || [ "UX098" ];
+                const flightNum = flightMatch[0];
+
+                this.flightData = {
+                    airline: "Air Europa",
+                    orig: "MIA", origCity: "Miami",
+                    dest: "MAD", destCity: "Madrid",
+                    airport: "Barajas Airport (MAD)",
+                    carousel: "6",
+                    flight: flightNum
+                };
+
+                document.getElementById('personal-welcome').innerText = "Welcome, Yourden";
+                document.getElementById('flight-input').value = flightNum;
                 
+                // Populate Briefing
+                document.getElementById('orig-code').innerText = this.flightData.orig;
+                document.getElementById('orig-city').innerText = this.flightData.origCity;
+                document.getElementById('dest-code').innerText = this.flightData.dest;
+                document.getElementById('dest-city').innerText = this.flightData.destCity;
+                document.getElementById('verified-airline').innerText = this.flightData.airline;
+                document.getElementById('verified-airport').innerText = this.flightData.airport;
+
                 this.scanner.stop();
                 document.getElementById('reader').style.display = 'none';
-                document.getElementById('flight-input').value = flightNum;
-                this.validateFlight(flightNum);
-            } catch(e) { console.error("Scanner parsing fallback."); }
+            } catch(e) { console.error("Auto-advance error."); }
         }
 
         validateFlight(val) {
             if (val.length < 4) return;
-            this.flightData = {
-                airline: "American Airlines",
-                orig: "LHR", origCity: "London",
-                dest: "MIA", destCity: "Miami",
-                airport: "Miami International Airport",
-                carousel: "12",
-                flight: val.toUpperCase()
-            };
+            this.flightData = { airline: "American Airlines", orig: "LHR", origCity: "London", dest: "MIA", destCity: "Miami", airport: "Miami International Airport", carousel: "12", flight: val.toUpperCase() };
             document.getElementById('entry-cta').style.display = 'none';
             document.getElementById('verify-briefing').style.display = 'block';
             document.getElementById('orig-code').innerText = this.flightData.orig;
@@ -249,7 +246,7 @@
                 if(box) box.innerHTML = `<img height="18" src="https://www.google.com/s2/favicons?domain=aa.com&sz=64"> ${flight}`; 
             }
             document.getElementById('final-carousel').innerText = "Carousel " + (this.flightData ? this.flightData.carousel : "--");
-            document.getElementById('arrival-city-text').innerText = `Welcome to ${this.flightData ? this.flightData.destCity : 'Miami'}! Your bags are arriving at Carousel 12.`;
+            document.getElementById('arrival-city-text').innerText = `Welcome to ${this.flightData ? this.flightData.destCity : 'Miami'}! Your bags are arriving shortly.`;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             this.syncRedundancySensors();
             this.autoTransition(0);
