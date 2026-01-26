@@ -16,6 +16,9 @@
         
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
+        
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
+        #scan-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 1px solid var(--v-gold); margin-bottom: 15px; width: 100%; height: 50px; border-radius: 15px; font-weight: 800; cursor: pointer; }
         #flight-input { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 20px; text-align: center; margin-bottom: 20px; background: white; color: #1c1c1e; font-weight: 700; outline: none; box-sizing: border-box; }
 
         #verify-briefing { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3); text-align: left; width: 100%; animation: fadeIn 0.5s ease forwards; }
@@ -25,7 +28,7 @@
         .hub-node h4 { margin: 0; font-size: 24px; font-weight: 900; }
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; }
 
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111 center/cover no-repeat; transition: background 2s ease; }
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111 center/cover no-repeat; transition: background 1.5s ease; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; }
         .dest-pill { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 12px; font-size: 12px; font-weight: 800; color: white; text-transform: uppercase; }
 
@@ -43,8 +46,7 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0; font-size:38px; font-weight:900;">VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:16px; margin: 10px 0;">SYSTEM ACTIVE | PRO TIER</div>
-        
+        <div id="status-msg" style="color:white; font-weight:800; font-size:16px; margin: 10px 0;">PRO TIER | SECURE ACCESS</div>
         <div id="reader"></div>
         <button id="scan-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
@@ -77,19 +79,19 @@
     <div class="mission-step" id="step-1">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">02. LOGISTICS</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Check-in</div>
-        <div id="logistics-text" class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Airline check-in counter is ready for bag drop.</div>
+        <div id="logistics-text" class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Airline counter is ready for bag drop and verification.</div>
     </div>
 
     <div class="mission-step" id="step-2">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:var(--v-blue); font-weight:900;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="framed-title" id="card-gate">Gate --</div>
-        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Security cleared. Prepare for boarding.</div>
+        <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:10px;">Security cleared. Monitor gate for active boarding status.</div>
     </div>
 
     <div class="mission-step" id="step-3" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
-        <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Your logistics are synchronized.</div>
+        <div id="arrival-msg" style="color:white; margin-top:15px; font-size: 17px;">Welcome! Your mission is complete.</div>
         <button class="start-btn" style="background: #fff; color: #000; width: 100%; margin-top:20px; font-size: 14px; height: 50px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
     </div>
 </div>
@@ -128,17 +130,17 @@
         }
 
         async validateFlight(val) {
-            if (val.length >= 4) await this.handshake(val.toUpperCase().trim());
+            if (val.length >= 4 && !val.includes('<')) await this.handshake(val.toUpperCase().trim());
         }
 
         async handshake(fNum) {
             const msg = document.getElementById('status-msg');
-            msg.innerText = "AUTHENTICATING PRO-SESSION...";
+            msg.innerText = "AUTHENTICATING SECURE SESSION...";
             try {
+                // DIRECT HTTPS CONNECTION FOR PAID TIER (Removing proxy to prevent HTML injection errors)
                 const target = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
-                const wrapper = await res.json();
-                const json = JSON.parse(wrapper.contents);
+                const res = await fetch(target);
+                const json = await res.json();
                 
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
@@ -147,7 +149,7 @@
                         airline: f.airline.name,
                         orig: f.departure.iata,
                         dest: f.arrival.iata,
-                        city: f.arrival.airport ? f.arrival.airport.split(' ')[0] : "Arrival",
+                        city: f.arrival.airport ? f.arrival.airport.split(' ')[0] : "Destination",
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD",
                         baggage: f.arrival.baggage || "TBD",
@@ -176,15 +178,11 @@
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            document.getElementById('logistics-text').innerText = `${this.flightData.airline} counter is ready for check-in.`;
+            document.getElementById('logistics-text').innerText = `${this.flightData.airline} counter is ready for bag drop.`;
             document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Bags at Carousel ${this.flightData.baggage}.`;
             
             // DYNAMIC VISUAL MAPPING
-            const photoMap = { 
-                "ATL": "1540260906354-297ba6d2239e", 
-                "LAX": "1506159904221-02894547b3d2", 
-                "MIA": "1503891450247-eeaf07d19539" 
-            };
+            const photoMap = { "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", "MIA": "1503891450247-eeaf07d19539" };
             const photoId = photoMap[this.flightData.dest] || "1539037116277-4db20889f2d4";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
             
