@@ -14,8 +14,16 @@
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* 1. ENTRY SCREEN - RESTORED ELITE UI */
-        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        /* 1. ENTRY SCREEN - ELITE UI WITH AIRPLANE BACKGROUND */
+        #entry-screen { 
+            position: fixed; inset: 0; 
+            background: linear-gradient(135deg, rgba(0,122,255,0.9) 0%, rgba(0,198,255,0.9) 100%), 
+                        url('https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; 
+            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
+        }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
@@ -43,7 +51,8 @@
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         
         .esim-cta { margin-top: 30px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 25px; padding: 25px; color: white; text-align: left; }
-        .perk-box { background: rgba(255,255,255,0.08); border-radius: 25px; padding: 25px; border: 1px solid rgba(255,255,255,0.15); margin-top: 20px; text-align: left; }
+        .perk-box { background: rgba(255,255,255,0.08); border-radius: 25px; padding: 25px; border: 1px solid rgba(255,255,255,0.15); margin-top: 20px; text-align: left; position: relative; }
+        .sb-logo { position: absolute; right: 25px; top: 25px; height: 45px; width: 45px; }
         
         .start-btn { width: 100%; height: 70px; background: white; color: black; border: none; border-radius: 22px; font-weight: 900; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
         #mission-tray::-webkit-scrollbar { display: none; }
@@ -54,7 +63,7 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0 0 10px 0; font-size:42px; font-weight:900; letter-spacing: -1px;">VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">PRO TIER | SECURE ACCESS</div>
+        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">SYSTEM READY</div>
         
         <div id="reader"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
@@ -86,19 +95,19 @@
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
-            Head inside through the entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters to drop your bags and verify documents.
+            Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters at **Counter <span id="text-counter" style="color:var(--v-gold);">TBD</span>** to drop bags.
         </div>
     </div>
 
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your connectivity strategy:</div>
-        <div class="esim-cta">
-            <div style="font-weight:900; font-size:22px;">Global Connectivity</div>
-            <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital eSIM now to bypass roaming fees upon arrival.</div>
-            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px;">ACTIVATE ESIM</button>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, secure your global connectivity strategy:</div>
+        <div class="esim-cta" onclick="alert('Activating eSIM Strategic Portal...')">
+            <div style="font-weight:900; font-size:22px;">Global eSIM</div>
+            <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
+            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px;">ACTIVATE NOW</button>
         </div>
     </div>
 
@@ -107,8 +116,9 @@
         <div class="framed-title" id="card-gate">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitor Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for active boarding calls. While you wait:</div>
         <div class="perk-box">
+            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
             <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
-            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight coffee. Show this code at the terminal.</div>
+            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight coffee. Show this code at the counter.</div>
             <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
         </div>
     </div>
@@ -173,6 +183,7 @@
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD",
                         baggage: f.arrival.baggage || "TBD",
+                        counter: f.departure.checkin_counter || "A-G",
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
                     document.getElementById('orig-code').innerText = this.flightData.orig;
@@ -202,6 +213,7 @@
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
+            document.getElementById('text-counter').innerText = this.flightData.counter;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('text-gate').innerText = this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
