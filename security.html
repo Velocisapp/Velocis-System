@@ -85,23 +85,30 @@
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head inside through the designated entrance. You're in the right place. Everything is synchronized.</div>
-    </div>
-
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. STRATEGY</div><div class="airline-box" id="logo-2">----</div></div>
-        <div class="esim-cta">
-            <div style="font-weight:900; font-size:22px;">Global Connectivity</div>
-            <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital eSIM now to bypass roaming fees the moment we touch down.</div>
-            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px;">ACTIVATE SOVEREIGN DATA</button>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
+            Head inside through the entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters to drop your bags and verify documents.
         </div>
     </div>
 
     <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. PERK</div><div class="airline-box" id="logo-3">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
+        <div class="framed-title">Security</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your connectivity strategy:</div>
+        <div class="esim-cta">
+            <div style="font-weight:900; font-size:22px;">Global Connectivity</div>
+            <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital eSIM now to bypass roaming fees upon arrival.</div>
+            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px;">ACTIVATE ESIM</button>
+        </div>
+    </div>
+
+    <div class="mission-step">
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
+        <div class="framed-title" id="card-gate">Gate --</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitor Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for active boarding calls. While you wait:</div>
         <div class="perk-box">
             <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
-            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight ritual. Show this code at the terminal.</div>
+            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight coffee. Show this code at the terminal.</div>
             <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
         </div>
     </div>
@@ -109,7 +116,10 @@
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
-        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Welcome! Let's get your logistics ready.</div>
+        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">
+            Alright, you have landed! <br>
+            <span id="airport-full-name" style="color:var(--v-gold);">---</span> (<span id="airport-iata">---</span>).
+        </div>
         <button class="start-btn" style="background:#fff; color:#000; height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
     </div>
 </div>
@@ -155,9 +165,13 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     this.flightData = {
-                        flight: fNum, airline: f.airline.name, orig: f.departure.iata, dest: f.arrival.iata,
-                        city: f.arrival.airport ? f.arrival.airport.split(' ')[0] : "Destination",
-                        gate: f.departure.gate || "TBD", terminal: f.departure.terminal || "TBD",
+                        flight: fNum,
+                        airline: f.airline.name,
+                        orig: f.departure.iata,
+                        dest: f.arrival.iata,
+                        airport: f.arrival.airport || "International Airport",
+                        gate: f.departure.gate || "TBD",
+                        terminal: f.departure.terminal || "TBD",
                         baggage: f.arrival.baggage || "TBD",
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
@@ -172,22 +186,38 @@
         start() {
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+            
+            // UI Logic Sync
             for(let i=1; i<=4; i++) {
                 const box = document.getElementById(`logo-${i}`);
                 if(box) box.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             }
-            document.getElementById('hud-city').innerText = this.flightData.city;
+            
+            // HUD Update
+            document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            
+            // Guidance Card Content
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+            document.getElementById('text-door').innerText = this.flightData.terminal;
+            document.getElementById('text-airline').innerText = this.flightData.airline;
+            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
+            document.getElementById('text-gate').innerText = this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Your bags are arriving at Carousel ${this.flightData.baggage}. Logistics synchronized.`;
+            
+            // Arrival Specifics
+            document.getElementById('airport-full-name').innerText = this.flightData.airport;
+            document.getElementById('airport-iata').innerText = this.flightData.dest;
 
-            // DYNAMIC CITY PHOTO MAPPING
+            // Visualizer Mapping
             const photoMap = { 
-                "ATL": "1540260906354-297ba6d2239e", "LAX": "1506159904221-02894547b3d2", 
-                "MIA": "1503891450247-eeaf07d19539", "MAD": "1539037116277-4db20889f2d4",
-                "LHR": "1486381464718-a30058a01560", "JFK": "1496442226664-5f449f10111d"
+                "ATL": "1540260906354-297ba6d2239e", 
+                "LAX": "1506159904221-02894547b3d2", 
+                "MIA": "1503891450247-eeaf07d19539",
+                "MAD": "1539037116277-4db20889f2d4",
+                "LHR": "1486381464718-a30058a01560",
+                "JFK": "1496442226664-5f449f10111d"
             };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
