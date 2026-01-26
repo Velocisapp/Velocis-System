@@ -6,25 +6,19 @@
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { 
-            --v-blue: #007AFF; 
-            --v-dark-card: #1c1c1e; 
-            --v-arrival-blue: #0052cc;
-            --v-gold: #FFD700;
-        }
+        :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #flight-input { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 20px; text-align: center; margin-bottom: 20px; background: white; color: #1c1c1e; font-weight: 700; outline: none; box-sizing: border-box; }
 
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111 center/cover no-repeat; transition: background 1.5s ease; }
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111 center/cover no-repeat; transition: background 2s ease; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; }
         .dest-pill { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 12px; font-size: 12px; font-weight: 800; color: white; text-transform: uppercase; }
 
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 35px 35px 0 0; z-index: 10; padding-bottom: 100px; }
         .mission-step { min-height: 100%; padding: 40px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .active-guidance { background: rgba(255, 215, 0, 0.05) !important; border-left: 8px solid var(--v-gold) !important; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 10px 18px; border-radius: 15px; font-size: 34px; font-weight: 900; color: var(--v-gold); margin-top: 10px; }
         .airline-box { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 12px; }
         
@@ -41,8 +35,7 @@
     <div class="glass-card">
         <h1 style="color:white; margin:0; font-size:38px; font-weight:900;">VELOCIS</h1>
         <div id="status-msg" style="color:white; font-weight:800; font-size:16px; margin: 10px 0;">PRO TIER | SECURE ACCESS</div>
-        <input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
-        
+        <input type="text" id="flight-input" placeholder="DL1249" oninput="engine.validateFlight(this.value)">
         <div id="verify-briefing" style="display:none; margin-top:20px;">
             <div style="display:flex; justify-content:space-between; color:white; margin-bottom:15px;">
                 <div style="text-align:left;"><h4 id="orig-code" style="margin:0; font-size:24px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">DEPARTURE</p></div>
@@ -62,13 +55,13 @@
 </div>
 
 <div id="mission-tray">
-    <div class="mission-step" id="step-0">
+    <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
         <div class="guidance-text" style="color:rgba(255,255,255,0.8); margin-top:15px; font-size:17px;">Head inside through the designated entrance. You're in the right place.</div>
     </div>
 
-    <div class="mission-step" id="step-1">
+    <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900;">02. STRATEGY</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="esim-cta">
             <div style="font-weight:900; font-size:18px;">Global Connectivity</div>
@@ -77,7 +70,7 @@
         </div>
     </div>
 
-    <div class="mission-step" id="step-2">
+    <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900;">03. PERK</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="perk-box">
             <div style="color:var(--v-gold); font-weight:900; font-size:22px;">Starbucks Reward</div>
@@ -86,7 +79,7 @@
         </div>
     </div>
 
-    <div class="mission-step" id="step-3" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
+    <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
         <div id="arrival-msg" style="color:white; margin-top:20px; font-size:20px; font-weight:700;">Welcome! Let's get your ride ready.</div>
@@ -99,7 +92,6 @@
         constructor() { 
             this.flightData = null; 
             this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-            this.busy = false;
         }
 
         async validateFlight(val) {
@@ -115,13 +107,9 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     this.flightData = {
-                        flight: fNum,
-                        airline: f.airline.name,
-                        orig: f.departure.iata,
-                        dest: f.arrival.iata,
+                        flight: fNum, airline: f.airline.name, orig: f.departure.iata, dest: f.arrival.iata,
                         city: f.arrival.airport ? f.arrival.airport.split(' ')[0] : "Destination",
-                        gate: f.departure.gate || "TBD",
-                        terminal: f.departure.terminal || "TBD",
+                        gate: f.departure.gate || "TBD", terminal: f.departure.terminal || "TBD",
                         baggage: f.arrival.baggage || "TBD",
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
@@ -146,19 +134,19 @@
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Bags at Carousel ${this.flightData.baggage}.`;
+            document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Bags arriving at Carousel ${this.flightData.baggage}.`;
 
-            // DYNAMIC VISUAL MAPPING - FIXED City matching
+            // DYNAMIC CITYSCAPE MAPPING
             const photoMap = { 
                 "ATL": "1540260906354-297ba6d2239e", 
                 "LAX": "1506159904221-02894547b3d2", 
                 "MIA": "1503891450247-eeaf07d19539",
-                "MAD": "1539037116277-4db20889f2d4"
+                "MAD": "1539037116277-4db20889f2d4",
+                "LHR": "1486381464718-a30058a01560",
+                "JFK": "1496442226664-5f449f10111d"
             };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
-            
-            document.getElementById('step-0').classList.add('active-guidance');
         }
     }
     const engine = new VelocisSovereign();
