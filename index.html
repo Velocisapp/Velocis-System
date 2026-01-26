@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,6 +84,40 @@
             animation: bounce-arrow 1s infinite;
         }
         @keyframes bounce-arrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(20px); } }
+
+        /* MERCHANT HUB STYLES */
+        .merchant-banner {
+            background: linear-gradient(135deg, rgba(15, 15, 15, 0.98) 0%, rgba(30, 30, 30, 0.98) 100%);
+            border: 2px solid #FFD700;
+            border-radius: 12px;
+            margin: 20px auto;
+            width: 95%;
+            padding: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+            text-align: left;
+        }
+        .merchant-tag {
+            color: #FFD700;
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .merchant-scroll {
+            display: flex;
+            gap: 25px;
+            animation: ticker-slide 20s linear infinite;
+            white-space: nowrap;
+        }
+        @keyframes ticker-slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .perk-item { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; font-size: 12px; }
+        .perk-badge { background: #FFD700; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; }
     </style>
 </head>
 
@@ -162,6 +197,21 @@
             <a href="https://www.rome2rio.com" target="_blank" style="display: block; background: #222222; color: #00ffff; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center; border: 1px solid #00ffff;">Rome2rio</a>
             
             <a href="https://www.klook.com" target="_blank" style="display: block; background: #ff4500; color: #fff; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center; border: 1px solid #fff;">Klook.com</a>
+
+            <div class="merchant-banner">
+                <span class="merchant-tag">Velocis Sovereign Perks</span>
+                <div style="overflow: hidden;">
+                    <div class="merchant-scroll">
+                        <div class="perk-item"><span class="perk-badge">eSIM</span> 15% OFF DATA</div>
+                        <div class="perk-item"><span class="perk-badge">PERK</span> $10 UBER CREDIT</div>
+                        <div class="perk-item"><span class="perk-badge">CAFE</span> STARBUCKS 15%</div>
+                        <div class="perk-item"><span class="perk-badge">eSIM</span> 15% OFF DATA</div>
+                        <div class="perk-item"><span class="perk-badge">PERK</span> $10 UBER CREDIT</div>
+                        <div class="perk-item"><span class="perk-badge">CAFE</span> STARBUCKS 15%</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div id="ground-transport-market" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
