@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -50,7 +51,7 @@
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         
-        .esim-cta { margin-top: 30px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 25px; padding: 25px; color: white; text-align: left; }
+        .esim-cta { margin-top: 30px; background: linear-gradient(135deg, #007AFF 0%, #00c6ff 100%); border-radius: 25px; padding: 25px; color: white; text-align: left; cursor: pointer; }
         .perk-box { background: rgba(255,255,255,0.08); border-radius: 25px; padding: 25px; border: 1px solid rgba(255,255,255,0.15); margin-top: 20px; text-align: left; position: relative; }
         .sb-logo { position: absolute; right: 25px; top: 25px; height: 45px; width: 45px; }
         
@@ -96,14 +97,14 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
             Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters at **Counter <span id="text-counter" style="color:var(--v-gold);">TBD</span>** to drop bags.
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> check-in counters at **Counter <span id="text-counter" style="color:var(--v-gold);">TBD</span>** to drop bags and verify your sovereign documents.
         </div>
     </div>
 
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, secure your global connectivity strategy:</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your global connectivity strategy:</div>
         <div class="esim-cta" onclick="alert('Activating eSIM Strategic Portal...')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
@@ -118,7 +119,7 @@
         <div class="perk-box">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
             <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
-            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight coffee. Show this code at the counter.</div>
+            <div style="color:white; opacity:0.85; font-size:15px; margin-top:8px; line-height:1.4;">Enjoy 15% off your pre-flight ritual. Show this code at the counter.</div>
             <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
         </div>
     </div>
@@ -198,7 +199,7 @@
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // UI Logic Sync
+            // UI Sync
             for(let i=1; i<=4; i++) {
                 const box = document.getElementById(`logo-${i}`);
                 if(box) box.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
@@ -209,7 +210,7 @@
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             
-            // Guidance Card Content
+            // Card Content
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
