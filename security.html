@@ -133,13 +133,23 @@
             this.isProcessing = false;
         }
 
-        startScanner() {
+        async startScanner() {
             document.getElementById('reader').style.display = 'block';
             document.getElementById('scan-btn').style.display = 'none';
             this.scanner = new Html5Qrcode("reader");
-            // FIXED: Using "ideal" to stop camera crashing on multi-lens phones
-            this.scanner.start({ facingMode: { ideal: "environment" } }, { fps: 15, qrbox: {width:250, height:250} }, (t) => this.parsePass(t))
-                .catch(err => alert("Camera blocked. Please use manual flight entry."));
+            
+            // THE FIX: Generic constraints to allow iPhone security handshake
+            const config = { fps: 15, qrbox: {width:250, height:250} };
+            
+            try {
+                // First try standard back camera request
+                await this.scanner.start({ facingMode: "environment" }, config, (t) => this.parsePass(t));
+            } catch (err) {
+                // Second try: allow any camera to prevent "Blocked" error
+                console.warn("Retrying with broad constraints...");
+                this.scanner.start({}, config, (t) => this.parsePass(t))
+                .catch(e => alert("Please enable Camera in iPhone Settings > Safari > Camera."));
+            }
         }
 
         async fetchAviationData(fNum) {
@@ -158,7 +168,7 @@
                         orig: f.departure.iata
                     };
                 }
-            } catch(e) { console.error("AviationStack error"); }
+            } catch(e) { console.error("API error"); }
             return null;
         }
 
@@ -184,9 +194,8 @@
         async validateFlight(val) {
             if (val.length >= 4) {
                 const live = await this.fetchAviationData(val.toUpperCase());
-                if(live) {
-                    this.updateIdentity(val.toUpperCase(), live, "Passenger");
-                }
+                // Force briefing card even with fallback if API is slow
+                this.updateIdentity(val.toUpperCase(), live, "Passenger");
             }
         }
 
@@ -203,28 +212,25 @@
         start() {
             if(!this.flightData) return;
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            
             for(let i=1; i<=4; i++) { 
                 const logoBox = document.getElementById(`logo-${i}`);
                 if(logoBox) logoBox.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`; 
             }
-            
             document.getElementById('hud-city').innerText = this.flightData.city;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            
             document.getElementById('logistics-guidance').innerText = `${this.flightData.airline} check-in is right here. Once you drop your bags, you're halfway to the gate.`;
             document.getElementById('arrival-msg').innerText = `Welcome to ${this.flightData.city}! Your bags are arriving at Carousel ${this.flightData.baggage}.`;
-
             const photoMap = { "MAD": "1539037116277-4db20889f2d4", "MIA": "1506159904221-02894547b3d2" };
             const photoId = photoMap[this.flightData.dest] || "1539037116277-4db20889f2d4";
             document.getElementById('dest-visualizer').style.backgroundImage = `url('https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80')`;
-            
             document.getElementById('step-0').classList.add('active-guidance');
         }
     }
     const engine = new VelocisSovereign();
 </script>
+</body>
+</html>
