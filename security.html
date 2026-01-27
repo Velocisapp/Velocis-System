@@ -175,41 +175,34 @@
             const initBtn = document.getElementById('initiate-btn');
             
             statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
-            
-            try {
-                // BULLETPROOF SPAIN HANDSHAKE
-                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
-                
-                // Force Madrid-Specific query for Iberia or Air Europa
-                if(fNum.toUpperCase().startsWith('IB') || fNum.toUpperCase().startsWith('UX')) { 
-                    url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}&arr_iata=MAD`; 
-                }
+            fNum = fNum.toUpperCase().trim();
+            const numOnly = fNum.replace(/\D/g,''); // Extracts just the digits (e.g., 5106)
 
+            try {
+                // PAID TIER STRATEGY: Search by flight number for maximum reliability
+                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`;
+                
                 let res = await fetch(url);
                 let json = await res.json();
-                
+
                 if(json.data && json.data.length > 0) {
-                    const f = json.data[0];
-                    const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
+                    // Logic: Find the exact airline match, or take the most recent live flight
+                    let f = json.data.find(flight => fNum.includes(flight.flight.iata) || fNum.includes(flight.airline.iata)) || json.data[0];
                     
-                    if(f.flight_status === "cancelled") {
-                        statusLabel.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
-                        statusLabel.style.color = "var(--v-red)";
-                        entryBanner.innerText = "⚠️ SYSTEM ALERT: FLIGHT REMOVED FROM LOGISTICS";
-                        entryBanner.style.background = "rgba(255,59,48,0.2)";
-                        entryBanner.style.color = "var(--v-red)";
-                        entryBanner.style.display = "block";
-                        initBtn.style.display = 'none';
-                        briefing.style.display = 'block';
-                        return;
-                    }
+                    const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
-                        flight: fNum, airline: f.airline.name, orig: f.departure.iata, dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Airport", gate: f.departure.gate || "TBD",
-                        terminal: f.departure.terminal || "TBD", baggage: f.arrival.baggage || "TBD",
+                        flight: fNum, 
+                        airline: f.airline.name, 
+                        orig: f.departure.iata, 
+                        dest: f.arrival.iata,
+                        airport: f.arrival.airport || "Madrid-Barajas", 
+                        gate: f.departure.gate || "TBD",
+                        terminal: f.departure.terminal || "TBD", 
+                        baggage: f.arrival.baggage || "TBD",
                         counter: f.departure.checkin_counter || "AIRLINE DESK",
-                        status: f.flight_status, time: depTime,
+                        status: f.flight_status, 
+                        time: depTime,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
 
@@ -226,7 +219,8 @@
                     briefing.style.display = 'block';
                     statusLabel.innerText = "MISSION PARAMETERS SECURED";
                 } else {
-                    statusLabel.innerText = "FLIGHT NOT FOUND. CHECK LOGISTICS.";
+                    statusLabel.innerText = "LOGISTICS TIMEOUT: NO ACTIVE DATA";
+                    statusLabel.style.color = "var(--v-red)";
                 }
             } catch(e) { statusLabel.innerText = "SECURE HANDSHAKE FAILED"; }
         }
