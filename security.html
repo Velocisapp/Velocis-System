@@ -103,23 +103,28 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Proceed to <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
     </div>
+
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, activate your global connectivity strategy:</div>
         <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px; cursor:pointer;">ACTIVATE NOW</button>
         </div>
     </div>
+
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="framed-title" id="card-gate">Gate --</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitor Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for active boarding calls. While you wait:</div>
         <div class="perk-box">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
             <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
             <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
         </div>
     </div>
+
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
@@ -170,7 +175,6 @@
                     const f = json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
                     
-                    // --- RECOVERED STATUS LOGIC: CANCELLATION GATE ---
                     if(f.flight_status === "cancelled") {
                         statusLabel.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         statusLabel.style.color = "var(--v-red)";
@@ -195,7 +199,6 @@
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    // --- THE STATUS FIX: Physical logic for Delay Window 1 ---
                     if(f.flight_status === "scheduled" || f.flight_status === "delayed") {
                         entryBanner.innerText = `⚠️ DELAYED | DEPARTURE: ${depTime}`;
                         entryBanner.style.background = "rgba(255,149,0,0.2)";
@@ -212,14 +215,13 @@
         start() {
             if(!this.flightData) return;
             
-            // --- THE STATUS FIX: Mission HUD logic for Delay Window 2 ---
-            const statusPill = document.getElementById('mission-status-pill');
+            const missionPill = document.getElementById('mission-status-pill');
             if(this.flightData.status === "scheduled" || this.flightData.status === "delayed") {
-                statusPill.innerText = `DELAYED: ${this.flightData.time}`;
-                statusPill.style.color = "var(--v-orange)";
+                missionPill.innerText = `DELAYED: ${this.flightData.time}`;
+                missionPill.style.color = "var(--v-orange)";
             } else {
-                statusPill.innerText = "ACTIVE MISSION";
-                statusPill.style.color = "var(--v-gold)";
+                missionPill.innerText = "ACTIVE MISSION";
+                missionPill.style.color = "var(--v-gold)";
             }
 
             const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "YYZ": "1436491865332-7a61a109c053" };
@@ -243,6 +245,7 @@
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('text-door').innerText = this.flightData.terminal;
+            document.getElementById('text-gate').innerText = this.flightData.gate;
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('text-counter').innerText = this.flightData.counter;
             
