@@ -93,12 +93,12 @@
     
     <div class="hud-overlay">
         <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
-    <div id="bridge-label" style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Connectivity Strategy</div>
-    <div style="display: flex; gap: 10px;">
-        <a id="local-esim-btn" href="index.html#local-esim" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid #00ff88; padding: 12px 20px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">LOCAL DATA</a>
-        <a href="index.html#global-connectivity-hub" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 20px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">GLOBAL ROAMING</a>
-    </div>
-</div>
+            <div id="bridge-label" style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Global Internet Connection</div>
+            <div style="display: flex; gap: 10px;">
+                <a id="local-esim-btn" href="https://www.airalo.com/spain-esim" target="_blank" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid #00ff88; padding: 12px 20px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">LOCAL DATA</a>
+                <a href="https://holafly.com/" target="_blank" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 20px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">GLOBAL ROAMING</a>
+            </div>
+        </div>
 
         <div style="display:flex; justify-content:space-between; pointer-events: none;">
             <div class="dest-pill" id="hud-city">DESTINATION</div>
@@ -179,19 +179,15 @@
             
             statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
             fNum = fNum.toUpperCase().trim();
-            const numOnly = fNum.replace(/\D/g,''); // Extracts just the digits (e.g., 5106)
+            const numOnly = fNum.replace(/\D/g,'');
 
             try {
-                // PAID TIER STRATEGY: Search by flight number for maximum reliability
                 let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`;
-                
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // Logic: Find the exact airline match, or take the most recent live flight
                     let f = json.data.find(flight => fNum.includes(flight.flight.iata) || fNum.includes(flight.airline.iata)) || json.data[0];
-                    
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
@@ -212,15 +208,15 @@
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                   if (f.flight_status === "delayed") {
-    const delayTime = this.formatTime(f.departure.estimated);
-    entryBanner.innerText = `⚠️ DELAYED | NEW DEPARTURE: ${delayTime}`;
-    entryBanner.style.background = "rgba(255,149,0,0.2)";
-    entryBanner.style.color = "var(--v-orange)";
-    entryBanner.style.display = "block";
-} else {
-    entryBanner.style.display = "none";
-}
+                    if (f.flight_status === "delayed") {
+                        const delayTime = this.formatTime(f.departure.estimated);
+                        entryBanner.innerText = `⚠️ DELAYED | NEW DEPARTURE: ${delayTime}`;
+                        entryBanner.style.background = "rgba(255,149,0,0.2)";
+                        entryBanner.style.color = "var(--v-orange)";
+                        entryBanner.style.display = "block";
+                    } else {
+                        entryBanner.style.display = "none";
+                    }
 
                     briefing.style.display = 'block';
                     statusLabel.innerText = "MISSION PARAMETERS SECURED";
@@ -272,8 +268,18 @@
             document.getElementById('airport-iata').innerText = this.flightData.dest;
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
+
+            // DYNAMIC BUTTON LOGIC
             const countryName = (this.flightData.dest === 'MAD' || this.flightData.dest === 'ALC' || this.flightData.dest === 'BCN') ? 'SPAIN' : 'DESTINATION';
-document.getElementById('local-esim-btn').innerText = `${countryName} LOCAL DATA`;
+            const localBtn = document.getElementById('local-esim-btn');
+            localBtn.innerText = `${countryName} LOCAL DATA`;
+            
+            // Dynamic URL Routing
+            if(this.flightData.dest === 'MAD' || this.flightData.dest === 'ALC') {
+                localBtn.href = "https://www.airalo.com/spain-esim";
+            } else {
+                localBtn.href = "https://www.airalo.com/";
+            }
         }
     }
     const engine = new VelocisSovereign();
