@@ -170,7 +170,7 @@
                     const f = json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
                     
-                    // --- THE STATUS FIX: Physical Gate for Cancellation ---
+                    // --- RECOVERED STATUS LOGIC: CANCELLATION GATE ---
                     if(f.flight_status === "cancelled") {
                         statusLabel.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         statusLabel.style.color = "var(--v-red)";
@@ -235,15 +235,17 @@
             document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            
+            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('text-door').innerText = this.flightData.terminal;
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('text-counter').innerText = this.flightData.counter;
-            document.getElementById('text-gate').innerText = this.flightData.gate;
-            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
+            
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
