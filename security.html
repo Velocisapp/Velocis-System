@@ -194,7 +194,7 @@
                         airline: f.airline.name, 
                         orig: f.departure.iata, 
                         dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Madrid-Barajas", 
+                        airport: f.arrival.airport || "Regional Hub", 
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD", 
                         baggage: f.arrival.baggage || "TBD",
@@ -238,7 +238,7 @@
                 missionPill.style.color = "var(--v-gold)";
             }
 
-            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "YYZ": "1436491865332-7a61a109c053" };
+            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "BCN": "1583423203372-bfc5a1c1e4b8", "IVL": "1539037116277-4db20889f2d4" };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const imgLayer = document.getElementById('cityscape-layer');
             imgLayer.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${Date.now()}`;
@@ -268,12 +268,15 @@
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-            // DYNAMIC BUTTON LOGIC
-            const countryName = (this.flightData.dest === 'MAD' || this.flightData.dest === 'ALC' || this.flightData.dest === 'BCN') ? 'SPAIN' : 'DESTINATION';
+            // DYNAMIC BUTTON LOGIC FOR SPANISH DOMESTIC FLIGHTS
+            const spanishCodes = ['MAD', 'BCN', 'ALC', 'AGP', 'TFN', 'TFS', 'LPA', 'IVL', 'PMI', 'VLC'];
+            const isSpain = spanishCodes.includes(this.flightData.dest);
+            const countryName = isSpain ? 'SPAIN' : 'DESTINATION';
             const localBtn = document.getElementById('local-esim-btn');
+            
             localBtn.innerText = `${countryName} LOCAL DATA`;
             
-            if(this.flightData.dest === 'MAD' || this.flightData.dest === 'ALC') {
+            if(isSpain) {
                 localBtn.href = "https://www.airalo.com/spain-esim";
             } else {
                 localBtn.href = "https://www.airalo.com/";
