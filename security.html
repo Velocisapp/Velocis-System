@@ -12,6 +12,7 @@
             --v-arrival-blue: #0052cc;
             --v-gold: #FFD700;
             --v-red: #FF3B30;
+            --v-orange: #FF9500;
         }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
@@ -112,7 +113,7 @@
 
 <div id="dest-visualizer">
     <div class="hud-overlay">
-        <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
+        <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-gate">GATE --</div><div class="dest-pill" id="hud-door">DOOR --</div></div>
     </div>
 </div>
@@ -188,7 +189,7 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     
-                    // STATUS logic check: Abort if flight is canceled
+                    // STATUS logic check: Handle Canceled and Delayed
                     if(f.flight_status === "cancelled") {
                         status.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         status.style.color = "var(--v-red)";
@@ -200,6 +201,7 @@
                         airport: f.arrival.airport || "Airport", gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD", baggage: f.arrival.baggage || "TBD",
                         counter: f.departure.checkin_counter || "AIRLINE DESK",
+                        status: f.flight_status,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
                     document.getElementById('orig-code').innerText = this.flightData.orig;
@@ -214,6 +216,12 @@
         start() {
             if(!this.flightData) return;
             
+            // DELAY STATUS logic
+            if(this.flightData.status === "scheduled") {
+                document.getElementById('mission-status-pill').innerText = "DELAYED";
+                document.getElementById('mission-status-pill').style.color = "var(--v-orange)";
+            }
+
             // PORTAL IMAGE UPDATER logic
             const photoMap = { "ATL": "1540260906354-297ba6d2239e", "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836" };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
@@ -224,7 +232,7 @@
             // TRANSITION logic
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // FULL UI POPULATION (Unshortened architecture)
+            // FULL UI POPULATION (UNSHORTENED)
             const l1 = document.getElementById('logo-1'); l1.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             const l2 = document.getElementById('logo-2'); l2.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             const l3 = document.getElementById('logo-3'); l3.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
