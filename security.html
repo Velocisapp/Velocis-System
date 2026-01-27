@@ -206,12 +206,13 @@
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    // STATUS FIX: Only show orange banner if status is officially 'delayed'
-                    if (f.flight_status === "delayed") {
-                        const delayTime = this.formatTime(f.departure.estimated);
-                        entryBanner.innerText = `⚠️ DELAYED | NEW DEPARTURE: ${delayTime}`;
-                        entryBanner.style.background = "rgba(255,149,0,0.2)";
-                        entryBanner.style.color = "var(--v-orange)";
+                    // STATUS FIX: Orange banner ONLY triggers for official 'delayed' or 'cancelled' status
+                    if (f.flight_status === "delayed" || f.flight_status === "cancelled") {
+                        const statusText = f.flight_status === "cancelled" ? "🚨 CANCELED" : "⚠️ DELAYED";
+                        const timeText = f.flight_status === "cancelled" ? "CONTACT AIRLINE" : `NEW DEPARTURE: ${this.formatTime(f.departure.estimated)}`;
+                        entryBanner.innerText = `${statusText} | ${timeText}`;
+                        entryBanner.style.background = f.flight_status === "cancelled" ? "rgba(255,59,48,0.2)" : "rgba(255,149,0,0.2)";
+                        entryBanner.style.color = f.flight_status === "cancelled" ? "var(--v-red)" : "var(--v-orange)";
                         entryBanner.style.display = "block";
                     } else {
                         entryBanner.style.display = "none";
@@ -230,8 +231,11 @@
             if(!this.flightData) return;
             
             const missionPill = document.getElementById('mission-status-pill');
-            // STATUS FIX: Only show delayed text in HUD if status is officially 'delayed'
-            if(this.flightData.status === "delayed") {
+            // STATUS FIX: HUD styling for different flight states
+            if(this.flightData.status === "cancelled") {
+                missionPill.innerText = "MISSION ABORTED";
+                missionPill.style.color = "var(--v-red)";
+            } else if(this.flightData.status === "delayed") {
                 missionPill.innerText = `DELAYED: ${this.flightData.time}`;
                 missionPill.style.color = "var(--v-orange)";
             } else {
@@ -269,21 +273,21 @@
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-            // DYNAMIC BUTTON LOGIC FOR ALL COUNTRIES
+            // GLOBAL LOCAL DATA LOGIC: Dynamic labeling and specific searching
+            const dest = this.flightData.dest;
             const spanishCodes = ['MAD', 'BCN', 'ALC', 'AGP', 'TFN', 'TFS', 'LPA', 'IVL', 'PMI', 'VLC'];
-            const destCode = this.flightData.dest;
-            const isSpain = spanishCodes.includes(destCode);
-            
             const localBtn = document.getElementById('local-esim-btn');
             
-            // If Spain, use "SPAIN". If elsewhere, use the Destination Code (e.g. OVB)
-            const dynamicLabel = isSpain ? 'SPAIN' : destCode;
-            localBtn.innerText = `${dynamicLabel} LOCAL DATA`;
-            
-            if(isSpain) {
+            if (this.flightData.status === "cancelled") {
+                localBtn.innerText = "CLAIM COMPENSATION";
+                localBtn.style.borderColor = "var(--v-red)";
+                localBtn.href = "https://www.airhelp.com/";
+            } else if (spanishCodes.includes(dest)) {
+                localBtn.innerText = "SPAIN LOCAL DATA";
                 localBtn.href = "https://www.airalo.com/spain-esim";
             } else {
-                localBtn.href = "https://www.airalo.com/";
+                localBtn.innerText = `${dest} LOCAL DATA`;
+                localBtn.href = `https://www.airalo.com/search?q=${dest}`;
             }
         }
     }
