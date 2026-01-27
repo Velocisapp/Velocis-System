@@ -174,7 +174,6 @@
             const statusLabel = document.getElementById('status-msg');
             const entryBanner = document.getElementById('entry-delay-banner');
             const briefing = document.getElementById('verify-briefing');
-            const initBtn = document.getElementById('initiate-btn');
             
             statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
             fNum = fNum.toUpperCase().trim();
@@ -207,6 +206,7 @@
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
+                    // STATUS FIX: Only show orange banner if status is officially 'delayed'
                     if (f.flight_status === "delayed") {
                         const delayTime = this.formatTime(f.departure.estimated);
                         entryBanner.innerText = `⚠️ DELAYED | NEW DEPARTURE: ${delayTime}`;
@@ -230,7 +230,8 @@
             if(!this.flightData) return;
             
             const missionPill = document.getElementById('mission-status-pill');
-            if(this.flightData.status === "scheduled" || this.flightData.status === "delayed") {
+            // STATUS FIX: Only show delayed text in HUD if status is officially 'delayed'
+            if(this.flightData.status === "delayed") {
                 missionPill.innerText = `DELAYED: ${this.flightData.time}`;
                 missionPill.style.color = "var(--v-orange)";
             } else {
@@ -268,13 +269,16 @@
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-            // DYNAMIC BUTTON LOGIC FOR SPANISH DOMESTIC FLIGHTS
+            // DYNAMIC BUTTON LOGIC FOR ALL COUNTRIES
             const spanishCodes = ['MAD', 'BCN', 'ALC', 'AGP', 'TFN', 'TFS', 'LPA', 'IVL', 'PMI', 'VLC'];
-            const isSpain = spanishCodes.includes(this.flightData.dest);
-            const countryName = isSpain ? 'SPAIN' : 'DESTINATION';
+            const destCode = this.flightData.dest;
+            const isSpain = spanishCodes.includes(destCode);
+            
             const localBtn = document.getElementById('local-esim-btn');
             
-            localBtn.innerText = `${countryName} LOCAL DATA`;
+            // If Spain, use "SPAIN". If elsewhere, use the Destination Code (e.g. OVB)
+            const dynamicLabel = isSpain ? 'SPAIN' : destCode;
+            localBtn.innerText = `${dynamicLabel} LOCAL DATA`;
             
             if(isSpain) {
                 localBtn.href = "https://www.airalo.com/spain-esim";
