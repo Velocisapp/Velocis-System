@@ -44,7 +44,7 @@
             background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
         
-        /* Cityscape as physical content tag instead of CSS background to force rendering */
+        /* Foreground Image Tag: Forces mobile browser to render pixels as primary content */
         #cityscape-layer {
             position: absolute; inset: 0; width: 100%; height: 100%;
             object-fit: cover; opacity: 0; z-index: 1;
@@ -89,7 +89,7 @@
 <div id="dest-visualizer">
     <img id="cityscape-layer" src="" alt="">
     <div class="hud-overlay">
-        <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" id="mission-status-alert" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
+        <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-gate">GATE --</div><div class="dest-pill" id="hud-door">DOOR --</div></div>
     </div>
 </div>
@@ -100,7 +100,7 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">
             Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span> to drop bags and verify documents.
+            Proceed to the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.
         </div>
     </div>
 
@@ -117,7 +117,12 @@
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
         <div class="framed-title" id="card-gate">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitor Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for active boarding calls.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitor Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for active boarding calls. While you wait:</div>
+        <div class="perk-box">
+            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
+            <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
+            <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
+        </div>
     </div>
 
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
@@ -157,11 +162,11 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     
-                    // --- RECOVERED STATUS LOGIC: CANCELLATION GATE ---
+                    // --- THE STATUS FIX: Physical logic gate for Cancellation ---
                     if(f.flight_status === "cancelled") {
                         statusLabel.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         statusLabel.style.color = "var(--v-red)";
-                        return;
+                        return; // Halt logic
                     }
 
                     this.flightData = {
@@ -169,7 +174,7 @@
                         airport: f.arrival.airport || "Airport", gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD", baggage: f.arrival.baggage || "TBD",
                         counter: f.departure.checkin_counter || "AIRLINE DESK",
-                        status: f.flight_status, // Store for HUD status update
+                        status: f.flight_status,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
                     document.getElementById('orig-code').innerText = this.flightData.orig;
@@ -184,29 +189,29 @@
         start() {
             if(!this.flightData) return;
             
-            // --- STATUS ENGINE: DELAY ALERT ---
-            const alertPill = document.getElementById('mission-status-alert');
+            // --- THE STATUS FIX: Mission HUD logic for Delay ---
+            const statusPill = document.getElementById('mission-status-pill');
             if(this.flightData.status === "scheduled" || this.flightData.status === "delayed") {
-                alertPill.innerText = "DELAYED";
-                alertPill.style.color = "var(--v-orange)";
+                statusPill.innerText = "DELAYED / ON-TIME";
+                statusPill.style.color = "var(--v-orange)";
             } else {
-                alertPill.innerText = "ACTIVE MISSION";
-                alertPill.style.color = "var(--v-gold)";
+                statusPill.innerText = "ACTIVE MISSION";
+                statusPill.style.color = "var(--v-gold)";
             }
 
-            // --- CITYSCAPE: PHYSICAL CONTENT FIX ---
+            // --- THE CITYSCAPE BREAKTHROUGH: Physical Content Fix ---
             const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "YYZ": "1436491865332-7a61a109c053" };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const imgLayer = document.getElementById('cityscape-layer');
             
-            // Forces physical load with cache buster to bypass black void bugs
-            imgLayer.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${Date.now()}`;
+            // Cache buster forces fresh rendering of pixels
+            imgLayer.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&cache=${Date.now()}`;
             imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
 
-            // Transition
+            // Transition logic
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // FULL UI POPULATION (No shortening - Addressing every element)
+            // FULL UI POPULATION (UNSHORTENED)
             document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
