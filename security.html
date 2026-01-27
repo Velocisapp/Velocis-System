@@ -189,7 +189,7 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     
-                    // STATUS logic check: Handle Canceled and Delayed
+                    // STATUS logic check: Block if flight is canceled
                     if(f.flight_status === "cancelled") {
                         status.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         status.style.color = "var(--v-red)";
@@ -216,8 +216,8 @@
         start() {
             if(!this.flightData) return;
             
-            // DELAY STATUS logic
-            if(this.flightData.status === "scheduled") {
+            // DELAY STATUS engine
+            if(this.flightData.status === "scheduled" || this.flightData.status === "delayed") {
                 document.getElementById('mission-status-pill').innerText = "DELAYED";
                 document.getElementById('mission-status-pill').style.color = "var(--v-orange)";
             }
