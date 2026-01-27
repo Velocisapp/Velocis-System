@@ -189,7 +189,7 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     
-                    // STATUS logic check: Handle Canceled and Delayed
+                    // --- STATUS logic check: Abort if flight is canceled ---
                     if(f.flight_status === "cancelled") {
                         status.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         status.style.color = "var(--v-red)";
@@ -216,7 +216,7 @@
         start() {
             if(!this.flightData) return;
             
-            // DELAY STATUS engine logic
+            // --- DELAY STATUS engine logic ---
             const statusPill = document.getElementById('mission-status-pill');
             if(this.flightData.status === "scheduled" || this.flightData.status === "delayed") {
                 statusPill.innerText = "DELAYED";
@@ -226,7 +226,7 @@
                 statusPill.style.color = "var(--v-gold)";
             }
 
-            // PORTAL IMAGE UPDATER logic for background fix
+            // PORTAL IMAGE UPDATER logic
             const photoMap = { "ATL": "1540260906354-297ba6d2239e", "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836" };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const portalImg = document.getElementById('portal-img');
@@ -236,11 +236,11 @@
             // TRANSITION logic
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // FULL UI POPULATION (UNSHORTENED)
-            const l1 = document.getElementById('logo-1'); l1.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            const l2 = document.getElementById('logo-2'); l2.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            const l3 = document.getElementById('logo-3'); l3.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            const l4 = document.getElementById('logo-4'); l4.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            // --- FULL UI POPULATION (UNSHORTENED architecture) ---
+            document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
