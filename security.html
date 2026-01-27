@@ -79,7 +79,7 @@
 .landmark-svg-icon {
     width: 65%;
     max-height: 60%;
-    fill: rgba(255, 215, 0, 0.25); /* Subtle VELOCIS Gold */
+    fill: rgba(255, 215, 0, 0.6); /* Subtle VELOCIS Gold */
     filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.1));
 }
     </style>
@@ -273,23 +273,39 @@
         }
     }
     const engine = new VelocisSovereign();
-    // INDEPENDENT VISUAL ENGINE - PROTECTED BY FIREWALL
+   /* 🛡️ VELOCIS GLOBAL VISUAL ENGINE - ISOLATED INJECTION 🛡️ */
 document.addEventListener('click', function(e) {
     if (e.target && e.target.id === 'initiate-btn') {
-        // Micro-delay ensures the main flight engine finishes first
-        setTimeout(() => {
-            const ghost = document.getElementById('landmark-ghost-layer');
-            const city = engine.flightData ? engine.flightData.dest : 'DEFAULT';
-            
-            const library = {
-                "MAD": `<svg class="landmark-svg-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>`,
-                "ALC": `<svg class="landmark-svg-icon" viewBox="0 0 24 24"><path d="M13.5 4A1.5 1.5 0 0 0 12 5.5A1.5 1.5 0 0 0 13.5 7A1.5 1.5 0 0 0 15 5.5A1.5 1.5 0 0 0 13.5 4M1 21h22L12 2"/></svg>`,
-                "DEFAULT": `<svg class="landmark-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`
-            };
+        const ghost = document.getElementById('landmark-ghost-layer');
+        if (!ghost) return;
 
-            ghost.innerHTML = library[city] || library["DEFAULT"];
-            ghost.style.opacity = "1";
-        }, 800); // 800ms wait ensures the slide animation is active before showing landmark
+        // 1. Identify the Vibe based on Destination
+        const dest = (engine.flightData && engine.flightData.dest) ? engine.flightData.dest : "DEFAULT";
+        
+        // 2. Global Mapping Logic
+        const regionMap = {
+            "ALC": "COASTAL", "MIA": "COASTAL", "HNL": "COASTAL", "IBZ": "COASTAL", "CUN": "COASTAL",
+            "MAD": "SOVEREIGN", "LON": "SOVEREIGN", "PAR": "SOVEREIGN", "ROM": "SOVEREIGN", "BCN": "SOVEREIGN",
+            "ATL": "HUB", "JFK": "HUB", "DXB": "HUB", "LHR": "HUB", "HKG": "HUB", "DFW": "HUB"
+        };
+        const vibe = regionMap[dest] || "DEFAULT";
+
+        // 3. High-Visibility Solid Vector Library (Gold)
+        const vectors = {
+            "COASTAL": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><circle cx="50" cy="40" r="15" fill="#FFD700"/><path d="M20 70 q15 -20 30 0 t30 0" stroke="#FFD700" stroke-width="6" fill="none"/></svg>`,
+            "SOVEREIGN": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><path d="M20 80 L30 40 L50 20 L70 40 L80 80 Z" fill="#FFD700" opacity="0.8"/><circle cx="50" cy="15" r="5" fill="#FFD700"/></svg>`,
+            "HUB": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><path d="M10 10 h30 v30 h-30 Z M60 10 h30 v30 h-30 Z M10 60 h30 v30 h-30 Z M60 60 h30 v30 h-30 Z" fill="#FFD700" opacity="0.6"/></svg>`,
+            "DEFAULT": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" stroke="#FFD700" stroke-width="4" fill="none"/><path d="M50 5 v90 M5 50 h90" stroke="#FFD700" stroke-width="2"/></svg>`
+        };
+
+        // 4. Force-Paint Execution
+        ghost.innerHTML = vectors[vibe] || vectors["DEFAULT"];
+        
+        // Triggering 200ms earlier than the slide to ensure it's ready
+        setTimeout(() => {
+            ghost.style.opacity = "0.35";
+            ghost.style.transform = "scale(1.1)";
+        }, 600);
     }
 });
 </script>
