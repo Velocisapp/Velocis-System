@@ -84,7 +84,7 @@
             
             <div id="entry-delay-banner"></div>
 
-            <button class="start-btn" style="margin-top: 20px;" onclick="engine.start()">INITIATE MISSION</button>
+            <button id="initiate-btn" class="start-btn" style="margin-top: 20px;" onclick="engine.start()">INITIATE MISSION</button>
         </div>
     </div>
 </div>
@@ -155,8 +155,13 @@
         async handshake(fNum) {
             const statusLabel = document.getElementById('status-msg');
             const entryBanner = document.getElementById('entry-delay-banner');
+            const briefing = document.getElementById('verify-briefing');
+            const initBtn = document.getElementById('initiate-btn');
+            
             statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
+            statusLabel.style.color = "white";
             entryBanner.style.display = 'none';
+            initBtn.style.display = 'block';
 
             try {
                 let res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`);
@@ -165,9 +170,16 @@
                     const f = json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
                     
+                    // --- THE STATUS FIX: Physical Gate for Cancellation ---
                     if(f.flight_status === "cancelled") {
                         statusLabel.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         statusLabel.style.color = "var(--v-red)";
+                        entryBanner.innerText = "⚠️ SYSTEM ALERT: FLIGHT REMOVED FROM LOGISTICS";
+                        entryBanner.style.background = "rgba(255,59,48,0.2)";
+                        entryBanner.style.color = "var(--v-red)";
+                        entryBanner.style.display = "block";
+                        initBtn.style.display = 'none';
+                        briefing.style.display = 'block';
                         return;
                     }
 
@@ -183,14 +195,16 @@
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
+                    // --- THE STATUS FIX: Physical logic for Delay Window 1 ---
                     if(f.flight_status === "scheduled" || f.flight_status === "delayed") {
                         entryBanner.innerText = `⚠️ DELAYED | DEPARTURE: ${depTime}`;
+                        entryBanner.style.background = "rgba(255,149,0,0.2)";
+                        entryBanner.style.color = "var(--v-gold)";
                         entryBanner.style.display = "block";
                     }
 
-                    document.getElementById('verify-briefing').style.display = 'block';
+                    briefing.style.display = 'block';
                     statusLabel.innerText = "MISSION PARAMETERS SECURED";
-                    statusLabel.style.color = "white";
                 }
             } catch(e) { statusLabel.innerText = "SECURE HANDSHAKE FAILED"; }
         }
@@ -198,13 +212,14 @@
         start() {
             if(!this.flightData) return;
             
-            const missionPill = document.getElementById('mission-status-pill');
+            // --- THE STATUS FIX: Mission HUD logic for Delay Window 2 ---
+            const statusPill = document.getElementById('mission-status-pill');
             if(this.flightData.status === "scheduled" || this.flightData.status === "delayed") {
-                missionPill.innerText = `DELAYED: ${this.flightData.time}`;
-                missionPill.style.color = "var(--v-orange)";
+                statusPill.innerText = `DELAYED: ${this.flightData.time}`;
+                statusPill.style.color = "var(--v-orange)";
             } else {
-                missionPill.innerText = "ACTIVE MISSION";
-                missionPill.style.color = "var(--v-gold)";
+                statusPill.innerText = "ACTIVE MISSION";
+                statusPill.style.color = "var(--v-gold)";
             }
 
             const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "YYZ": "1436491865332-7a61a109c053" };
