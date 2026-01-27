@@ -117,29 +117,8 @@
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Proceed to <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
     </div>
 
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
-        <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, activate your global connectivity strategy:</div>
-        <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
-            <div style="font-weight:900; font-size:22px;">Global eSIM</div>
-            <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px; cursor:pointer;">ACTIVATE NOW</button>
-        </div>
-    </div>
-
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
-        <div class="framed-title" id="card-gate">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitor Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for active boarding calls. While you wait:</div>
-        <div class="perk-box">
-            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
-            <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
-            <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
-        </div>
-    </div>
-
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">02. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
         <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Landed at <span id="airport-full-name" style="color:var(--v-gold);">---</span> (<span id="airport-iata">---</span>).</div>
         <button class="start-btn" style="background:#fff; color:#000; height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
@@ -180,36 +159,30 @@
             const numOnly = fNum.replace(/\D/g,'');
 
             try {
-                // FIXED: Get today's date to filter results and fix uncertain status issues
+                // FIXED: Filter results by today's date to avoid "uncertain" or legacy flight status
                 const today = new Date().toISOString().split('T')[0];
                 let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // FILTER: Force today's date to prevent status confusion
+                    // FILTER: Force today's date to clear status confusion
                     let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
-                        flight: fNum, 
-                        airline: f.airline.name, 
-                        orig: f.departure.iata, 
-                        dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Regional Hub", 
-                        gate: f.departure.gate || "TBD",
-                        terminal: f.departure.terminal || "TBD", 
-                        baggage: f.arrival.baggage || "TBD",
+                        flight: fNum, airline: f.airline.name, orig: f.departure.iata, dest: f.arrival.iata,
+                        airport: f.arrival.airport || "Regional Hub", gate: f.departure.gate || "TBD",
+                        terminal: f.departure.terminal || "TBD", baggage: f.arrival.baggage || "TBD",
                         counter: f.departure.checkin_counter || "AIRLINE DESK",
-                        status: f.flight_status, 
-                        time: depTime,
+                        status: f.flight_status, time: depTime,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
 
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    // STATUS FIX: Explicitly handles cancelled and delayed logic
+                    // STATUS LOGIC: Explicitly handle cancelled and delayed alerts
                     if (f.flight_status === "cancelled" || f.flight_status === "delayed") {
                         const alertText = f.flight_status === "cancelled" ? "🚨 CANCELED" : "⚠️ DELAYED";
                         const subInfo = f.flight_status === "cancelled" ? "CONTACT AIRLINE" : `NEW DEPARTURE: ${this.formatTime(f.departure.estimated)}`;
@@ -254,8 +227,6 @@
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
             document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             
             document.getElementById('hud-city').innerText = this.flightData.dest;
@@ -263,10 +234,7 @@
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-            document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('text-door').innerText = this.flightData.terminal;
-            document.getElementById('text-gate').innerText = this.flightData.gate;
-            document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('text-counter').innerText = this.flightData.counter;
             
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
@@ -275,7 +243,7 @@
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-            // FIXED: LOCAL DATA SEARCH - Correct branding and direct search links
+            // FIXED: LOCAL DATA SEARCH - Brands button by code and uses direct search links for results
             const dest = this.flightData.dest;
             const spanishCodes = ['MAD', 'BCN', 'ALC', 'AGP', 'TFN', 'TFS', 'LPA', 'IVL', 'PMI', 'VLC'];
             const localBtn = document.getElementById('local-esim-btn');
@@ -288,7 +256,7 @@
                 localBtn.href = "https://www.airalo.com/spain-esim";
             } else {
                 localBtn.innerText = `${dest} LOCAL DATA`;
-                // Build a smart search query to ensure local landing page results
+                // Build search link to ensure the landing page reflects the specific destination
                 localBtn.href = `https://www.airalo.com/search?q=${dest}`;
             }
         }
