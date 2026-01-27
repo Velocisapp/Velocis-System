@@ -76,12 +76,14 @@
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <div class="manual-input-container"><input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)"></div>
         <div id="verify-briefing">
-            <div class="route-path" style="display:flex; justify-content:space-between; align-items:center; color:white;">
+            <div class="route-path">
                 <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
                 <div style="font-size:24px; color:white; opacity:0.5;">✈</div>
                 <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><p>ARRIVAL</p></div>
             </div>
+            
             <div id="entry-delay-banner"></div>
+
             <button id="initiate-btn" class="start-btn" style="margin-top: 20px;" onclick="engine.start()">INITIATE MISSION</button>
         </div>
     </div>
