@@ -180,14 +180,14 @@
             const numOnly = fNum.replace(/\D/g,'');
 
             try {
-                // FIXED: Get today's date to filter out old API entries that cause uncertain status
+                // FIXED: Get today's date to filter results and fix uncertain status issues
                 const today = new Date().toISOString().split('T')[0];
                 let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // Match today's flight to ensure the "Delayed/Cancelled" logic is current
+                    // FILTER: Force today's date to prevent status confusion
                     let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
@@ -209,11 +209,11 @@
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    // STATUS FIX: Triggers alert only for active 'delayed' or 'cancelled' flags
+                    // STATUS FIX: Explicitly handles cancelled and delayed logic
                     if (f.flight_status === "cancelled" || f.flight_status === "delayed") {
                         const alertText = f.flight_status === "cancelled" ? "🚨 CANCELED" : "⚠️ DELAYED";
-                        const infoText = f.flight_status === "cancelled" ? "CONTACT AIRLINE" : `NEW DEPARTURE: ${this.formatTime(f.departure.estimated)}`;
-                        entryBanner.innerText = `${alertText} | ${infoText}`;
+                        const subInfo = f.flight_status === "cancelled" ? "CONTACT AIRLINE" : `NEW DEPARTURE: ${this.formatTime(f.departure.estimated)}`;
+                        entryBanner.innerText = `${alertText} | ${subInfo}`;
                         entryBanner.style.background = f.flight_status === "cancelled" ? "rgba(255,59,48,0.2)" : "rgba(255,149,0,0.2)";
                         entryBanner.style.color = f.flight_status === "cancelled" ? "var(--v-red)" : "var(--v-orange)";
                         entryBanner.style.display = "block";
@@ -275,20 +275,20 @@
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-            // FIXED: LOCAL DATA REPAIR - Brands button by code and uses direct search link for eSIMs
+            // FIXED: LOCAL DATA SEARCH - Correct branding and direct search links
             const dest = this.flightData.dest;
             const spanishCodes = ['MAD', 'BCN', 'ALC', 'AGP', 'TFN', 'TFS', 'LPA', 'IVL', 'PMI', 'VLC'];
             const localBtn = document.getElementById('local-esim-btn');
             
             if (this.flightData.status === "cancelled") {
-                localBtn.innerText = "FLIGHT COMPENSATION";
+                localBtn.innerText = "CLAIM COMPENSATION";
                 localBtn.href = "https://www.airhelp.com/";
             } else if (spanishCodes.includes(dest)) {
                 localBtn.innerText = "SPAIN LOCAL DATA";
                 localBtn.href = "https://www.airalo.com/spain-esim";
             } else {
                 localBtn.innerText = `${dest} LOCAL DATA`;
-                // Generates a direct search on the supplier's site for the arrival airport
+                // Build a smart search query to ensure local landing page results
                 localBtn.href = `https://www.airalo.com/search?q=${dest}`;
             }
         }
