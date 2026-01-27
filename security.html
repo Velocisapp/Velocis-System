@@ -84,25 +84,19 @@
             
             <div id="entry-delay-banner"></div>
 
-            <button id="initiate-btn" class="start-btn" style="margin-top: 20px;" onclick="engine.start()">INITIATE MISSION</button>
-        </div>
-    </div>
-</div>
-
-<div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
-    <div style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase;">Premium Travel Access</div>
+            <button id="initiate-btn" class="start-btn" style="margin-top: 20px;" onclick="engine.start()">START MY TRIP</button>
+       
+     <div class="hud-overlay" style="position: absolute; inset: 0; pointer-events: none; z-index: 5;">
+        <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
+    <div style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase;">Global Internet Access</div>
     <a href="index.html#esim-connectivity-hub" style="pointer-events: auto !important; display: inline-block; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 14px 28px; border-radius: 16px; font-size: 14px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.8); letter-spacing: 1px; z-index: 101;">
-        ACTIVATE GLOBAL INTERNET
-    </a>
-</div>
-</div>
-    <div class="hud-overlay">
+        ACTIVATE GLOBAL INTERNET </a>
+           </div> 
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-gate">GATE --</div><div class="dest-pill" id="hud-door">DOOR --</div></div>
-    </div>
-</div>
+    
 
-<div id="mission-tray">
+         <div id="mission-tray">
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
