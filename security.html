@@ -166,20 +166,23 @@
 
         async validateFlight(val) { if (val.length >= 4) await this.handshake(val.toUpperCase().trim()); }
 
-        async handshake(fNum) {
-            const statusLabel = document.getElementById('status-msg');
-            const entryBanner = document.getElementById('entry-delay-banner');
-            const briefing = document.getElementById('verify-briefing');
-            const initBtn = document.getElementById('initiate-btn');
-            
-            statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
-            statusLabel.style.color = "white";
-            entryBanner.style.display = 'none';
-            initBtn.style.display = 'block';
+       async handshake(fNum) {
+    const statusLabel = document.getElementById('status-msg');
+    const entryBanner = document.getElementById('entry-delay-banner');
+    const briefing = document.getElementById('verify-briefing');
+    const initBtn = document.getElementById('initiate-btn');
+    
+    statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
+    
+try {
+            // Updated Madrid Logic: Checks flight number AND arrival airport for Iberia/Air Europa
+            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
+            if(fNum.toUpperCase().startsWith('IB') || fNum.toUpperCase().startsWith('UX')) { 
+                url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}&arr_iata=MAD`; 
+            }
 
-            try {
-                let res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`);
-                let json = await res.json();
+            let res = await fetch(url);
+            let json = await res.json();
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
