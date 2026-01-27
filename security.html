@@ -91,6 +91,12 @@
 
 <div id="dest-visualizer">
     <img id="cityscape-layer" src="" alt="">
+    <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
+    <div style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase; text-shadow: 0 0 10px rgba(0,0,0,0.8);">Connectivity Protocol</div>
+    <a href="index.html#esim-connectivity-hub" style="pointer-events: auto; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 14px 28px; border-radius: 16px; font-size: 14px; font-weight: 900; background: rgba(0,0,0,0.6); backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); letter-spacing: 1px;">
+        ACTIVATE GLOBAL INTERNET
+    </a>
+</div>
     <div class="hud-overlay">
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-gate">GATE --</div><div class="dest-pill" id="hud-door">DOOR --</div></div>
@@ -252,6 +258,7 @@
             document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
+            setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
         }
     }
     const engine = new VelocisSovereign();
