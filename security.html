@@ -46,35 +46,13 @@
             flex: 1; width: 100%; height: 45vh; position: relative; 
             background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
-
-        /* */
-        #landmark-svg-layer {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 1.2s ease-out, transform 1.5s cubic-bezier(0.19, 1, 0.22, 1);
-            transform: scale(0.85);
-            pointer-events: none;
-        }
-        .landmark-svg-path {
-            width: 55%;
-            height: auto;
-            fill: var(--v-gold);
-            filter: drop-shadow(0 0 20px rgba(255,215,0,0.3));
-        }
-        /* */
-
         #cityscape-layer {
             position: absolute; inset: 0; width: 100%; height: 100%;
             object-fit: cover; opacity: 0; z-index: 1;
             transition: opacity 1.5s ease-in;
         }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; }
-        .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18_px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
 
         /* 3. MISSION TRAY - HIGH FIDELITY UNSHORTENED */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
@@ -112,9 +90,6 @@
 </div>
 
 <div id="dest-visualizer">
-    -->
-    <div id="landmark-svg-layer"></div>
-    -->
     <img id="cityscape-layer" src="" alt="">
     <div class="hud-overlay">
         <div style="display:flex; justify-content:space-between;"><div class="dest-pill" id="hud-city">DESTINATION</div><div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ACTIVE MISSION</div></div>
@@ -249,15 +224,7 @@
                 missionPill.style.color = "var(--v-gold)";
             }
 
-            // const cityLayer = document.getElementById('landmark-svg-layer');
-            const icons = {
-                "MAD": `<svg class="landmark-svg-path" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>`, 
-                "ALC": `<svg class="landmark-svg-path" viewBox="0 0 24 24"><path d="M13.5 4A1.5 1.5 0 0 0 12 5.5A1.5 1.5 0 0 0 13.5 7A1.5 1.5 0 0 0 15 5.5A1.5 1.5 0 0 0 13.5 4M1 21h22L12 2"/></svg>`,
-                "DEFAULT": `<svg class="landmark-svg-path" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`
-            };
-            cityLayer.innerHTML = icons[this.flightData.dest] || icons["DEFAULT"];
-            setTimeout(() => { cityLayer.style.opacity = "0.35"; cityLayer.style.transform = "scale(1)"; }, 300);
-            // const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "YYZ": "1436491865332-7a61a109c053" };
+            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "YYZ": "1436491865332-7a61a109c053" };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const imgLayer = document.getElementById('cityscape-layer');
             imgLayer.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${Date.now()}`;
@@ -265,6 +232,7 @@
 
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
+            // FULL UI POPULATION (UNSHORTENED)
             document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
@@ -277,4 +245,16 @@
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
             document.getElementById('text-door').innerText = this.flightData.terminal;
-            document.getElementById('text-gate').innerText =
+            document.getElementById('text-gate').innerText = this.flightData.gate;
+            document.getElementById('text-airline').innerText = this.flightData.airline;
+            document.getElementById('text-counter').innerText = this.flightData.counter;
+            
+            document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
+            document.getElementById('airport-full-name').innerText = this.flightData.airport;
+            document.getElementById('airport-iata').innerText = this.flightData.dest;
+        }
+    }
+    const engine = new VelocisSovereign();
+</script>
+</body>
+</html>
