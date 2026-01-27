@@ -180,17 +180,15 @@
             const numOnly = fNum.replace(/\D/g,'');
 
             try {
-                // Get today's date to filter out past/future flight data that confuses the status
+                // FIXED: Get today's date to filter out old API entries that cause uncertain status
                 const today = new Date().toISOString().split('T')[0];
                 let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // Filter for today's flight to ensure status accuracy
-                    let activeFlights = json.data.filter(f => f.flight_date === today);
-                    let f = activeFlights[0] || json.data[0];
-
+                    // Match today's flight to ensure the "Delayed/Cancelled" logic is current
+                    let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
@@ -211,11 +209,11 @@
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    // Improved status logic: Only show alert for true delay/cancellation
+                    // STATUS FIX: Triggers alert only for active 'delayed' or 'cancelled' flags
                     if (f.flight_status === "cancelled" || f.flight_status === "delayed") {
-                        const statusText = f.flight_status === "cancelled" ? "🚨 CANCELED" : "⚠️ DELAYED";
-                        const subText = f.flight_status === "cancelled" ? "CONTACT AIRLINE" : `NEW DEPARTURE: ${this.formatTime(f.departure.estimated)}`;
-                        entryBanner.innerText = `${statusText} | ${subText}`;
+                        const alertText = f.flight_status === "cancelled" ? "🚨 CANCELED" : "⚠️ DELAYED";
+                        const infoText = f.flight_status === "cancelled" ? "CONTACT AIRLINE" : `NEW DEPARTURE: ${this.formatTime(f.departure.estimated)}`;
+                        entryBanner.innerText = `${alertText} | ${infoText}`;
                         entryBanner.style.background = f.flight_status === "cancelled" ? "rgba(255,59,48,0.2)" : "rgba(255,149,0,0.2)";
                         entryBanner.style.color = f.flight_status === "cancelled" ? "var(--v-red)" : "var(--v-orange)";
                         entryBanner.style.display = "block";
@@ -277,21 +275,20 @@
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-            // GLOBAL LOCAL DATA LOGIC: Builds direct links based on city code
+            // FIXED: LOCAL DATA REPAIR - Brands button by code and uses direct search link for eSIMs
             const dest = this.flightData.dest;
             const spanishCodes = ['MAD', 'BCN', 'ALC', 'AGP', 'TFN', 'TFS', 'LPA', 'IVL', 'PMI', 'VLC'];
             const localBtn = document.getElementById('local-esim-btn');
             
             if (this.flightData.status === "cancelled") {
-                localBtn.innerText = "CLAIM COMPENSATION";
-                localBtn.style.borderColor = "var(--v-red)";
+                localBtn.innerText = "FLIGHT COMPENSATION";
                 localBtn.href = "https://www.airhelp.com/";
             } else if (spanishCodes.includes(dest)) {
                 localBtn.innerText = "SPAIN LOCAL DATA";
                 localBtn.href = "https://www.airalo.com/spain-esim";
             } else {
                 localBtn.innerText = `${dest} LOCAL DATA`;
-                // Build a smart search link for any global destination
+                // Generates a direct search on the supplier's site for the arrival airport
                 localBtn.href = `https://www.airalo.com/search?q=${dest}`;
             }
         }
