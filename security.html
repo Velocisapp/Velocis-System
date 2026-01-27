@@ -131,7 +131,7 @@
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once through, activate your global connectivity strategy:</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Clear the security checkpoint. Once you are through, activate your global connectivity strategy:</div>
         <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <div style="font-size:14px; margin-top:8px; opacity:0.95; line-height:1.4;">Secure your digital connection now to bypass roaming fees upon landing.</div>
@@ -189,7 +189,7 @@
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     
-                    // STATUS logic check: Block if flight is canceled
+                    // STATUS logic check: Handle Canceled and Delayed
                     if(f.flight_status === "cancelled") {
                         status.innerText = "MISSION ABORTED: FLIGHT CANCELLED";
                         status.style.color = "var(--v-red)";
@@ -216,13 +216,17 @@
         start() {
             if(!this.flightData) return;
             
-            // DELAY STATUS engine
+            // DELAY STATUS engine logic
+            const statusPill = document.getElementById('mission-status-pill');
             if(this.flightData.status === "scheduled" || this.flightData.status === "delayed") {
-                document.getElementById('mission-status-pill').innerText = "DELAYED";
-                document.getElementById('mission-status-pill').style.color = "var(--v-orange)";
+                statusPill.innerText = "DELAYED";
+                statusPill.style.color = "var(--v-orange)";
+            } else {
+                statusPill.innerText = "ACTIVE MISSION";
+                statusPill.style.color = "var(--v-gold)";
             }
 
-            // PORTAL IMAGE UPDATER logic
+            // PORTAL IMAGE UPDATER logic for background fix
             const photoMap = { "ATL": "1540260906354-297ba6d2239e", "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836" };
             const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const portalImg = document.getElementById('portal-img');
