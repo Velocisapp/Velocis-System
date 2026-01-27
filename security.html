@@ -291,11 +291,11 @@ document.addEventListener('click', function(e) {
         const vibe = regionMap[dest] || "DEFAULT";
 
         // 3. High-Visibility Solid Vector Library (Gold)
-        const vectors = {
-            "COASTAL": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><circle cx="50" cy="40" r="15" fill="#FFD700"/><path d="M20 70 q15 -20 30 0 t30 0" stroke="#FFD700" stroke-width="6" fill="none"/></svg>`,
-            "SOVEREIGN": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><path d="M20 80 L30 40 L50 20 L70 40 L80 80 Z" fill="#FFD700" opacity="0.8"/><circle cx="50" cy="15" r="5" fill="#FFD700"/></svg>`,
-            "HUB": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><path d="M10 10 h30 v30 h-30 Z M60 10 h30 v30 h-30 Z M10 60 h30 v30 h-30 Z M60 60 h30 v30 h-30 Z" fill="#FFD700" opacity="0.6"/></svg>`,
-            "DEFAULT": `<svg class="landmark-svg-icon" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" stroke="#FFD700" stroke-width="4" fill="none"/><path d="M50 5 v90 M5 50 h90" stroke="#FFD700" stroke-width="2"/></svg>`
+       const vectors = {
+            "COASTAL": `<svg class="landmark-svg-icon" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><circle cx="50" cy="40" r="20" fill="#FFD700"/><path d="M10 75 Q50 50 90 75" stroke="#FFD700" stroke-width="8" fill="none"/></svg>`,
+            "SOVEREIGN": `<svg class="landmark-svg-icon" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><path d="M20 80 L35 30 L50 10 L65 30 L80 80 Z" fill="#FFD700"/></svg>`,
+            "HUB": `<svg class="landmark-svg-icon" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><rect x="15" y="15" width="30" height="30" fill="#FFD700"/><rect x="55" y="15" width="30" height="30" fill="#FFD700"/><rect x="15" y="55" width="30" height="30" fill="#FFD700"/><rect x="55" y="55" width="30" height="30" fill="#FFD700"/></svg>`,
+            "DEFAULT": `<svg class="landmark-svg-icon" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><circle cx="50" cy="50" r="40" stroke="#FFD700" stroke-width="8" fill="none"/><path d="M50 10 v80 M10 50 h80" stroke="#FFD700" stroke-width="8"/></svg>`
         };
 
         // 4. Force-Paint Execution
