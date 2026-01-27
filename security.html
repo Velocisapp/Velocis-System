@@ -29,6 +29,8 @@
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
         .scan-trigger-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 2px solid var(--v-gold); width: 100%; height: 60px; border-radius: 20px; font-weight: 800; font-size: 16px; cursor: pointer; letter-spacing: 1px; margin-bottom: 15px; }
         .manual-input-container { width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
+        
+        /* FIXED: MOBILE INPUT CUT-OFF */
         #flight-input { width: 100%; padding: 16px 5px; border: none; border-radius: 20px; font-size: 18px; text-align: center; background: white; color: #1c1c1e; font-weight: 800; outline: none; box-sizing: border-box; appearance: none; }
 
         #entry-delay-banner { display: none; margin-top: 15px; padding: 12px; border-radius: 15px; background: rgba(255,149,0,0.2); border: 1px solid var(--v-orange); color: var(--v-gold); font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
@@ -166,23 +168,26 @@
 
         async validateFlight(val) { if (val.length >= 4) await this.handshake(val.toUpperCase().trim()); }
 
-       async handshake(fNum) {
-    const statusLabel = document.getElementById('status-msg');
-    const entryBanner = document.getElementById('entry-delay-banner');
-    const briefing = document.getElementById('verify-briefing');
-    const initBtn = document.getElementById('initiate-btn');
-    
-    statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
-    
-try {
-            // Updated Madrid Logic: Checks flight number AND arrival airport for Iberia/Air Europa
-            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
-            if(fNum.toUpperCase().startsWith('IB') || fNum.toUpperCase().startsWith('UX')) { 
-                url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}&arr_iata=MAD`; 
-            }
+        async handshake(fNum) {
+            const statusLabel = document.getElementById('status-msg');
+            const entryBanner = document.getElementById('entry-delay-banner');
+            const briefing = document.getElementById('verify-briefing');
+            const initBtn = document.getElementById('initiate-btn');
+            
+            statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
+            
+            try {
+                // BULLETPROOF SPAIN HANDSHAKE
+                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}`;
+                
+                // Force Madrid-Specific query for Iberia or Air Europa
+                if(fNum.toUpperCase().startsWith('IB') || fNum.toUpperCase().startsWith('UX')) { 
+                    url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_iata=${fNum}&arr_iata=MAD`; 
+                }
 
-            let res = await fetch(url);
-            let json = await res.json();
+                let res = await fetch(url);
+                let json = await res.json();
+                
                 if(json.data && json.data.length > 0) {
                     const f = json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
@@ -220,6 +225,8 @@ try {
 
                     briefing.style.display = 'block';
                     statusLabel.innerText = "MISSION PARAMETERS SECURED";
+                } else {
+                    statusLabel.innerText = "FLIGHT NOT FOUND. CHECK LOGISTICS.";
                 }
             } catch(e) { statusLabel.innerText = "SECURE HANDSHAKE FAILED"; }
         }
