@@ -64,9 +64,9 @@
     <img id="cityscape-layer" src="" alt="">
     <div class="hud-overlay">
         <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
-            <div id="bridge-label" style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Connectivity Strategy</div>
+            <div id="bridge-label" style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Global Internet Access</div>
             <div style="display: flex; gap: 10px;">
-                <a id="local-esim-btn" href="index.html#global-internet-access" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">INTERNET CONNECTION OPTIONS</a>
+                <a id="local-esim-btn" href="index.html#esim-connectivity-hub" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">INTERNET CONNECTION OPTIONS</a>
             </div>
         </div>
         <div style="display:flex; justify-content:space-between; pointer-events: none;">
@@ -97,7 +97,7 @@
         </div>
         <div class="framed-title">Security</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Once you've cleared security, I'll help you get connected so you're ready when you land:</div>
-        <div class="esim-cta" onclick="window.open('index.html#global-internet-access', '_self')">
+        <div class="esim-cta" onclick="window.open('index.html#esim-connectivity-hub', '_self')">
             <div style="font-weight:900; font-size:22px;">Global eSIM</div>
             <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px; cursor:pointer;">ACTIVATE NOW</button>
         </div>
@@ -239,17 +239,13 @@ class VelocisSovereign {
         if (this.flightData.status === "landed") {
             carouselTitle.innerText = "Carousel " + this.flightData.baggage;
             arrivalMsg.innerHTML = `Welcome home! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
-            actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport'">VIEW GROUND TRANSPORT</button>`;
+            actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>`;
         } else {
             carouselTitle.innerText = "Preview " + this.flightData.dest;
             arrivalMsg.innerHTML = `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Information will update as soon as we touch down.`;
             actionContainer.innerHTML = `<div style="margin-top:20px; color:rgba(255,255,255,0.4); font-size:12px; font-weight:700; letter-spacing:1px;">LIVE FLIGHT TRACKING ACTIVE</div>`;
         }
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
-        // The eSIM button labeling is still dynamic, but now acts as one consolidated button
-        const countryCodes = { "MAD": "SPAIN", "BOG": "COLOMBIA", "BCN": "SPAIN" };
-        const countryName = countryCodes[this.flightData.dest] || "LOCAL";
-        // Button text is now static as requested, but we keep logic clean
     }
 }
 const engine = new VelocisSovereign();
