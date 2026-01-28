@@ -166,7 +166,7 @@ class VelocisSovereign {
 
     async validateFlight(val) {
         const cleanVal = val.toUpperCase().trim();
-        // Core logic: trigger only if flight number pattern is detected
+        // TRIGGER RESTORED: Directly calling handshake when logic matches
         if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) { 
             await this.handshake(cleanVal); 
         }
@@ -177,14 +177,14 @@ class VelocisSovereign {
         const entryBanner = document.getElementById('entry-delay-banner');
         const briefing = document.getElementById('verify-briefing');
         const initBtn = document.getElementById('initiate-btn');
-        statusLabel.innerText = "Syncing with real-time tracker...";
+        statusLabel.innerText = "Syncing with real-time manifest...";
         
         const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
         const flightNumStr = fNum.match(/\d+/)?.[0];
 
         try {
             const today = new Date().toISOString().split('T')[0];
-            // DIRECT SECURE FETCH: Paid Tier key allows Direct HTTPS communication
+            // DIRECT SECURE FETCH: Re-enabled for Paid Tier HTTPS support
             let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
             let res = await fetch(url);
             let json = await res.json();
@@ -194,8 +194,6 @@ class VelocisSovereign {
                 const schedTime = new Date(f.departure.scheduled);
                 const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                 const delayMins = Math.floor((estTime - schedTime) / 60000);
-                const isActuallyDelayed = delayMins > 0;
-                const isCancelled = f.flight_status === "cancelled";
                 const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
                 
                 this.flightData = {
@@ -209,8 +207,8 @@ class VelocisSovereign {
                     baggage: f.arrival.baggage || "TBD",
                     counter: f.departure.checkin_counter || "CHECK-IN DESK",
                     status: f.flight_status,
-                    isDelayed: isActuallyDelayed,
-                    isCancelled: isCancelled,
+                    isDelayed: delayMins > 0,
+                    isCancelled: f.flight_status === "cancelled",
                     time: depTime,
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
@@ -218,24 +216,15 @@ class VelocisSovereign {
                 document.getElementById('orig-code').innerText = this.flightData.orig;
                 document.getElementById('dest-code').innerText = this.flightData.dest;
                 
-                if(isCancelled) {
-                    entryBanner.innerText = "Flight Cancelled. guidance suspended.";
+                if(this.flightData.isCancelled) {
+                    entryBanner.innerText = "Flight Cancelled. Guidance suspended.";
                     entryBanner.style.background = "rgba(255,59,48,0.2)";
                     entryBanner.style.color = "var(--v-red)";
                     entryBanner.style.display = "block";
-                    initBtn.innerText = "FLIGHT CANCELLED";
-                    initBtn.style.background = "var(--v-red)";
-                    initBtn.onclick = null;
-                } else if(isActuallyDelayed) {
-                    entryBanner.innerText = `New departure: ${depTime}`;
-                    entryBanner.style.background = "rgba(255,149,0,0.2)";
-                    entryBanner.style.color = "var(--v-orange)";
-                    entryBanner.style.display = "block";
-                    initBtn.innerText = "START MY TRIP";
-                    initBtn.style.background = "white";
-                    initBtn.onclick = () => this.start();
+                    initBtn.innerText = "CANCELLED";
                 } else {
-                    entryBanner.style.display = "none";
+                    entryBanner.style.display = this.flightData.isDelayed ? "block" : "none";
+                    if(this.flightData.isDelayed) entryBanner.innerText = `New departure: ${depTime}`;
                     initBtn.innerText = "START MY TRIP";
                     initBtn.style.background = "white";
                     initBtn.onclick = () => this.start();
@@ -243,17 +232,16 @@ class VelocisSovereign {
                 briefing.style.display = 'block';
                 statusLabel.innerText = "Connection Secure. Ready?";
             } else { statusLabel.innerText = "Manifest entry not found for: " + fNum; }
-        } catch(e) { statusLabel.innerText = "Sync failure. iPhone Security Protocol block."; }
+        } catch(e) { 
+            statusLabel.innerText = "Sync failure. iPhone Security check."; 
+            console.error("Engine Sync Error:", e);
+        }
     }
 
     start() {
         if(!this.flightData || this.flightData.isCancelled) return;
-        const missionPill = document.getElementById('mission-status-pill');
-        missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
-        missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
-        const photoMap = { "MAD": "1539037116277-4db20889f2d4", "BOG": "1533604131557-4470912d08db", "BCN": "1583423203372-bfc5a1c1e4b8" };
         const imgLayer = document.getElementById('cityscape-layer');
-        imgLayer.src = `https://images.unsplash.com/photo-${photoMap[this.flightData.dest] || "1436491865332-7a61a109c053"}?auto=format&fit=crop&w=1200&q=80`;
+        imgLayer.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`;
         imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
@@ -280,19 +268,18 @@ class VelocisSovereign {
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
+        document.getElementById('text-airline').innerText = this.flightData.airline;
+        document.getElementById('text-counter').innerText = this.flightData.counter;
+        document.getElementById('airport-full-name').innerText = this.flightData.airport;
 
         if(this.passenger.name !== "Traveler") {
-            document.getElementById('boarding-text').innerHTML = `I'm monitoring Gate <span style="color:var(--v-gold); font-weight:800;">${this.flightData.gate}</span> for you. Welcome, <b>${this.passenger.name}</b>. Your seat is <b>${this.passenger.seat}</b>.`;
+            document.getElementById('boarding-text').innerHTML = `Welcome, <b>${this.passenger.name}</b>. Your seat is <b>${this.passenger.seat}</b>.`;
         }
 
         [1,2,3,4].forEach(i => {
             document.getElementById(`logo-${i}`).innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         });
 
-        document.getElementById('text-airline').innerText = this.flightData.airline;
-        document.getElementById('text-counter').innerText = this.flightData.counter;
-        document.getElementById('airport-full-name').innerText = this.flightData.airport;
-        
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
 }
