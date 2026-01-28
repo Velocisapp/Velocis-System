@@ -166,81 +166,88 @@ class VelocisSovereign {
         const cleanVal = val.toUpperCase().trim();
         if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) { await this.handshake(cleanVal); }
     }
+
+    // NEW IPHONE-OPTIMIZED JSONP HANDSHAKE
     async handshake(fNum) {
+        const statusLabel = document.getElementById('status-msg');
+        statusLabel.innerText = "Syncing with Sovereign Intelligence...";
+        const flightNumStr = fNum.match(/\d+/)?.[0];
+
+        // 1. Define the Global Callback for the API data
+        window.processFlightData = (json) => {
+            this.handleApiResponse(json, fNum);
+            const oldScript = document.getElementById('jsonp-sync');
+            if (oldScript) oldScript.remove();
+        };
+
+        // 2. Inject JSONP Script (Bypasses HTTPS Mixed Content Blocks)
+        const script = document.createElement('script');
+        script.id = 'jsonp-sync';
+        script.src = `http://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}&callback=processFlightData`;
+        
+        script.onerror = () => {
+            statusLabel.innerText = "Sync failure. iPhone Security Protocol active.";
+        };
+
+        document.head.appendChild(script);
+    }
+
+    // MOVED LOGIC TO SEPARATE FUNCTION TO SUPPORT JSONP CALLBACK
+    handleApiResponse(json, fNum) {
         const statusLabel = document.getElementById('status-msg');
         const entryBanner = document.getElementById('entry-delay-banner');
         const briefing = document.getElementById('verify-briefing');
         const initBtn = document.getElementById('initiate-btn');
-        statusLabel.innerText = "Syncing with real-time tracker...";
         const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
-        const flightNumStr = fNum.match(/\d+/)?.[0];
 
-        try {
+        if(json && json.data && json.data.length > 0) {
             const today = new Date().toISOString().split('T')[0];
-            // IPHONE PROXY FIX: Bypasses Mixed Content / Protocol blocks
-            const proxy = "https://api.allorigins.win/get?url=";
-            const targetUrl = encodeURIComponent(`http://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`);
+            let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
             
-            let res = await fetch(proxy + targetUrl);
-            let proxyJson = await res.json();
-            let json = JSON.parse(proxyJson.contents);
+            const schedTime = new Date(f.departure.scheduled);
+            const estTime = new Date(f.departure.estimated || f.departure.scheduled);
+            const delayMins = Math.floor((estTime - schedTime) / 60000);
+            const isActuallyDelayed = delayMins > 0;
+            const isCancelled = f.flight_status === "cancelled";
+            const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
+            
+            this.flightData = {
+                flight: f.flight.iata || fNum,
+                airline: f.airline.name,
+                orig: f.departure.iata,
+                dest: f.arrival.iata,
+                airport: f.arrival.airport || "Regional Terminal",
+                gate: f.departure.gate || "TBD",
+                terminal: f.departure.terminal || "TBD",
+                baggage: f.arrival.baggage || "TBD",
+                counter: f.departure.checkin_counter || "CHECK-IN DESK",
+                status: f.flight_status,
+                isDelayed: isActuallyDelayed,
+                isCancelled: isCancelled,
+                time: depTime,
+                logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
+            };
 
-            if(json && json.data && json.data.length > 0) {
-                let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
-                const schedTime = new Date(f.departure.scheduled);
-                const estTime = new Date(f.departure.estimated || f.departure.scheduled);
-                const delayMins = Math.floor((estTime - schedTime) / 60000);
-                const isActuallyDelayed = delayMins > 0;
-                const isCancelled = f.flight_status === "cancelled";
-                const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
-                this.flightData = {
-                    flight: f.flight.iata || fNum,
-                    airline: f.airline.name,
-                    orig: f.departure.iata,
-                    dest: f.arrival.iata,
-                    airport: f.arrival.airport || "Regional Terminal",
-                    gate: f.departure.gate || "TBD",
-                    terminal: f.departure.terminal || "TBD",
-                    baggage: f.arrival.baggage || "TBD",
-                    counter: f.departure.checkin_counter || "CHECK-IN DESK",
-                    status: f.flight_status,
-                    isDelayed: isActuallyDelayed,
-                    isCancelled: isCancelled,
-                    time: depTime,
-                    logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
-                };
-                document.getElementById('orig-code').innerText = this.flightData.orig;
-                document.getElementById('dest-code').innerText = this.flightData.dest;
-                if(isCancelled) {
-                    entryBanner.innerText = "Flight Cancelled. guidance suspended.";
-                    entryBanner.style.background = "rgba(255,59,48,0.2)";
-                    entryBanner.style.color = "var(--v-red)";
-                    entryBanner.style.display = "block";
-                    initBtn.innerText = "FLIGHT CANCELLED";
-                    initBtn.style.background = "var(--v-red)";
-                    initBtn.onclick = null;
-                } else if(isActuallyDelayed) {
-                    entryBanner.innerText = `New departure: ${depTime}`;
-                    entryBanner.style.background = "rgba(255,149,0,0.2)";
-                    entryBanner.style.color = "var(--v-orange)";
-                    entryBanner.style.display = "block";
-                    initBtn.innerText = "START MY TRIP";
-                    initBtn.style.background = "white";
-                    initBtn.onclick = () => this.start();
-                } else {
-                    entryBanner.style.display = "none";
-                    initBtn.innerText = "START MY TRIP";
-                    initBtn.style.background = "white";
-                    initBtn.onclick = () => this.start();
-                }
-                briefing.style.display = 'block';
-                statusLabel.innerText = "Connection Secure. Ready?";
-            } else { statusLabel.innerText = "Hmm, I couldn't find any flight data for today."; }
-        } catch(e) { 
-            console.error("Sovereign Proxy Error:", e);
-            statusLabel.innerText = "Sync failure. Network check required."; 
+            document.getElementById('orig-code').innerText = this.flightData.orig;
+            document.getElementById('dest-code').innerText = this.flightData.dest;
+            
+            if(isCancelled) {
+                entryBanner.innerText = "Flight Cancelled. Guidance suspended.";
+                entryBanner.style.display = "block";
+                initBtn.innerText = "CANCELLED";
+            } else {
+                entryBanner.style.display = isActuallyDelayed ? "block" : "none";
+                if(isActuallyDelayed) entryBanner.innerText = `New departure: ${depTime}`;
+                initBtn.innerText = "START MY TRIP";
+                initBtn.onclick = () => this.start();
+            }
+            briefing.style.display = 'block';
+            statusLabel.innerText = "Connection Secure. Ready?";
+        } else {
+            statusLabel.innerText = "Hmm, I couldn't find any flight data for today.";
         }
     }
+
     start() {
         if(!this.flightData || this.flightData.isCancelled) return;
         const missionPill = document.getElementById('mission-status-pill');
@@ -251,10 +258,7 @@ class VelocisSovereign {
         imgLayer.src = `https://images.unsplash.com/photo-${photoMap[this.flightData.dest] || "1436491865332-7a61a109c053"}?auto=format&fit=crop&w=1200&q=80`;
         imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+        
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
 
@@ -269,8 +273,6 @@ class VelocisSovereign {
         const doorPill = document.getElementById('hud-door');
         if (this.passenger.seat !== "--") {
             doorPill.innerHTML = `SEAT ${this.passenger.seat} <div class="zone-alert">ZONE ${zone}</div>`;
-            doorPill.style.height = "auto";
-            doorPill.style.textAlign = "center";
         } else {
             doorPill.innerText = "DOOR " + this.flightData.terminal;
         }
@@ -280,44 +282,17 @@ class VelocisSovereign {
         document.getElementById('text-gate').innerText = this.flightData.gate;
 
         if(this.passenger.name !== "Traveler") {
-            document.getElementById('boarding-text').innerHTML = `I'm monitoring Gate <span style="color:var(--v-gold); font-weight:800;">${this.flightData.gate}</span> for you. Welcome, <b>${this.passenger.name}</b>. Your seat is <b>${this.passenger.seat}</b>.`;
+            document.getElementById('boarding-text').innerHTML = `Welcome, <b>${this.passenger.name}</b>. Your seat is <b>${this.passenger.seat}</b>.`;
         }
+
+        [1,2,3,4].forEach(i => {
+            document.getElementById(`logo-${i}`).innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+        });
 
         document.getElementById('text-airline').innerText = this.flightData.airline;
         document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('airport-full-name').innerText = this.flightData.airport;
-        const carouselTitle = document.getElementById('card-carousel');
-        const arrivalMsg = document.getElementById('arrival-msg');
-        const actionContainer = document.getElementById('arrival-action-container');
         
-        const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(this.flightData.airport)}+terminal+map`;
-        const taxiEstimate = "Est. Taxi to City: $35 - $55";
-
-        if (this.flightData.status === "landed") {
-            carouselTitle.innerText = "Carousel " + this.flightData.baggage;
-            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Welcome home, ${this.passenger.name}! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.` : `Welcome to <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
-            actionContainer.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
-                    <button class="start-btn" style="height:60px; font-size:15px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
-                    <button class="start-btn" style="height:50px; font-size:13px; background:transparent; border:1px solid var(--v-gold); color:var(--v-gold);" onclick="window.open('${mapUrl}')">LIVE TERMINAL MAP</button>
-                    <div class="logistics-intel">
-                        <p style="margin:0; font-size:10px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Logistics Intelligence</p>
-                        <p style="margin:5px 0 0 0; font-size:14px; color:white; font-weight:700;">${taxiEstimate}</p>
-                    </div>
-                </div>`;
-        } else {
-            carouselTitle.innerText = "Preview " + this.flightData.dest;
-            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Preparing for your arrival, ${this.passenger.name}. We'll guide you through ${this.flightData.airport} the moment we touch down.` : `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
-            actionContainer.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
-                    <button class="start-btn" style="height:60px; font-size:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid white;" onclick="window.location.href='index.html#ground-transport-market'">GROUND TRANSPORT OPTIONS</button>
-                    <button class="start-btn" style="height:50px; font-size:13px; background:transparent; border:1px solid rgba(255,255,255,0.3); color:white;" onclick="window.open('${mapUrl}')">PREVIEW TERMINAL MAP</button>
-                    <div class="logistics-intel" style="border-left-color: rgba(255,255,255,0.3);">
-                        <p style="margin:0; font-size:10px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Logistics Intelligence</p>
-                        <p style="margin:5px 0 0 0; font-size:14px; color:rgba(255,255,255,0.7); font-weight:700;">Calculating local transport rates...</p>
-                    </div>
-                </div>`;
-        }
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
 }
