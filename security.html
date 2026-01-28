@@ -36,6 +36,8 @@
         .sb-logo { position: absolute; right: 25px; top: 25px; height: 45px; width: 45px; }
         .start-btn { width: 100%; height: 70px; background: white; color: black; border: none; border-radius: 22px; font-weight: 900; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
         #mission-tray::-webkit-scrollbar { display: none; }
+        /* LOGISTICS CARD STYLE */
+        .logistics-intel { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 18px; border-left: 4px solid var(--v-gold); margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -200,10 +202,12 @@ class VelocisSovereign {
                     entryBanner.style.display = "block";
                     initBtn.innerText = "START MY TRIP";
                     initBtn.style.background = "white";
+                    initBtn.onclick = () => this.start();
                 } else {
                     entryBanner.style.display = "none";
                     initBtn.innerText = "START MY TRIP";
                     initBtn.style.background = "white";
+                    initBtn.onclick = () => this.start();
                 }
                 briefing.style.display = 'block';
                 statusLabel.innerText = "Connection Secure. Ready?";
@@ -236,14 +240,35 @@ class VelocisSovereign {
         const carouselTitle = document.getElementById('card-carousel');
         const arrivalMsg = document.getElementById('arrival-msg');
         const actionContainer = document.getElementById('arrival-action-container');
+        
+        // DYNAMIC LOGISTICS CONTENT
+        const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(this.flightData.airport)}+terminal+map`;
+        const taxiEstimate = "Est. Taxi to City: $35 - $55";
+
         if (this.flightData.status === "landed") {
             carouselTitle.innerText = "Carousel " + this.flightData.baggage;
-            arrivalMsg.innerHTML = `Welcome home! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
-            actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>`;
+            arrivalMsg.innerHTML = `Welcome to <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Our mission is to guide you through this port with zero friction.`;
+            actionContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
+                    <button class="start-btn" style="height:60px; font-size:15px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
+                    <button class="start-btn" style="height:50px; font-size:13px; background:transparent; border:1px solid var(--v-gold); color:var(--v-gold);" onclick="window.open('${mapUrl}')">LIVE TERMINAL MAP</button>
+                    <div class="logistics-intel">
+                        <p style="margin:0; font-size:10px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Logistics Intelligence</p>
+                        <p style="margin:5px 0 0 0; font-size:14px; color:white; font-weight:700;">${taxiEstimate}</p>
+                    </div>
+                </div>`;
         } else {
             carouselTitle.innerText = "Preview " + this.flightData.dest;
-            arrivalMsg.innerHTML = `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Information will update as soon as we touch down.`;
-            actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px; background:rgba(255,255,255,0.1); color:white; border:1px solid white;" onclick="window.location.href='index.html#ground-transport-market'">GROUND TRANSPORT OPTIONS</button>`;
+            arrivalMsg.innerHTML = `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. We will guide you through this annoying port environment the moment we touch down.`;
+            actionContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
+                    <button class="start-btn" style="height:60px; font-size:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid white;" onclick="window.location.href='index.html#ground-transport-market'">GROUND TRANSPORT OPTIONS</button>
+                    <button class="start-btn" style="height:50px; font-size:13px; background:transparent; border:1px solid rgba(255,255,255,0.3); color:white;" onclick="window.open('${mapUrl}')">PREVIEW TERMINAL MAP</button>
+                    <div class="logistics-intel" style="border-left-color: rgba(255,255,255,0.3);">
+                        <p style="margin:0; font-size:10px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Logistics Intelligence</p>
+                        <p style="margin:5px 0 0 0; font-size:14px; color:rgba(255,255,255,0.7); font-weight:700;">Calculating local transport rates...</p>
+                    </div>
+                </div>`;
         }
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
