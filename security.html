@@ -166,7 +166,6 @@ class VelocisSovereign {
 
     async validateFlight(val) {
         const cleanVal = val.toUpperCase().trim();
-        // TRIGGER RESTORED: Directly calling handshake when logic matches
         if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) { 
             await this.handshake(cleanVal); 
         }
@@ -222,6 +221,8 @@ class VelocisSovereign {
                     entryBanner.style.color = "var(--v-red)";
                     entryBanner.style.display = "block";
                     initBtn.innerText = "CANCELLED";
+                    initBtn.style.background = "var(--v-red)";
+                    initBtn.onclick = null;
                 } else {
                     entryBanner.style.display = this.flightData.isDelayed ? "block" : "none";
                     if(this.flightData.isDelayed) entryBanner.innerText = `New departure: ${depTime}`;
@@ -240,6 +241,9 @@ class VelocisSovereign {
 
     start() {
         if(!this.flightData || this.flightData.isCancelled) return;
+        const missionPill = document.getElementById('mission-status-pill');
+        missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
+        missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
         const imgLayer = document.getElementById('cityscape-layer');
         imgLayer.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`;
         imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
@@ -250,7 +254,8 @@ class VelocisSovereign {
 
         let zone = "3";
         if (this.passenger.seat !== "--") {
-            const row = parseInt(this.passenger.seat.match(/\d+/));
+            const rowNumMatch = this.passenger.seat.match(/\d+/);
+            const row = rowNumMatch ? parseInt(rowNumMatch[0]) : 20;
             if (row <= 5) zone = "1 (PRIORITY)";
             else if (row <= 15) zone = "2";
             else zone = "3/4";
@@ -277,7 +282,8 @@ class VelocisSovereign {
         }
 
         [1,2,3,4].forEach(i => {
-            document.getElementById(`logo-${i}`).innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            const logoEl = document.getElementById(`logo-${i}`);
+            if(logoEl) logoEl.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         });
 
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
