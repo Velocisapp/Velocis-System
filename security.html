@@ -144,7 +144,11 @@ class VelocisSovereign {
         const r = document.getElementById('reader'); r.style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417 ] }, (t) => this.handleScan(t));
+        await this.scanner.start(
+            { facingMode: "environment" }, 
+            { fps: 15, qrbox: 250, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417 ] }, 
+            (t) => this.handleScan(t)
+        );
     }
 
     async handleScan(data) {
@@ -166,6 +170,7 @@ class VelocisSovereign {
 
     async validateFlight(val) {
         const cleanVal = val.toUpperCase().trim();
+        // Trigger sync when a complete flight number pattern is entered (e.g., AA100)
         if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) { 
             await this.handshake(cleanVal); 
         }
@@ -176,14 +181,14 @@ class VelocisSovereign {
         const entryBanner = document.getElementById('entry-delay-banner');
         const briefing = document.getElementById('verify-briefing');
         const initBtn = document.getElementById('initiate-btn');
-        statusLabel.innerText = "Syncing with real-time manifest...";
+        statusLabel.innerText = "Syncing with real-time tracker...";
         
         const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
         const flightNumStr = fNum.match(/\d+/)?.[0];
 
         try {
             const today = new Date().toISOString().split('T')[0];
-            // DIRECT SECURE FETCH: Re-enabled for Paid Tier HTTPS support
+            // DIRECT SECURE FETCH: Paid Tier key allows Direct HTTPS communication
             let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
             let res = await fetch(url);
             let json = await res.json();
@@ -220,22 +225,26 @@ class VelocisSovereign {
                     entryBanner.style.background = "rgba(255,59,48,0.2)";
                     entryBanner.style.color = "var(--v-red)";
                     entryBanner.style.display = "block";
-                    initBtn.innerText = "CANCELLED";
+                    initBtn.innerText = "FLIGHT CANCELLED";
                     initBtn.style.background = "var(--v-red)";
                     initBtn.onclick = null;
                 } else {
                     entryBanner.style.display = this.flightData.isDelayed ? "block" : "none";
-                    if(this.flightData.isDelayed) entryBanner.innerText = `New departure: ${depTime}`;
+                    if(this.flightData.isDelayed) {
+                        entryBanner.innerText = `New departure: ${depTime}`;
+                        entryBanner.style.background = "rgba(255,149,0,0.2)";
+                        entryBanner.style.color = "var(--v-orange)";
+                    }
                     initBtn.innerText = "START MY TRIP";
                     initBtn.style.background = "white";
                     initBtn.onclick = () => this.start();
                 }
                 briefing.style.display = 'block';
                 statusLabel.innerText = "Connection Secure. Ready?";
-            } else { statusLabel.innerText = "Manifest entry not found for: " + fNum; }
+            } else { statusLabel.innerText = "Hmm, I couldn't find flight " + fNum + " for today."; }
         } catch(e) { 
             statusLabel.innerText = "Sync failure. iPhone Security check."; 
-            console.error("Engine Sync Error:", e);
+            console.error("Engine Handshake Error:", e);
         }
     }
 
@@ -244,9 +253,10 @@ class VelocisSovereign {
         const missionPill = document.getElementById('mission-status-pill');
         missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
         missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
-        const imgLayer = document.getElementById('cityscape-layer');
-        imgLayer.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`;
-        imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
+        const cityscapeImg = document.getElementById('cityscape-layer');
+        cityscapeImg.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`;
+        cityscapeImg.onload = () => cityscapeImg.style.opacity = "1";
+
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
         document.getElementById('hud-city').innerText = this.flightData.dest;
@@ -254,11 +264,8 @@ class VelocisSovereign {
 
         let zone = "3";
         if (this.passenger.seat !== "--") {
-            const rowNumMatch = this.passenger.seat.match(/\d+/);
-            const row = rowNumMatch ? parseInt(rowNumMatch[0]) : 20;
-            if (row <= 5) zone = "1 (PRIORITY)";
-            else if (row <= 15) zone = "2";
-            else zone = "3/4";
+            const rowNum = parseInt(this.passenger.seat.match(/\d+/));
+            if (rowNum <= 5) zone = "1 (PRIORITY)"; else if (rowNum <= 15) zone = "2";
         }
 
         const doorPill = document.getElementById('hud-door');
