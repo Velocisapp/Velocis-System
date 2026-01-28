@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <title>VELOCIS™ | Master Sovereign Engine</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
@@ -52,13 +58,15 @@
             <input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
         </div>
         <div id="verify-briefing">
+            <div id="ident-label" style="color:var(--v-gold); font-size:11px; font-weight:900; margin-bottom:10px; text-transform:uppercase;"></div>
             <div class="route-path">
                 <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
                 <div style="font-size:24px; color:white; opacity:0.5;">✈</div>
                 <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><p>ARRIVAL</p></div>
             </div>
             <div id="entry-delay-banner"></div>
-            <button id="initiate-btn" class="start-btn" style="margin-top: 20px;" onclick="engine.start()">START MY TRIP</button>
+            <button id="sync-manifest-btn" class="start-btn" style="background:var(--v-gold); color:black; margin-bottom:15px; display:none;" onclick="engine.performHandshake()">SYNC MANIFEST</button>
+            <button id="initiate-btn" class="start-btn" style="margin-top: 20px; display:none;" onclick="engine.start()">START MY TRIP</button>
         </div>
     </div>
 </div>
@@ -136,7 +144,7 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Traveler", seat: "--", pnr: "------" };
+        this.passenger = { name: "Traveler", seat: "--", pnr: "------", flightNum: "" };
     }
     formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
     
@@ -162,89 +170,99 @@ class VelocisSovereign {
             } catch(e) { console.warn("BCBP Parse failed."); }
         }
         if(flightMatch) { 
-            await this.handshake(flightMatch); 
+            this.passenger.flightNum = flightMatch;
             if(this.scanner) await this.scanner.stop(); 
             document.getElementById('reader').style.display = 'none'; 
+            this.showSyncPrompt();
         }
     }
 
-    async validateFlight(val) {
+    validateFlight(val) {
         const cleanVal = val.toUpperCase().trim();
-        // Trigger sync when a complete flight number pattern is entered (e.g., AA100)
         if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) { 
-            await this.handshake(cleanVal); 
+            this.passenger.flightNum = cleanVal;
+            this.showSyncPrompt();
         }
     }
 
-    async handshake(fNum) {
+    showSyncPrompt() {
+        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.name} | SEAT ${this.passenger.seat}`;
+        document.getElementById('verify-briefing').style.display = 'block';
+        document.getElementById('sync-manifest-btn').style.display = 'block';
+        document.getElementById('status-msg').innerText = "Data Acquired. Sync with Manifest?";
+    }
+
+    async performHandshake() {
+        const syncBtn = document.getElementById('sync-manifest-btn');
         const statusLabel = document.getElementById('status-msg');
-        const entryBanner = document.getElementById('entry-delay-banner');
-        const briefing = document.getElementById('verify-briefing');
         const initBtn = document.getElementById('initiate-btn');
-        statusLabel.innerText = "Syncing with real-time tracker...";
+        const entryBanner = document.getElementById('entry-delay-banner');
         
-        const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
-        const flightNumStr = fNum.match(/\d+/)?.[0];
+        syncBtn.innerText = "AUTHENTICATING...";
+        syncBtn.disabled = true;
 
         try {
             const today = new Date().toISOString().split('T')[0];
-            // DIRECT SECURE FETCH: Paid Tier key allows Direct HTTPS communication
-            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
+            const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
+            const airlineCode = this.passenger.flightNum.match(/[A-Z]+/)[0];
+            
+            // DIRECT SECURE FETCH: Since you are on Paid Tier, direct HTTPS is the only Safari-approved path.
+            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
             let res = await fetch(url);
             let json = await res.json();
 
             if(json && json.data && json.data.length > 0) {
-                let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
+                let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
                 const schedTime = new Date(f.departure.scheduled);
                 const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                 const delayMins = Math.floor((estTime - schedTime) / 60000);
                 const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
                 
                 this.flightData = {
-                    flight: f.flight.iata || fNum,
-                    airline: f.airline.name,
-                    orig: f.departure.iata,
-                    dest: f.arrival.iata,
-                    airport: f.arrival.airport || "Regional Terminal",
-                    gate: f.departure.gate || "TBD",
-                    terminal: f.departure.terminal || "TBD",
-                    baggage: f.arrival.baggage || "TBD",
-                    counter: f.departure.checkin_counter || "CHECK-IN DESK",
-                    status: f.flight_status,
-                    isDelayed: delayMins > 0,
-                    isCancelled: f.flight_status === "cancelled",
-                    time: depTime,
+                    flight: f.flight.iata || this.passenger.flightNum, 
+                    airline: f.airline.name, 
+                    orig: f.departure.iata, 
+                    dest: f.arrival.iata, 
+                    airport: f.arrival.airport || "Regional Terminal", 
+                    gate: f.departure.gate || "TBD", 
+                    terminal: f.departure.terminal || "TBD", 
+                    baggage: f.arrival.baggage || "TBD", 
+                    counter: f.departure.checkin_counter || "CHECK-IN DESK", 
+                    status: f.flight_status, 
+                    isDelayed: delayMins > 0, 
+                    isCancelled: f.flight_status === "cancelled", 
+                    time: depTime, 
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
 
                 document.getElementById('orig-code').innerText = this.flightData.orig;
                 document.getElementById('dest-code').innerText = this.flightData.dest;
                 
+                syncBtn.style.display = 'none';
                 if(this.flightData.isCancelled) {
-                    entryBanner.innerText = "Flight Cancelled. Guidance suspended.";
+                    entryBanner.innerText = "Manifest Void: Cancelled.";
                     entryBanner.style.background = "rgba(255,59,48,0.2)";
                     entryBanner.style.color = "var(--v-red)";
                     entryBanner.style.display = "block";
-                    initBtn.innerText = "FLIGHT CANCELLED";
-                    initBtn.style.background = "var(--v-red)";
-                    initBtn.onclick = null;
                 } else {
                     entryBanner.style.display = this.flightData.isDelayed ? "block" : "none";
                     if(this.flightData.isDelayed) {
-                        entryBanner.innerText = `New departure: ${depTime}`;
+                        entryBanner.innerText = `Update: Departure at ${depTime}`;
                         entryBanner.style.background = "rgba(255,149,0,0.2)";
                         entryBanner.style.color = "var(--v-orange)";
                     }
-                    initBtn.innerText = "START MY TRIP";
-                    initBtn.style.background = "white";
-                    initBtn.onclick = () => this.start();
+                    initBtn.style.display = 'block';
+                    statusLabel.innerText = "MANIFEST SECURED";
                 }
-                briefing.style.display = 'block';
-                statusLabel.innerText = "Connection Secure. Ready?";
-            } else { statusLabel.innerText = "Hmm, I couldn't find flight " + fNum + " for today."; }
+            } else { 
+                statusLabel.innerText = "Manifest not found for " + this.passenger.flightNum;
+                syncBtn.disabled = false;
+                syncBtn.innerText = "RETRY SYNC";
+            }
         } catch(e) { 
-            statusLabel.innerText = "Sync failure. iPhone Security check."; 
-            console.error("Engine Handshake Error:", e);
+            statusLabel.innerText = "Sync failure. iPhone Security Active."; 
+            syncBtn.disabled = false;
+            syncBtn.innerText = "RETRY SYNC";
         }
     }
 
@@ -253,50 +271,50 @@ class VelocisSovereign {
         const missionPill = document.getElementById('mission-status-pill');
         missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
         missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
-        const cityscapeImg = document.getElementById('cityscape-layer');
-        cityscapeImg.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`;
-        cityscapeImg.onload = () => cityscapeImg.style.opacity = "1";
+        
+        const cityscapeLayer = document.getElementById('cityscape-layer');
+        cityscapeLayer.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`;
+        cityscapeLayer.onload = () => { cityscapeLayer.style.opacity = "1"; };
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
 
         let zone = "3";
         if (this.passenger.seat !== "--") {
-            const rowNum = parseInt(this.passenger.seat.match(/\d+/));
-            if (rowNum <= 5) zone = "1 (PRIORITY)"; else if (rowNum <= 15) zone = "2";
+            const rowNumMatch = this.passenger.seat.match(/\d+/);
+            const row = rowNumMatch ? parseInt(rowNumMatch[0]) : 20;
+            if (row <= 5) zone = "1 (PRIORITY)"; else if (row <= 15) zone = "2";
         }
 
         const doorPill = document.getElementById('hud-door');
         if (this.passenger.seat !== "--") {
             doorPill.innerHTML = `SEAT ${this.passenger.seat} <div class="zone-alert">ZONE ${zone}</div>`;
             doorPill.style.height = "auto";
-            doorPill.style.textAlign = "center";
-        } else {
-            doorPill.innerText = "DOOR " + this.flightData.terminal;
-        }
+        } else { doorPill.innerText = "DOOR " + this.flightData.terminal; }
         
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
-        document.getElementById('text-airline').innerText = this.flightData.airline;
-        document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('airport-full-name').innerText = this.flightData.airport;
-
-        if(this.passenger.name !== "Traveler") {
-            document.getElementById('boarding-text').innerHTML = `Welcome, <b>${this.passenger.name}</b>. Your seat is <b>${this.passenger.seat}</b>.`;
-        }
-
+        
+        const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         [1,2,3,4].forEach(i => {
-            const logoEl = document.getElementById(`logo-${i}`);
-            if(logoEl) logoEl.innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+             const logoDiv = document.getElementById(`logo-${i}`);
+             if(logoDiv) logoDiv.innerHTML = airlineLogo;
         });
 
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
 }
 const engine = new VelocisSovereign();
+
+// PWA SERVICE WORKER REGISTRATION
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(reg => console.log('Sovereign Service Worker Registered'))
+    .catch(err => console.log('Worker Sync Failed', err));
+}
 </script>
 </body>
 </html>
