@@ -164,49 +164,63 @@
         }
 
         async handleScan(data) {
-            const match = data.match(/[A-Z]{2}\d{2,4}/)?.[0];
+            const match = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
             if(match) { await this.handshake(match); if(this.scanner) await this.scanner.stop(); document.getElementById('reader').style.display = 'none'; }
         }
 
-        async validateFlight(val) { if (val.length >= 4) await this.handshake(val.toUpperCase().trim()); }
+        async validateFlight(val) { 
+            const cleanVal = val.toUpperCase().trim();
+            if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) {
+                await this.handshake(cleanVal); 
+            }
+        }
 
         async handshake(fNum) {
             const statusLabel = document.getElementById('status-msg');
             const entryBanner = document.getElementById('entry-delay-banner');
             const briefing = document.getElementById('verify-briefing');
             
-            statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
-            fNum = fNum.toUpperCase().trim();
-            const numOnly = fNum.replace(/\D/g,'');
+            statusLabel.innerText = "AUTHENTICATING STRICT MATCH...";
+            
+            // STRICT SPLIT: Extract Airline Code and Flight Number separately
+            const airlineCode = fNum.match(/[A-Z]+/)?.[0];
+            const flightNum = fNum.match(/\d+/)?.[0];
 
             try {
-                // FORCE TONIGHT'S DATE to fix Uncertain/Stuck statuses
                 const today = new Date().toISOString().split('T')[0];
-                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`;
+                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNum}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // Optimized Matching: Select tonight's flight entry specifically
-                    let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
+                    // STRICT MATCHING LOGIC:
+                    // 1. Look for today's flight
+                    // 2. Look for the airline code typed by the user (either in flight IATA or airline IATA)
+                    let f = json.data.find(flight => 
+                        flight.flight_date === today && 
+                        (flight.flight.iata.includes(airlineCode) || flight.airline.iata === airlineCode)
+                    ) || json.data[0];
+
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
-                        flight: fNum, airline: f.airline.name, 
-                        orig: f.departure.iata, dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Madrid-Barajas", 
+                        flight: f.flight.iata || fNum, 
+                        airline: f.airline.name, 
+                        orig: f.departure.iata, 
+                        dest: f.arrival.iata,
+                        airport: f.arrival.airport || "Regional Hub", 
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD", 
                         baggage: f.arrival.baggage || "TBD",
                         counter: f.departure.checkin_counter || "AIRLINE DESK",
-                        status: f.flight_status, time: depTime,
+                        status: f.flight_status, 
+                        time: depTime,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
 
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    // FIXED DELAY/CANCEL LOGIC
                     if (f.flight_status === "cancelled") {
                         entryBanner.innerText = "🚨 CANCELLED | CONTACT AIRLINE";
                         entryBanner.style.background = "rgba(255,59,48,0.2)";
@@ -225,7 +239,7 @@
                     briefing.style.display = 'block';
                     statusLabel.innerText = "MISSION PARAMETERS SECURED";
                 } else {
-                    statusLabel.innerText = "LOGISTICS TIMEOUT: NO ACTIVE DATA";
+                    statusLabel.innerText = "NO MATCH FOUND FOR " + fNum;
                     statusLabel.style.color = "var(--v-red)";
                 }
             } catch(e) { statusLabel.innerText = "SECURE HANDSHAKE FAILED"; }
@@ -233,10 +247,10 @@
 
         start() {
             if(!this.flightData) return;
-            const missionPill = document.getElementById('mission-status-pill');
             
+            const missionPill = document.getElementById('mission-status-pill');
             if(this.flightData.status === "cancelled") {
-                missionPill.innerText = "MISSION ABORTED";
+                missionPill.innerText = "ABORTED";
                 missionPill.style.color = "var(--v-red)";
             } else if(this.flightData.status === "delayed") {
                 missionPill.innerText = `DELAYED: ${this.flightData.time}`;
@@ -274,7 +288,8 @@
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
             
-            const countryName = (this.flightData.dest === 'MAD' || this.flightData.dest === 'ALC' || this.flightData.dest === 'BCN') ? 'SPAIN' : 'DESTINATION';
+            const countryCodes = { "MAD": "SPAIN", "ALC": "SPAIN", "BCN": "SPAIN", "YYZ": "CANADA", "JFK": "USA" };
+            const countryName = countryCodes[this.flightData.dest] || "DESTINATION";
             document.getElementById('local-esim-btn').innerText = `${countryName} LOCAL DATA`;
         }
     }
