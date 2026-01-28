@@ -1,7 +1,8 @@
 {
-  "name": "Velocis-System",
-  "short_name": "Velocis-System",
-  "start_url": "index.html",
+  "name": "Velocis Sovereign System",
+  "short_name": "VELOCIS",
+  "start_url": "security.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#010406",
   "theme_color": "#00FFFF",
@@ -9,7 +10,8 @@
     {
       "src": "apple-touch-icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
