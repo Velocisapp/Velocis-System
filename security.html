@@ -206,9 +206,14 @@ class VelocisSovereign {
             const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
             const airlineCode = this.passenger.flightNum.match(/[A-Z]+/)[0];
             
-            // DIRECT SECURE FETCH: Since you are on Paid Tier, direct HTTPS is the only Safari-approved path.
+            // SOVEREIGN HANDSHAKE: Forced HTTPS + CORS trust protocols for iPhone Standalone Mode
             let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
-            let res = await fetch(url);
+            
+            let res = await fetch(url, {
+                mode: 'cors',
+                credentials: 'omit'
+            });
+
             let json = await res.json();
 
             if(json && json.data && json.data.length > 0) {
@@ -260,7 +265,8 @@ class VelocisSovereign {
                 syncBtn.innerText = "RETRY SYNC";
             }
         } catch(e) { 
-            statusLabel.innerText = "Sync failure. iPhone Security Active."; 
+            console.error("Sync Error:", e);
+            statusLabel.innerText = "Sync failure. Check API key status."; 
             syncBtn.disabled = false;
             syncBtn.innerText = "RETRY SYNC";
         }
