@@ -70,7 +70,7 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0 0 10px 0; font-size:42px; font-weight:900;">VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">Ready for your next journey?</div>
+        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">Ready for your next trip?</div>
         <div id="reader"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <div class="manual-input-container"><input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)"></div>
@@ -141,7 +141,7 @@
     <div class="mission-step" id="arrival-card-container" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">04. DESTINATION</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Preview --</div>
-        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Preparing for your arrival at <span id="airport-full-name" style="color:var(--v-gold);">---</span>.</div>
+        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Preparing for your arrival...</div>
         <div id="arrival-action-container"></div>
     </div>
 </div>
@@ -170,7 +170,7 @@
 
         async validateFlight(val) { 
             const cleanVal = val.toUpperCase().trim();
-            if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) {
+            if (cleanVal.length >= 4) {
                 await this.handshake(cleanVal); 
             }
         }
@@ -188,14 +188,11 @@
 
             try {
                 const today = new Date().toISOString().split('T')[0];
-                
-                // SOVEREIGN FETCH: Wide pull by flight number to ensure Paid Tier response
                 let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // PRECISE LOCAL FILTER: Matches Today's date AND the Airline typed
                     let f = json.data.find(flight => 
                         flight.flight_date === today && 
                         (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped))
@@ -258,7 +255,7 @@
             missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
             missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
 
-            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "BOG": "1533604131557-4470912d08db", "BCN": "1583423203372-bfc5a1c1e4b8" };
+            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "BOG": "1533604131557-4470912d08db", "BCN": "1583423203372-bfc5a1c1e4b8", "ICN": "1540962323563-1c9074749f7e" };
             const imgLayer = document.getElementById('cityscape-layer');
             imgLayer.src = `https://images.unsplash.com/photo-${photoMap[this.flightData.dest] || "1436491865332-7a61a109c053"}?auto=format&fit=crop&w=1200&q=80`;
             imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
@@ -280,7 +277,7 @@
             document.getElementById('text-counter').innerText = this.flightData.counter;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
 
-            // JOURNEY STATE LOGIC - MAINTAINS PREVIEW IF NOT LANDED
+            // JOURNEY STATE LOGIC - LOCKING ARRIVAL MESSAGE
             const carouselTitle = document.getElementById('card-carousel');
             const arrivalMsg = document.getElementById('arrival-msg');
             const actionContainer = document.getElementById('arrival-action-container');
@@ -291,7 +288,7 @@
                 actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport'">VIEW GROUND TRANSPORT</button>`;
             } else {
                 carouselTitle.innerText = "Preview " + this.flightData.dest;
-                arrivalMsg.innerHTML = `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Baggage info will update on touchdown.`;
+                arrivalMsg.innerHTML = `Getting ready for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Information will update as soon as we touch down.`;
                 actionContainer.innerHTML = `<div style="margin-top:20px; color:rgba(255,255,255,0.4); font-size:12px; font-weight:700; letter-spacing:1px;">LIVE FLIGHT TRACKING ACTIVE</div>`;
             }
 
