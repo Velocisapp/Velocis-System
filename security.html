@@ -138,11 +138,11 @@
         </div>
     </div>
 
-    <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">04. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
-        <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
-        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Welcome home! We've landed at <span id="airport-full-name" style="color:var(--v-gold);">---</span>.</div>
-        <button class="start-btn" style="background:#fff; color:#000; height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
+    <div class="mission-step" id="arrival-card-container" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
+        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">04. DESTINATION</div><div class="airline-box" id="logo-4">----</div></div>
+        <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Preview --</div>
+        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Getting ready for your arrival at <span id="airport-full-name" style="color:var(--v-gold);">---</span>.</div>
+        <div id="arrival-action-container"></div>
     </div>
 </div>
 
@@ -197,10 +197,12 @@
                         (flight.flight.iata.includes(airlineCode) || flight.airline.iata === airlineCode)
                     ) || json.data[0];
 
+                    // DEFINITIVE DELAY FIX: Use Math to compare times
                     const schedTime = new Date(f.departure.scheduled);
                     const estTime = new Date(f.departure.estimated || f.departure.scheduled);
+                    const delayMinutes = Math.floor((estTime - schedTime) / 60000);
                     
-                    const isActuallyDelayed = estTime > schedTime || f.flight_status === "delayed";
+                    const isActuallyDelayed = delayMinutes > 0 || f.flight_status === "delayed";
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
@@ -208,7 +210,7 @@
                         airline: f.airline.name, 
                         orig: f.departure.iata, 
                         dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Madrid-Barajas", 
+                        airport: f.arrival.airport || "Regional Hub", 
                         gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD", 
                         baggage: f.arrival.baggage || "TBD",
@@ -267,23 +269,40 @@
 
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
+            // MAP LOGOS
             document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             
+            // HUD
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             
+            // TRAY - STEP 01
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
-            document.getElementById('text-gate').innerText = this.flightData.gate;
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('text-counter').innerText = this.flightData.counter;
             
-            document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
-            document.getElementById('airport-full-name').innerText = this.flightData.airport;
+            // JOURNEY STATE LOGIC: STEP 04 DYNAMIC SWITCH
+            const carouselTitle = document.getElementById('card-carousel');
+            const arrivalMsg = document.getElementById('arrival-msg');
+            const actionContainer = document.getElementById('arrival-action-container');
+            const airportName = this.flightData.airport;
+
+            if (this.flightData.status === "landed") {
+                carouselTitle.innerText = "Carousel " + this.flightData.baggage;
+                arrivalMsg.innerHTML = `Welcome home! We've landed at <span style="color:var(--v-gold);">${airportName}</span>.`;
+                actionContainer.innerHTML = `<button class="start-btn" style="background:#fff; color:#000; height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>`;
+            } else {
+                carouselTitle.innerText = "Preview " + this.flightData.dest;
+                arrivalMsg.innerHTML = `Getting ready for your arrival at <span style="color:var(--v-gold);">${airportName}</span>. I'll update your baggage claim details once we touch down.`;
+                actionContainer.innerHTML = `<div style="margin-top:20px; color:rgba(255,255,255,0.6); font-size:14px; font-weight:700;">LIVE UPDATES ACTIVE</div>`;
+            }
+            
+            document.getElementById('airport-full-name').innerText = airportName;
             
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
             
