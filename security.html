@@ -206,15 +206,12 @@ class VelocisSovereign {
             const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
             const airlineCode = this.passenger.flightNum.match(/[A-Z]+/)[0];
             
-            // SECURITY HARDENING: Use All-Origins proxy to bypass browser security blocks
-            const targetUrl = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
-            const proxiedUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            // PAID TIER: DIRECT SECURE HTTPS FETCH
+            // This is the fastest and most secure method available to you.
+            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
             
-            let res = await fetch(proxiedUrl);
-            let outerJson = await res.json();
-            
-            // Parse the actual API data from the proxy wrapper
-            let json = JSON.parse(outerJson.contents);
+            let res = await fetch(url);
+            let json = await res.json();
 
             if(json && json.data && json.data.length > 0) {
                 let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
@@ -266,7 +263,7 @@ class VelocisSovereign {
             }
         } catch(e) { 
             console.error(e);
-            statusLabel.innerText = "Check connection or API key."; 
+            statusLabel.innerText = "Sync Error. Check API status."; 
             syncBtn.disabled = false;
             syncBtn.innerText = "RETRY SYNC";
         }
