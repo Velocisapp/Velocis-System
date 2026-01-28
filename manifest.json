@@ -1,7 +1,7 @@
 {
   "name": "Velocis Sovereign System",
   "short_name": "VELOCIS",
-  "start_url": "security.html",
+  "start_url": "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#010406",
