@@ -193,19 +193,18 @@
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // STRICT CARRIER MATCH: Filter results to find exact carrier typed (IBE, VLG, etc)
+                    // SOVEREIGN MATCH: Filter by carrier typed (e.g., AV, IBE) to prevent hub mismatches
                     let f = json.data.find(flight => 
                         flight.flight_date === today && 
                         (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode))
                     ) || json.data[0];
 
-                    // MATHEMATICAL DELAY FIX: Compare schedule vs estimate
+                    // MATHEMATICAL DELAY CALCULATION: Bypass status text
                     const schedTime = new Date(f.departure.scheduled);
                     const estTime = new Date(f.departure.estimated || f.departure.scheduled);
-                    const diffMs = estTime - schedTime;
-                    const delayMins = Math.floor(diffMs / 60000);
+                    const delayMins = Math.floor((estTime - schedTime) / 60000);
                     
-                    const isActuallyDelayed = delayMins > 0 || f.flight_status === "delayed";
+                    const isActuallyDelayed = delayMins > 0;
                     const isCancelled = f.flight_status === "cancelled";
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
@@ -223,13 +222,13 @@
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
                     if (isCancelled) {
-                        entryBanner.innerText = "Oh no, it looks like this flight was cancelled.";
+                        entryBanner.innerText = "Flight Cancelled. I'll stay here if you need anything.";
                         entryBanner.style.background = "rgba(255,59,48,0.2)";
                         entryBanner.style.color = "var(--v-red)";
                         entryBanner.style.display = "block";
                         initBtn.innerText = "FLIGHT CANCELLED";
                         initBtn.style.background = "var(--v-red)";
-                        initBtn.onclick = null; // HARD STOP LOCK
+                        initBtn.onclick = null; // CANCELLATION LOCK
                     } else if (isActuallyDelayed) {
                         entryBanner.innerText = `Hang tight! New departure: ${depTime}`;
                         entryBanner.style.background = "rgba(255,149,0,0.2)";
@@ -258,7 +257,7 @@
             missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
             missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
 
-            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "BCN": "1583423203372-bfc5a1c1e4b8" };
+            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "BOG": "1533604131557-4470912d08db", "BCN": "1583423203372-bfc5a1c1e4b8" };
             const imgLayer = document.getElementById('cityscape-layer');
             imgLayer.src = `https://images.unsplash.com/photo-${photoMap[this.flightData.dest] || "1436491865332-7a61a109c053"}?auto=format&fit=crop&w=1200&q=80`;
             imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
@@ -279,7 +278,7 @@
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
 
-            // JOURNEY STATE LOGIC: STEP 04 DYNAMIC SWITCH
+            // JOURNEY STATE LOGIC
             const carouselTitle = document.getElementById('card-carousel');
             const arrivalMsg = document.getElementById('arrival-msg');
             const actionContainer = document.getElementById('arrival-action-container');
@@ -295,7 +294,7 @@
             }
 
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
-            const countryCodes = { "MAD": "SPAIN", "ALC": "SPAIN", "BCN": "SPAIN" };
+            const countryCodes = { "MAD": "SPAIN", "BOG": "COLOMBIA", "BCN": "SPAIN" };
             const countryName = countryCodes[this.flightData.dest] || "LOCAL";
             document.getElementById('local-esim-btn').innerText = `${countryName} DATA`;
         }
