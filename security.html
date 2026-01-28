@@ -36,9 +36,7 @@
         .sb-logo { position: absolute; right: 25px; top: 25px; height: 45px; width: 45px; }
         .start-btn { width: 100%; height: 70px; background: white; color: black; border: none; border-radius: 22px; font-weight: 900; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
         #mission-tray::-webkit-scrollbar { display: none; }
-        /* LOGISTICS CARD STYLE */
         .logistics-intel { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 18px; border-left: 4px solid var(--v-gold); margin-top: 15px; }
-        /* ZONE ALERT STYLE */
         .zone-alert { background: var(--v-blue); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-top: 5px; display: inline-block; animation: pulse-blue 2s infinite; text-transform: uppercase; }
         @keyframes pulse-blue { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
@@ -177,22 +175,15 @@ class VelocisSovereign {
         const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
         const flightNumStr = fNum.match(/\d+/)?.[0];
 
-        // IPHONE-READY SMART FETCH: Tries HTTPS then falls back to HTTP
-        const tryFetch = async (protocol) => {
-            let url = `${protocol}://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
-            let res = await fetch(url);
-            return await res.json();
-        };
-
         try {
             const today = new Date().toISOString().split('T')[0];
-            let json;
-            try {
-                json = await tryFetch('https');
-            } catch(e) {
-                console.log("iPhone protocol shift required...");
-                json = await tryFetch('http');
-            }
+            // IPHONE PROXY FIX: Bypasses Mixed Content / Protocol blocks
+            const proxy = "https://api.allorigins.win/get?url=";
+            const targetUrl = encodeURIComponent(`http://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`);
+            
+            let res = await fetch(proxy + targetUrl);
+            let proxyJson = await res.json();
+            let json = JSON.parse(proxyJson.contents);
 
             if(json && json.data && json.data.length > 0) {
                 let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
@@ -245,7 +236,10 @@ class VelocisSovereign {
                 briefing.style.display = 'block';
                 statusLabel.innerText = "Connection Secure. Ready?";
             } else { statusLabel.innerText = "Hmm, I couldn't find any flight data for today."; }
-        } catch(e) { statusLabel.innerText = "Sync failure. Protocol check required."; }
+        } catch(e) { 
+            console.error("Sovereign Proxy Error:", e);
+            statusLabel.innerText = "Sync failure. Network check required."; 
+        }
     }
     start() {
         if(!this.flightData || this.flightData.isCancelled) return;
@@ -262,10 +256,8 @@ class VelocisSovereign {
         document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         document.getElementById('hud-city').innerText = this.flightData.dest;
-        
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
 
-        // SOVEREIGN ZONE CALCULATION
         let zone = "3";
         if (this.passenger.seat !== "--") {
             const row = parseInt(this.passenger.seat.match(/\d+/));
@@ -303,7 +295,7 @@ class VelocisSovereign {
 
         if (this.flightData.status === "landed") {
             carouselTitle.innerText = "Carousel " + this.flightData.baggage;
-            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Welcome home, ${this.passenger.name}! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.` : `Welcome to <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Our mission is to guide you through this port with zero friction.`;
+            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Welcome home, ${this.passenger.name}! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.` : `Welcome to <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
             actionContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
                     <button class="start-btn" style="height:60px; font-size:15px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
@@ -315,7 +307,7 @@ class VelocisSovereign {
                 </div>`;
         } else {
             carouselTitle.innerText = "Preview " + this.flightData.dest;
-            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Preparing for your arrival, ${this.passenger.name}. We'll guide you through ${this.flightData.airport} the moment we touch down.` : `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. We will guide you through this annoying port environment the moment we touch down.`;
+            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Preparing for your arrival, ${this.passenger.name}. We'll guide you through ${this.flightData.airport} the moment we touch down.` : `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
             actionContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
                     <button class="start-btn" style="height:60px; font-size:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid white;" onclick="window.location.href='index.html#ground-transport-market'">GROUND TRANSPORT OPTIONS</button>
