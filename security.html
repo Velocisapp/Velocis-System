@@ -179,6 +179,7 @@
             const statusLabel = document.getElementById('status-msg');
             const entryBanner = document.getElementById('entry-delay-banner');
             const briefing = document.getElementById('verify-briefing');
+            const initBtn = document.getElementById('initiate-btn');
             
             statusLabel.innerText = "Let me check that for you...";
             
@@ -192,121 +193,107 @@
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
+                    // Carrier Match Fix: specifically filters by airline typed (e.g. IBE or VLG)
                     let f = json.data.find(flight => 
                         flight.flight_date === today && 
                         (flight.flight.iata.includes(airlineCode) || flight.airline.iata === airlineCode)
                     ) || json.data[0];
 
-                    // DEFINITIVE DELAY FIX: Use Math to compare times
                     const schedTime = new Date(f.departure.scheduled);
                     const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                     const delayMinutes = Math.floor((estTime - schedTime) / 60000);
                     
                     const isActuallyDelayed = delayMinutes > 0 || f.flight_status === "delayed";
+                    const isCancelled = f.flight_status === "cancelled";
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
-                        flight: f.flight.iata || fNum, 
-                        airline: f.airline.name, 
-                        orig: f.departure.iata, 
-                        dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Regional Hub", 
-                        gate: f.departure.gate || "TBD",
-                        terminal: f.departure.terminal || "TBD", 
-                        baggage: f.arrival.baggage || "TBD",
-                        counter: f.departure.checkin_counter || "AIRLINE DESK",
-                        status: f.flight_status, 
-                        isDelayed: isActuallyDelayed,
-                        time: depTime,
+                        flight: f.flight.iata || fNum, airline: f.airline.name, 
+                        orig: f.departure.iata, dest: f.arrival.iata,
+                        airport: f.arrival.airport || "Barajas Hub", 
+                        gate: f.departure.gate || "TBD", terminal: f.departure.terminal || "TBD", 
+                        baggage: f.arrival.baggage || "TBD", status: f.flight_status, 
+                        isDelayed: isActuallyDelayed, isCancelled: isCancelled, time: depTime,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
 
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    if (f.flight_status === "cancelled") {
-                        entryBanner.innerText = "Oh no, it looks like this flight was cancelled.";
+                    if (isCancelled) {
+                        entryBanner.innerText = "Flight Cancelled. I'll stay here if you need anything.";
                         entryBanner.style.background = "rgba(255,59,48,0.2)";
                         entryBanner.style.color = "var(--v-red)";
                         entryBanner.style.display = "block";
+                        initBtn.innerText = "FLIGHT CANCELLED";
+                        initBtn.style.background = "var(--v-red)";
+                        initBtn.onclick = null; // LOCK
                     } else if (isActuallyDelayed) {
                         entryBanner.innerText = `Hang tight! New departure: ${depTime}`;
                         entryBanner.style.background = "rgba(255,149,0,0.2)";
                         entryBanner.style.color = "var(--v-orange)";
                         entryBanner.style.display = "block";
+                        initBtn.innerText = "START MY TRIP";
+                        initBtn.style.background = "white";
                     } else {
                         entryBanner.style.display = "none";
+                        initBtn.innerText = "START MY TRIP";
+                        initBtn.style.background = "white";
                     }
 
                     briefing.style.display = 'block';
-                    statusLabel.innerText = "I've found your flight! Ready to go?";
+                    statusLabel.innerText = "I've found your flight! Ready?";
                 } else {
-                    statusLabel.innerText = "Hmm, I couldn't find a flight with that number.";
+                    statusLabel.innerText = "Hmm, I couldn't find that flight number.";
                 }
             } catch(e) { statusLabel.innerText = "I'm having trouble connecting right now."; }
         }
 
         start() {
-            if(!this.flightData) return;
+            if(!this.flightData || this.flightData.isCancelled) return;
             
             const missionPill = document.getElementById('mission-status-pill');
-            if(this.flightData.status === "cancelled") {
-                missionPill.innerText = "FLIGHT CANCELLED";
-                missionPill.style.color = "var(--v-red)";
-            } else if(this.flightData.isDelayed) {
-                missionPill.innerText = `DELAYED: ${this.flightData.time}`;
-                missionPill.style.color = "var(--v-orange)";
-            } else {
-                missionPill.innerText = "ON TIME";
-                missionPill.style.color = "var(--v-gold)";
-            }
+            missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
+            missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
 
             const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "BCN": "1583423203372-bfc5a1c1e4b8" };
-            const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
             const imgLayer = document.getElementById('cityscape-layer');
-            imgLayer.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${Date.now()}`;
+            imgLayer.src = `https://images.unsplash.com/photo-${photoMap[this.flightData.dest] || "1436491865332-7a61a109c053"}?auto=format&fit=crop&w=1200&q=80`;
             imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
 
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             
-            // MAP LOGOS
             document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             
-            // HUD
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-            
-            // TRAY - STEP 01
             document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
             document.getElementById('text-door').innerText = this.flightData.terminal;
+            document.getElementById('text-gate').innerText = this.flightData.gate;
             document.getElementById('text-airline').innerText = this.flightData.airline;
-            document.getElementById('text-counter').innerText = this.flightData.counter;
-            
-            // JOURNEY STATE LOGIC: STEP 04 DYNAMIC SWITCH
+            document.getElementById('airport-full-name').innerText = this.flightData.airport;
+
+            // JOURNEY STATE LOGIC
             const carouselTitle = document.getElementById('card-carousel');
             const arrivalMsg = document.getElementById('arrival-msg');
             const actionContainer = document.getElementById('arrival-action-container');
-            const airportName = this.flightData.airport;
 
             if (this.flightData.status === "landed") {
                 carouselTitle.innerText = "Carousel " + this.flightData.baggage;
-                arrivalMsg.innerHTML = `Welcome home! We've landed at <span style="color:var(--v-gold);">${airportName}</span>.`;
-                actionContainer.innerHTML = `<button class="start-btn" style="background:#fff; color:#000; height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>`;
+                arrivalMsg.innerHTML = `Welcome home! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
+                actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport'">VIEW GROUND TRANSPORT</button>`;
             } else {
                 carouselTitle.innerText = "Preview " + this.flightData.dest;
-                arrivalMsg.innerHTML = `Getting ready for your arrival at <span style="color:var(--v-gold);">${airportName}</span>. I'll update your baggage claim details once we touch down.`;
+                arrivalMsg.innerHTML = `Getting ready for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. I'll update claim details when we touch down.`;
                 actionContainer.innerHTML = `<div style="margin-top:20px; color:rgba(255,255,255,0.6); font-size:14px; font-weight:700;">LIVE UPDATES ACTIVE</div>`;
             }
-            
-            document.getElementById('airport-full-name').innerText = airportName;
-            
+
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
-            
-            const countryCodes = { "MAD": "SPAIN", "ALC": "SPAIN", "BCN": "SPAIN", "YYZ": "CANADA", "JFK": "USA" };
+            const countryCodes = { "MAD": "SPAIN", "ALC": "SPAIN", "BCN": "SPAIN" };
             const countryName = countryCodes[this.flightData.dest] || "LOCAL";
             document.getElementById('local-esim-btn').innerText = `${countryName} DATA`;
         }
