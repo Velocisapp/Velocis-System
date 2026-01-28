@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -178,7 +179,8 @@ class VelocisSovereign {
         const flightNumStr = fNum.match(/\d+/)?.[0];
         try {
             const today = new Date().toISOString().split('T')[0];
-            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
+            // CRITICAL: Switched to HTTP to avoid Basic Plan SSL handshake block
+            let url = `http://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
@@ -232,7 +234,7 @@ class VelocisSovereign {
                 briefing.style.display = 'block';
                 statusLabel.innerText = "Connection Secure. Ready?";
             } else { statusLabel.innerText = "Hmm, I couldn't find any flight data for today."; }
-        } catch(e) { statusLabel.innerText = "Sync failure. Checking gate data..."; }
+        } catch(e) { statusLabel.innerText = "Sync failure. Protocol check required."; }
     }
     start() {
         if(!this.flightData || this.flightData.isCancelled) return;
@@ -252,7 +254,7 @@ class VelocisSovereign {
         
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
 
-        // ZONE LOGIC
+        // SOVEREIGN ZONE LOGIC
         let zone = "3";
         if (this.passenger.seat !== "--") {
             const row = parseInt(this.passenger.seat.match(/\d+/));
