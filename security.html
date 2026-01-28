@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -111,7 +112,7 @@
             <div class="airline-box" id="logo-3">----</div>
         </div>
         <div class="framed-title" id="card-gate">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">I'm monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for you. Relax and maybe grab a coffee while we wait:</div>
+        <div id="boarding-text" style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">I'm monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for you. Relax and maybe grab a coffee while we wait:</div>
         <div class="perk-box">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
             <div style="color:var(--v-gold); font-weight:900; font-size:24px;">Starbucks Reward</div>
@@ -132,17 +133,40 @@
 
 <script>
 class VelocisSovereign {
-    constructor() { this.flightData = null; this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; }
+    constructor() { 
+        this.flightData = null; 
+        this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
+        // SAFETY DEFAULTS FOR PERSONALIZATION
+        this.passenger = { name: "Traveler", seat: "--", pnr: "------" };
+    }
     formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
     async startScanner() {
         const r = document.getElementById('reader'); r.style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t));
+        // Enhanced to support PDF417 for real boarding passes
+        await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417 ] }, (t) => this.handleScan(t));
     }
     async handleScan(data) {
-        const match = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
-        if(match) { await this.handshake(match); if(this.scanner) await this.scanner.stop(); document.getElementById('reader').style.display = 'none'; }
+        let flightMatch = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
+        
+        // BCBP DECODING LAYER
+        if (data.startsWith("M1")) {
+            try {
+                const rawName = data.substring(2, 22).trim();
+                this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
+                this.passenger.pnr = data.substring(23, 29).trim();
+                this.passenger.seat = data.substring(48, 52).trim();
+                // Extract flight number from barcode specific position if regex missed it
+                if(!flightMatch) flightMatch = data.substring(36, 43).trim();
+            } catch(e) { console.warn("Personalized data extraction skipped: format mismatch."); }
+        }
+
+        if(flightMatch) { 
+            await this.handshake(flightMatch); 
+            if(this.scanner) await this.scanner.stop(); 
+            document.getElementById('reader').style.display = 'none'; 
+        }
     }
     async validateFlight(val) {
         const cleanVal = val.toUpperCase().trim();
@@ -229,11 +253,20 @@ class VelocisSovereign {
         document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         document.getElementById('hud-city').innerText = this.flightData.dest;
+        
+        // DYNAMIC HUD MUTATION
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
-        document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+        document.getElementById('hud-door').innerText = (this.passenger.seat !== "--") ? "SEAT " + this.passenger.seat : "DOOR " + this.flightData.terminal;
+        
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
+
+        // BOARDING STEP MUTATION
+        if(this.passenger.name !== "Traveler") {
+            document.getElementById('boarding-text').innerHTML = `I'm monitoring Gate <span style="color:var(--v-gold); font-weight:800;">${this.flightData.gate}</span> for you. Welcome, <b>${this.passenger.name}</b>. Your seat is <b>${this.passenger.seat}</b>.`;
+        }
+
         document.getElementById('text-airline').innerText = this.flightData.airline;
         document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('airport-full-name').innerText = this.flightData.airport;
@@ -247,7 +280,7 @@ class VelocisSovereign {
 
         if (this.flightData.status === "landed") {
             carouselTitle.innerText = "Carousel " + this.flightData.baggage;
-            arrivalMsg.innerHTML = `Welcome to <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Our mission is to guide you through this port with zero friction.`;
+            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Welcome home, ${this.passenger.name}! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.` : `Welcome to <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Our mission is to guide you through this port with zero friction.`;
             actionContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
                     <button class="start-btn" style="height:60px; font-size:15px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
@@ -259,7 +292,7 @@ class VelocisSovereign {
                 </div>`;
         } else {
             carouselTitle.innerText = "Preview " + this.flightData.dest;
-            arrivalMsg.innerHTML = `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. We will guide you through this annoying port environment the moment we touch down.`;
+            arrivalMsg.innerHTML = (this.passenger.name !== "Traveler") ? `Preparing for your arrival, ${this.passenger.name}. We'll guide you through ${this.flightData.airport} the moment we touch down.` : `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. We will guide you through this annoying port environment the moment we touch down.`;
             actionContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
                     <button class="start-btn" style="height:60px; font-size:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid white;" onclick="window.location.href='index.html#ground-transport-market'">GROUND TRANSPORT OPTIONS</button>
