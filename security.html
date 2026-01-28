@@ -181,25 +181,27 @@
             const briefing = document.getElementById('verify-briefing');
             const initBtn = document.getElementById('initiate-btn');
             
-            statusLabel.innerText = "Let me check that for you...";
+            statusLabel.innerText = "Syncing with Sovereign Engine...";
             
-            const airlineCode = fNum.match(/[A-Z]+/)?.[0];
+            const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
             const flightNumStr = fNum.match(/\d+/)?.[0];
 
             try {
-                // DATE LOCK: Force today's UTC date to avoid ghost data from yesterday
+                // TODAY LOCK (Local Time Relative)
                 const today = new Date().toISOString().split('T')[0];
                 
-                // CARRIER LOCK: Filter specifically by the airline IATA typed
-                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}&airline_iata=${airlineCode}&flight_date=${today}`;
+                // WIDE FETCH: Pull by flight number only to ensure the Paid Tier responds
+                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // Filter specifically for TODAY only
-                    let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
+                    // SMART LOCAL FILTER: Scan results for Today's Date AND the Airline typed
+                    let f = json.data.find(flight => 
+                        flight.flight_date === today && 
+                        (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped))
+                    ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
 
-                    // MATHEMATICAL DELAY CALCULATION: Bypass status text labels
                     const schedTime = new Date(f.departure.scheduled);
                     const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                     const diffMs = estTime - schedTime;
@@ -223,15 +225,15 @@
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
                     if (isCancelled) {
-                        entryBanner.innerText = "Oh no, it looks like this flight was cancelled.";
+                        entryBanner.innerText = "Flight Cancelled. Guidance suspended.";
                         entryBanner.style.background = "rgba(255,59,48,0.2)";
                         entryBanner.style.color = "var(--v-red)";
                         entryBanner.style.display = "block";
                         initBtn.innerText = "FLIGHT CANCELLED";
                         initBtn.style.background = "var(--v-red)";
-                        initBtn.onclick = null; // LOCK TRANSITION
+                        initBtn.onclick = null; // LOCK
                     } else if (isActuallyDelayed) {
-                        entryBanner.innerText = `Hang tight! New departure: ${depTime}`;
+                        entryBanner.innerText = `New departure: ${depTime}`;
                         entryBanner.style.background = "rgba(255,149,0,0.2)";
                         entryBanner.style.color = "var(--v-orange)";
                         entryBanner.style.display = "block";
@@ -244,11 +246,11 @@
                     }
 
                     briefing.style.display = 'block';
-                    statusLabel.innerText = "I've found your flight! Ready?";
+                    statusLabel.innerText = "Details Secrued. Ready to go?";
                 } else {
-                    statusLabel.innerText = "Hmm, I couldn't find that flight number today.";
+                    statusLabel.innerText = "Hmm, I couldn't find that flight instance today.";
                 }
-            } catch(e) { statusLabel.innerText = "I'm having trouble connecting right now."; }
+            } catch(e) { statusLabel.innerText = "Sync failure. Checking gate data..."; }
         }
 
         start() {
@@ -279,7 +281,7 @@
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
 
-            // JOURNEY STATE LOGIC: ONLY UNLOCK LANDED DATA IF STATUS IS 'LANDED' TODAY
+            // JOURNEY STATE LOGIC
             const carouselTitle = document.getElementById('card-carousel');
             const arrivalMsg = document.getElementById('arrival-msg');
             const actionContainer = document.getElementById('arrival-action-container');
@@ -290,7 +292,7 @@
                 actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport'">VIEW GROUND TRANSPORT</button>`;
             } else {
                 carouselTitle.innerText = "Preview " + this.flightData.dest;
-                arrivalMsg.innerHTML = `Getting ready for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. I'll update claim details when we touch down.`;
+                arrivalMsg.innerHTML = `Getting ready for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. claim details will update on touchdown.`;
                 actionContainer.innerHTML = `<div style="margin-top:20px; color:rgba(255,255,255,0.6); font-size:14px; font-weight:700;">LIVE UPDATES ACTIVE</div>`;
             }
 
