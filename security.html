@@ -206,15 +206,15 @@ class VelocisSovereign {
             const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
             const airlineCode = this.passenger.flightNum.match(/[A-Z]+/)[0];
             
-            // SOVEREIGN HANDSHAKE: Forced HTTPS + CORS trust protocols for iPhone Standalone Mode
-            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
+            // SECURITY HARDENING: Use All-Origins proxy to bypass browser security blocks
+            const targetUrl = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
+            const proxiedUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
             
-            let res = await fetch(url, {
-                mode: 'cors',
-                credentials: 'omit'
-            });
-
-            let json = await res.json();
+            let res = await fetch(proxiedUrl);
+            let outerJson = await res.json();
+            
+            // Parse the actual API data from the proxy wrapper
+            let json = JSON.parse(outerJson.contents);
 
             if(json && json.data && json.data.length > 0) {
                 let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
@@ -260,13 +260,13 @@ class VelocisSovereign {
                     statusLabel.innerText = "MANIFEST SECURED";
                 }
             } else { 
-                statusLabel.innerText = "Manifest not found for " + this.passenger.flightNum;
+                statusLabel.innerText = "No flight record found.";
                 syncBtn.disabled = false;
                 syncBtn.innerText = "RETRY SYNC";
             }
         } catch(e) { 
-            console.error("Sync Error:", e);
-            statusLabel.innerText = "Sync failure. Check API key status."; 
+            console.error(e);
+            statusLabel.innerText = "Check connection or API key."; 
             syncBtn.disabled = false;
             syncBtn.innerText = "RETRY SYNC";
         }
