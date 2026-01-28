@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -177,13 +176,25 @@ class VelocisSovereign {
         statusLabel.innerText = "Syncing with real-time tracker...";
         const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
         const flightNumStr = fNum.match(/\d+/)?.[0];
+
+        // IPHONE-READY SMART FETCH: Tries HTTPS then falls back to HTTP
+        const tryFetch = async (protocol) => {
+            let url = `${protocol}://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
+            let res = await fetch(url);
+            return await res.json();
+        };
+
         try {
             const today = new Date().toISOString().split('T')[0];
-            // CRITICAL: Switched to HTTP to avoid Basic Plan SSL handshake block
-            let url = `http://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
-            let res = await fetch(url);
-            let json = await res.json();
-            if(json.data && json.data.length > 0) {
+            let json;
+            try {
+                json = await tryFetch('https');
+            } catch(e) {
+                console.log("iPhone protocol shift required...");
+                json = await tryFetch('http');
+            }
+
+            if(json && json.data && json.data.length > 0) {
                 let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
                 const schedTime = new Date(f.departure.scheduled);
                 const estTime = new Date(f.departure.estimated || f.departure.scheduled);
@@ -254,7 +265,7 @@ class VelocisSovereign {
         
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
 
-        // SOVEREIGN ZONE LOGIC
+        // SOVEREIGN ZONE CALCULATION
         let zone = "3";
         if (this.passenger.seat !== "--") {
             const row = parseInt(this.passenger.seat.match(/\d+/));
