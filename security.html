@@ -184,33 +184,35 @@
             statusLabel.innerText = "Let me check that for you...";
             
             const airlineCode = fNum.match(/[A-Z]+/)?.[0];
-            const flightNum = fNum.match(/\d+/)?.[0];
+            const flightNumStr = fNum.match(/\d+/)?.[0];
 
             try {
                 const today = new Date().toISOString().split('T')[0];
-                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNum}`;
+                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // Carrier Match Fix: specifically filters by airline typed (e.g. IBE or VLG)
+                    // STRICT CARRIER MATCH: Filter results to find exact carrier typed (IBE, VLG, etc)
                     let f = json.data.find(flight => 
                         flight.flight_date === today && 
-                        (flight.flight.iata.includes(airlineCode) || flight.airline.iata === airlineCode)
+                        (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode))
                     ) || json.data[0];
 
+                    // MATHEMATICAL DELAY FIX: Compare schedule vs estimate
                     const schedTime = new Date(f.departure.scheduled);
                     const estTime = new Date(f.departure.estimated || f.departure.scheduled);
-                    const delayMinutes = Math.floor((estTime - schedTime) / 60000);
+                    const diffMs = estTime - schedTime;
+                    const delayMins = Math.floor(diffMs / 60000);
                     
-                    const isActuallyDelayed = delayMinutes > 0 || f.flight_status === "delayed";
+                    const isActuallyDelayed = delayMins > 0 || f.flight_status === "delayed";
                     const isCancelled = f.flight_status === "cancelled";
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
                     this.flightData = {
                         flight: f.flight.iata || fNum, airline: f.airline.name, 
                         orig: f.departure.iata, dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Barajas Hub", 
+                        airport: f.arrival.airport || "Regional Hub", 
                         gate: f.departure.gate || "TBD", terminal: f.departure.terminal || "TBD", 
                         baggage: f.arrival.baggage || "TBD", status: f.flight_status, 
                         isDelayed: isActuallyDelayed, isCancelled: isCancelled, time: depTime,
@@ -221,13 +223,13 @@
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
                     if (isCancelled) {
-                        entryBanner.innerText = "Flight Cancelled. I'll stay here if you need anything.";
+                        entryBanner.innerText = "Oh no, it looks like this flight was cancelled.";
                         entryBanner.style.background = "rgba(255,59,48,0.2)";
                         entryBanner.style.color = "var(--v-red)";
                         entryBanner.style.display = "block";
                         initBtn.innerText = "FLIGHT CANCELLED";
                         initBtn.style.background = "var(--v-red)";
-                        initBtn.onclick = null; // LOCK
+                        initBtn.onclick = null; // HARD STOP LOCK
                     } else if (isActuallyDelayed) {
                         entryBanner.innerText = `Hang tight! New departure: ${depTime}`;
                         entryBanner.style.background = "rgba(255,149,0,0.2)";
@@ -277,7 +279,7 @@
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
 
-            // JOURNEY STATE LOGIC
+            // JOURNEY STATE LOGIC: STEP 04 DYNAMIC SWITCH
             const carouselTitle = document.getElementById('card-carousel');
             const arrivalMsg = document.getElementById('arrival-msg');
             const actionContainer = document.getElementById('arrival-action-container');
