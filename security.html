@@ -203,18 +203,24 @@ class VelocisSovereign {
 
         try {
             const today = new Date().toISOString().split('T')[0];
-            const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
-            const airlineCode = this.passenger.flightNum.match(/[A-Z]+/)[0];
+            const flightNumMatch = this.passenger.flightNum.match(/\d+/);
+            const flightNumOnly = flightNumMatch ? flightNumMatch[0] : "";
             
-            // PAID TIER: DIRECT SECURE HTTPS FETCH
-            // This is the fastest and most secure method available to you.
+            // CLEAN HANDSHAKE: Forced HTTPS + No Cache + Direct JSON Accept
             let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
             
-            let res = await fetch(url);
+            let res = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
+            });
+
+            if (!res.ok) throw new Error('API_REJECTED');
             let json = await res.json();
 
             if(json && json.data && json.data.length > 0) {
-                let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
+                // Sorting to find the exact date match first
+                let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
+                
                 const schedTime = new Date(f.departure.scheduled);
                 const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                 const delayMins = Math.floor((estTime - schedTime) / 60000);
@@ -257,13 +263,13 @@ class VelocisSovereign {
                     statusLabel.innerText = "MANIFEST SECURED";
                 }
             } else { 
-                statusLabel.innerText = "No flight record found.";
+                statusLabel.innerText = "Manifest Data Not Available.";
                 syncBtn.disabled = false;
                 syncBtn.innerText = "RETRY SYNC";
             }
         } catch(e) { 
-            console.error(e);
-            statusLabel.innerText = "Sync Error. Check API status."; 
+            console.error("Handshake Error:", e);
+            statusLabel.innerText = "Sync failure. Protocol Error."; 
             syncBtn.disabled = false;
             syncBtn.innerText = "RETRY SYNC";
         }
