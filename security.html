@@ -6,53 +6,26 @@
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { 
-            --v-blue: #007AFF; 
-            --v-dark-card: #1c1c1e; 
-            --v-arrival-blue: #0052cc;
-            --v-gold: #FFD700;
-            --v-red: #FF3B30;
-            --v-orange: #FF9500;
-        }
+        :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        
         /* 1. ENTRY SCREEN */
-        #entry-screen { 
-            position: fixed; inset: 0; 
-            background: linear-gradient(135deg, rgba(0,122,255,0.9) 0%, rgba(0,198,255,0.9) 100%), 
-                        url('https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=1200&q=80');
-            background-size: cover; background-position: center;
-            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; 
-            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); 
-        }
+        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,0.9) 0%, rgba(0,198,255,0.9) 100%), url('https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
         .scan-trigger-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 2px solid var(--v-gold); width: 100%; height: 60px; border-radius: 20px; font-weight: 800; font-size: 16px; cursor: pointer; letter-spacing: 1px; margin-bottom: 15px; }
         .manual-input-container { width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
-        
         #flight-input { width: 100%; padding: 16px 5px; border: none; border-radius: 20px; font-size: 18px; text-align: center; background: white; color: #1c1c1e; font-weight: 800; outline: none; box-sizing: border-box; appearance: none; }
-
         #entry-delay-banner { display: none; margin-top: 15px; padding: 12px; border-radius: 15px; background: rgba(255,149,0,0.2); border: 1px solid var(--v-orange); color: var(--v-gold); font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         #verify-briefing { display: none; margin-top: 25px; animation: fadeIn 0.6s ease forwards; width: 100%; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .route-path { display: flex; align-items: center; justify-content: space-between; margin: 15px 0; color: white; }
         .hub-node h4 { margin: 0; font-size: 28px; font-weight: 900; }
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-
         /* 2. VISUALIZER */
-        #dest-visualizer { 
-            flex: 1; width: 100%; height: 45vh; position: relative; 
-            background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden;
-        }
-        #cityscape-layer {
-            position: absolute; inset: 0; width: 100%; height: 100%;
-            object-fit: cover; opacity: 0; z-index: 1;
-            transition: opacity 1.5s ease-in;
-        }
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #cityscape-layer{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 1; transition: opacity 1.5s ease-in; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
-
         /* 3. MISSION TRAY */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
@@ -66,15 +39,15 @@
     </style>
 </head>
 <body>
-
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0 0 10px 0; font-size:42px; font-weight:900;">VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">Ready for your next trip?</div>
+        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">Ready for your next journey?</div>
         <div id="reader"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
-        <div class="manual-input-container"><input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)"></div>
-        
+        <div class="manual-input-container">
+            <input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
+        </div>
         <div id="verify-briefing">
             <div class="route-path">
                 <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
@@ -89,7 +62,6 @@
 
 <div id="dest-visualizer">
     <img id="cityscape-layer" src="" alt="">
-    
     <div class="hud-overlay">
         <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
             <div id="bridge-label" style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Connectivity Strategy</div>
@@ -98,7 +70,6 @@
                 <a href="index.html#global-connectivity-hub" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 20px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">GLOBAL ROAMING</a>
             </div>
         </div>
-
         <div style="display:flex; justify-content:space-between; pointer-events: none;">
             <div class="dest-pill" id="hud-city">DESTINATION</div>
             <div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ACTIVE MISSION</div>
@@ -112,13 +83,19 @@
 
 <div id="mission-tray">
     <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div>
+            <div class="airline-box" id="logo-1">----</div>
+        </div>
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. I'll see you at the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
     </div>
 
     <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div><div class="airline-box" id="logo-2">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div>
+            <div class="airline-box" id="logo-2">----</div>
+        </div>
         <div class="framed-title">Security</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Once you've cleared security, I'll help you get connected so you're ready when you land:</div>
         <div class="esim-cta" onclick="window.open('https://www.airalo.com/', '_blank')">
@@ -128,7 +105,10 @@
     </div>
 
     <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div><div class="airline-box" id="logo-3">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
+            <div class="airline-box" id="logo-3">----</div>
+        </div>
         <div class="framed-title" id="card-gate">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">I'm monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for you. Relax and maybe grab a coffee while we wait:</div>
         <div class="perk-box">
@@ -139,166 +119,140 @@
     </div>
 
     <div class="mission-step" id="arrival-card-container" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">04. DESTINATION</div><div class="airline-box" id="logo-4">----</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:white; font-weight:900; letter-spacing:1px;">04. DESTINATION</div>
+            <div class="airline-box" id="logo-4">----</div>
+        </div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Preview --</div>
-        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Preparing for your arrival...</div>
+        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Preparing for your arrival at <span id="airport-full-name" style="color:var(--v-gold);">---</span>.</div>
         <div id="arrival-action-container"></div>
     </div>
 </div>
 
 <script>
-    class VelocisSovereign {
-        constructor() { this.flightData = null; this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; }
-
-        formatTime(iso) {
-            if(!iso) return "TBD";
-            const d = new Date(iso);
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-
-        async startScanner() {
-            const r = document.getElementById('reader'); r.style.display = 'block';
-            document.getElementById('scan-btn').style.display = 'none';
-            this.scanner = new Html5Qrcode("reader");
-            await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t));
-        }
-
-        async handleScan(data) {
-            const match = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
-            if(match) { await this.handshake(match); if(this.scanner) await this.scanner.stop(); document.getElementById('reader').style.display = 'none'; }
-        }
-
-        async validateFlight(val) { 
-            const cleanVal = val.toUpperCase().trim();
-            if (cleanVal.length >= 4) {
-                await this.handshake(cleanVal); 
-            }
-        }
-
-        async handshake(fNum) {
-            const statusLabel = document.getElementById('status-msg');
-            const entryBanner = document.getElementById('entry-delay-banner');
-            const briefing = document.getElementById('verify-briefing');
-            const initBtn = document.getElementById('initiate-btn');
-            
-            statusLabel.innerText = "Syncing with real-time tracker...";
-            
-            const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
-            const flightNumStr = fNum.match(/\d+/)?.[0];
-
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
-                let res = await fetch(url);
-                let json = await res.json();
-
-                if(json.data && json.data.length > 0) {
-                    let f = json.data.find(flight => 
-                        flight.flight_date === today && 
-                        (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped))
-                    ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
-
-                    const schedTime = new Date(f.departure.scheduled);
-                    const estTime = new Date(f.departure.estimated || f.departure.scheduled);
-                    const delayMins = Math.floor((estTime - schedTime) / 60000);
-                    
-                    const isActuallyDelayed = delayMins > 0;
-                    const isCancelled = f.flight_status === "cancelled";
-                    const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
-
-                    this.flightData = {
-                        flight: f.flight.iata || fNum, airline: f.airline.name, 
-                        orig: f.departure.iata, dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Regional Terminal", 
-                        gate: f.departure.gate || "TBD", terminal: f.departure.terminal || "TBD", 
-                        baggage: f.arrival.baggage || "TBD", counter: f.departure.checkin_counter || "CHECK-IN DESK",
-                        status: f.flight_status, isDelayed: isActuallyDelayed, isCancelled: isCancelled, time: depTime,
-                        logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
-                    };
-
-                    document.getElementById('orig-code').innerText = this.flightData.orig;
-                    document.getElementById('dest-code').innerText = this.flightData.dest;
-                    
-                    if (isCancelled) {
-                        entryBanner.innerText = "Flight Cancelled. guidance suspended.";
-                        entryBanner.style.background = "rgba(255,59,48,0.2)";
-                        entryBanner.style.color = "var(--v-red)";
-                        entryBanner.style.display = "block";
-                        initBtn.innerText = "FLIGHT CANCELLED";
-                        initBtn.style.background = "var(--v-red)";
-                        initBtn.onclick = null; 
-                    } else if (isActuallyDelayed) {
-                        entryBanner.innerText = `New departure: ${depTime}`;
-                        entryBanner.style.background = "rgba(255,149,0,0.2)";
-                        entryBanner.style.color = "var(--v-orange)";
-                        entryBanner.style.display = "block";
-                        initBtn.innerText = "START MY TRIP";
-                        initBtn.style.background = "white";
-                    } else {
-                        entryBanner.style.display = "none";
-                        initBtn.innerText = "START MY TRIP";
-                        initBtn.style.background = "white";
-                    }
-
-                    briefing.style.display = 'block';
-                    statusLabel.innerText = "Connection Secure. Ready?";
-                } else {
-                    statusLabel.innerText = "Hmm, I couldn't find any flight data for today.";
-                }
-            } catch(e) { statusLabel.innerText = "Sync failure. Checking gate data..."; }
-        }
-
-        start() {
-            if(!this.flightData || this.flightData.isCancelled) return;
-            
-            const missionPill = document.getElementById('mission-status-pill');
-            missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
-            missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
-
-            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "BOG": "1533604131557-4470912d08db", "BCN": "1583423203372-bfc5a1c1e4b8", "ICN": "1540962323563-1c9074749f7e" };
-            const imgLayer = document.getElementById('cityscape-layer');
-            imgLayer.src = `https://images.unsplash.com/photo-${photoMap[this.flightData.dest] || "1436491865332-7a61a109c053"}?auto=format&fit=crop&w=1200&q=80`;
-            imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
-
-            document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            
-            document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            
-            document.getElementById('hud-city').innerText = this.flightData.dest;
-            document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
-            document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-            document.getElementById('text-door').innerText = this.flightData.terminal;
-            document.getElementById('text-gate').innerText = this.flightData.gate;
-            document.getElementById('text-airline').innerText = this.flightData.airline;
-            document.getElementById('text-counter').innerText = this.flightData.counter;
-            document.getElementById('airport-full-name').innerText = this.flightData.airport;
-
-            // JOURNEY STATE LOGIC - LOCKING ARRIVAL MESSAGE
-            const carouselTitle = document.getElementById('card-carousel');
-            const arrivalMsg = document.getElementById('arrival-msg');
-            const actionContainer = document.getElementById('arrival-action-container');
-
-            if (this.flightData.status === "landed") {
-                carouselTitle.innerText = "Carousel " + this.flightData.baggage;
-                arrivalMsg.innerHTML = `Welcome home! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
-                actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport'">VIEW GROUND TRANSPORT</button>`;
-            } else {
-                carouselTitle.innerText = "Preview " + this.flightData.dest;
-                arrivalMsg.innerHTML = `Getting ready for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Information will update as soon as we touch down.`;
-                actionContainer.innerHTML = `<div style="margin-top:20px; color:rgba(255,255,255,0.4); font-size:12px; font-weight:700; letter-spacing:1px;">LIVE FLIGHT TRACKING ACTIVE</div>`;
-            }
-
-            setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
-            const countryCodes = { "MAD": "SPAIN", "BOG": "COLOMBIA", "BCN": "SPAIN" };
-            const countryName = countryCodes[this.flightData.dest] || "LOCAL";
-            document.getElementById('local-esim-btn').innerText = `${countryName} DATA`;
-        }
+class VelocisSovereign {
+    constructor() { this.flightData = null; this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; }
+    formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+    async startScanner() {
+        const r = document.getElementById('reader'); r.style.display = 'block';
+        document.getElementById('scan-btn').style.display = 'none';
+        this.scanner = new Html5Qrcode("reader");
+        await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t));
     }
-    const engine = new VelocisSovereign();
+    async handleScan(data) {
+        const match = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
+        if(match) { await this.handshake(match); if(this.scanner) await this.scanner.stop(); document.getElementById('reader').style.display = 'none'; }
+    }
+    async validateFlight(val) {
+        const cleanVal = val.toUpperCase().trim();
+        if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) { await this.handshake(cleanVal); }
+    }
+    async handshake(fNum) {
+        const statusLabel = document.getElementById('status-msg');
+        const entryBanner = document.getElementById('entry-delay-banner');
+        const briefing = document.getElementById('verify-briefing');
+        const initBtn = document.getElementById('initiate-btn');
+        statusLabel.innerText = "Syncing with real-time tracker...";
+        const airlineTyped = fNum.match(/[A-Z]+/)?.[0];
+        const flightNumStr = fNum.match(/\d+/)?.[0];
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
+            let res = await fetch(url);
+            let json = await res.json();
+            if(json.data && json.data.length > 0) {
+                let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineTyped || flight.flight.iata.includes(airlineTyped)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
+                const schedTime = new Date(f.departure.scheduled);
+                const estTime = new Date(f.departure.estimated || f.departure.scheduled);
+                const delayMins = Math.floor((estTime - schedTime) / 60000);
+                const isActuallyDelayed = delayMins > 0;
+                const isCancelled = f.flight_status === "cancelled";
+                const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
+                this.flightData = {
+                    flight: f.flight.iata || fNum,
+                    airline: f.airline.name,
+                    orig: f.departure.iata,
+                    dest: f.arrival.iata,
+                    airport: f.arrival.airport || "Regional Terminal",
+                    gate: f.departure.gate || "TBD",
+                    terminal: f.departure.terminal || "TBD",
+                    baggage: f.arrival.baggage || "TBD",
+                    counter: f.departure.checkin_counter || "CHECK-IN DESK",
+                    status: f.flight_status,
+                    isDelayed: isActuallyDelayed,
+                    isCancelled: isCancelled,
+                    time: depTime,
+                    logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
+                };
+                document.getElementById('orig-code').innerText = this.flightData.orig;
+                document.getElementById('dest-code').innerText = this.flightData.dest;
+                if(isCancelled) {
+                    entryBanner.innerText = "Flight Cancelled. guidance suspended.";
+                    entryBanner.style.background = "rgba(255,59,48,0.2)";
+                    entryBanner.style.color = "var(--v-red)";
+                    entryBanner.style.display = "block";
+                    initBtn.innerText = "FLIGHT CANCELLED";
+                    initBtn.style.background = "var(--v-red)";
+                    initBtn.onclick = null;
+                } else if(isActuallyDelayed) {
+                    entryBanner.innerText = `New departure: ${depTime}`;
+                    entryBanner.style.background = "rgba(255,149,0,0.2)";
+                    entryBanner.style.color = "var(--v-orange)";
+                    entryBanner.style.display = "block";
+                    initBtn.innerText = "START MY TRIP";
+                    initBtn.style.background = "white";
+                } else {
+                    entryBanner.style.display = "none";
+                    initBtn.innerText = "START MY TRIP";
+                    initBtn.style.background = "white";
+                }
+                briefing.style.display = 'block';
+                statusLabel.innerText = "Connection Secure. Ready?";
+            } else { statusLabel.innerText = "Hmm, I couldn't find any flight data for today."; }
+        } catch(e) { statusLabel.innerText = "Sync failure. Checking gate data..."; }
+    }
+    start() {
+        if(!this.flightData || this.flightData.isCancelled) return;
+        const missionPill = document.getElementById('mission-status-pill');
+        missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
+        missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
+        const photoMap = { "MAD": "1539037116277-4db20889f2d4", "BOG": "1533604131557-4470912d08db", "BCN": "1583423203372-bfc5a1c1e4b8" };
+        const imgLayer = document.getElementById('cityscape-layer');
+        imgLayer.src = `https://images.unsplash.com/photo-${photoMap[this.flightData.dest] || "1436491865332-7a61a109c053"}?auto=format&fit=crop&w=1200&q=80`;
+        imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+        document.getElementById('logo-2').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+        document.getElementById('logo-3').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+        document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+        document.getElementById('hud-city').innerText = this.flightData.dest;
+        document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
+        document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+        document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+        document.getElementById('text-door').innerText = this.flightData.terminal;
+        document.getElementById('text-gate').innerText = this.flightData.gate;
+        document.getElementById('text-airline').innerText = this.flightData.airline;
+        document.getElementById('text-counter').innerText = this.flightData.counter;
+        document.getElementById('airport-full-name').innerText = this.flightData.airport;
+        const carouselTitle = document.getElementById('card-carousel');
+        const arrivalMsg = document.getElementById('arrival-msg');
+        const actionContainer = document.getElementById('arrival-action-container');
+        if (this.flightData.status === "landed") {
+            carouselTitle.innerText = "Carousel " + this.flightData.baggage;
+            arrivalMsg.innerHTML = `Welcome home! We've landed at <span style="color:var(--v-gold);">${this.flightData.airport}</span>.`;
+            actionContainer.innerHTML = `<button class="start-btn" style="height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport'">VIEW GROUND TRANSPORT</button>`;
+        } else {
+            carouselTitle.innerText = "Preview " + this.flightData.dest;
+            arrivalMsg.innerHTML = `Preparing for your arrival at <span style="color:var(--v-gold);">${this.flightData.airport}</span>. Information will update as soon as we touch down.`;
+            actionContainer.innerHTML = `<div style="margin-top:20px; color:rgba(255,255,255,0.4); font-size:12px; font-weight:700; letter-spacing:1px;">LIVE FLIGHT TRACKING ACTIVE</div>`;
+        }
+        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
+        const countryCodes = { "MAD": "SPAIN", "BOG": "COLOMBIA", "BCN": "SPAIN" };
+        const countryName = countryCodes[this.flightData.dest] || "LOCAL";
+        document.getElementById('local-esim-btn').innerText = `${countryName} DATA`;
+    }
+}
+const engine = new VelocisSovereign();
 </script>
 </body>
 </html>
