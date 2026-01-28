@@ -187,22 +187,23 @@
             const flightNumStr = fNum.match(/\d+/)?.[0];
 
             try {
+                // DATE LOCK: Force today's UTC date to avoid ghost data from yesterday
                 const today = new Date().toISOString().split('T')[0];
-                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}`;
+                
+                // CARRIER LOCK: Filter specifically by the airline IATA typed
+                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumStr}&airline_iata=${airlineCode}&flight_date=${today}`;
                 let res = await fetch(url);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // SOVEREIGN MATCH: Filter by carrier typed (e.g., AV, IBE) to prevent hub mismatches
-                    let f = json.data.find(flight => 
-                        flight.flight_date === today && 
-                        (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode))
-                    ) || json.data[0];
+                    // Filter specifically for TODAY only
+                    let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
 
-                    // MATHEMATICAL DELAY CALCULATION: Bypass status text
+                    // MATHEMATICAL DELAY CALCULATION: Bypass status text labels
                     const schedTime = new Date(f.departure.scheduled);
                     const estTime = new Date(f.departure.estimated || f.departure.scheduled);
-                    const delayMins = Math.floor((estTime - schedTime) / 60000);
+                    const diffMs = estTime - schedTime;
+                    const delayMins = Math.floor(diffMs / 60000);
                     
                     const isActuallyDelayed = delayMins > 0;
                     const isCancelled = f.flight_status === "cancelled";
@@ -211,7 +212,7 @@
                     this.flightData = {
                         flight: f.flight.iata || fNum, airline: f.airline.name, 
                         orig: f.departure.iata, dest: f.arrival.iata,
-                        airport: f.arrival.airport || "Regional Hub", 
+                        airport: f.arrival.airport || "Regional Terminal", 
                         gate: f.departure.gate || "TBD", terminal: f.departure.terminal || "TBD", 
                         baggage: f.arrival.baggage || "TBD", status: f.flight_status, 
                         isDelayed: isActuallyDelayed, isCancelled: isCancelled, time: depTime,
@@ -222,13 +223,13 @@
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
                     if (isCancelled) {
-                        entryBanner.innerText = "Flight Cancelled. I'll stay here if you need anything.";
+                        entryBanner.innerText = "Oh no, it looks like this flight was cancelled.";
                         entryBanner.style.background = "rgba(255,59,48,0.2)";
                         entryBanner.style.color = "var(--v-red)";
                         entryBanner.style.display = "block";
                         initBtn.innerText = "FLIGHT CANCELLED";
                         initBtn.style.background = "var(--v-red)";
-                        initBtn.onclick = null; // CANCELLATION LOCK
+                        initBtn.onclick = null; // LOCK TRANSITION
                     } else if (isActuallyDelayed) {
                         entryBanner.innerText = `Hang tight! New departure: ${depTime}`;
                         entryBanner.style.background = "rgba(255,149,0,0.2)";
@@ -245,7 +246,7 @@
                     briefing.style.display = 'block';
                     statusLabel.innerText = "I've found your flight! Ready?";
                 } else {
-                    statusLabel.innerText = "Hmm, I couldn't find that flight number.";
+                    statusLabel.innerText = "Hmm, I couldn't find that flight number today.";
                 }
             } catch(e) { statusLabel.innerText = "I'm having trouble connecting right now."; }
         }
@@ -278,7 +279,7 @@
             document.getElementById('text-airline').innerText = this.flightData.airline;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
 
-            // JOURNEY STATE LOGIC
+            // JOURNEY STATE LOGIC: ONLY UNLOCK LANDED DATA IF STATUS IS 'LANDED' TODAY
             const carouselTitle = document.getElementById('card-carousel');
             const arrivalMsg = document.getElementById('arrival-msg');
             const actionContainer = document.getElementById('arrival-action-container');
