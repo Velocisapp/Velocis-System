@@ -74,7 +74,6 @@
         <div id="reader"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <div class="manual-input-container"><input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)"></div>
-        
         <div id="verify-briefing">
             <div class="route-path">
                 <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
@@ -89,7 +88,6 @@
 
 <div id="dest-visualizer">
     <img id="cityscape-layer" src="" alt="">
-    
     <div class="hud-overlay">
         <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
             <div id="bridge-label" style="color: var(--v-gold); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Global Internet Connection</div>
@@ -98,7 +96,6 @@
                 <a href="https://holafly.com/" target="_blank" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 20px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">GLOBAL ROAMING</a>
             </div>
         </div>
-
         <div style="display:flex; justify-content:space-between; pointer-events: none;">
             <div class="dest-pill" id="hud-city">DESTINATION</div>
             <div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ACTIVE MISSION</div>
@@ -114,26 +111,19 @@
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div><div class="airline-box" id="logo-1">----</div></div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Proceed to <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Proceed to counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
     </div>
-
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;"><div style="color:white; font-weight:900; letter-spacing:1px;">02. ARRIVAL</div><div class="airline-box" id="logo-4">----</div></div>
         <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Carousel --</div>
         <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Landed at <span id="airport-full-name" style="color:var(--v-gold);">---</span> (<span id="airport-iata">---</span>).</div>
-        <button class="start-btn" style="background:#fff; color:#000; height:60px; font-size:15px; margin-top:30px;" onclick="window.location.href='index.html#ground-transport-market'">VIEW GROUND TRANSPORT</button>
     </div>
 </div>
 
 <script>
     class VelocisSovereign {
         constructor() { this.flightData = null; this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; }
-
-        formatTime(iso) {
-            if(!iso) return "TBD";
-            const d = new Date(iso);
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
+        formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 
         async startScanner() {
             const r = document.getElementById('reader'); r.style.display = 'block';
@@ -142,123 +132,81 @@
             await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (t) => this.handleScan(t));
         }
 
-        async handleScan(data) {
-            const match = data.match(/[A-Z]{2}\d{2,4}/)?.[0];
-            if(match) { await this.handshake(match); if(this.scanner) await this.scanner.stop(); document.getElementById('reader').style.display = 'none'; }
-        }
-
+        async handleScan(data) { const match = data.match(/[A-Z]{2}\d{2,4}/)?.[0]; if(match) { await this.handshake(match); if(this.scanner) await this.scanner.stop(); document.getElementById('reader').style.display = 'none'; } }
         async validateFlight(val) { if (val.length >= 4) await this.handshake(val.toUpperCase().trim()); }
 
         async handshake(fNum) {
             const statusLabel = document.getElementById('status-msg');
             const entryBanner = document.getElementById('entry-delay-banner');
             const briefing = document.getElementById('verify-briefing');
-            
-            statusLabel.innerText = "AUTHENTICATING PRO-SESSION...";
-            fNum = fNum.toUpperCase().trim();
+            statusLabel.innerText = "RESTORING ALL FUNCTIONS...";
             const numOnly = fNum.replace(/\D/g,'');
 
             try {
-                // FIXED: Filter results by today's date to avoid "uncertain" or legacy flight status
-                const today = new Date().toISOString().split('T')[0];
-                let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`;
-                let res = await fetch(url);
+                let res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${numOnly}`);
                 let json = await res.json();
 
                 if(json.data && json.data.length > 0) {
-                    // FILTER: Force today's date to clear status confusion
-                    let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
+                    let f = json.data[0];
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
+                    const isDelayed = f.departure.delay > 0;
+                    const isCancelled = f.flight_status === 'cancelled';
 
                     this.flightData = {
                         flight: fNum, airline: f.airline.name, orig: f.departure.iata, dest: f.arrival.iata,
                         airport: f.arrival.airport || "Regional Hub", gate: f.departure.gate || "TBD",
                         terminal: f.departure.terminal || "TBD", baggage: f.arrival.baggage || "TBD",
-                        counter: f.departure.checkin_counter || "AIRLINE DESK",
-                        status: f.flight_status, time: depTime,
+                        status: isCancelled ? 'cancelled' : (isDelayed ? 'delayed' : 'scheduled'), 
+                        time: depTime,
                         logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                     };
 
                     document.getElementById('orig-code').innerText = this.flightData.orig;
                     document.getElementById('dest-code').innerText = this.flightData.dest;
                     
-                    // STATUS LOGIC: Explicitly handle cancelled and delayed alerts
-                    if (f.flight_status === "cancelled" || f.flight_status === "delayed") {
-                        const alertText = f.flight_status === "cancelled" ? "🚨 CANCELED" : "⚠️ DELAYED";
-                        const subInfo = f.flight_status === "cancelled" ? "CONTACT AIRLINE" : `NEW DEPARTURE: ${this.formatTime(f.departure.estimated)}`;
-                        entryBanner.innerText = `${alertText} | ${subInfo}`;
-                        entryBanner.style.background = f.flight_status === "cancelled" ? "rgba(255,59,48,0.2)" : "rgba(255,149,0,0.2)";
-                        entryBanner.style.color = f.flight_status === "cancelled" ? "var(--v-red)" : "var(--v-orange)";
+                    if (isCancelled) {
+                        entryBanner.innerText = "🚨 CANCELED | CONTACT AIRLINE";
+                        entryBanner.style.background = "rgba(255,59,48,0.2)";
+                        entryBanner.style.color = "var(--v-red)";
                         entryBanner.style.display = "block";
-                    } else {
-                        entryBanner.style.display = "none";
-                    }
+                    } else if (isDelayed) {
+                        entryBanner.innerText = `⚠️ DELAYED | NEW TIME: ${depTime}`;
+                        entryBanner.style.display = "block";
+                        entryBanner.style.background = "rgba(255,149,0,0.2)";
+                        entryBanner.style.color = "var(--v-orange)";
+                    } else { entryBanner.style.display = "none"; }
 
                     briefing.style.display = 'block';
-                    statusLabel.innerText = "MISSION PARAMETERS SECURED";
-                } else {
-                    statusLabel.innerText = "LOGISTICS TIMEOUT: NO ACTIVE DATA";
-                    statusLabel.style.color = "var(--v-red)";
+                    statusLabel.innerText = "SYSTEMS ONLINE";
                 }
-            } catch(e) { statusLabel.innerText = "SECURE HANDSHAKE FAILED"; }
+            } catch(e) { statusLabel.innerText = "OFFLINE"; }
         }
 
         start() {
             if(!this.flightData) return;
-            
             const missionPill = document.getElementById('mission-status-pill');
+            
             if(this.flightData.status === "cancelled") {
-                missionPill.innerText = "MISSION ABORTED";
-                missionPill.style.color = "var(--v-red)";
+                missionPill.innerText = "ABORTED"; missionPill.style.color = "var(--v-red)";
             } else if(this.flightData.status === "delayed") {
-                missionPill.innerText = `DELAYED: ${this.flightData.time}`;
-                missionPill.style.color = "var(--v-orange)";
+                missionPill.innerText = `DELAYED: ${this.flightData.time}`; missionPill.style.color = "var(--v-orange)";
             } else {
-                missionPill.innerText = "ACTIVE MISSION";
-                missionPill.style.color = "var(--v-gold)";
+                missionPill.innerText = "ACTIVE"; missionPill.style.color = "var(--v-gold)";
             }
 
-            const photoMap = { "MAD": "1539037116277-4db20889f2d4", "ALC": "1559310804-069279093836", "BCN": "1583423203372-bfc5a1c1e4b8", "IVL": "1539037116277-4db20889f2d4" };
-            const photoId = photoMap[this.flightData.dest] || "1436491865332-7a61a109c053";
-            const imgLayer = document.getElementById('cityscape-layer');
-            imgLayer.src = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=1200&q=80&v=${Date.now()}`;
-            imgLayer.onload = () => { imgLayer.style.opacity = "1"; };
-
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            
-            document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            
             document.getElementById('hud-city').innerText = this.flightData.dest;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-            
-            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-            document.getElementById('text-door').innerText = this.flightData.terminal;
-            document.getElementById('text-counter').innerText = this.flightData.counter;
-            
-            document.getElementById('card-carousel').innerText = "Carousel " + this.flightData.baggage;
+            document.getElementById('logo-1').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            document.getElementById('logo-4').innerHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('airport-iata').innerText = this.flightData.dest;
-            
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-            // FIXED: LOCAL DATA SEARCH - Brands button by code and uses direct search links for results
-            const dest = this.flightData.dest;
-            const spanishCodes = ['MAD', 'BCN', 'ALC', 'AGP', 'TFN', 'TFS', 'LPA', 'IVL', 'PMI', 'VLC'];
             const localBtn = document.getElementById('local-esim-btn');
-            
-            if (this.flightData.status === "cancelled") {
-                localBtn.innerText = "CLAIM COMPENSATION";
-                localBtn.href = "https://www.airhelp.com/";
-            } else if (spanishCodes.includes(dest)) {
-                localBtn.innerText = "SPAIN LOCAL DATA";
-                localBtn.href = "https://www.airalo.com/spain-esim";
-            } else {
-                localBtn.innerText = `${dest} LOCAL DATA`;
-                // Build search link to ensure the landing page reflects the specific destination
-                localBtn.href = `https://www.airalo.com/search?q=${dest}`;
-            }
+            localBtn.innerText = `${this.flightData.dest} LOCAL DATA`;
+            localBtn.href = `https://www.airalo.com/search?q=${this.flightData.dest}`;
         }
     }
     const engine = new VelocisSovereign();
