@@ -200,7 +200,6 @@
                     const schedTime = new Date(f.departure.scheduled);
                     const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                     
-                    // TIME COMPARISON FIX: Force delay if estimated > scheduled
                     const isActuallyDelayed = estTime > schedTime || f.flight_status === "delayed";
                     const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
 
@@ -250,7 +249,7 @@
             
             const missionPill = document.getElementById('mission-status-pill');
             if(this.flightData.status === "cancelled") {
-                missionPill.innerText = "ABORTED";
+                missionPill.innerText = "FLIGHT CANCELLED";
                 missionPill.style.color = "var(--v-red)";
             } else if(this.flightData.isDelayed) {
                 missionPill.innerText = `DELAYED: ${this.flightData.time}`;
