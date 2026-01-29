@@ -16,9 +16,35 @@
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,0.9) 0%, rgba(0,198,255,0.9) 100%), url('https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
-        .scan-trigger-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 2px solid var(--v-gold); width: 100%; height: 60px; border-radius: 20px; font-weight: 800; font-size: 16px; cursor: pointer; letter-spacing: 1px; margin-bottom: 15px; }
+.scan-trigger-btn { 
+    background: #FFF; /* Solid white for primary hierarchy */
+    color: #007AFF;   /* Velocis Blue text */
+    width: 100%; 
+    height: 60px; 
+    border-radius: 20px; 
+    font-weight: 900; 
+    font-size: 16px; 
+    cursor: pointer; 
+    border: none;
+    position: relative; /* Ensures it stays in the layout flow */
+    z-index: 1010;      /* Forces it above any ghost overlays */
+    pointer-events: auto !important; /* Forces the browser to allow the click */
+}
         .manual-input-container { width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
-        #flight-input { width: 100%; padding: 16px 5px; border: none; border-radius: 20px; font-size: 18px; text-align: center; background: white; color: #1c1c1e; font-weight: 800; outline: none; box-sizing: border-box; appearance: none; }
+       #flight-input { 
+    width: 100%; 
+    padding: 16px 5px; 
+    border: 1px solid rgba(255,255,255,0.3); 
+    border-radius: 20px; 
+    font-size: 16px; 
+    text-align: center; 
+    background: rgba(255,255,255,0.1); /* Translucent, not solid */
+    color: white; 
+    font-weight: 600; 
+    outline: none; 
+    box-sizing: border-box; 
+    appearance: none;
+}}
         
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: linear-gradient(to bottom, #001f3f, #000000); display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
         
@@ -45,6 +71,15 @@
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 
         #reset-trip { font-size: 10px; opacity: 0.4; color: white; text-decoration: underline; margin-top: 8px; pointer-events: auto !important; }
+        #sync-manifest-btn {
+    animation: buttonPulse 2s infinite;
+}
+
+@keyframes buttonPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+    70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
     </style>
 </head>
 <body>
