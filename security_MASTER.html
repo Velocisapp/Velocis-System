@@ -42,7 +42,7 @@
 
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; position: relative; z-index: 100; pointer-events: auto !important; }
         .esim-text { color: white; font-weight: 800; font-size: 15px; margin-bottom: 12px; display: block; }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; }
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
 
         #sync-manifest-btn { animation: buttonPulse 2s infinite; }
         @keyframes buttonPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
@@ -109,9 +109,10 @@
         </div>
         <div class="framed-title">Security</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Secure arrival connectivity now to stay operational the moment you land:</div>
-        <div class="esim-cta" onclick="window.location.href='index.html#esim-connectivity-hub'">
+        
+        <div class="esim-cta" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
             <span class="esim-text">Global eSIM Connectivity</span>
-            <button class="slim-btn">ACTIVATE NOW</button>
+            <button class="slim-btn"><span style="color:var(--v-blue); margin-right:5px;">●</span>Verified Partner: Activate Now</button>
         </div>
     </div>
 
@@ -122,9 +123,13 @@
         </div>
         <div class="framed-title" id="card-gate">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span>. Grab a coffee while you wait for the call:</div>
-        <div class="perk-box">
+        
+        <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'" style="cursor:pointer;">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
-            <div class="perk-code">VELOCIS15</div>
+            <div style="text-align:right;">
+                <div style="color:var(--v-gold); font-size:8px; font-weight:900; letter-spacing:1px; margin-bottom:2px;">OFFICIAL PERK</div>
+                <div class="perk-code">VELOCIS15</div>
+            </div>
         </div>
     </div>
 
@@ -142,7 +147,7 @@
         </div>
 
         <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
-            <button class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'">GROUND TRANSPORT DATABASE</button>
+            <button class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>System Verified: Transport Database</button>
         </div>
     </div>
 </div>
