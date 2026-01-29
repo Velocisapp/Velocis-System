@@ -22,8 +22,8 @@
         
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: linear-gradient(to bottom, #001f3f, #000000); display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
         
-        /* THE VISUALIZER - BLUR REMOVED COMPLETELY */
-        #cityscape-layer{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 6; transition: opacity 2s ease-in-out; }
+        /* BLUR REMOVED - FORCED CLEARNESS */
+        #cityscape-layer{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 6; transition: opacity 2s ease-in-out; filter: none !important; -webkit-filter: none !important; }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent, rgba(0,0,0,0.7)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
@@ -35,7 +35,6 @@
         .start-btn { width: 100%; height: 70px; background: white; color: black; border: none; border-radius: 22px; font-weight: 900; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
         #mission-tray::-webkit-scrollbar { display: none; }
 
-        /* REFINED DISCREET ELEMENTS */
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; }
         .sb-logo { height: 22px; width: 22px; opacity: 0.9; }
         .perk-title { font-size: 12px; font-weight: 700; color: var(--v-gold); letter-spacing: 0.5px; text-transform: uppercase; }
@@ -44,6 +43,8 @@
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.15) 0%, rgba(0,198,255,0.15) 100%); border: 1px solid rgba(0,122,255,0.3); border-radius: 20px; padding: 20px; text-align: center; }
         .esim-text { color: white; font-weight: 800; font-size: 15px; margin-bottom: 12px; display: block; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.3px; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+        #reset-trip { font-size: 10px; opacity: 0.4; color: white; text-decoration: underline; margin-top: 8px; pointer-events: auto !important; }
     </style>
 </head>
 <body>
@@ -57,15 +58,14 @@
         <div class="manual-input-container">
             <input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
         </div>
-        <div id="verify-briefing">
+        <div id="verify-briefing" style="display:none; width: 100%;">
             <div id="ident-label" style="color:var(--v-gold); font-size:11px; font-weight:900; margin-bottom:10px; text-transform:uppercase;"></div>
-            <div class="route-path">
-                <div class="hub-node"><h4 id="orig-code">...</h4><p>DEPARTURE</p></div>
-                <div style="font-size:24px; color:white; opacity:0.5;">✈</div>
-                <div class="hub-node" style="text-align:right;"><h4 id="dest-code">...</h4><p>ARRIVAL</p></div>
+            <div class="route-path" style="display:flex; align-items:center; justify-content:space-between; margin:15px 0; color:white;">
+                <div class="hub-node"><h4 id="orig-code" style="margin:0; font-size:28px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">DEPARTURE</p></div>
+                <div style="font-size:24px; opacity:0.5;">✈</div>
+                <div class="hub-node" style="text-align:right;"><h4 id="dest-code" style="margin:0; font-size:28px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">ARRIVAL</p></div>
             </div>
-            <div id="entry-delay-banner"></div>
-            <button id="sync-manifest-btn" class="start-btn" style="background:var(--v-gold); color:black; margin-bottom:15px; display:none;" onclick="engine.performHandshake()">SYNC MANIFEST</button>
+            <button id="sync-manifest-btn" class="start-btn" style="background:var(--v-gold); color:black; margin-bottom:15px;" onclick="engine.performHandshake()">SYNC MANIFEST</button>
             <button id="initiate-btn" class="start-btn" style="margin-top: 20px; display:none;" onclick="engine.start()">START MY TRIP</button>
         </div>
     </div>
@@ -75,13 +75,14 @@
     <img id="cityscape-layer" src="" alt="">
     <div class="hud-overlay">
         <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
-            <div style="display: flex; gap: 10px;">
-                <a id="local-esim-btn" href="index.html#esim-connectivity-hub" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;">INTERNET CONNECTION OPTIONS</a>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                <a id="local-esim-btn" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
+                <div id="reset-trip" onclick="engine.resetTrip()">New Ticket</div>
             </div>
         </div>
         <div style="display:flex; justify-content:space-between; pointer-events: none;">
             <div class="dest-pill" id="hud-city">DESTINATION</div>
-            <div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">STATUS</div>
+            <div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">ON TIME</div>
         </div>
         <div style="display:flex; justify-content:space-between; pointer-events: none;">
             <div class="dest-pill" id="hud-gate">GATE --</div>
@@ -106,7 +107,7 @@
             <div class="airline-box" id="logo-2">----</div>
         </div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Once cleared, secure your arrival connectivity to stay operational upon landing:</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Secure arrival connectivity to stay operational upon landing:</div>
         <div class="esim-cta" onclick="window.location.href='index.html#esim-connectivity-hub'">
             <span class="esim-text">Global eSIM Connectivity</span>
             <button class="slim-btn">ACTIVATE NOW</button>
@@ -134,7 +135,7 @@
             <div style="color:white; font-weight:900; letter-spacing:1px;">04. DESTINATION</div>
             <div class="airline-box" id="logo-4">----</div>
         </div>
-        <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Preview --</div>
+        <div class="framed-title" style="color:white; border-color:white;" id="card-carousel">Arrival</div>
         <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Preparing for arrival at <span id="airport-full-name" style="color:var(--v-gold);">---</span>.</div>
     </div>
 </div>
@@ -144,14 +145,28 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Traveler", seat: "--", pnr: "------", flightNum: "" };
+        this.passenger = { name: "Traveler", seat: "--", flightNum: "" };
+        this.init();
     }
 
-    // Scroll handler removed to prevent unwanted blur
-    formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
-    
+    init() {
+        const savedManifest = localStorage.getItem('velocis_manifest');
+        const savedPassenger = localStorage.getItem('velocis_passenger');
+        if (savedManifest && savedPassenger) {
+            this.flightData = JSON.parse(savedManifest);
+            this.passenger = JSON.parse(savedPassenger);
+            setTimeout(() => this.start(true), 150);
+        }
+    }
+
+    resetTrip() {
+        localStorage.removeItem('velocis_manifest');
+        localStorage.removeItem('velocis_passenger');
+        window.location.reload();
+    }
+
     haptic(type = 'medium') {
-        try { if (navigator.vibrate) { navigator.vibrate(type === 'heavy' ? [70, 40, 70] : 40); } } catch (e) {}
+        try { if (navigator.vibrate) navigator.vibrate(type === 'heavy' ? [70, 40, 70] : 40); } catch (e) {}
     }
 
     async startScanner() {
@@ -165,16 +180,15 @@ class VelocisSovereign {
     async handleScan(data) {
         let flightMatch = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
         if (data.startsWith("M1")) {
-            try {
-                const rawName = data.substring(2, 22).trim();
-                this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
-                this.passenger.seat = data.substring(48, 52).trim();
-                if(!flightMatch) flightMatch = data.substring(36, 43).trim();
-            } catch(e) {}
+            const rawName = data.substring(2, 22).trim();
+            this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
+            this.passenger.seat = data.substring(48, 52).trim();
+            if(!flightMatch) flightMatch = data.substring(36, 43).trim();
         }
         if(flightMatch) { 
             this.haptic('heavy');
             this.passenger.flightNum = flightMatch;
+            localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
             if(this.scanner) await this.scanner.stop(); 
             document.getElementById('reader').style.display = 'none'; 
             this.showSyncPrompt();
@@ -182,73 +196,81 @@ class VelocisSovereign {
     }
 
     validateFlight(val) {
-        const cleanVal = val.toUpperCase().trim();
-        if (cleanVal.length >= 4) { this.haptic(); this.passenger.flightNum = cleanVal; this.showSyncPrompt(); }
+        if (val.length >= 4) { 
+            this.haptic(); 
+            this.passenger.flightNum = val.toUpperCase(); 
+            localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
+            this.showSyncPrompt(); 
+        }
     }
 
     showSyncPrompt() {
-        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.name} | SEAT ${this.passenger.seat}`;
+        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.name}`;
         document.getElementById('verify-briefing').style.display = 'block';
-        document.getElementById('sync-manifest-btn').style.display = 'block';
     }
 
     async performHandshake() {
         this.haptic();
         const syncBtn = document.getElementById('sync-manifest-btn');
-        const statusLabel = document.getElementById('status-msg');
         syncBtn.innerText = "AUTHENTICATING...";
-        syncBtn.disabled = true;
         try {
-            const today = new Date().toISOString().split('T')[0];
             const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
-            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
-            let res = await fetch(url);
+            let res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`);
             let json = await res.json();
-            if(json && json.data && json.data.length > 0) {
-                let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
-                const airlineName = f.airline.name || "Aviation Partner";
+            if(json.data && json.data.length > 0) {
+                let f = json.data[0];
                 this.flightData = {
-                    flight: f.flight.iata || this.passenger.flightNum, airline: airlineName, 
+                    flight: f.flight.iata, airline: f.airline.name, 
                     orig: f.departure.iata, dest: f.arrival.iata, 
-                    airport: f.arrival.airport || "Regional Terminal", gate: f.departure.gate || "TBD", 
+                    airport: f.arrival.airport, gate: f.departure.gate || "TBD", 
                     terminal: f.departure.terminal || "1", 
-                    counter: f.departure.checkin_counter || `${airlineName.split(' ')[0]} DESK`, 
-                    time: this.formatTime(f.departure.estimated || f.departure.scheduled),
+                    counter: f.departure.checkin_counter || `${f.airline.name.split(' ')[0]} DESK`, 
                     isDelayed: f.departure.delay > 0,
-                    logo: `https://www.google.com/s2/favicons?domain=${airlineName.toLowerCase().replace(/\s/g, '')}.com&sz=64`
+                    logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
+                localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 document.getElementById('orig-code').innerText = this.flightData.orig;
                 document.getElementById('dest-code').innerText = this.flightData.dest;
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
-                statusLabel.innerText = "MANIFEST SECURED";
             }
-        } catch(e) { statusLabel.innerText = "Sync failure."; syncBtn.disabled = false; }
+        } catch(e) { syncBtn.innerText = "SYNC ERROR - RETRY"; }
     }
 
-    start() {
-        this.haptic('heavy');
+    start(isRestore = false) {
+        if(!isRestore) this.haptic('heavy');
         const bg = document.getElementById('cityscape-layer');
-        bg.src = `https://source.unsplash.com/featured/1600x900?city,skyline,${this.flightData.dest.toLowerCase()}`;
+        
+        // CACHE BUSTER + FORCE NO BLUR
+        const sig = Math.floor(Math.random() * 1000);
+        bg.style.filter = "none";
+        bg.style.webkitFilter = "none";
+        bg.src = `https://source.unsplash.com/featured/1600x900?city,skyline,${this.flightData.dest.toLowerCase()}&sig=${sig}`;
+        
         bg.onload = () => { bg.style.opacity = "1"; };
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        document.getElementById('text-airline').innerText = this.flightData.airline;
-        document.getElementById('text-counter').innerText = this.flightData.counter;
+        
+        // Data Fill
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+        document.getElementById('text-airline').innerText = this.flightData.airline;
+        document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
         document.getElementById('airport-full-name').innerText = this.flightData.airport;
-        
-        // STATUS HUD UPDATE
+
         const statusPill = document.getElementById('mission-status-pill');
         statusPill.innerText = this.flightData.isDelayed ? "DELAYED" : "ON TIME";
         statusPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
 
         const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        [1,2,3,4].forEach(i => { document.getElementById(`logo-${i}`).innerHTML = airlineLogo; });
+        [1,2,3,4].forEach(i => {
+            const logoDiv = document.getElementById(`logo-${i}`);
+            if(logoDiv) logoDiv.innerHTML = airlineLogo;
+        });
+        
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
 }
