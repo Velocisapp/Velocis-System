@@ -22,7 +22,7 @@
         
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        /* THE SHIELD FIX: Added a strong default background gradient */
+        /* THE SHIELD FIX: Added a strong default background gradient to prevent black-out */
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: radial-gradient(circle at center, #003366 0%, #000000 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
         #cityscape-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 6; transition: opacity 2s ease-in-out; }
 
@@ -35,7 +35,7 @@
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         #mission-tray::-webkit-scrollbar { display: none; }
 
-        #reset-trip { font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); margin-top: 15px; pointer-events: auto !important; cursor: pointer; display: inline-block; }
+        #reset-trip { font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); margin-top: 15px; pointer-events: auto !important; cursor: pointer; display: inline-block; text-decoration: none; }
 
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; }
         .sb-logo { height: 35px; width: 35px; }
@@ -254,7 +254,7 @@ class VelocisSovereign {
         if(!isRestore) this.haptic('heavy');
         const bg = document.getElementById('cityscape-layer');
         
-        // Use the code (BOG, JFK) as the primary search tag
+        // Clean the city name: use the 3-letter code if the airport name is too long
         const searchCity = this.flightData.dest; 
         const randomID = Math.floor(Math.random() * 1000);
 
@@ -264,7 +264,7 @@ class VelocisSovereign {
 
         bg.style.opacity = "0"; 
         
-        // Remove existing listeners to prevent "?" icon leaks
+        // CREATE A NEW IMAGE LOADER TO PREVENT BROKEN "?" ICONS
         const imgLoader = new Image();
         
         imgLoader.onload = () => {
