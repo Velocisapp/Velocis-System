@@ -134,7 +134,17 @@
             <div class="airline-box" id="logo-4">----</div>
         </div>
         <div class="framed-title" style="color:white; border-color:white;">Arrival</div>
-        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:22px; font-weight:800; line-height:1.3;">Welcome to <span id="airport-full-name" style="color:var(--v-gold);">---</span>. Your journey is complete.</div>
+        
+        <div id="arrival-context-box" style="margin-top:25px;">
+            <div id="arrival-msg" style="color:white; font-size:20px; font-weight:800; line-height:1.3;">
+                Preparing for your arrival at <span id="airport-full-name" style="color:var(--v-gold);">---</span>.
+            </div>
+        </div>
+
+        <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
+            <span class="esim-text" style="font-size:13px; color:var(--v-gold);">GROUND TRANSPORTATION HUB</span>
+            <button class="slim-btn" onclick="window.location.href='index.html#transport-database'">ACCESS LOCAL DATABASE</button>
+        </div>
     </div>
 </div>
 
@@ -270,6 +280,12 @@ class VelocisSovereign {
         img.onload = () => { bg.src = img.src; };
         
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
+
+        // RESTORED: Temporal Arrival Logic
+        const arrivalMsg = document.getElementById('arrival-msg');
+        if (arrivalMsg && this.flightData) {
+            arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">We will update your Arrival Briefing for ${this.flightData.dest} once you are airborne.</span>`;
+        }
     }
 }
 const engine = new VelocisSovereign();
