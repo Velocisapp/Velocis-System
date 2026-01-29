@@ -4,18 +4,14 @@
     <meta charset="utf-8">
     <title>VELOCIS™ | Master Sovereign Engine</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        
-        /* 1. ENTRY SCREEN */
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,0.9) 0%, rgba(0,198,255,0.9) 100%), url('https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
@@ -24,18 +20,13 @@
         #flight-input { width: 100%; padding: 16px 5px; border: none; border-radius: 20px; font-size: 18px; text-align: center; background: white; color: #1c1c1e; font-weight: 800; outline: none; box-sizing: border-box; appearance: none; }
         #entry-delay-banner { display: none; margin-top: 15px; padding: 12px; border-radius: 15px; background: rgba(255,149,0,0.2); border: 1px solid var(--v-orange); color: var(--v-gold); font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         #verify-briefing { display: none; margin-top: 25px; animation: fadeIn 0.6s ease forwards; width: 100%; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .route-path { display: flex; align-items: center; justify-content: space-between; margin: 15px 0; color: white; }
         .hub-node h4 { margin: 0; font-size: 28px; font-weight: 900; }
         .hub-node p { margin: 0; font-size: 11px; opacity: 0.8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-
-        /* 2. VISUALIZER */
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        #cityscape-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 1; transition: opacity 1.5s ease-in; }
+        #cityscape-layer{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 1; transition: opacity 1.5s ease-in; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* 3. MISSION TRAY */
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
@@ -45,12 +36,9 @@
         .sb-logo { position: absolute; right: 25px; top: 25px; height: 45px; width: 45px; }
         .start-btn { width: 100%; height: 70px; background: white; color: black; border: none; border-radius: 22px; font-weight: 900; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
         #mission-tray::-webkit-scrollbar { display: none; }
-        .zone-alert { background: var(--v-blue); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-top: 5px; display: inline-block; animation: pulse-blue 2s infinite; text-transform: uppercase; }
-        @keyframes pulse-blue { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0 0 10px 0; font-size:42px; font-weight:900;">VELOCIS</h1>
@@ -103,7 +91,6 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. I'll see you at the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
     </div>
-
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div>
@@ -116,7 +103,6 @@
             <button style="background:white; color:var(--v-blue); border:none; width:100%; padding:15px; border-radius:15px; font-weight:900; margin-top:20px; font-size:14px; cursor:pointer;">ACTIVATE NOW</button>
         </div>
     </div>
-
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
@@ -130,7 +116,6 @@
             <div style="background:var(--v-blue); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:900; margin-top:20px; font-size:18px; letter-spacing:2px;">VELOCIS15</div>
         </div>
     </div>
-
     <div class="mission-step" id="arrival-card-container" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="color:white; font-weight:900; letter-spacing:1px;">04. DESTINATION</div>
@@ -148,26 +133,24 @@ class VelocisSovereign {
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
         this.passenger = { name: "Traveler", seat: "--", pnr: "------", flightNum: "" };
     }
-
     formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
     
+    // Hardened Haptic Engine
     haptic(type = 'medium') {
-        if (window.navigator.vibrate) {
-            if (type === 'heavy') window.navigator.vibrate([100, 50, 100]);
-            else window.navigator.vibrate(50);
-        }
+        try {
+            if (navigator.vibrate) {
+                if (type === 'heavy') navigator.vibrate([70, 40, 70]);
+                else navigator.vibrate(40);
+            }
+        } catch (e) { console.warn("Haptics blocked."); }
     }
 
     async startScanner() {
-        this.haptic();
+        this.haptic(); // Unlocks vibrate on first touch
         const r = document.getElementById('reader'); r.style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        await this.scanner.start(
-            { facingMode: "environment" }, 
-            { fps: 15, qrbox: 250, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417 ] }, 
-            (t) => this.handleScan(t)
-        );
+        await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417 ] }, (t) => this.handleScan(t));
     }
 
     async handleScan(data) {
@@ -203,7 +186,6 @@ class VelocisSovereign {
         document.getElementById('verify-briefing').style.display = 'block';
         document.getElementById('sync-manifest-btn').style.display = 'block';
         document.getElementById('status-msg').innerText = "Data Acquired. Sync with Manifest?";
-        document.getElementById('status-msg').style.color = "white";
     }
 
     async performHandshake() {
@@ -212,33 +194,23 @@ class VelocisSovereign {
         const statusLabel = document.getElementById('status-msg');
         const initBtn = document.getElementById('initiate-btn');
         const entryBanner = document.getElementById('entry-delay-banner');
-        
         syncBtn.innerText = "AUTHENTICATING...";
         syncBtn.disabled = true;
 
         try {
             const today = new Date().toISOString().split('T')[0];
             const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
-            const airlineCode = this.passenger.flightNum.match(/[A-Z]+/)[0];
             
             let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
             let res = await fetch(url);
             let json = await res.json();
 
             if(json && json.data && json.data.length > 0) {
-                // Find Today's flight, or fallback to most recent
-                let f = json.data.find(flight => flight.flight_date === today && (flight.airline.iata === airlineCode || flight.flight.iata.includes(airlineCode)) ) || json.data.find(flight => flight.flight_date === today) || json.data[0];
-                
-                if (f.flight_date !== today) {
-                    statusLabel.innerText = "HISTORICAL DATA DETECTED";
-                    statusLabel.style.color = "var(--v-orange)";
-                }
-
+                let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
                 const schedTime = new Date(f.departure.scheduled);
                 const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                 const delayMins = Math.floor((estTime - schedTime) / 60000);
                 const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
-                
                 const airlineName = f.airline.name || "Aviation Partner";
 
                 this.flightData = {
@@ -249,7 +221,6 @@ class VelocisSovereign {
                     airport: f.arrival.airport || "Regional Terminal", 
                     gate: f.departure.gate || "TBD", 
                     terminal: f.departure.terminal || "1", 
-                    baggage: f.arrival.baggage || "TBD", 
                     counter: f.departure.checkin_counter || `${airlineName.split(' ')[0]} DESK`, 
                     status: f.flight_status, 
                     isDelayed: delayMins > 0, 
@@ -260,70 +231,43 @@ class VelocisSovereign {
 
                 document.getElementById('orig-code').innerText = this.flightData.orig;
                 document.getElementById('dest-code').innerText = this.flightData.dest;
-                
                 syncBtn.style.display = 'none';
                 if(this.flightData.isCancelled) {
                     entryBanner.innerText = "Manifest Void: Cancelled.";
-                    entryBanner.style.background = "rgba(255,59,48,0.2)";
-                    entryBanner.style.color = "var(--v-red)";
                     entryBanner.style.display = "block";
                 } else {
                     this.haptic('heavy');
                     entryBanner.style.display = this.flightData.isDelayed ? "block" : "none";
-                    if(this.flightData.isDelayed) {
-                        entryBanner.innerText = `Update: Departure at ${depTime}`;
-                        entryBanner.style.background = "rgba(255,149,0,0.2)";
-                        entryBanner.style.color = "var(--v-orange)";
-                    }
                     initBtn.style.display = 'block';
-                    if (f.flight_date === today) statusLabel.innerText = "MANIFEST SECURED";
+                    statusLabel.innerText = "MANIFEST SECURED";
                 }
             } else { 
-                statusLabel.innerText = "Manifest not found for " + this.passenger.flightNum;
+                statusLabel.innerText = "Manifest not found.";
                 syncBtn.disabled = false;
-                syncBtn.innerText = "RETRY SYNC";
             }
         } catch(e) { 
-            console.error(e);
             statusLabel.innerText = "Sync failure. API restricted."; 
             syncBtn.disabled = false;
-            syncBtn.innerText = "RETRY SYNC";
         }
     }
 
     start() {
         this.haptic('heavy');
-        if(!this.flightData || this.flightData.isCancelled) return;
+        if(!this.flightData) return;
         
-        const missionPill = document.getElementById('mission-status-pill');
-        missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
-        missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
-        
-        // DYNAMIC CITY BACKDROP: Pulls cinematic cityscape based on destination IATA/City
+        // Dynamic Backdrop - High Trust URL
         const cityscapeLayer = document.getElementById('cityscape-layer');
-        cityscapeLayer.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`; // Placeholder for faster load
+        cityscapeLayer.src = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1200&q=80`; // Standard Chicago fallback
         
-        // Apply city-specific visual
+        // Search specific city
         const cityImage = `https://source.unsplash.com/1200x800/?city,${this.flightData.dest}`;
-        cityscapeLayer.src = cityImage;
+        cityscapeLayer.src = cityImage; 
         cityscapeLayer.onload = () => { cityscapeLayer.style.opacity = "1"; };
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
-
-        let zone = "3";
-        if (this.passenger.seat !== "--") {
-            const rowNumMatch = this.passenger.seat.match(/\d+/);
-            const row = rowNumMatch ? parseInt(rowNumMatch[0]) : 20;
-            if (row <= 5) zone = "1 (PRIORITY)"; else if (row <= 15) zone = "2";
-        }
-
-        const doorPill = document.getElementById('hud-door');
-        if (this.passenger.seat !== "--") {
-            doorPill.innerHTML = `SEAT ${this.passenger.seat} <div class="zone-alert">ZONE ${zone}</div>`;
-            doorPill.style.height = "auto";
-        } else { doorPill.innerText = "DOOR " + this.flightData.terminal; }
+        document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
         
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
@@ -333,21 +277,10 @@ class VelocisSovereign {
         document.getElementById('text-counter').innerText = this.flightData.counter;
         
         const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        [1,2,3,4].forEach(i => {
-             const logoDiv = document.getElementById(`logo-${i}`);
-             if(logoDiv) logoDiv.innerHTML = airlineLogo;
-        });
-
-        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
+        [1,2,3,4].forEach(i => { const logoDiv = document.getElementById(`logo-${i}`); if(logoDiv) logoDiv.innerHTML = airlineLogo; });
     }
 }
 const engine = new VelocisSovereign();
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js')
-    .then(reg => console.log('Sovereign Service Worker Registered'))
-    .catch(err => console.log('Worker Sync Failed', err));
-}
 </script>
 </body>
 </html>
