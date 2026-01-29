@@ -251,33 +251,45 @@ class VelocisSovereign {
         }
     }
 
-    start() {
-        this.haptic('heavy');
-        if(!this.flightData) return;
-        
-        // Dynamic Backdrop - High Trust URL
+   // 1. DYNAMIC CITY BACKDROP FIX
         const cityscapeLayer = document.getElementById('cityscape-layer');
-        cityscapeLayer.src = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1200&q=80`; // Standard Chicago fallback
+        // We use a high-speed direct link that Safari trusts
+        const destinationCity = this.flightData.dest || "London";
+        cityscapeLayer.src = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200&auto=format&fit=crop`; // Quick placeholder
         
-        // Search specific city
-        const cityImage = `https://source.unsplash.com/1200x800/?city,${this.flightData.dest}`;
+        // This is the active city search logic
+        const cityImage = `https://source.unsplash.com/1200x800/?city,${destinationCity},skyline`;
         cityscapeLayer.src = cityImage; 
-        cityscapeLayer.onload = () => { cityscapeLayer.style.opacity = "1"; };
+        cityscapeLayer.style.opacity = "1";
 
-        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        // 2. MISSION TRAY INTEL (The lines you asked about)
+        document.getElementById('text-airline').innerText = this.flightData.airline;
+        document.getElementById('text-counter').innerText = this.flightData.counter;
+        
+        // 3. HUD UPDATES
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
         
+        // 4. TRANSITION
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        
+        // 5. MISSION STEPS
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
         document.getElementById('airport-full-name').innerText = this.flightData.airport;
-        document.getElementById('text-airline').innerText = this.flightData.airline;
-        document.getElementById('text-counter').innerText = this.flightData.counter;
         
         const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        [1,2,3,4].forEach(i => { const logoDiv = document.getElementById(`logo-${i}`); if(logoDiv) logoDiv.innerHTML = airlineLogo; });
+        [1,2,3,4].forEach(i => { 
+            const logoDiv = document.getElementById(`logo-${i}`); 
+            if(logoDiv) logoDiv.innerHTML = airlineLogo; 
+        });
+
+        const missionPill = document.getElementById('mission-status-pill');
+        missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
+
+        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
 }
 const engine = new VelocisSovereign();
