@@ -142,8 +142,7 @@
         </div>
 
         <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
-            <span class="esim-text" style="font-size:13px; color:var(--v-gold);">GROUND TRANSPORTATION HUB</span>
-            <button class="slim-btn" onclick="window.location.href='index.html#transport-database'">ACCESS LOCAL DATABASE</button>
+            <button class="slim-btn" onclick="window.location.href='index.html#ground-transport-database'">GROUND TRANSPORT DATABASE</button>
         </div>
     </div>
 </div>
@@ -281,7 +280,6 @@ class VelocisSovereign {
         
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-        // RESTORED: Temporal Arrival Logic
         const arrivalMsg = document.getElementById('arrival-msg');
         if (arrivalMsg && this.flightData) {
             arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">We will update your Arrival Briefing for ${this.flightData.dest} once you are airborne.</span>`;
