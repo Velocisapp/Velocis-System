@@ -159,11 +159,20 @@ class VelocisSovereign {
         }
     }
 
-    resetTrip() {
-        localStorage.removeItem('velocis_manifest');
-        localStorage.removeItem('velocis_passenger');
-        window.location.reload();
-    }
+    #reset-trip { 
+    font-size: 12px; 
+    opacity: 1; 
+    color: var(--v-gold); 
+    font-weight: 900; 
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 8px 15px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    margin-top: 15px; 
+    pointer-events: auto !important;
+}
 
     haptic(type = 'medium') {
         try { if (navigator.vibrate) navigator.vibrate(type === 'heavy' ? [70, 40, 70] : 40); } catch (e) {}
