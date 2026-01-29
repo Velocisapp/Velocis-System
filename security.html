@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,36 +14,29 @@
         :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,0.9) 0%, rgba(0,198,255,0.9) 100%); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        .glass-card { background: rgba(255, 255, 255, 0.25); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
-        #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
-        .scan-trigger-btn { background: rgba(255,215,0,0.2); color: var(--v-gold); border: 2px solid var(--v-gold); width: 100%; height: 60px; border-radius: 20px; font-weight: 800; font-size: 16px; cursor: pointer; letter-spacing: 1px; margin-bottom: 15px; }
-        .manual-input-container { width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
-        #flight-input { width: 100%; padding: 16px 5px; border: none; border-radius: 20px; font-size: 18px; text-align: center; background: white; color: #1c1c1e; font-weight: 800; outline: none; box-sizing: border-box; appearance: none; }
+        /* FIX: Opaque Entry Screen to hide hub during scan */
+        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,1) 0%, rgba(0,198,255,1) 100%); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
-        
-        /* THE SHARPNESS FIX: Purged all filter and blur classes */
-        #cityscape-layer{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 6; transition: opacity 1.5s ease-in; filter: none !important; -webkit-filter: none !important; }
+        #cityscape-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; z-index: 6; transition: opacity 1.5s ease; filter: none !important; -webkit-filter: none !important; }
 
-        .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent, rgba(0,0,0,0.7)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
-        .dest-pill { background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.8) 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
+        .dest-pill { background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; }
         
-        #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
+        /* FIX: Mission tray restored to scrollable mandatory snapping */
+        #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; -webkit-overflow-scrolling: touch; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
-        .start-btn { width: 100%; height: 70px; background: white; color: black; border: none; border-radius: 22px; font-weight: 900; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
+        .start-btn { width: 100%; height: 70px; background: white; color: black; border: none; border-radius: 22px; font-weight: 900; font-size: 20px; cursor: pointer; }
+        #mission-tray::-webkit-scrollbar { display: none; }
 
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; }
         .sb-logo { height: 22px; width: 22px; }
-        .perk-title { font-size: 12px; font-weight: 700; color: var(--v-gold); letter-spacing: 0.5px; text-transform: uppercase; }
-        .perk-code { background: var(--v-blue); color: white; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; letter-spacing: 1px; }
-
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.15) 0%, rgba(0,198,255,0.15) 100%); border: 1px solid rgba(0,122,255,0.3); border-radius: 20px; padding: 20px; text-align: center; }
-        .esim-text { color: white; font-weight: 800; font-size: 15px; margin-bottom: 12px; display: block; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer; }
-
+        .esim-text { color: white; font-weight: 800; font-size: 15px; margin-bottom: 12px; display: block; }
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 10px; border-radius: 12px; font-weight: 900; }
         #reset-trip { font-size: 10px; opacity: 0.4; color: white; text-decoration: underline; margin-top: 8px; pointer-events: auto !important; }
     </style>
 </head>
@@ -51,21 +45,16 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0 0 10px 0; font-size:42px; font-weight:900;">VELOCIS</h1>
-        <div id="status-msg">Ready for your next journey?</div>
-        <div id="reader"></div>
+        <div id="status-msg">Ready for your journey?</div>
+        <div id="reader" style="width:100%; border-radius:20px; margin-bottom:15px; display:none; background:#000;"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <div class="manual-input-container">
-            <input type="text" id="flight-input" placeholder="ENTER FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
+            <input type="text" id="flight-input" style="width:100%; padding:15px; border-radius:15px; border:none; text-align:center; font-weight:800;" placeholder="FLIGHT NUMBER" oninput="engine.validateFlight(this.value)">
         </div>
-        <div id="verify-briefing" style="display:none; width: 100%;">
+        <div id="verify-briefing" style="display:none; width:100%; margin-top:20px;">
             <div id="ident-label" style="color:var(--v-gold); font-size:11px; font-weight:900; margin-bottom:10px; text-transform:uppercase;"></div>
-            <div class="route-path" style="display:flex; align-items:center; justify-content:space-between; margin:15px 0; color:white;">
-                <div class="hub-node"><h4 id="orig-code" style="margin:0; font-size:28px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">DEPARTURE</p></div>
-                <div style="font-size:24px; opacity:0.5;">✈</div>
-                <div class="hub-node" style="text-align:right;"><h4 id="dest-code" style="margin:0; font-size:28px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">ARRIVAL</p></div>
-            </div>
-            <button id="sync-manifest-btn" class="start-btn" style="background:var(--v-gold); color:black; margin-bottom:15px;" onclick="engine.performHandshake()">SYNC MANIFEST</button>
-            <button id="initiate-btn" class="start-btn" style="margin-top: 20px; display:none;" onclick="engine.start()">START MY TRIP</button>
+            <button id="sync-manifest-btn" class="start-btn" style="background:var(--v-gold); color:black;" onclick="engine.performHandshake()">SYNC MANIFEST</button>
+            <button id="initiate-btn" class="start-btn" style="display:none;" onclick="engine.start()">START MY TRIP</button>
         </div>
     </div>
 </div>
@@ -75,7 +64,7 @@
     <div class="hud-overlay">
         <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
             <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                <a id="local-esim-btn" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
+                <a id="local-esim-btn" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 12px; font-weight: 900; background: rgba(0,0,0,0.8); letter-spacing: 1px;" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
                 <div id="reset-trip" onclick="engine.resetTrip()">New Ticket</div>
             </div>
         </div>
@@ -93,13 +82,46 @@
 <div id="mission-tray">
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div>
+            <div style="color:var(--v-blue); font-weight:900;">01. ENTRANCE</div>
             <div class="airline-box" id="logo-1">----</div>
         </div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Counter: <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Counter: <span id="text-counter" style="color:var(--v-gold); font-weight:800;">...</span></div>
     </div>
+
+    <div class="mission-step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900;">02. CHECKPOINT</div>
+            <div class="airline-box" id="logo-2">----</div>
+        </div>
+        <div class="framed-title">Security</div>
+        <div class="esim-cta" onclick="window.location.href='index.html#esim-connectivity-hub'">
+            <span class="esim-text">Global eSIM Connectivity</span>
+            <button class="slim-btn">ACTIVATE NOW</button>
+        </div>
     </div>
+
+    <div class="mission-step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900;">03. BOARDING</div>
+            <div class="airline-box" id="logo-3">----</div>
+        </div>
+        <div class="framed-title" id="card-gate">Gate --</div>
+        <div class="perk-box">
+            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
+            <div class="perk-code" style="background:var(--v-blue); color:white; padding:5px 10px; border-radius:8px; font-weight:900;">VELOCIS15</div>
+        </div>
+    </div>
+
+    <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:white; font-weight:900;">04. DESTINATION</div>
+            <div class="airline-box" id="logo-4">----</div>
+        </div>
+        <div class="framed-title" style="color:white; border-color:white;">Arrival</div>
+        <div id="arrival-msg" style="color:white; margin-top:25px; font-size:20px; font-weight:800;">Welcome to <span id="airport-full-name" style="color:var(--v-gold);">---</span>.</div>
+    </div>
+</div>
 
 <script>
 class VelocisSovereign {
@@ -115,26 +137,20 @@ class VelocisSovereign {
         if (savedManifest) {
             this.flightData = JSON.parse(savedManifest);
             this.passenger = JSON.parse(localStorage.getItem('velocis_passenger'));
-            // Instantly restore session
             setTimeout(() => this.start(true), 200);
         }
     }
 
     resetTrip() { localStorage.clear(); window.location.reload(); }
 
-    haptic(type = 'medium') {
-        try { if (navigator.vibrate) navigator.vibrate(type === 'heavy' ? [70, 40, 70] : 40); } catch (e) {}
-    }
-
     async startScanner() {
-        this.haptic();
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
         await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
     }
 
-    handleScan(data) {
+    async handleScan(data) {
         let flightMatch = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
         if (data.startsWith("M1")) {
             const rawName = data.substring(2, 22).trim();
@@ -142,10 +158,9 @@ class VelocisSovereign {
             if(!flightMatch) flightMatch = data.substring(36, 43).trim();
         }
         if(flightMatch) { 
-            this.haptic('heavy');
             this.passenger.flightNum = flightMatch;
             localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
-            this.scanner.stop();
+            await this.scanner.stop();
             document.getElementById('reader').style.display = 'none'; 
             this.showSyncPrompt();
         }
@@ -159,9 +174,6 @@ class VelocisSovereign {
     }
 
     async performHandshake() {
-        this.haptic();
-        const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "AUTHENTICATING...";
         try {
             const num = this.passenger.flightNum.match(/\d+/)[0];
             let res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${num}`);
@@ -170,55 +182,45 @@ class VelocisSovereign {
                 let f = json.data[0];
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
-                    orig: f.departure.iata, dest: f.arrival.iata, 
+                    orig: f.departure.iata, dest: f.arrival.iata, airport: f.arrival.airport,
                     gate: f.departure.gate || "TBD", terminal: f.departure.terminal || "1", 
-                    counter: f.departure.checkin_counter || `${f.airline.name.split(' ')[0]} DESK`, 
+                    counter: f.departure.checkin_counter || `${f.airline.name.split(' ')[0]} DESK`,
                     isDelayed: f.departure.delay > 0,
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-                syncBtn.style.display = 'none';
+                document.getElementById('sync-manifest-btn').style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
             }
-        } catch(e) { syncBtn.innerText = "SYNC ERROR - RETRY"; }
+        } catch(e) {}
     }
 
     start(isRestore = false) {
-        if(!isRestore) this.haptic('heavy');
         const bg = document.getElementById('cityscape-layer');
         const sig = Math.floor(Math.random() * 999);
         
-        // FORCING SHARPNESS & UPDATED IMAGE API
-        bg.style.filter = "none";
-        bg.style.webkitFilter = "none";
-        bg.src = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80`; // Safe Fallback
+        // HARD-FORCE SHARP BACKGROUND LOAD
+        bg.src = `https://source.unsplash.com/featured/1600x900?city,skyline,${this.flightData.dest.toLowerCase()}&sig=${sig}`;
         
+        bg.onload = () => { bg.style.opacity = "1"; };
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
-        // UI Data Fill
+        // UI DATA SYNC
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+        document.getElementById('card-gate').innerText = "Gate " + this.flightData.gate;
+        document.getElementById('airport-full-name').innerText = this.flightData.airport;
 
         const statusPill = document.getElementById('mission-status-pill');
         statusPill.innerText = this.flightData.isDelayed ? "DELAYED" : "ON TIME";
         statusPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
 
         const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        document.getElementById(`logo-1`).innerHTML = airlineLogo;
-
-        // Custom City Load
-        const city = this.flightData.dest.toLowerCase();
-        const img = new Image();
-        img.src = `https://images.unsplash.com/featured/?${city},skyline`;
-        img.onload = () => { 
-            bg.src = img.src; 
-            bg.style.opacity = "1"; 
-        };
-        img.onerror = () => { bg.style.opacity = "1"; };
+        [1,2,3,4].forEach(i => { document.getElementById(`logo-${i}`).innerHTML = airlineLogo; });
         
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
