@@ -148,7 +148,16 @@ class VelocisSovereign {
     }
     formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
     
+    // NEW: Sovereign Haptic Shake
+    haptic(type = 'medium') {
+        if (window.navigator.vibrate) {
+            if (type === 'heavy') window.navigator.vibrate([100, 50, 100]);
+            else window.navigator.vibrate(50);
+        }
+    }
+
     async startScanner() {
+        this.haptic();
         const r = document.getElementById('reader'); r.style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
@@ -170,6 +179,7 @@ class VelocisSovereign {
             } catch(e) { console.warn("BCBP Parse failed."); }
         }
         if(flightMatch) { 
+            this.haptic('heavy');
             this.passenger.flightNum = flightMatch;
             if(this.scanner) await this.scanner.stop(); 
             document.getElementById('reader').style.display = 'none'; 
@@ -180,6 +190,7 @@ class VelocisSovereign {
     validateFlight(val) {
         const cleanVal = val.toUpperCase().trim();
         if (cleanVal.length >= 4 && /[A-Z]/.test(cleanVal) && /\d/.test(cleanVal)) { 
+            this.haptic();
             this.passenger.flightNum = cleanVal;
             this.showSyncPrompt();
         }
@@ -193,6 +204,7 @@ class VelocisSovereign {
     }
 
     async performHandshake() {
+        this.haptic();
         const syncBtn = document.getElementById('sync-manifest-btn');
         const statusLabel = document.getElementById('status-msg');
         const initBtn = document.getElementById('initiate-btn');
@@ -203,44 +215,38 @@ class VelocisSovereign {
 
         try {
             const today = new Date().toISOString().split('T')[0];
-            const flightNumMatch = this.passenger.flightNum.match(/\d+/);
-            const flightNumOnly = flightNumMatch ? flightNumMatch[0] : "";
+            const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
             
-            // CLEAN HANDSHAKE: Forced HTTPS + No Cache + Direct JSON Accept
             let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
-            
-            let res = await fetch(url, {
-                headers: { 'Accept': 'application/json' },
-                cache: 'no-store'
-            });
-
-            if (!res.ok) throw new Error('API_REJECTED');
+            let res = await fetch(url);
             let json = await res.json();
 
             if(json && json.data && json.data.length > 0) {
-                // Sorting to find the exact date match first
                 let f = json.data.find(flight => flight.flight_date === today) || json.data[0];
-                
                 const schedTime = new Date(f.departure.scheduled);
                 const estTime = new Date(f.departure.estimated || f.departure.scheduled);
                 const delayMins = Math.floor((estTime - schedTime) / 60000);
                 const depTime = this.formatTime(f.departure.estimated || f.departure.scheduled);
                 
+                // SOVEREIGN INTEL: Door and Counter Logic
+                const terminal = f.departure.terminal || "1";
+                const airlineName = f.airline.name || "Aviation Partner";
+                
                 this.flightData = {
                     flight: f.flight.iata || this.passenger.flightNum, 
-                    airline: f.airline.name, 
+                    airline: airlineName, 
                     orig: f.departure.iata, 
                     dest: f.arrival.iata, 
                     airport: f.arrival.airport || "Regional Terminal", 
                     gate: f.departure.gate || "TBD", 
-                    terminal: f.departure.terminal || "TBD", 
+                    terminal: terminal, 
                     baggage: f.arrival.baggage || "TBD", 
-                    counter: f.departure.checkin_counter || "CHECK-IN DESK", 
+                    counter: f.departure.checkin_counter || `${airlineName.split(' ')[0]} DESK`, 
                     status: f.flight_status, 
                     isDelayed: delayMins > 0, 
                     isCancelled: f.flight_status === "cancelled", 
                     time: depTime, 
-                    logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
+                    logo: `https://www.google.com/s2/favicons?domain=${airlineName.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
 
                 document.getElementById('orig-code').innerText = this.flightData.orig;
@@ -253,6 +259,7 @@ class VelocisSovereign {
                     entryBanner.style.color = "var(--v-red)";
                     entryBanner.style.display = "block";
                 } else {
+                    this.haptic('heavy');
                     entryBanner.style.display = this.flightData.isDelayed ? "block" : "none";
                     if(this.flightData.isDelayed) {
                         entryBanner.innerText = `Update: Departure at ${depTime}`;
@@ -263,26 +270,28 @@ class VelocisSovereign {
                     statusLabel.innerText = "MANIFEST SECURED";
                 }
             } else { 
-                statusLabel.innerText = "Manifest Data Not Available.";
+                statusLabel.innerText = "No flight record found.";
                 syncBtn.disabled = false;
                 syncBtn.innerText = "RETRY SYNC";
             }
         } catch(e) { 
-            console.error("Handshake Error:", e);
-            statusLabel.innerText = "Sync failure. Protocol Error."; 
+            console.error(e);
+            statusLabel.innerText = "Sync failure. API restricted."; 
             syncBtn.disabled = false;
             syncBtn.innerText = "RETRY SYNC";
         }
     }
 
     start() {
+        this.haptic('heavy');
         if(!this.flightData || this.flightData.isCancelled) return;
         const missionPill = document.getElementById('mission-status-pill');
         missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
         missionPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
         
+        // SOVEREIGN BACKDROP: Dynamic Unsplash Cityscape
         const cityscapeLayer = document.getElementById('cityscape-layer');
-        cityscapeLayer.src = `https://images.unsplash.com/photo-1436491865332-7a61a109c053?auto=format&fit=crop&w=1200&q=80`;
+        cityscapeLayer.src = `https://source.unsplash.com/1200x800/?city,${this.flightData.dest}`;
         cityscapeLayer.onload = () => { cityscapeLayer.style.opacity = "1"; };
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
@@ -306,6 +315,8 @@ class VelocisSovereign {
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
         document.getElementById('airport-full-name').innerText = this.flightData.airport;
+        document.getElementById('text-airline').innerText = this.flightData.airline;
+        document.getElementById('text-counter').innerText = this.flightData.counter;
         
         const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         [1,2,3,4].forEach(i => {
@@ -318,7 +329,6 @@ class VelocisSovereign {
 }
 const engine = new VelocisSovereign();
 
-// PWA SERVICE WORKER REGISTRATION
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
     .then(reg => console.log('Sovereign Service Worker Registered'))
