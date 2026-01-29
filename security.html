@@ -252,19 +252,33 @@ class VelocisSovereign {
     start(isRestore = false) {
         if(!isRestore) this.haptic('heavy');
         const bg = document.getElementById('cityscape-layer');
-        const cityName = this.flightData.airport.split(' ')[0]; 
+        
+        // Clean the city name: use the 3-letter code if the airport name is too long
+        const searchCity = this.flightData.dest; 
+        const randomID = Math.floor(Math.random() * 1000);
 
-        // UPDATED: High-Authority City Visualizer Logic
-        const visualSource = `https://images.unsplash.com/featured/?${cityName},skyline,architecture&sig=${Math.random()}`;
+        // CURSE BREAKER: Simplified search terms + Fallback image logic
+        const primarySource = `https://images.unsplash.com/featured/?${searchCity},city,skyline&sig=${randomID}`;
+        const fallbackSource = `https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?auto=format&fit=crop&w=1600&q=80`;
 
         bg.style.opacity = "0"; 
-        setTimeout(() => {
-            bg.src = visualSource;
-            bg.onload = () => { bg.style.opacity = "1"; }; 
-        }, 500);
-
-        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
+        // Pre-load the image before showing it
+        const imgLoader = new Image();
+        imgLoader.src = primarySource;
+        
+        imgLoader.onload = () => {
+            bg.src = primarySource;
+            bg.style.opacity = "1";
+        };
+        
+        imgLoader.onerror = () => {
+            bg.src = fallbackSource;
+            bg.style.opacity = "1";
+        };
+
+        // UI Updates
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
