@@ -263,12 +263,17 @@ class VelocisSovereign {
         if(!this.flightData) return;
         
         const cityscapeLayer = document.getElementById('cityscape-layer');
-        const destinationCity = this.flightData.dest || "London";
-        cityscapeLayer.src = `https://source.unsplash.com/1200x800/?city,${destinationCity},skyline`; 
-        cityscapeLayer.onload = () => { cityscapeLayer.style.opacity = "1"; };
+        const destinationCity = (this.flightData.dest || "London").toLowerCase();
+
+        // High-Speed Direct Search for Backdrop
+        cityscapeLayer.src = `https://source.unsplash.com/1600x900/?city,skyline,${destinationCity}`; 
+        cityscapeLayer.onload = () => { 
+            cityscapeLayer.style.opacity = "1"; 
+        };
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
+        // Mission Tray Intel Deployment
         document.getElementById('text-airline').innerText = this.flightData.airline;
         document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('hud-city').innerText = this.flightData.dest;
@@ -288,6 +293,7 @@ class VelocisSovereign {
 
         const missionPill = document.getElementById('mission-status-pill');
         missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
+        
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
 }
