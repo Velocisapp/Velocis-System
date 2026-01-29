@@ -135,7 +135,6 @@ class VelocisSovereign {
     }
     formatTime(iso) { if(!iso) return "TBD"; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
     
-    // Hardened Haptic Engine
     haptic(type = 'medium') {
         try {
             if (navigator.vibrate) {
@@ -146,11 +145,26 @@ class VelocisSovereign {
     }
 
     async startScanner() {
-        this.haptic(); // Unlocks vibrate on first touch
-        const r = document.getElementById('reader'); r.style.display = 'block';
-        document.getElementById('scan-btn').style.display = 'none';
+        this.haptic();
+        const readerDiv = document.getElementById('reader');
+        const scanBtn = document.getElementById('scan-btn');
+        const statusMsg = document.getElementById('status-msg');
+
+        readerDiv.style.display = 'block';
+        scanBtn.style.display = 'none';
+
         this.scanner = new Html5Qrcode("reader");
-        await this.scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417 ] }, (t) => this.handleScan(t));
+        this.scanner.start(
+            { facingMode: "environment" }, 
+            { fps: 20, qrbox: {width: 250, height: 250} },
+            (decodedText) => { this.handleScan(decodedText); },
+            (errorMessage) => { }
+        ).catch(err => {
+            console.error(err);
+            statusMsg.innerText = "CAMERA ERROR: PLEASE REFRESH";
+            statusMsg.style.color = "red";
+            scanBtn.style.display = 'block';
+        });
     }
 
     async handleScan(data) {
@@ -200,7 +214,6 @@ class VelocisSovereign {
         try {
             const today = new Date().toISOString().split('T')[0];
             const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
-            
             let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`;
             let res = await fetch(url);
             let json = await res.json();
@@ -241,40 +254,27 @@ class VelocisSovereign {
                     initBtn.style.display = 'block';
                     statusLabel.innerText = "MANIFEST SECURED";
                 }
-            } else { 
-                statusLabel.innerText = "Manifest not found.";
-                syncBtn.disabled = false;
-            }
-        } catch(e) { 
-            statusLabel.innerText = "Sync failure. API restricted."; 
-            syncBtn.disabled = false;
-        }
+            } else { statusLabel.innerText = "Manifest not found."; syncBtn.disabled = false; }
+        } catch(e) { statusLabel.innerText = "Sync failure. API restricted."; syncBtn.disabled = false; }
     }
 
-   // 1. DYNAMIC CITY BACKDROP FIX
-        const cityscapeLayer = document.getElementById('cityscape-layer');
-        // We use a high-speed direct link that Safari trusts
-        const destinationCity = this.flightData.dest || "London";
-        cityscapeLayer.src = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200&auto=format&fit=crop`; // Quick placeholder
+    start() {
+        this.haptic('heavy');
+        if(!this.flightData) return;
         
-        // This is the active city search logic
-        const cityImage = `https://source.unsplash.com/1200x800/?city,${destinationCity},skyline`;
-        cityscapeLayer.src = cityImage; 
-        cityscapeLayer.style.opacity = "1";
+        const cityscapeLayer = document.getElementById('cityscape-layer');
+        const destinationCity = this.flightData.dest || "London";
+        cityscapeLayer.src = `https://source.unsplash.com/1200x800/?city,${destinationCity},skyline`; 
+        cityscapeLayer.onload = () => { cityscapeLayer.style.opacity = "1"; };
 
-        // 2. MISSION TRAY INTEL (The lines you asked about)
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        
         document.getElementById('text-airline').innerText = this.flightData.airline;
         document.getElementById('text-counter').innerText = this.flightData.counter;
-        
-        // 3. HUD UPDATES
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
         
-        // 4. TRANSITION
-        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        
-        // 5. MISSION STEPS
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
@@ -288,7 +288,6 @@ class VelocisSovereign {
 
         const missionPill = document.getElementById('mission-status-pill');
         missionPill.innerText = this.flightData.isDelayed ? `DELAYED: ${this.flightData.time}` : "ON TIME";
-
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
     }
 }
