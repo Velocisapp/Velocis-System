@@ -146,7 +146,7 @@ class VelocisSovereign {
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
         this.passenger = { name: "Traveler", seat: "--", flightNum: "" };
-        this.init();
+        this.init(); // Memory Handshake
     }
 
     init() {
@@ -155,7 +155,7 @@ class VelocisSovereign {
         if (savedManifest && savedPassenger) {
             this.flightData = JSON.parse(savedManifest);
             this.passenger = JSON.parse(savedPassenger);
-            // PERSISTENT MEMORY HANDSHAKE
+            // PERSISTENT MEMORY HANDSHAKE - Skip scanner
             setTimeout(() => this.start(true), 150);
         }
     }
