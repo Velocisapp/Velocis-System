@@ -155,6 +155,7 @@ class VelocisSovereign {
         if (savedManifest && savedPassenger) {
             this.flightData = JSON.parse(savedManifest);
             this.passenger = JSON.parse(savedPassenger);
+            // PERSISTENT MEMORY HANDSHAKE
             setTimeout(() => this.start(true), 150);
         }
     }
@@ -240,9 +241,9 @@ class VelocisSovereign {
     start(isRestore = false) {
         if(!isRestore) this.haptic('heavy');
         const bg = document.getElementById('cityscape-layer');
-        
-        // CACHE BUSTER + FORCE NO BLUR
         const sig = Math.floor(Math.random() * 1000);
+        
+        // DUAL FORCE: Forced Sharp Styles + Fresh Cache Busting URL
         bg.style.filter = "none";
         bg.style.webkitFilter = "none";
         bg.src = `https://source.unsplash.com/featured/1600x900?city,skyline,${this.flightData.dest.toLowerCase()}&sig=${sig}`;
@@ -250,7 +251,7 @@ class VelocisSovereign {
         bg.onload = () => { bg.style.opacity = "1"; };
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
-        // Data Fill
+        // Populate UI
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
