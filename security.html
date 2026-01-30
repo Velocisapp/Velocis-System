@@ -88,20 +88,6 @@
 
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. CHECKPOINT</div>
-            <div class="airline-box" id="logo-2">----</div>
-        </div>
-        <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">
-            <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>, prepare your internet options now to stay connected after landing.
-        </div>
-        <div class="esim-cta" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
-            <button class="slim-btn">Activate Breeze eSIM</button>
-        </div>
-    </div>
-
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
             <div class="airline-box" id="logo-3">----</div>
         </div>
@@ -200,6 +186,7 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
+                // DATA DETECTIVE: Hunts for city in Timezone, Airport, or Location
                 let foundCity = "Local";
                 if (f.arrival.timezone) {
                     let zoneParts = f.arrival.timezone.split('/');
@@ -210,8 +197,8 @@ class VelocisSovereign {
 
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
-                    dest: f.arrival.iata, gate: f.departure.gate || "TBD", 
-                    terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || "CHECK-IN",
+                    dest: this.forcedDest || f.arrival.iata, gate: f.departure.gate || "TBD", 
+                    terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || "AIRLINE DESK",
                     airport: f.arrival.airport,
                     arrivalCity: foundCity, 
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
@@ -229,15 +216,15 @@ class VelocisSovereign {
         
         try {
             const cityName = this.flightData.dest.toUpperCase();
+            // RE-CALCULATE NAME DIRECTLY FROM LIVE DATA TO KILL THE TOKYO GHOST
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             
-            // 1. UPDATE BUTTON TEXT (Force Overwrite)
             const transportBtn = document.getElementById('transport-options-btn');
             if (transportBtn) {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
-            // 2. UPDATE VISUALS (With Universal Fallback)
+            // VISUALS: Bulletproof image mapping
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
@@ -247,24 +234,26 @@ class VelocisSovereign {
             const visual = document.getElementById('dest-visualizer');
             if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || defaultImg}')`;
             
-            // 3. UPDATE HUD & NAMES
             if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = cityName;
             if(document.getElementById('hud-gate')) document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             if(document.getElementById('hud-door')) document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            
             document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-            // 4. LOGOS
-            const logoHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
+            if(document.getElementById('text-brief-airline')) document.getElementById('text-brief-airline').innerText = this.flightData.airline;
+            if(document.getElementById('text-seat')) document.getElementById('text-seat').innerText = this.passenger.seat;
+            if(document.getElementById('card-door')) document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+            if(document.getElementById('text-door')) document.getElementById('text-door').innerText = this.flightData.terminal;
+            if(document.getElementById('text-counter')) document.getElementById('text-counter').innerText = this.flightData.counter;
+            if(document.getElementById('text-gate')) document.getElementById('text-gate').innerText = this.flightData.gate;
 
-            // 5. TRANSITION
+            const logoHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            [1,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
+
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
 
-        } catch (err) {
-            console.error("Start Error:", err);
-            document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        }
+        } catch (err) { console.error("Start Error:", err); }
     }
 }
 const engine = new VelocisSovereign();
