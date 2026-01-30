@@ -22,25 +22,16 @@
         
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        /* THE VISUALIZER FIX: Using background-image instead of <img> to hide broken icons */
+        /* THE SHIELD: Always starts with a professional blue glow */
         #dest-visualizer { 
-            flex: 1; 
-            width: 100%; 
-            height: 45vh; 
-            position: relative; 
-            background-color: #000;
-            background-image: radial-gradient(circle at center, #003366 0%, #000000 100%);
-            background-size: cover;
-            background-position: center;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; 
-            z-index: 5;
-            transition: background-image 1s ease-in-out;
+            flex: 1; width: 100%; height: 45vh; position: relative; 
+            background: radial-gradient(circle at center, #003366 0%, #000000 100%);
+            background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5;
+            transition: background-image 1.2s ease-in-out;
         }
 
-        .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
+        .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
         
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; -webkit-overflow-scrolling: touch; }
@@ -123,7 +114,6 @@
         </div>
         <div class="framed-title">Security</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Secure arrival connectivity now to stay operational the moment you land:</div>
-        
         <div class="esim-cta" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
             <span class="esim-text">Global eSIM Connectivity</span>
             <button class="slim-btn"><span style="color:var(--v-blue); margin-right:5px;">●</span>Verified Partner: Activate Now</button>
@@ -137,7 +127,6 @@
         </div>
         <div class="framed-title" id="card-gate">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span>. Grab a coffee while you wait for the call:</div>
-        
         <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'" style="cursor:pointer;">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
             <div style="text-align:right;">
@@ -265,18 +254,21 @@ class VelocisSovereign {
         if(!isRestore) this.haptic('heavy');
         const visualArea = document.getElementById('dest-visualizer');
         
-        // Use airport first word (e.g., London, Bogota) as the keyword
-        const searchCity = this.flightData.airport.split(' ')[0]; 
+        // Clean the city name: use the first word of the airport name
+        const cityName = this.flightData.airport.split(' ')[0]; 
         const randomID = Math.floor(Math.random() * 1000);
 
-        // SOURCE FIX: Using keyword-based images which are much more stable
-        const imageURL = `https://source.unsplash.com/1600x900/?${searchCity},skyline,city`;
+        // SKYLINE PROTOCOL: Using the official Unsplash Source URL for maximum stability
+        const imageURL = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80`; // Default NY as fallback
+        const cityURL = `https://source.unsplash.com/1600x900/?${cityName},skyline`;
 
         // Pre-load logic
         const img = new Image();
-        img.src = imageURL;
+        img.src = cityURL;
         img.onload = () => {
-            // APPLY AS BACKGROUND IMAGE - This hides the "?" icon problem!
+            visualArea.style.backgroundImage = `url('${cityURL}')`;
+        };
+        img.onerror = () => {
             visualArea.style.backgroundImage = `url('${imageURL}')`;
         };
 
