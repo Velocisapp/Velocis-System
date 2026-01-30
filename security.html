@@ -24,7 +24,7 @@
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; transition: background-image 1.2s ease-in-out; }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
-        .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 6px 10px; border-radius: 10px; font-size: 8px; font-weight: 800; color: white; text-transform: uppercase; }
+        .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
         
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
@@ -174,7 +174,7 @@ class VelocisSovereign {
         this.scanner = new Html5Qrcode("reader");
         try {
             await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Scanner error", err); }
     }
 
     async handleScan(data) {
@@ -207,10 +207,14 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
-                // SMARTER CITY DETECTION: Use the timezone or airport name if city is missing
+                // AUTONOMOUS DATA EXTRACTION: Pull city from timezone, airport, or region data
                 let cityFallback = "Local";
-                if(f.arrival.timezone) cityFallback = f.arrival.timezone.split('/')[1].replace('_', ' ');
-                else if(f.arrival.airport) cityFallback = f.arrival.airport.split(' ')[0];
+                if(f.arrival.timezone) {
+                   let parts = f.arrival.timezone.split('/');
+                   cityFallback = parts[parts.length - 1].replace(/_/g, ' ');
+                } else if(f.arrival.airport) {
+                   cityFallback = f.arrival.airport.split(' ')[0];
+                }
 
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
@@ -220,6 +224,8 @@ class VelocisSovereign {
                     arrivalCity: cityFallback,
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
+                
+                // Aggressively overwrite LocalStorage to clear old Tokyo cache
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -232,9 +238,10 @@ class VelocisSovereign {
         
         try {
             const cityName = this.flightData.dest.toUpperCase();
+            // Pulling dynamic city name from flight manifest
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             
-            // THE AUTONOMOUS FIX: Build the label with a safety check
+            // AUTOMATIC UI UPDATE: Brands Section 04 for any city in the world
             const transportBtn = document.getElementById('transport-options-btn');
             if (transportBtn) {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
@@ -243,7 +250,8 @@ class VelocisSovereign {
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "BOG": `https://images.unsplash.com/photo-1583531352515-88841314dd95?auto=format&fit=crop&w=1200&q=80`,
-                "JFK": `https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80`
+                "JFK": `https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80`,
+                "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`
             };
 
             const target = atlas[cityName] || atlas["NRT"];
