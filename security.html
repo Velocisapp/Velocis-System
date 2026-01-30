@@ -37,15 +37,19 @@
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
 
-        /* UI COLLISION FIX: Buttons lowered and resized to prevent overlap with top pills */
-        #market-bridge { position: absolute; top: 48%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
-        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 12px; font-size: 9px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; }
+        /* THE STRUCTURAL FIX: Moving actions to the BOTTOM of the area to clear Gate/Door data */
+        #market-bridge { position: absolute; bottom: 15px; left: 0; right: 0; display: flex; flex-direction: row; justify-content: center; gap: 8px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 8px 12px; border-radius: 10px; font-size: 8px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 0.5px; text-transform: uppercase; }
         
-        /* PILL FIX: SCAN NEW TICKET */
-        #reset-trip { pointer-events: auto !important; font-size: 9px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
+        /* PILL FIX: SCAN NEW TICKET MOVED BOTTOM */
+        #reset-trip { pointer-events: auto !important; font-size: 8px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 10px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
 
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+
+        .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; pointer-events: auto !important; }
+        .sb-logo { height: 30px; width: 30px; }
+        .perk-code { background: var(--v-blue); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -69,7 +73,7 @@
 
 <div id="dest-visualizer">
     <div id="market-bridge">
-        <a class="cta-btn" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
+        <a class="cta-btn" href="index.html#esim-connectivity-hub">CONNECTIVITY</a>
         <div id="reset-trip" onclick="engine.resetTrip()">SCAN NEW TICKET</div>
     </div>
     <div class="hud-overlay">
@@ -92,9 +96,9 @@
         </div>
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Welcome, <span id="text-passenger-name" style="color:white; font-weight:800;">Traveler</span>. We are synchronized with <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">your airline</span>. 
+            Welcome, <span id="text-passenger-name" style="color:white; font-weight:800;">Traveler</span>. We are synchronized with <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">your flight</span>. 
             Confirming seat <span id="text-seat" style="color:var(--v-gold); font-weight:800;">--</span>. <br><br>
-            Stay focused—VELOCIS is now guiding you step-by-step to your destination. First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span> for <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.
+            Stay focused—VELOCIS is now guiding you step-by-step. First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span> for <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.
         </div>
     </div>
 
@@ -116,7 +120,17 @@
             <div class="airline-box" id="logo-3">----</div>
         </div>
         <div class="framed-title" id="card-gate">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for your departure sequence.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
+            Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span>. 
+            Operations suggests a recovery interval—consider a café while you wait for the call:
+        </div>
+        <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
+            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
+            <div style="text-align:right;">
+                <div style="color:var(--v-gold); font-size:8px; font-weight:900; letter-spacing:1px; margin-bottom:2px;">TERMINAL PERK</div>
+                <div class="perk-code">VELOCIS15</div>
+            </div>
+        </div>
     </div>
 
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
@@ -125,7 +139,13 @@
             <div class="airline-box" id="logo-4">----</div>
         </div>
         <div class="framed-title" style="color:white; border-color:white;">Arrival Data</div>
-        <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">Synchronizing mission intelligence for <span id="airport-full-name" style="color:var(--v-gold); font-weight:800;">Destination Hub</span>. Briefing ready on arrival.</div>
+        <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
+            Synchronizing mission intelligence for <span id="airport-full-name" style="color:var(--v-gold); font-weight:800;">Destination Hub</span>. <br><br>
+            Touchdown logistics ready:
+        </div>
+        <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
+            <button class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>Transport Logistics Database</button>
+        </div>
     </div>
 </div>
 
@@ -224,19 +244,16 @@ class VelocisSovereign {
         const target = atlas[cityName] || atlas["NRT"];
         visual.style.setProperty('background-image', `url('${target}')`, 'important');
         
-        // HUD & WARM GUIDANCE INJECTION
+        // Data Injection
         document.getElementById('hud-city').innerText = cityName;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-        
-        // Dynamic Passenger Confirmation
         document.getElementById('text-passenger-name').innerText = this.passenger.name;
         document.getElementById('text-brief-airline').innerText = this.flightData.airline;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-counter').innerText = this.flightData.counter;
-        
         document.getElementById('text-gate').innerText = this.flightData.gate;
         document.getElementById('airport-full-name').innerText = this.flightData.airport || "International Hub";
 
