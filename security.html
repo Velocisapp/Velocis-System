@@ -37,34 +37,20 @@
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
 
-        #market-bridge { position: absolute; top: 40%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+        #market-bridge { position: absolute; top: 40%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
         .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 11px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; }
-        #reset-trip { pointer-events: auto !important; font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; }
+        #reset-trip { pointer-events: auto !important; font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
 
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; }
-
-        /* 3D ICON POLISH */
-        .icon-btn-3d { 
-            width: 70px; height: 70px; border: 2px solid rgba(0,255,255,0.5); 
-            border-radius: 20px; background: rgba(0,122,255,0.1); 
-            display: flex; align-items: center; justify-content: center; 
-            margin: 0 auto 20px auto; filter: drop-shadow(0 0 10px var(--v-blue));
-        }
-
-        #sync-manifest-btn { animation: buttonPulse 2s infinite; }
-        @keyframes buttonPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
     </style>
 </head>
 <body>
 
 <div id="entry-screen">
     <div class="glass-card">
-        <div class="icon-btn-3d">
-            <img src="https://img.icons8.com/plasticine/100/airplane-mode-on.png" width="50" alt="Air Gate">
-        </div>
         <h1 style="color:white; margin:0 0 10px 0; font-size:42px; font-weight:900;">VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; margin-bottom: 25px; letter-spacing: 1px;">Ready for your next journey?</div>
+        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">Ready for your next journey?</div>
         <div id="reader"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <div class="manual-input-container">
@@ -102,7 +88,7 @@
             <div class="airline-box" id="logo-1">----</div>
         </div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. I'll see you at the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Proceed to <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
     </div>
 
     <div class="mission-step">
@@ -111,7 +97,7 @@
             <div class="airline-box" id="logo-2">----</div>
         </div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Secure arrival connectivity now to stay operational the moment you land:</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Prepare arrival connectivity now to remain operational upon touchdown.</div>
         <div class="esim-cta" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
             <button class="slim-btn">Activate Breeze eSIM</button>
         </div>
@@ -123,16 +109,16 @@
             <div class="airline-box" id="logo-3">----</div>
         </div>
         <div class="framed-title" id="card-gate">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for your departure.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span> for your departure sequence.</div>
     </div>
 
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:white; font-weight:900; letter-spacing:1px;">04. ARRIVAL</div>
+            <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
             <div class="airline-box" id="logo-4">----</div>
         </div>
-        <div class="framed-title" style="color:white; border-color:white;">Arrival Briefing</div>
-        <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">Welcome to <span id="airport-full-name" style="color:var(--v-gold); font-weight:800;">Destination Hub</span>. Logistics synchronization complete.</div>
+        <div class="framed-title" style="color:white; border-color:white;">Arrival Data</div>
+        <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">Synchronizing mission intelligence for <span id="airport-full-name" style="color:var(--v-gold); font-weight:800;">Destination Hub</span>. Briefing ready on arrival.</div>
     </div>
 </div>
 
@@ -154,9 +140,10 @@ class VelocisSovereign {
     }
 
     async resetTrip() {
-        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
+        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} this.scanner = null; }
         localStorage.clear();
         sessionStorage.clear();
+        this.flightData = null;
         window.location.reload();
     }
 
@@ -223,7 +210,6 @@ class VelocisSovereign {
         const target = atlas[cityName] || atlas["NRT"];
         visual.style.setProperty('background-image', `url('${target}')`, 'important');
         
-        // HUD & GUIDANCE RESTORATION
         document.getElementById('hud-city').innerText = cityName;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
@@ -231,7 +217,7 @@ class VelocisSovereign {
         document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-gate').innerText = this.flightData.gate;
-        document.getElementById('airport-full-name').innerText = this.flightData.airport || "International Airport";
+        document.getElementById('airport-full-name').innerText = this.flightData.airport || "International Hub";
 
         const logoHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
