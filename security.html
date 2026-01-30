@@ -22,12 +22,13 @@
         
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
+        /* CULPRIT FIXED: Background image removed from CSS to prevent New York ghosting */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
             background: #000 radial-gradient(circle at center, #003366 0%, #000000 100%);
             background-size: cover; background-position: center;
             display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5;
-            transition: background-image 1s ease-in-out;
+            transition: background-image 0.5s ease-in-out;
         }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
@@ -172,7 +173,7 @@ class VelocisSovereign {
     }
 
     resetTrip() {
-        // MEMORY PURGE: Clears variables and cache to prevent New York sticky-background
+        // PURGE: Clear everything to prevent New York sticky-background
         localStorage.clear();
         sessionStorage.clear();
         this.flightData = null;
@@ -193,16 +194,9 @@ class VelocisSovereign {
 
     async handleScan(data) {
         let flightMatch = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
-        if (data.startsWith("M1")) {
-            const rawName = data.substring(2, 22).trim();
-            this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
-            this.passenger.seat = data.substring(48, 52).trim();
-            if(!flightMatch) flightMatch = data.substring(36, 43).trim();
-        }
         if(flightMatch) { 
             this.haptic('heavy');
             this.passenger.flightNum = flightMatch.trim().toUpperCase();
-            localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
             if(this.scanner) await this.scanner.stop(); 
             document.getElementById('reader').style.display = 'none'; 
             this.showSyncPrompt();
@@ -213,13 +207,12 @@ class VelocisSovereign {
         if (val.length >= 4) { 
             this.haptic(); 
             this.passenger.flightNum = val.trim().toUpperCase(); 
-            localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
             this.showSyncPrompt(); 
         }
     }
 
     showSyncPrompt() {
-        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.name}`;
+        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.flightNum}`;
         document.getElementById('verify-briefing').style.display = 'block';
     }
 
@@ -258,20 +251,20 @@ class VelocisSovereign {
         const visualArea = document.getElementById('dest-visualizer');
         const cityName = this.flightData.dest.trim().toUpperCase();
         
-        // NUCLEAR CACHE BUSTER: Dynamic timestamp forces browser to ignore previous session images
+        // CACHE-BUSTER Protocol: Forces browser to ignore previous session images
         const buster = Date.now();
 
         const satelliteLibrary = {
             "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
-            "HND": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
             "BOG": `https://images.unsplash.com/photo-1583531352515-88841314dd95?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
             "JFK": `https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
-            "DEFAULT": `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop&v=${buster}`
+            "PAR": `https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
+            "DEFAULT": `https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?q=80&w=1600&auto=format&fit=crop&v=${buster}`
         };
 
         const targetImage = satelliteLibrary[cityName] || satelliteLibrary["DEFAULT"];
 
-        // FORCE REDRAW: Ensures the visualizer resets before applying the specific city image
+        // GHOST BUSTER Logic: Clear and force render black before showing city
         visualArea.style.backgroundImage = "none";
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
@@ -288,10 +281,6 @@ class VelocisSovereign {
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('text-gate').innerText = this.flightData.gate;
 
-            const statusPill = document.getElementById('mission-status-pill');
-            statusPill.innerText = this.flightData.isDelayed ? "DELAYED" : "ON TIME";
-            statusPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
-
             const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             [1,2,3,4].forEach(i => {
                 const logoDiv = document.getElementById(`logo-${i}`);
@@ -299,11 +288,6 @@ class VelocisSovereign {
             });
 
             setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
-
-            const arrivalMsg = document.getElementById('arrival-msg');
-            if (arrivalMsg && this.flightData) {
-                arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">Arrival Briefing for ${cityName} updated.</span>`;
-            }
         }, 50);
     }
 }
