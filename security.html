@@ -16,16 +16,19 @@
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
 
-        .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 60px; border-radius: 20px; font-weight: 900; font-size: 16px; cursor: pointer; border: none; position: relative; z-index: 1010; pointer-events: auto !important; margin-bottom: 15px; }
+        /* BUTTON FIX: Added pointer-events auto and high z-index to ensure it is clickable */
+        .scan-trigger-btn, #initiate-btn, #sync-manifest-btn { cursor: pointer; pointer-events: auto !important; position: relative; z-index: 1100; }
+        
+        .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 60px; border-radius: 20px; font-weight: 900; font-size: 16px; border: none; margin-bottom: 15px; }
         .manual-input-container { width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000 radial-gradient(circle at center, #003366 0%, #000000 100%); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; transition: background-image 1.2s ease-in-out; }
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; transition: background-image 1.2s ease-in-out; }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; -webkit-overflow-scrolling: touch; }
+        #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
@@ -155,12 +158,13 @@ class VelocisSovereign {
         if (savedManifest && savedPassenger) {
             this.flightData = JSON.parse(savedManifest);
             this.passenger = JSON.parse(savedPassenger);
-            setTimeout(() => this.start(true), 150);
+            // Small delay to ensure UI is ready
+            setTimeout(() => this.start(true), 300);
         }
     }
 
     async resetTrip() {
-        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} this.scanner = null; }
+        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
         localStorage.clear();
         sessionStorage.clear();
         this.flightData = null;
@@ -220,8 +224,12 @@ class VelocisSovereign {
     }
 
     start(isRestore = false) {
-        if(!this.flightData) return;
-        const visual = document.getElementById('dest-visualizer');
+        // SAFETY CHECK: If no flight data, we can't start.
+        if(!this.flightData) {
+            console.log("No flight data found.");
+            return;
+        }
+
         const cityName = this.flightData.dest.toUpperCase();
         const buster = Date.now();
 
@@ -232,28 +240,56 @@ class VelocisSovereign {
         };
 
         const target = atlas[cityName] || atlas["NRT"];
-        visual.style.setProperty('background-image', `url('${target}')`, 'important');
+        const visual = document.getElementById('dest-visualizer');
+        if(visual) visual.style.setProperty('background-image', `url('${target}')`, 'important');
         
-        document.getElementById('hud-city').innerText = cityName;
-        document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
-        document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+        // Update HUD
+        const hudCity = document.getElementById('hud-city');
+        if(hudCity) hudCity.innerText = cityName;
         
-        // Update all passenger names throughout the mission cards
-        document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
+        const hudGate = document.getElementById('hud-gate');
+        if(hudGate) hudGate.innerText = "GATE " + this.flightData.gate;
+        
+        const hudDoor = document.getElementById('hud-door');
+        if(hudDoor) hudDoor.innerText = "DOOR " + this.flightData.terminal;
+        
+        // Update Passenger Names globally
+        document.querySelectorAll('.dyn-passenger-name').forEach(el => {
+            el.innerText = this.passenger.name;
+        });
 
-        document.getElementById('text-brief-airline').innerText = this.flightData.airline;
-        document.getElementById('text-seat').innerText = this.passenger.seat;
-        document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-        document.getElementById('text-door').innerText = this.flightData.terminal;
-        document.getElementById('text-counter').innerText = this.flightData.counter;
-        document.getElementById('text-gate').innerText = this.flightData.gate;
-        document.getElementById('airport-full-name').innerText = this.flightData.airport || "International Hub";
+        // Update card details
+        const briefAirline = document.getElementById('text-brief-airline');
+        if(briefAirline) briefAirline.innerText = this.flightData.airline;
+        
+        const seatNum = document.getElementById('text-seat');
+        if(seatNum) seatNum.innerText = this.passenger.seat;
 
+        const cardDoor = document.getElementById('card-door');
+        if(cardDoor) cardDoor.innerText = "Door " + this.flightData.terminal;
+
+        const textDoor = document.getElementById('text-door');
+        if(textDoor) textDoor.innerText = this.flightData.terminal;
+
+        const textCounter = document.getElementById('text-counter');
+        if(textCounter) textCounter.innerText = this.flightData.counter;
+
+        const textGate = document.getElementById('text-gate');
+        if(textGate) textGate.innerText = this.flightData.gate;
+
+        // Apply Airline Logos
         const logoHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
+        [1,2,3,4].forEach(i => { 
+            const slot = document.getElementById(`logo-${i}`);
+            if(slot) slot.innerHTML = logoHTML; 
+        });
 
+        // HIDE ENTRY SCREEN
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
+        setTimeout(() => { 
+            const bridge = document.getElementById('market-bridge');
+            if(bridge) bridge.style.opacity = "1"; 
+        }, 1000);
     }
 }
 const engine = new VelocisSovereign();
