@@ -22,13 +22,13 @@
         
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        /* THE SHIELD: Always starts with a professional blue glow */
+        /* FIXED VISUALIZER: Using a static fallback to guarantee a background */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
-            background: radial-gradient(circle at center, #003366 0%, #000000 100%);
-            background-size: cover; background-position: center;
+            background: #000 url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop') no-repeat center center;
+            background-size: cover;
             display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5;
-            transition: background-image 1.2s ease-in-out;
+            transition: background-image 1s ease-in-out;
         }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
@@ -254,23 +254,22 @@ class VelocisSovereign {
         if(!isRestore) this.haptic('heavy');
         const visualArea = document.getElementById('dest-visualizer');
         
-        // Clean the city name: use the first word of the airport name
-        const cityName = this.flightData.airport.split(' ')[0]; 
-        const randomID = Math.floor(Math.random() * 1000);
-
-        // SKYLINE PROTOCOL: Using the official Unsplash Source URL for maximum stability
-        const imageURL = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80`; // Default NY as fallback
-        const cityURL = `https://source.unsplash.com/1600x900/?${cityName},skyline`;
-
-        // Pre-load logic
-        const img = new Image();
-        img.src = cityURL;
-        img.onload = () => {
-            visualArea.style.backgroundImage = `url('${cityURL}')`;
+        // THE SATELLITE CURATION: Hand-picked stunning backgrounds that WILL load.
+        const cityName = this.flightData.dest;
+        const satelliteLibrary = {
+            "JFK": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1600&auto=format&fit=crop",
+            "LHR": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1600&auto=format&fit=crop",
+            "DXB": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1600&auto=format&fit=crop",
+            "PAR": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop",
+            "BOG": "https://images.unsplash.com/photo-1583531352515-88841314dd95?q=80&w=1600&auto=format&fit=crop",
+            "MIA": "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=1600&auto=format&fit=crop",
+            "DEFAULT": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop"
         };
-        img.onerror = () => {
-            visualArea.style.backgroundImage = `url('${imageURL}')`;
-        };
+
+        const targetImage = satelliteLibrary[cityName] || satelliteLibrary["DEFAULT"];
+
+        // Force the background update immediately
+        visualArea.style.backgroundImage = `url('${targetImage}')`;
 
         // UI Updates
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
