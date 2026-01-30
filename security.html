@@ -37,19 +37,17 @@
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
 
-        /* THE STRUCTURAL FIX: Moving actions to the BOTTOM of the area to clear Gate/Door data */
-        #market-bridge { position: absolute; bottom: 15px; left: 0; right: 0; display: flex; flex-direction: row; justify-content: center; gap: 8px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
-        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 8px 12px; border-radius: 10px; font-size: 8px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 0.5px; text-transform: uppercase; }
-        
-        /* PILL FIX: SCAN NEW TICKET MOVED BOTTOM */
-        #reset-trip { pointer-events: auto !important; font-size: 8px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 10px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
+        /* CENTERED BUTTON AREA TO PREVENT COLLISION */
+        #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; text-transform: uppercase; }
+        #reset-trip { pointer-events: auto !important; font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
 
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
 
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; pointer-events: auto !important; }
-        .sb-logo { height: 30px; width: 30px; }
-        .perk-code { background: var(--v-blue); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; }
+        .sb-logo { height: 35px; width: 35px; }
+        .perk-code { background: var(--v-blue); color: white; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -73,7 +71,7 @@
 
 <div id="dest-visualizer">
     <div id="market-bridge">
-        <a class="cta-btn" href="index.html#esim-connectivity-hub">CONNECTIVITY</a>
+        <a class="cta-btn" href="index.html#esim-connectivity-hub">CONNECTIVITY OPTIONS</a>
         <div id="reset-trip" onclick="engine.resetTrip()">SCAN NEW TICKET</div>
     </div>
     <div class="hud-overlay">
@@ -108,7 +106,7 @@
             <div class="airline-box" id="logo-2">----</div>
         </div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Prepare arrival connectivity now to remain operational upon touchdown.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Secure arrival connectivity now to remain operational upon touchdown.</div>
         <div class="esim-cta" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
             <button class="slim-btn">Activate Breeze eSIM</button>
         </div>
@@ -122,7 +120,7 @@
         <div class="framed-title" id="card-gate">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
             Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span>. 
-            Operations suggests a recovery interval—consider a café while you wait for the call:
+            Operations suggest a recovery interval—consider a café while you wait for the call:
         </div>
         <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
@@ -140,11 +138,11 @@
         </div>
         <div class="framed-title" style="color:white; border-color:white;">Arrival Data</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            Synchronizing mission intelligence for <span id="airport-full-name" style="color:var(--v-gold); font-weight:800;">Destination Hub</span>. <br><br>
-            Touchdown logistics ready:
+            Synchronizing mission data for <span id="airport-full-name" style="color:var(--v-gold); font-weight:800;">Touchdown</span>. <br><br>
+            Ground logistics ready:
         </div>
         <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
-            <button class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>Transport Logistics Database</button>
+            <button class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>Logistics Hub Database</button>
         </div>
     </div>
 </div>
@@ -170,10 +168,9 @@ class VelocisSovereign {
     }
 
     async resetTrip() {
-        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} this.scanner = null; }
+        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
         localStorage.clear();
         sessionStorage.clear();
-        this.flightData = null;
         window.location.reload();
     }
 
@@ -244,7 +241,7 @@ class VelocisSovereign {
         const target = atlas[cityName] || atlas["NRT"];
         visual.style.setProperty('background-image', `url('${target}')`, 'important');
         
-        // Data Injection
+        // Dynamic Injection
         document.getElementById('hud-city').innerText = cityName;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
