@@ -37,9 +37,12 @@
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
 
-        #market-bridge { position: absolute; top: 40%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
-        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 11px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; }
-        #reset-trip { pointer-events: auto !important; font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
+        /* UI ALIGNMENT FIX: Centering and padding for CTA bridge */
+        #market-bridge { position: absolute; top: 40%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; }
+        
+        /* PILL FIX: SCAN NEW TICKET */
+        #reset-trip { pointer-events: auto !important; font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
 
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; }
@@ -67,7 +70,7 @@
 <div id="dest-visualizer">
     <div id="market-bridge">
         <a class="cta-btn" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
-        <div id="reset-trip" onclick="engine.resetTrip()">NEW TICKET</div>
+        <div id="reset-trip" onclick="engine.resetTrip()">SCAN NEW TICKET</div>
     </div>
     <div class="hud-overlay">
         <div style="display:flex; justify-content:space-between;">
@@ -88,7 +91,11 @@
             <div class="airline-box" id="logo-1">----</div>
         </div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. Proceed to <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
+            Welcome, <span id="text-passenger-name" style="color:white; font-weight:800;">Traveler</span>. We are synchronized with <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">your flight</span>. 
+            Confirming seat <span id="text-seat" style="color:var(--v-gold); font-weight:800;">--</span>. <br><br>
+            Stay focused—VELOCIS is now guiding you step-by-step to your destination. First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span> for <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.
+        </div>
     </div>
 
     <div class="mission-step">
@@ -127,14 +134,17 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
+        this.passenger = { name: "Traveler", seat: "--", flightNum: "" };
         this.scanner = null;
         this.init();
     }
 
     init() {
-        const saved = localStorage.getItem('velocis_manifest');
-        if (saved) {
-            this.flightData = JSON.parse(saved);
+        const savedManifest = localStorage.getItem('velocis_manifest');
+        const savedPassenger = localStorage.getItem('velocis_passenger');
+        if (savedManifest && savedPassenger) {
+            this.flightData = JSON.parse(savedManifest);
+            this.passenger = JSON.parse(savedPassenger);
             setTimeout(() => this.start(true), 150);
         }
     }
@@ -159,13 +169,17 @@ class VelocisSovereign {
     async handleScan(data) {
         let flightMatch = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
         if (data.startsWith("M1")) {
+            const rawName = data.substring(2, 22).trim();
+            this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
+            this.passenger.seat = data.substring(48, 52).trim();
             this.forcedDest = data.substring(22, 25).trim().toUpperCase();
         }
         if(flightMatch || this.forcedDest) { 
             this.tempFlight = flightMatch || "UA54";
+            localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
             if(this.scanner) await this.scanner.stop(); 
             document.getElementById('reader').style.display = 'none'; 
-            document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.tempFlight}`;
+            document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.name}`;
             document.getElementById('verify-briefing').style.display = 'block';
         }
     }
@@ -210,12 +224,19 @@ class VelocisSovereign {
         const target = atlas[cityName] || atlas["NRT"];
         visual.style.setProperty('background-image', `url('${target}')`, 'important');
         
+        // HUD & GUIDANCE RESTORATION
         document.getElementById('hud-city').innerText = cityName;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+        
+        // 01. ENTRANCE Personalization Injection
+        document.getElementById('text-passenger-name').innerText = this.passenger.name;
+        document.getElementById('text-brief-airline').innerText = this.flightData.airline;
+        document.getElementById('text-seat').innerText = this.passenger.seat;
+        document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
         document.getElementById('text-counter').innerText = this.flightData.counter;
-        document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+        
         document.getElementById('text-gate').innerText = this.flightData.gate;
         document.getElementById('airport-full-name').innerText = this.flightData.airport || "International Hub";
 
