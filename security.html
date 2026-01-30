@@ -162,8 +162,8 @@ class VelocisSovereign {
 
     async resetTrip() {
         if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
-        localStorage.removeItem('velocis_manifest');
-        localStorage.removeItem('velocis_passenger');
+        localStorage.clear();
+        sessionStorage.clear();
         this.flightData = null;
         window.location.reload();
     }
@@ -174,7 +174,7 @@ class VelocisSovereign {
         this.scanner = new Html5Qrcode("reader");
         try {
             await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Scanner error", err); }
     }
 
     async handleScan(data) {
@@ -207,25 +207,25 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
-                // DATA DETECTIVE: Hunts for the city name in Timezone, Airport, or Destination fields
-                let foundCity = "Local";
-                if (f.arrival.timezone) {
-                    let zoneParts = f.arrival.timezone.split('/');
-                    foundCity = zoneParts[zoneParts.length - 1].replace(/_/g, ' ');
-                } else if (f.arrival.airport) {
-                    foundCity = f.arrival.airport.split(' ')[0];
+                // AUTONOMOUS DATA EXTRACTION: Pull city from timezone, airport, or region data
+                let cityFallback = "Local";
+                if(f.arrival.timezone) {
+                   let parts = f.arrival.timezone.split('/');
+                   cityFallback = parts[parts.length - 1].replace(/_/g, ' ');
+                } else if(f.arrival.airport) {
+                   cityFallback = f.arrival.airport.split(' ')[0];
                 }
 
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
-                    dest: f.arrival.iata, gate: f.departure.gate || "TBD", 
+                    dest: this.forcedDest || f.arrival.iata, gate: f.departure.gate || "TBD", 
                     terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || `${f.airline.name.split(' ')[0]} DESK`,
                     airport: f.arrival.airport,
-                    arrivalCity: foundCity, 
+                    arrivalCity: cityFallback,
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 
-                // Aggressively save fresh data
+                // Aggressively overwrite LocalStorage to clear old Tokyo cache
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -241,19 +241,21 @@ class VelocisSovereign {
             // Pulling dynamic city name from flight manifest
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             
-            // THE AUTOMATIC UI UPDATE: Brands Section 04 for any city in the world
+            // DYNAMIC COMPANION LOGIC: Brands Section 04 for any city in the world autonomously
             const transportBtn = document.getElementById('transport-options-btn');
             if (transportBtn) {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
+            // Dynamically assign background images (or default if no match)
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
-                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`
+                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`,
+                "ALG": `https://images.unsplash.com/photo-1565431697950-e76317b389f4?auto=format&fit=crop&w=1200&q=80`
             };
 
-            const target = atlas[cityName] || atlas["NRT"];
+            const target = atlas[cityName] || `https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80`;
             const visual = document.getElementById('dest-visualizer');
             if(visual) visual.style.setProperty('background-image', `url('${target}')`, 'important');
             
