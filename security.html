@@ -16,11 +16,9 @@
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
 
         #initiate-btn, #sync-manifest-btn, .scan-trigger-btn { cursor: pointer !important; pointer-events: auto !important; z-index: 3000 !important; position: relative; }
-
-        .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; letter-spacing: 1px; }
+        .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; }
         
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; transition: background-image 1.2s ease-in-out; }
-
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; transition: background-image 1.2s ease; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
         
@@ -161,6 +159,7 @@ class VelocisSovereign {
         localStorage.clear();
         sessionStorage.clear();
         this.flightData = null;
+        this.passenger = { name: "Traveler", seat: "--", flightNum: "" };
         window.location.reload();
     }
 
@@ -170,7 +169,7 @@ class VelocisSovereign {
         this.scanner = new Html5Qrcode("reader");
         try {
             await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Scanner error", err); }
     }
 
     async handleScan(data) {
@@ -201,19 +200,23 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
-                // NO-TOKYO FALLBACK LOGIC
-                let cityFallback = "Local";
-                if(f.arrival.timezone) cityFallback = f.arrival.timezone.split('/')[1].replace(/_/g, ' ');
-                else if(f.arrival.airport) cityFallback = f.arrival.airport.split(' ')[0];
+                let foundCity = "Local";
+                if (f.arrival.timezone) {
+                    let zoneParts = f.arrival.timezone.split('/');
+                    foundCity = zoneParts[zoneParts.length - 1].replace(/_/g, ' ');
+                } else if (f.arrival.airport) {
+                    foundCity = f.arrival.airport.split(' ')[0];
+                }
 
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
                     dest: f.arrival.iata, gate: f.departure.gate || "TBD", 
-                    terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || `${f.airline.name.split(' ')[0]} DESK`,
+                    terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || "CHECK-IN",
                     airport: f.arrival.airport,
-                    arrivalCity: cityFallback,
+                    arrivalCity: foundCity, 
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
+                
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -228,38 +231,33 @@ class VelocisSovereign {
             const cityName = this.flightData.dest.toUpperCase();
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             
-            // THE FORCE-OVERWRITE LOGIC:
+            // 1. UPDATE BUTTON TEXT (Force Overwrite)
             const transportBtn = document.getElementById('transport-options-btn');
             if (transportBtn) {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
+            // 2. UPDATE VISUALS (With Universal Fallback)
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
                 "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`
             };
-
-            const target = atlas[cityName] || `https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80`;
+            const defaultImg = `https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80`;
             const visual = document.getElementById('dest-visualizer');
-            if(visual) visual.style.setProperty('background-image', `url('${target}')`, 'important');
+            if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || defaultImg}')`;
             
+            // 3. UPDATE HUD & NAMES
             if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = cityName;
             if(document.getElementById('hud-gate')) document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             if(document.getElementById('hud-door')) document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-            
             document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-            if(document.getElementById('text-brief-airline')) document.getElementById('text-brief-airline').innerText = this.flightData.airline;
-            if(document.getElementById('text-seat')) document.getElementById('text-seat').innerText = this.passenger.seat;
-            if(document.getElementById('card-door')) document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-            if(document.getElementById('text-door')) document.getElementById('text-door').innerText = this.flightData.terminal;
-            if(document.getElementById('text-counter')) document.getElementById('text-counter').innerText = this.flightData.counter;
-            if(document.getElementById('text-gate')) document.getElementById('text-gate').innerText = this.flightData.gate;
-
+            // 4. LOGOS
             const logoHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
 
+            // 5. TRANSITION
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
 
