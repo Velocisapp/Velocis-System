@@ -253,15 +253,20 @@ class VelocisSovereign {
         if(!isRestore) this.haptic('heavy');
         const visualArea = document.getElementById('dest-visualizer');
         
-        // SATELLITE LIBRARY: Verified direct links for major hubs
-        const cityName = this.flightData.dest;
+        // NORMALIZATION PROTOCOL: Clean the code to ensure it matches the library
+        const cityName = (this.flightData.dest || "DEFAULT").trim().toUpperCase();
+        
         const satelliteLibrary = {
             "NRT": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop", // Tokyo Skyline
-            "JFK": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1600&auto=format&fit=crop",
-            "LHR": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1600&auto=format&fit=crop",
-            "DXB": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1600&auto=format&fit=crop",
-            "PAR": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop",
-            "BOG": "https://images.unsplash.com/photo-1583531352515-88841314dd95?q=80&w=1600&auto=format&fit=crop",
+            "HND": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop", // Tokyo (Haneda)
+            "BOG": "https://images.unsplash.com/photo-1583531352515-88841314dd95?q=80&w=1600&auto=format&fit=crop", // Bogota
+            "JFK": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1600&auto=format&fit=crop", // NY
+            "EWR": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1600&auto=format&fit=crop", // NY (Newark)
+            "LHR": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1600&auto=format&fit=crop", // London
+            "DXB": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1600&auto=format&fit=crop", // Dubai
+            "PAR": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop", // Paris
+            "CDG": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop", // Paris (CDG)
+            "MIA": "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=1600&auto=format&fit=crop", // Miami
             "DEFAULT": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop"
         };
 
@@ -272,7 +277,7 @@ class VelocisSovereign {
 
         // UI Updates
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        document.getElementById('hud-city').innerText = this.flightData.dest;
+        document.getElementById('hud-city').innerText = cityName;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
         document.getElementById('text-door').innerText = this.flightData.terminal;
@@ -296,7 +301,7 @@ class VelocisSovereign {
 
         const arrivalMsg = document.getElementById('arrival-msg');
         if (arrivalMsg && this.flightData) {
-            arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">We will update your Arrival Briefing for ${this.flightData.dest} once you are airborne.</span>`;
+            arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">We will update your Arrival Briefing for ${cityName} once you are airborne.</span>`;
         }
     }
 }
