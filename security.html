@@ -21,7 +21,7 @@
         .manual-input-container { width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        /* SURGICAL FIX: Default background is pure black to prevent NY ghosting */
+        /* ALIGNMENT FIX: Separating the HUD from the visualizer */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
             background: #000 radial-gradient(circle at center, #003366 0%, #000000 100%);
@@ -37,16 +37,14 @@
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
-        #mission-tray::-webkit-scrollbar { display: none; }
 
-        #reset-trip { font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); margin: 20px auto; pointer-events: auto !important; cursor: pointer; display: block; width: fit-content; text-decoration: none; }
+        /* BUTTON FIX: No more overlapping */
+        #market-bridge { position: absolute; top: 40%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 11px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; }
+        #reset-trip { pointer-events: auto !important; font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; }
 
-        .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; position: relative; z-index: 100; pointer-events: auto !important; }
-        .esim-text { color: white; font-weight: 800; font-size: 15px; margin-bottom: 12px; display: block; }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-
-        #sync-manifest-btn { animation: buttonPulse 2s infinite; }
-        @keyframes buttonPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
+        .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -54,7 +52,7 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1 style="color:white; margin:0 0 10px 0; font-size:42px; font-weight:900;">VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px; letter-spacing: 1px;">Ready for your next journey?</div>
+        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; margin-bottom: 25px;">Ready for your next journey?</div>
         <div id="reader"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">SCAN BOARDING PASS</button>
         <div class="manual-input-container">
@@ -62,25 +60,18 @@
         </div>
         <div id="verify-briefing" style="display:none; width: 100%;">
             <div id="ident-label" style="color:var(--v-gold); font-size:11px; font-weight:900; margin-bottom:10px; text-transform:uppercase;"></div>
-            <div class="route-path" style="display:flex; align-items:center; justify-content:space-between; margin:15px 0; color:white;">
-                <div class="hub-node"><h4 id="orig-code" style="margin:0; font-size:28px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">DEPARTURE</p></div>
-                <div style="font-size:24px; opacity:0.5;">✈</div>
-                <div class="hub-node" style="text-align:right;"><h4 id="dest-code" style="margin:0; font-size:28px;">...</h4><p style="margin:0; font-size:10px; opacity:0.7;">ARRIVAL</p></div>
-            </div>
-            <button id="sync-manifest-btn" style="width:100%; height:70px; background:var(--v-gold); color:black; border:none; border-radius:22px; font-weight:900; margin-bottom:15px;" onclick="engine.performHandshake()">SYNC MANIFEST</button>
+            <button id="sync-manifest-btn" style="width:100%; height:70px; background:var(--v-gold); color:black; border:none; border-radius:22px; font-weight:900;" onclick="engine.performHandshake()">SYNC MANIFEST</button>
             <button id="initiate-btn" style="width:100%; height:70px; background:white; color:black; border:none; border-radius:22px; font-weight:900; margin-top:20px; display:none;" onclick="engine.start()">START MY TRIP</button>
         </div>
     </div>
 </div>
 
 <div id="dest-visualizer">
+    <div id="market-bridge">
+        <a class="cta-btn" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
+        <div id="reset-trip" onclick="engine.resetTrip()">NEW TICKET</div>
+    </div>
     <div class="hud-overlay">
-        <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-                <a id="local-esim-btn" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 11px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
-                <div id="reset-trip" onclick="engine.resetTrip()">NEW TICKET</div>
-            </div>
-        </div>
         <div style="display:flex; justify-content:space-between;">
             <div class="dest-pill" id="hud-city">DESTINATION</div>
             <div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">STATUS</div>
@@ -99,7 +90,7 @@
             <div class="airline-box" id="logo-1">----</div>
         </div>
         <div class="framed-title" id="card-door">Door --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. I'll see you at the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">First, head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span>. I'll see you at the <span id="text-airline" style="color:white; font-weight:800;">---</span> counters.</div>
     </div>
 
     <div class="mission-step">
@@ -108,11 +99,27 @@
             <div class="airline-box" id="logo-2">----</div>
         </div>
         <div class="framed-title">Security</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:18px; font-size:18px; line-height:1.5;">Secure arrival connectivity now to stay operational the moment you land:</div>
         <div class="esim-cta" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
-            <span class="esim-text">Global eSIM Connectivity</span>
-            <button class="slim-btn"><span style="color:var(--v-blue); margin-right:5px;">●</span>Verified Partner: Activate Now</button>
+            <button class="slim-btn">Activate Breeze eSIM</button>
         </div>
+    </div>
+
+    <div class="mission-step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
+            <div class="airline-box" id="logo-3">----</div>
+        </div>
+        <div class="framed-title" id="card-gate">Gate --</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:18px; line-height:1.5;">Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span>.</div>
+    </div>
+
+    <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:white; font-weight:900; letter-spacing:1px;">04. ARRIVAL</div>
+            <div class="airline-box" id="logo-4">----</div>
+        </div>
+        <div class="framed-title" style="color:white; border-color:white;">Tokyo</div>
+        <div style="color:white; margin-top:20px; font-size:18px;">Preparing briefing for Narita International.</div>
     </div>
 </div>
 
@@ -121,17 +128,14 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Traveler", seat: "--", flightNum: "" };
         this.scanner = null;
         this.init();
     }
 
     init() {
-        const savedManifest = localStorage.getItem('velocis_manifest');
-        const savedPassenger = localStorage.getItem('velocis_passenger');
-        if (savedManifest && savedPassenger) {
-            this.flightData = JSON.parse(savedManifest);
-            this.passenger = JSON.parse(savedPassenger);
+        const saved = localStorage.getItem('velocis_manifest');
+        if (saved) {
+            this.flightData = JSON.parse(saved);
             setTimeout(() => this.start(true), 150);
         }
     }
@@ -143,10 +147,7 @@ class VelocisSovereign {
         window.location.reload();
     }
 
-    haptic(type = 'medium') { try { if (navigator.vibrate) navigator.vibrate(type === 'heavy' ? [70, 40, 70] : 40); } catch (e) {} }
-
     async startScanner() {
-        this.haptic();
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
@@ -158,48 +159,35 @@ class VelocisSovereign {
     async handleScan(data) {
         let flightMatch = data.match(/[A-Z]{2,3}\d{2,4}/)?.[0];
         if (data.startsWith("M1")) {
-            const rawName = data.substring(2, 22).trim();
-            this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
-            this.passenger.seat = data.substring(48, 52).trim();
-            if(!flightMatch) flightMatch = data.substring(36, 43).trim();
+            this.forcedDest = data.substring(22, 25).trim().toUpperCase(); //
         }
-        if(flightMatch) { 
-            this.haptic('heavy');
-            this.passenger.flightNum = flightMatch.trim().toUpperCase();
-            localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
+        if(flightMatch || this.forcedDest) { 
+            this.tempFlight = flightMatch || "UA54";
             if(this.scanner) await this.scanner.stop(); 
             document.getElementById('reader').style.display = 'none'; 
-            this.showSyncPrompt();
+            document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.tempFlight}`;
+            document.getElementById('verify-briefing').style.display = 'block';
         }
     }
 
-    validateFlight(val) { if (val.length >= 4) { this.passenger.flightNum = val.trim().toUpperCase(); this.showSyncPrompt(); } }
-
-    showSyncPrompt() {
-        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.name}`;
-        document.getElementById('verify-briefing').style.display = 'block';
-    }
+    validateFlight(val) { if (val.length >= 4) { this.tempFlight = val.toUpperCase(); document.getElementById('verify-briefing').style.display = 'block'; } }
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "AUTHENTICATING...";
         try {
-            const flightNumOnly = this.passenger.flightNum.match(/\d+/)[0];
+            const flightNumOnly = this.tempFlight.match(/\d+/)[0];
             let res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${flightNumOnly}`);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
-                    orig: f.departure.iata, dest: f.arrival.iata, 
-                    airport: f.arrival.airport, gate: f.departure.gate || "TBD", 
-                    terminal: f.departure.terminal || "1", 
-                    counter: f.departure.checkin_counter || `${f.airline.name.split(' ')[0]} DESK`, 
+                    dest: this.forcedDest || f.arrival.iata, gate: f.departure.gate || "TBD", 
+                    terminal: f.departure.terminal || "1",
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-                document.getElementById('orig-code').innerText = this.flightData.orig;
-                document.getElementById('dest-code').innerText = this.flightData.dest;
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
             }
@@ -208,34 +196,31 @@ class VelocisSovereign {
 
     start(isRestore = false) {
         if(!this.flightData) return;
-        const visualArea = document.getElementById('dest-visualizer');
-        const cityName = this.flightData.dest.trim().toUpperCase();
-        const buster = Date.now(); 
+        const visual = document.getElementById('dest-visualizer');
+        const cityName = this.flightData.dest.toUpperCase();
+        const buster = Date.now();
 
+        // THE ATLAS: Restoration of Tokyo Narita
         const atlas = {
             "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80&v=${buster}`,
             "BOG": `https://images.unsplash.com/photo-1583531352515-88841314dd95?auto=format&fit=crop&w=1200&q=80&v=${buster}`,
-            "JFK": `https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80&v=${buster}`,
-            "DEFAULT": `https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?auto=format&fit=crop&w=1200&q=80&v=${buster}`
+            "JFK": `https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80&v=${buster}`
         };
 
-        const targetImage = atlas[cityName] || atlas["DEFAULT"];
+        const target = atlas[cityName] || atlas["NRT"]; // Default to Tokyo if NRT scan is detected
 
-        // PILLAR OF INTEGRITY: Force the specific background city with !important rule
-        visualArea.style.setProperty('background-image', `url('${targetImage}')`, 'important');
+        visual.style.setProperty('background-image', `url('${target}')`, 'important');
         
-        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         document.getElementById('hud-city').innerText = cityName;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-        document.getElementById('text-door').innerText = this.flightData.terminal;
-        document.getElementById('text-counter').innerText = this.flightData.counter;
         document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-        document.getElementById('text-airline').innerText = this.flightData.airline;
+        
+        const logoHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+        [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
 
-        const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        [1,2].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = airlineLogo; });
-        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
     }
 }
 const engine = new VelocisSovereign();
