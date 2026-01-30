@@ -272,7 +272,7 @@ class VelocisSovereign {
         
         const visualArea = document.getElementById('dest-visualizer');
         const cityName = this.flightData.dest.trim().toUpperCase();
-        const buster = Date.now(); // FORCED CACHE BUSTER
+        const buster = Date.now(); 
 
         const satelliteLibrary = {
             "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
@@ -299,9 +299,22 @@ class VelocisSovereign {
             document.getElementById('airport-full-name').innerText = this.flightData.airport;
             document.getElementById('text-gate').innerText = this.flightData.gate;
 
+            const statusPill = document.getElementById('mission-status-pill');
+            statusPill.innerText = this.flightData.isDelayed ? "DELAYED" : "ON TIME";
+            statusPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
+
             const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            [1,2,3,4].forEach(i => { document.getElementById(`logo-${i}`).innerHTML = airlineLogo; });
-            document.getElementById('market-bridge').style.opacity = "1";
+            [1,2,3,4].forEach(i => {
+                const logoDiv = document.getElementById(`logo-${i}`);
+                if(logoDiv) logoDiv.innerHTML = airlineLogo;
+            });
+
+            setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
+
+            const arrivalMsg = document.getElementById('arrival-msg');
+            if (arrivalMsg && this.flightData) {
+                arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">Arrival Briefing for ${cityName} updated.</span>`;
+            }
         }, 50);
     }
 }
