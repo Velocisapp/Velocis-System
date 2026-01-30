@@ -24,7 +24,7 @@
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; transition: background-image 1.2s ease-in-out; }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
-        .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 6px 10px; border-radius: 10px; font-size: 8px; font-weight: 800; color: white; text-transform: uppercase; }
+        .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
         
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
@@ -164,7 +164,6 @@ class VelocisSovereign {
         if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
         localStorage.clear();
         sessionStorage.clear();
-        this.flightData = null;
         window.location.reload();
     }
 
@@ -174,7 +173,7 @@ class VelocisSovereign {
         this.scanner = new Html5Qrcode("reader");
         try {
             await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
-        } catch (err) { console.error("Camera error", err); }
+        } catch (err) { console.error("Scanner error", err); }
     }
 
     async handleScan(data) {
@@ -241,21 +240,25 @@ class VelocisSovereign {
             if(document.getElementById('hud-gate')) document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             if(document.getElementById('hud-door')) document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
             
-            // Global Passenger Name Update
+            // GLOBAL PASSENGER NAME INJECTION
             document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-            // SMART BUTTON LOGIC: Context-aware text
+            // AUTOMATIC WORLDWIDE TRANSIT LOOKUP
+            const localTransit = {
+                "NRT": "Narita Express & Skyliner Rail",
+                "HND": "Tokyo Monorail & Keikyu Line",
+                "CDG": "Paris Metro & RER Network",
+                "LHR": "London Underground & Express",
+                "JFK": "AirTrain & NYC Subway",
+                "SIN": "MRT Singapore Rail",
+                "DXB": "Dubai Metro Network",
+                "AMS": "NS Dutch Railways"
+            };
+
             const transportBtn = document.getElementById('transport-options-btn');
             if (transportBtn) {
-                if (cityName === "CDG") {
-                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>Paris Subway & Suburban Rail';
-                } else if (cityName === "LHR") {
-                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>London Underground & Express';
-                } else if (cityName === "JFK") {
-                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>AirTrain & NYC Subway';
-                } else {
-                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>Ground Transport Options';
-                }
+                const networkName = localTransit[cityName] || "Ground Transport Options";
+                transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${networkName}`;
             }
 
             // Mission Card Data
@@ -270,7 +273,6 @@ class VelocisSovereign {
             const logoHTML = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
             [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
 
-            // Hide entry screen
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
             setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
 
