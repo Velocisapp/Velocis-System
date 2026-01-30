@@ -112,7 +112,7 @@
         </div>
         <div class="framed-title" style="color:white; border-color:white;">Arrival Hub</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, your carousel number and exit door will be shown here after landing.
+            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, welcome to your destination. Local guidance is ready.
         </div>
         <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
             <button id="transport-options-btn" class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>Transport Guide</button>
@@ -197,13 +197,14 @@ class VelocisSovereign {
 
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
-                    dest: this.forcedDest || f.arrival.iata, gate: f.departure.gate || "TBD", 
+                    dest: f.arrival.iata, gate: f.departure.gate || "TBD", 
                     terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || "AIRLINE DESK",
                     airport: f.arrival.airport,
                     arrivalCity: foundCity, 
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 
+                // FORCE OVERWRITE: Immediately kill any old data (Tokyo/Brussels) in storage
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -216,7 +217,7 @@ class VelocisSovereign {
         
         try {
             const cityName = this.flightData.dest.toUpperCase();
-            // RE-CALCULATE NAME DIRECTLY FROM LIVE DATA TO KILL THE TOKYO GHOST
+            // RE-CALCULATE FRESH: This line is the Tokyo ghost killer
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             
             const transportBtn = document.getElementById('transport-options-btn');
@@ -224,11 +225,12 @@ class VelocisSovereign {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
-            // VISUALS: Bulletproof image mapping
+            // VISUALS: Expanded atlas to prevent the black background error
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
-                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`
+                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`,
+                "BRU": `https://images.unsplash.com/photo-1563294314-169827051381?auto=format&fit=crop&w=1200&q=80`
             };
             const defaultImg = `https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80`;
             const visual = document.getElementById('dest-visualizer');
