@@ -22,13 +22,12 @@
         
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        /* CULPRIT FIXED: Background image removed from CSS to prevent New York ghosting */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
             background: #000 radial-gradient(circle at center, #003366 0%, #000000 100%);
             background-size: cover; background-position: center;
             display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5;
-            transition: background-image 0.5s ease-in-out;
+            transition: background-image 1s ease-in-out;
         }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
@@ -159,6 +158,7 @@ class VelocisSovereign {
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
         this.passenger = { name: "Traveler", seat: "--", flightNum: "" };
+        this.scanner = null;
         this.init();
     }
 
@@ -172,8 +172,10 @@ class VelocisSovereign {
         }
     }
 
-    resetTrip() {
-        // PURGE: Clear everything to prevent New York sticky-background
+    async resetTrip() {
+        if(this.scanner) {
+            try { await this.scanner.stop(); } catch(e) {}
+        }
         localStorage.clear();
         sessionStorage.clear();
         this.flightData = null;
@@ -186,10 +188,22 @@ class VelocisSovereign {
 
     async startScanner() {
         this.haptic();
-        document.getElementById('reader').style.display = 'block';
+        const readerElem = document.getElementById('reader');
+        readerElem.style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
+        
+        // Re-initialize class property to ensure stability
         this.scanner = new Html5Qrcode("reader");
-        await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
+        try {
+            await this.scanner.start(
+                { facingMode: "environment" }, 
+                { fps: 20, qrbox: 250 }, 
+                (t) => this.handleScan(t)
+            );
+        } catch (err) {
+            console.error("Camera failed", err);
+            document.getElementById('status-msg').innerText = "CAMERA ERROR: CHECK PERMISSIONS";
+        }
     }
 
     async handleScan(data) {
@@ -250,27 +264,23 @@ class VelocisSovereign {
         
         const visualArea = document.getElementById('dest-visualizer');
         const cityName = this.flightData.dest.trim().toUpperCase();
-        
-        // CACHE-BUSTER Protocol: Forces browser to ignore previous session images
         const buster = Date.now();
 
         const satelliteLibrary = {
             "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
             "BOG": `https://images.unsplash.com/photo-1583531352515-88841314dd95?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
             "JFK": `https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
-            "PAR": `https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
             "DEFAULT": `https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?q=80&w=1600&auto=format&fit=crop&v=${buster}`
         };
 
         const targetImage = satelliteLibrary[cityName] || satelliteLibrary["DEFAULT"];
 
-        // GHOST BUSTER Logic: Clear and force render black before showing city
+        // UI LOCK-IN
         visualArea.style.backgroundImage = "none";
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
         setTimeout(() => {
             visualArea.style.backgroundImage = `url('${targetImage}')`;
-            
             document.getElementById('hud-city').innerText = cityName;
             document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
@@ -282,12 +292,8 @@ class VelocisSovereign {
             document.getElementById('text-gate').innerText = this.flightData.gate;
 
             const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            [1,2,3,4].forEach(i => {
-                const logoDiv = document.getElementById(`logo-${i}`);
-                if(logoDiv) logoDiv.innerHTML = airlineLogo;
-            });
-
-            setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
+            [1,2,3,4].forEach(i => { document.getElementById(`logo-${i}`).innerHTML = airlineLogo; });
+            document.getElementById('market-bridge').style.opacity = "1";
         }, 50);
     }
 }
