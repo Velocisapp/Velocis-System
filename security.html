@@ -22,13 +22,12 @@
         
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        /* FIXED VISUALIZER: Using a static fallback to guarantee a background */
         #dest-visualizer { 
             flex: 1; width: 100%; height: 45vh; position: relative; 
-            background: #000 url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop') no-repeat center center;
-            background-size: cover;
+            background: #000 radial-gradient(circle at center, #003366 0%, #000000 100%);
+            background-size: cover; background-position: center;
             display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5;
-            transition: background-image 1s ease-in-out;
+            transition: background-image 1.2s ease-in-out;
         }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 30px; z-index: 10; pointer-events: none; }
@@ -40,7 +39,7 @@
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         #mission-tray::-webkit-scrollbar { display: none; }
 
-        #reset-trip { font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); margin-top: 15px; pointer-events: auto !important; cursor: pointer; display: inline-block; text-decoration: none; }
+        #reset-trip { font-size: 11px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); margin: 0 auto; pointer-events: auto !important; cursor: pointer; display: inline-block; text-decoration: none; }
 
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; }
         .sb-logo { height: 35px; width: 35px; }
@@ -81,7 +80,7 @@
 <div id="dest-visualizer">
     <div class="hud-overlay">
         <div id="market-bridge" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none;">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
                 <a id="local-esim-btn" style="pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 12px 25px; border-radius: 14px; font-size: 11px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px;" href="index.html#esim-connectivity-hub">INTERNET CONNECTION OPTIONS</a>
                 <div id="reset-trip" onclick="engine.resetTrip()">NEW TICKET</div>
             </div>
@@ -254,21 +253,21 @@ class VelocisSovereign {
         if(!isRestore) this.haptic('heavy');
         const visualArea = document.getElementById('dest-visualizer');
         
-        // THE SATELLITE CURATION: Hand-picked stunning backgrounds that WILL load.
+        // SATELLITE LIBRARY: Verified direct links for major hubs
         const cityName = this.flightData.dest;
         const satelliteLibrary = {
+            "NRT": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop", // Tokyo Skyline
             "JFK": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1600&auto=format&fit=crop",
             "LHR": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1600&auto=format&fit=crop",
             "DXB": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1600&auto=format&fit=crop",
             "PAR": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop",
             "BOG": "https://images.unsplash.com/photo-1583531352515-88841314dd95?q=80&w=1600&auto=format&fit=crop",
-            "MIA": "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=1600&auto=format&fit=crop",
             "DEFAULT": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop"
         };
 
         const targetImage = satelliteLibrary[cityName] || satelliteLibrary["DEFAULT"];
 
-        // Force the background update immediately
+        // Apply background immediately to break the curse
         visualArea.style.backgroundImage = `url('${targetImage}')`;
 
         // UI Updates
