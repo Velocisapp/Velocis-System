@@ -173,7 +173,6 @@ class VelocisSovereign {
     }
 
     async resetTrip() {
-        // Safe-Shutdown Scanner to release hardware lock
         if(this.scanner) {
             try { await this.scanner.stop(); } catch(e) {}
             this.scanner = null;
@@ -194,7 +193,6 @@ class VelocisSovereign {
         readerElem.style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         
-        // Re-initialize class property to ensure stability
         this.scanner = new Html5Qrcode("reader");
         try {
             await this.scanner.start(
@@ -274,7 +272,7 @@ class VelocisSovereign {
         
         const visualArea = document.getElementById('dest-visualizer');
         const cityName = this.flightData.dest.trim().toUpperCase();
-        const buster = Date.now();
+        const buster = Date.now(); // FORCED CACHE BUSTER
 
         const satelliteLibrary = {
             "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1600&auto=format&fit=crop&v=${buster}`,
@@ -286,7 +284,6 @@ class VelocisSovereign {
 
         const targetImage = satelliteLibrary[cityName] || satelliteLibrary["DEFAULT"];
 
-        // CLEAR OLD IMAGE AND FORCE NEW ONE
         visualArea.style.backgroundImage = "none";
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         
@@ -303,17 +300,8 @@ class VelocisSovereign {
             document.getElementById('text-gate').innerText = this.flightData.gate;
 
             const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-            [1,2,3,4].forEach(i => {
-                const logoDiv = document.getElementById(`logo-${i}`);
-                if(logoDiv) logoDiv.innerHTML = airlineLogo;
-            });
-
-            setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
-
-            const arrivalMsg = document.getElementById('arrival-msg');
-            if (arrivalMsg && this.flightData) {
-                arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">Arrival Briefing for ${cityName} updated.</span>`;
-            }
+            [1,2,3,4].forEach(i => { document.getElementById(`logo-${i}`).innerHTML = airlineLogo; });
+            document.getElementById('market-bridge').style.opacity = "1";
         }, 50);
     }
 }
