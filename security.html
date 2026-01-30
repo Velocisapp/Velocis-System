@@ -110,9 +110,9 @@
             <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
             <div class="airline-box" id="logo-4">----</div>
         </div>
-        <div class="framed-title" style="color:white; border-color:white;">Arrival Hub</div>
+        <div class="framed-title" id="stage-header-4" style="color:white; border-color:white;">Preparing Arrival</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, welcome to your destination. Local guidance is ready.
+            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, <span id="arrival-context-text">we are coordinating your arrival logistics. Once you land, local transit and baggage data will activate here.</span>
         </div>
         <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
             <button id="transport-options-btn" class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>Transport Guide</button>
@@ -186,7 +186,6 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
-                // DATA DETECTIVE: Hunts for city in Timezone, Airport, or Location
                 let foundCity = "Local";
                 if (f.arrival.timezone) {
                     let zoneParts = f.arrival.timezone.split('/');
@@ -204,7 +203,6 @@ class VelocisSovereign {
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 
-                // FORCE OVERWRITE: Immediately kill any old data (Tokyo/Brussels) in storage
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -217,15 +215,27 @@ class VelocisSovereign {
         
         try {
             const cityName = this.flightData.dest.toUpperCase();
-            // RE-CALCULATE FRESH: This line is the Tokyo ghost killer
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             
+            // 1. Contextual Step 4 logic
             const transportBtn = document.getElementById('transport-options-btn');
+            const step4Header = document.getElementById('stage-header-4');
+            const step4Text = document.getElementById('arrival-context-text');
+
             if (transportBtn) {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
-            // VISUALS: Expanded atlas to prevent the black background error
+            // Update text based on current physical stage (simulated by status)
+            if (this.flightData.status === "landed" || this.flightData.status === "arrived") {
+                if (step4Header) step4Header.innerText = "Arrival Hub";
+                if (step4Text) step4Text.innerText = "welcome to your destination. Local guidance and baggage tracking is now active.";
+            } else {
+                if (step4Header) step4Header.innerText = "Preparing Arrival";
+                if (step4Text) step4Text.innerText = `we are coordinating your arrival logistics. Once you land in ${cityDisplayName}, local transit and baggage data will activate here.`;
+            }
+
+            // 2. VISUALS: Expanded atlas with fallback
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
