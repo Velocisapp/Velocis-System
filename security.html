@@ -172,9 +172,10 @@ class VelocisSovereign {
     }
 
     resetTrip() {
-        // FULL CACHE WIPE
+        // MEMORY PURGE: Clears variables and cache to prevent New York sticky-background
         localStorage.clear();
         sessionStorage.clear();
+        this.flightData = null;
         window.location.reload();
     }
 
@@ -257,7 +258,7 @@ class VelocisSovereign {
         const visualArea = document.getElementById('dest-visualizer');
         const cityName = this.flightData.dest.trim().toUpperCase();
         
-        // NUCLEAR CACHE BUSTER: Dynamic timestamp forces browser to refresh images
+        // NUCLEAR CACHE BUSTER: Dynamic timestamp forces browser to ignore previous session images
         const buster = Date.now();
 
         const satelliteLibrary = {
@@ -270,40 +271,40 @@ class VelocisSovereign {
 
         const targetImage = satelliteLibrary[cityName] || satelliteLibrary["DEFAULT"];
 
-        // CLEAR OLD IMAGE AND FORCE NEW ONE
+        // FORCE REDRAW: Ensures the visualizer resets before applying the specific city image
         visualArea.style.backgroundImage = "none";
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        
         setTimeout(() => {
             visualArea.style.backgroundImage = `url('${targetImage}')`;
-        }, 10);
+            
+            document.getElementById('hud-city').innerText = cityName;
+            document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
+            document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            document.getElementById('text-door').innerText = this.flightData.terminal;
+            document.getElementById('text-counter').innerText = this.flightData.counter;
+            document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
+            document.getElementById('text-airline').innerText = this.flightData.airline;
+            document.getElementById('airport-full-name').innerText = this.flightData.airport;
+            document.getElementById('text-gate').innerText = this.flightData.gate;
 
-        // UI Updates
-        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        document.getElementById('hud-city').innerText = cityName;
-        document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
-        document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
-        document.getElementById('text-door').innerText = this.flightData.terminal;
-        document.getElementById('text-counter').innerText = this.flightData.counter;
-        document.getElementById('card-door').innerText = "Door " + this.flightData.terminal;
-        document.getElementById('text-airline').innerText = this.flightData.airline;
-        document.getElementById('airport-full-name').innerText = this.flightData.airport;
-        document.getElementById('text-gate').innerText = this.flightData.gate;
+            const statusPill = document.getElementById('mission-status-pill');
+            statusPill.innerText = this.flightData.isDelayed ? "DELAYED" : "ON TIME";
+            statusPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
 
-        const statusPill = document.getElementById('mission-status-pill');
-        statusPill.innerText = this.flightData.isDelayed ? "DELAYED" : "ON TIME";
-        statusPill.style.color = this.flightData.isDelayed ? "var(--v-orange)" : "var(--v-gold)";
+            const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
+            [1,2,3,4].forEach(i => {
+                const logoDiv = document.getElementById(`logo-${i}`);
+                if(logoDiv) logoDiv.innerHTML = airlineLogo;
+            });
 
-        const airlineLogo = `<img height="14" src="${this.flightData.logo}"> ${this.flightData.flight}`;
-        [1,2,3,4].forEach(i => {
-            const logoDiv = document.getElementById(`logo-${i}`);
-            if(logoDiv) logoDiv.innerHTML = airlineLogo;
-        });
+            setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
 
-        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1200);
-
-        const arrivalMsg = document.getElementById('arrival-msg');
-        if (arrivalMsg && this.flightData) {
-            arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">Arrival Briefing for ${cityName} updated.</span>`;
-        }
+            const arrivalMsg = document.getElementById('arrival-msg');
+            if (arrivalMsg && this.flightData) {
+                arrivalMsg.innerHTML = `You are currently at <span style="color:var(--v-gold);">${this.flightData.orig}</span>. <br><br><span style="font-size:16px; opacity:0.8; font-weight:400;">Arrival Briefing for ${cityName} updated.</span>`;
+            }
+        }, 50);
     }
 }
 const engine = new VelocisSovereign();
