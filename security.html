@@ -15,14 +15,13 @@
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
 
-        /* ENSURING BUTTONS ARE ON TOP AND CLICKABLE */
         #initiate-btn, #sync-manifest-btn, .scan-trigger-btn { cursor: pointer !important; pointer-events: auto !important; z-index: 3000 !important; position: relative; }
 
         .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 60px; border-radius: 20px; font-weight: 900; font-size: 16px; border: none; margin-bottom: 15px; }
         .manual-input-container { width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
         #flight-input { width: 100%; padding: 16px 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 16px; text-align: center; background: rgba(255,255,255,0.1); color: white; font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
         
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #000; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; transition: background-image 1.2s ease-in-out; }
 
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 6px 10px; border-radius: 10px; font-size: 8px; font-weight: 800; color: white; text-transform: uppercase; }
@@ -33,7 +32,7 @@
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
 
         #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
-        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; }
+        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; text-transform: uppercase; }
         #reset-trip { pointer-events: auto !important; font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
 
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
@@ -131,12 +130,12 @@
             <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
             <div class="airline-box" id="logo-4">----</div>
         </div>
-        <div class="framed-title" style="color:white; border-color:white;">Arrival Data</div>
+        <div class="framed-title" style="color:white; border-color:white;">Arrival Hub</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
             <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, your carousel number and exit door will be shown here after landing.
         </div>
         <div class="esim-cta" style="background: rgba(255,255,255,0.1); border-color: rgba(255,215,0,0.3); margin-top:30px;">
-            <button class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>Ground Transport Options</button>
+            <button id="transport-options-btn" class="slim-btn" onclick="window.location.href='index.html#ground-transport-market'"><span style="color:var(--v-gold); margin-right:5px;">●</span>Ground Transport Options</button>
         </div>
     </div>
 </div>
@@ -165,6 +164,7 @@ class VelocisSovereign {
         if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
         localStorage.clear();
         sessionStorage.clear();
+        this.flightData = null;
         window.location.reload();
     }
 
@@ -220,7 +220,6 @@ class VelocisSovereign {
         } catch(e) { syncBtn.innerText = "SYNC ERROR"; }
     }
 
-    // THE CLEANED UP START FUNCTION
     start(isRestore = false) {
         if(!this.flightData) return;
         
@@ -245,6 +244,20 @@ class VelocisSovereign {
             // Global Passenger Name Update
             document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
+            // SMART BUTTON LOGIC: Context-aware text
+            const transportBtn = document.getElementById('transport-options-btn');
+            if (transportBtn) {
+                if (cityName === "CDG") {
+                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>Paris Subway & Suburban Rail';
+                } else if (cityName === "LHR") {
+                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>London Underground & Express';
+                } else if (cityName === "JFK") {
+                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>AirTrain & NYC Subway';
+                } else {
+                    transportBtn.innerHTML = '<span style="color:var(--v-gold); margin-right:5px;">●</span>Ground Transport Options';
+                }
+            }
+
             // Mission Card Data
             if(document.getElementById('text-brief-airline')) document.getElementById('text-brief-airline').innerText = this.flightData.airline;
             if(document.getElementById('text-seat')) document.getElementById('text-seat').innerText = this.passenger.seat;
@@ -262,8 +275,7 @@ class VelocisSovereign {
             setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
 
         } catch (err) {
-            console.error("Critical Start Error:", err);
-            // Emergency fallback to at least clear the entry screen
+            console.error("Start Error:", err);
             document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         }
     }
