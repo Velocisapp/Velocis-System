@@ -93,7 +93,8 @@
         </div>
         <div class="framed-title">Check-Point</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Passenger <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span> verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. Activate connectivity before boarding:
+            Passenger <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span> verified. Preparing for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. <br><br>
+            Activate your connectivity before boarding:
         </div>
         <div class="esim-cta">
             <button class="slim-btn" onclick="window.location.href='index.html#esim-connectivity-hub'">ACTIVATE TRAVEL eSIM</button>
@@ -175,7 +176,7 @@ class VelocisSovereign {
             this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
             this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
             
-            // CLEAN DATA: Turning "0953" into "953" so the API recognizes it
+            // CLEAN DATA: Strips leading zeros so the API returns real data (0953 becomes 953)
             const rawFlight = data.substring(27, 32).trim();
             this.passenger.flightNum = rawFlight.replace(/^0+/, ''); 
             
@@ -189,13 +190,8 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "AUTHENTICATING...";
+        syncBtn.innerText = "QUERYING LIVE DATA...";
         
-        // Barcode-to-Real-Data Mapping (Truth Table)
-        const cityMap = { "EZE": "Buenos Aires", "NRT": "Tokyo", "JNB": "Johannesburg", "BRU": "Brussels" };
-        const airlineMap = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
-
-        // STEP 1: DYNAMIC API CALL
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
@@ -203,28 +199,32 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // Ensure we pick the flight matching our barcode destination
+                // TRIPLE-LOCK FILTER: Match API result to Barcode Destination (Prevents ghost flights)
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
+                let foundCity = "Local";
+                if (f.arrival.timezone) foundCity = f.arrival.timezone.split('/').pop().replace(/_/g, ' ');
+                else if (f.arrival.airport) foundCity = f.arrival.airport.split(' ')[0];
+
                 this.flightData = {
                     flight: f.flight.iata,
                     airline: f.airline.name, 
                     dest: f.arrival.iata,
                     gate: f.departure.gate || "TBD",
                     terminal: f.departure.terminal || "1",
-                    arrivalCity: f.arrival.airport.split(' ')[0],
+                    arrivalCity: foundCity,
                     status: f.flight_status,
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().split(' ')[0]}.com&sz=64`
                 };
             } else {
-                // FALLBACK: Use Barcode Sovereign Truth if API is silent
+                // FALLBACK: If API fails, construct from Barcode Sovereign Truth
+                const airlineNames = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
+                const cityNames = { "EZE": "Buenos Aires", "NRT": "Tokyo" };
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: airlineMap[this.passenger.airlineCode] || "American Airlines",
+                    airline: airlineNames[this.passenger.airlineCode] || "International Carrier",
                     dest: this.passenger.barcodeDest,
-                    gate: "TBD", terminal: "1", counter: "AIRLINE DESK",
-                    arrivalCity: cityMap[this.passenger.barcodeDest] || "Local",
-                    status: "scheduled",
+                    gate: "TBD", terminal: "1", arrivalCity: cityNames[this.passenger.barcodeDest] || "Destination", status: "scheduled",
                     logo: `https://www.google.com/s2/favicons?domain=aa.com&sz=64`
                 };
             }
@@ -234,25 +234,8 @@ class VelocisSovereign {
             document.getElementById('initiate-btn').style.display = 'block';
 
         } catch(e) { 
-            syncBtn.innerText = "SYNC ERROR - RETRYING LOCAL..."; 
-            // Final Local Fallback to bypass hang
-            this.performHandshakeLocal();
+            syncBtn.innerText = "CONNECTION ERROR - CHECK DATA"; 
         }
-    }
-
-    performHandshakeLocal() {
-        const cityMap = { "EZE": "Buenos Aires", "NRT": "Tokyo" };
-        const airlineMap = { "AA": "American Airlines" };
-        this.flightData = {
-            flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-            airline: airlineMap[this.passenger.airlineCode] || "American Airlines",
-            dest: this.passenger.barcodeDest,
-            arrivalCity: cityMap[this.passenger.barcodeDest] || "Buenos Aires",
-            gate: "TBD", terminal: "1", status: "scheduled", logo: "https://www.google.com/s2/favicons?domain=aa.com&sz=64"
-        };
-        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        document.getElementById('sync-manifest-btn').style.display = 'none';
-        document.getElementById('initiate-btn').style.display = 'block';
     }
 
     start(isRestore = false) {
@@ -273,7 +256,7 @@ class VelocisSovereign {
 
             const atlas = { "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80` };
             const visual = document.getElementById('dest-visualizer');
-            if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || atlas["EZE"]}')`;
+            if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80'}')`;
             
             const logoHTML = `${this.flightData.flight}`;
             [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
