@@ -33,6 +33,9 @@
 
         .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+
+        .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .sb-logo { height: 35px; width: 35px; }
     </style>
 </head>
 <body>
@@ -90,8 +93,7 @@
         </div>
         <div class="framed-title">Check-Point</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Passenger <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span> verified. Preparing for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. <br><br>
-            Activate your connectivity before boarding:
+            Passenger <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span> verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. Activate connectivity before boarding:
         </div>
         <div class="esim-cta">
             <button class="slim-btn" onclick="window.location.href='index.html#esim-connectivity-hub'">ACTIVATE TRAVEL eSIM</button>
@@ -107,6 +109,13 @@
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
             Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span>, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. 
             Consider a coffee break while you wait for your flight:
+        </div>
+        <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
+            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
+            <div style="text-align:right;">
+                <div style="color:var(--v-gold); font-size:8px; font-weight:900; letter-spacing:1px; margin-bottom:2px;">STARBUCKS DISCOUNT</div>
+                <div style="background: var(--v-blue); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">VELOCIS15</div>
+            </div>
         </div>
     </div>
 
@@ -166,7 +175,7 @@ class VelocisSovereign {
             this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
             this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
             
-            // KEY FIX: CLEAN FLIGHT NUMBER (Turns "0953" into "953")
+            // CLEAN DATA: Turning "0953" into "953" so the API recognizes it
             const rawFlight = data.substring(27, 32).trim();
             this.passenger.flightNum = rawFlight.replace(/^0+/, ''); 
             
@@ -182,7 +191,11 @@ class VelocisSovereign {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "AUTHENTICATING...";
         
-        // 1. DYNAMIC API CALL USING CLEAN DATA
+        // Barcode-to-Real-Data Mapping (Truth Table)
+        const cityMap = { "EZE": "Buenos Aires", "NRT": "Tokyo", "JNB": "Johannesburg", "BRU": "Brussels" };
+        const airlineMap = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
+
+        // STEP 1: DYNAMIC API CALL
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
@@ -190,30 +203,28 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // Find the specific flight to our destination (prevents Shanghai ghosting)
+                // Ensure we pick the flight matching our barcode destination
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
-                let foundCity = "Local";
-                if (f.arrival.timezone) foundCity = f.arrival.timezone.split('/').pop().replace(/_/g, ' ');
-                else if (f.arrival.airport) foundCity = f.arrival.airport.split(' ')[0];
-
                 this.flightData = {
                     flight: f.flight.iata,
-                    airline: f.airline.name, // REAL AIRLINE NAME FROM API
+                    airline: f.airline.name, 
                     dest: f.arrival.iata,
                     gate: f.departure.gate || "TBD",
                     terminal: f.departure.terminal || "1",
-                    arrivalCity: foundCity,
+                    arrivalCity: f.arrival.airport.split(' ')[0],
                     status: f.flight_status,
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().split(' ')[0]}.com&sz=64`
                 };
             } else {
-                // FALLBACK IF API RETURNS NOTHING
+                // FALLBACK: Use Barcode Sovereign Truth if API is silent
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: (this.passenger.airlineCode === 'AA') ? "American Airlines" : "International Partner",
+                    airline: airlineMap[this.passenger.airlineCode] || "American Airlines",
                     dest: this.passenger.barcodeDest,
-                    gate: "TBD", terminal: "1", arrivalCity: "Buenos Aires", status: "scheduled",
+                    gate: "TBD", terminal: "1", counter: "AIRLINE DESK",
+                    arrivalCity: cityMap[this.passenger.barcodeDest] || "Local",
+                    status: "scheduled",
                     logo: `https://www.google.com/s2/favicons?domain=aa.com&sz=64`
                 };
             }
@@ -223,8 +234,25 @@ class VelocisSovereign {
             document.getElementById('initiate-btn').style.display = 'block';
 
         } catch(e) { 
-            syncBtn.innerText = "CONNECTION ERROR"; 
+            syncBtn.innerText = "SYNC ERROR - RETRYING LOCAL..."; 
+            // Final Local Fallback to bypass hang
+            this.performHandshakeLocal();
         }
+    }
+
+    performHandshakeLocal() {
+        const cityMap = { "EZE": "Buenos Aires", "NRT": "Tokyo" };
+        const airlineMap = { "AA": "American Airlines" };
+        this.flightData = {
+            flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
+            airline: airlineMap[this.passenger.airlineCode] || "American Airlines",
+            dest: this.passenger.barcodeDest,
+            arrivalCity: cityMap[this.passenger.barcodeDest] || "Buenos Aires",
+            gate: "TBD", terminal: "1", status: "scheduled", logo: "https://www.google.com/s2/favicons?domain=aa.com&sz=64"
+        };
+        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+        document.getElementById('sync-manifest-btn').style.display = 'none';
+        document.getElementById('initiate-btn').style.display = 'block';
     }
 
     start(isRestore = false) {
@@ -243,6 +271,10 @@ class VelocisSovereign {
             if(document.getElementById('text-seat')) document.getElementById('text-seat').innerText = this.passenger.seat;
             if(document.getElementById('text-gate')) document.getElementById('text-gate').innerText = this.flightData.gate;
 
+            const atlas = { "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80` };
+            const visual = document.getElementById('dest-visualizer');
+            if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || atlas["EZE"]}')`;
+            
             const logoHTML = `${this.flightData.flight}`;
             [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
 
