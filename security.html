@@ -186,23 +186,21 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
+                // Aggressive city detection
                 let foundCity = "Local";
-                if (f.arrival.timezone) {
-                    let zoneParts = f.arrival.timezone.split('/');
-                    foundCity = zoneParts[zoneParts.length - 1].replace(/_/g, ' ');
-                } else if (f.arrival.airport) {
-                    foundCity = f.arrival.airport.split(' ')[0];
-                }
+                if (f.arrival.timezone) foundCity = f.arrival.timezone.split('/').pop().replace(/_/g, ' ');
+                else if (f.arrival.airport) foundCity = f.arrival.airport.split(' ')[0];
 
                 this.flightData = {
                     flight: f.flight.iata, airline: f.airline.name, 
                     dest: f.arrival.iata, gate: f.departure.gate || "TBD", 
                     terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || "AIRLINE DESK",
-                    airport: f.arrival.airport,
                     arrivalCity: foundCity, 
+                    status: f.flight_status,
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 
+                // Clear old city data by overwriting LocalStorage
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -217,7 +215,7 @@ class VelocisSovereign {
             const cityName = this.flightData.dest.toUpperCase();
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             
-            // 1. Contextual Step 4 logic
+            // 1. Contextual UI Logic
             const transportBtn = document.getElementById('transport-options-btn');
             const step4Header = document.getElementById('stage-header-4');
             const step4Text = document.getElementById('arrival-context-text');
@@ -226,20 +224,20 @@ class VelocisSovereign {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
-            // Update text based on current physical stage (simulated by status)
             if (this.flightData.status === "landed" || this.flightData.status === "arrived") {
                 if (step4Header) step4Header.innerText = "Arrival Hub";
-                if (step4Text) step4Text.innerText = "welcome to your destination. Local guidance and baggage tracking is now active.";
+                if (step4Text) step4Text.innerText = `welcome to ${cityDisplayName}. Local guidance and baggage tracking is now active.`;
             } else {
                 if (step4Header) step4Header.innerText = "Preparing Arrival";
                 if (step4Text) step4Text.innerText = `we are coordinating your arrival logistics. Once you land in ${cityDisplayName}, local transit and baggage data will activate here.`;
             }
 
-            // 2. VISUALS: Expanded atlas with fallback
+            // 2. VISUALS: Detailed Mapping
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
                 "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`,
+                "PVG": `https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?auto=format&fit=crop&w=1200&q=80`,
                 "BRU": `https://images.unsplash.com/photo-1563294314-169827051381?auto=format&fit=crop&w=1200&q=80`
             };
             const defaultImg = `https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80`;
