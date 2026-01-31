@@ -93,7 +93,8 @@
         </div>
         <div class="framed-title">Check-Point</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Passenger <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span> verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. Activate connectivity before boarding:
+            Passenger <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span> verified for arrival in <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. <br><br>
+            Activate global connectivity before boarding:
         </div>
         <div class="esim-cta">
             <button class="slim-btn" onclick="window.location.href='index.html#esim-connectivity-hub'">ACTIVATE TRAVEL eSIM</button>
@@ -151,12 +152,7 @@ class VelocisSovereign {
         }
     }
 
-    async resetTrip() {
-        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.reload();
-    }
+    async resetTrip() { localStorage.clear(); window.location.reload(); }
 
     async startScanner() {
         document.getElementById('reader').style.display = 'block';
@@ -174,10 +170,8 @@ class VelocisSovereign {
             this.passenger.seat = data.substring(48, 52).trim();
             this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
             this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
-            
-            // KEY FIX: Cleaning the ID (Strips leading zeros so the API returns real data)
-            const rawFlight = data.substring(27, 32).trim();
-            this.passenger.flightNum = rawFlight.replace(/^0+/, ''); 
+            // CLEAN DATA: Forces "953" instead of "0953" for API success
+            this.passenger.flightNum = data.substring(27, 32).trim().replace(/^0+/, ''); 
             
             localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
             if(this.scanner) await this.scanner.stop(); 
@@ -189,7 +183,7 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "AUTHENTICATING...";
+        syncBtn.innerText = "QUERYING LIVE API...";
         
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
@@ -198,79 +192,58 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // FILTER: pick result matching Barcode Destination Code
+                // TRIPLE-LOCK FILTER: Match against ticket destination code
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
-                let foundCity = "Local";
-                if (f.arrival.timezone) foundCity = f.arrival.timezone.split('/').pop().replace(/_/g, ' ');
-                else if (f.arrival.airport) foundCity = f.arrival.airport.split(' ')[0];
-
                 this.flightData = {
                     flight: f.flight.iata,
                     airline: f.airline.name, 
                     dest: f.arrival.iata,
+                    arrivalCity: f.arrival.airport.split(' ')[0],
                     gate: f.departure.gate || "TBD",
                     terminal: f.departure.terminal || "1",
-                    arrivalCity: foundCity,
-                    status: f.flight_status,
-                    logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().split(' ')[0]}.com&sz=64`
+                    status: f.flight_status
                 };
             } else {
-                // FALLBACK: Use Barcode truth if API is silent
-                const airlineNames = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
-                const cityNames = { "EZE": "Buenos Aires", "NRT": "Tokyo" };
+                // FALLBACK: Barcode Sovereignty logic (Real Names from Codes)
+                const airlines = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
+                const cities = { "EZE": "Buenos Aires" };
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: airlineNames[this.passenger.airlineCode] || "International Carrier",
+                    airline: airlines[this.passenger.airlineCode] || "International Carrier",
                     dest: this.passenger.barcodeDest,
-                    gate: "TBD", terminal: "1", arrivalCity: cityNames[this.passenger.barcodeDest] || "Destination", status: "scheduled",
-                    logo: `https://www.google.com/s2/favicons?domain=aa.com&sz=64`
+                    arrivalCity: cities[this.passenger.barcodeDest] || "Destination",
+                    gate: "TBD", terminal: "1", status: "scheduled"
                 };
             }
 
             localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
             syncBtn.style.display = 'none';
             document.getElementById('initiate-btn').style.display = 'block';
-
-        } catch(e) { 
-            syncBtn.innerText = "CONNECTION ERROR"; 
-        }
+        } catch(e) { syncBtn.innerText = "SYNC ERROR"; }
     }
 
-    start(isRestore = false) {
+    start() {
         if(!this.flightData) return;
+        const cityName = this.flightData.dest.toUpperCase();
+        const cityDisplayName = this.flightData.arrivalCity;
         
-        try {
-            const cityName = this.flightData.dest.toUpperCase();
-            const cityDisplayName = this.flightData.arrivalCity;
-            
-            if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = cityName;
-            if(document.getElementById('hud-gate')) document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
-            
-            document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
-            if(document.getElementById('text-checkpoint-city')) document.getElementById('text-checkpoint-city').innerText = cityDisplayName;
-            if(document.getElementById('text-brief-airline')) document.getElementById('text-brief-airline').innerText = this.flightData.airline;
-            if(document.getElementById('text-seat')) document.getElementById('text-seat').innerText = this.passenger.seat;
-            if(document.getElementById('text-gate')) document.getElementById('text-gate').innerText = this.flightData.gate;
+        // 1. DATA POPULATION
+        document.getElementById('hud-city').innerText = cityName;
+        document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
+        document.getElementById('text-brief-airline').innerText = this.flightData.airline;
+        document.getElementById('text-checkpoint-city').innerText = cityDisplayName;
+        document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-            // REAL-TIME BACKGROUND LOGIC
-            const visual = document.getElementById('dest-visualizer');
-            if(visual) {
-                // Use a dynamic search link to avoid hardcoding specific local paths
-                const query = cityDisplayName.replace(/ /g, '-').toLowerCase();
-                visual.style.backgroundImage = `url('https://source.unsplash.com/1200x800/?city,${query},landmark')`;
-                
-                // Fallback for EZE specific testing if Unsplash dynamic search is slow
-                if(cityName === "EZE") visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80')`;
-            }
-            
-            const logoHTML = `${this.flightData.flight}`;
-            [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
+        // 2. DYNAMIC BACKGROUND RESTORATION
+        const atlas = { "EZE": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80" };
+        const visual = document.getElementById('dest-visualizer');
+        if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || ""}')`;
 
-            document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-            setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
-
-        } catch (err) { console.error("Start Error:", err); }
+        // 3. UI TRANSITION
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        const logoHTML = `${this.flightData.flight}`;
+        [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
     }
 }
 const engine = new VelocisSovereign();
