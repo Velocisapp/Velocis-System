@@ -186,7 +186,7 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
-                // Aggressive city detection
+                // DATA DETECTIVE: Hunts for city directly in manifest
                 let foundCity = "Local";
                 if (f.arrival.timezone) foundCity = f.arrival.timezone.split('/').pop().replace(/_/g, ' ');
                 else if (f.arrival.airport) foundCity = f.arrival.airport.split(' ')[0];
@@ -200,7 +200,7 @@ class VelocisSovereign {
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 
-                // Clear old city data by overwriting LocalStorage
+                // FORCE OVERWRITE: Aggressively save fresh data
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -214,25 +214,26 @@ class VelocisSovereign {
         try {
             const cityName = this.flightData.dest.toUpperCase();
             const cityDisplayName = this.flightData.arrivalCity || "Local";
+            const isArrived = (this.flightData.status === "landed" || this.flightData.status === "arrived");
             
-            // 1. Contextual UI Logic
+            // 1. DYNAMIC BUTTON (NO TOKYO DEFAULT)
             const transportBtn = document.getElementById('transport-options-btn');
-            const step4Header = document.getElementById('stage-header-4');
-            const step4Text = document.getElementById('arrival-context-text');
-
             if (transportBtn) {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
-            if (this.flightData.status === "landed" || this.flightData.status === "arrived") {
-                if (step4Header) step4Header.innerText = "Arrival Hub";
-                if (step4Text) step4Text.innerText = `welcome to ${cityDisplayName}. Local guidance and baggage tracking is now active.`;
+            // 2. CONTEXTUAL STAGE MESSAGING
+            const stageHeader = document.getElementById('stage-header-4');
+            const statusText = document.getElementById('arrival-context-text');
+            if(isArrived) {
+                if(stageHeader) stageHeader.innerText = "Arrival Hub";
+                if(statusText) statusText.innerText = `welcome to ${cityDisplayName}. Local guidance and baggage tracking is now active.`;
             } else {
-                if (step4Header) step4Header.innerText = "Preparing Arrival";
-                if (step4Text) step4Text.innerText = `we are coordinating your arrival logistics. Once you land in ${cityDisplayName}, local transit and baggage data will activate here.`;
+                if(stageHeader) stageHeader.innerText = "Preparing Arrival";
+                if(statusText) statusText.innerText = `we are coordinating your arrival logistics. Once you land in ${cityDisplayName}, local transit and baggage data will activate here.`;
             }
 
-            // 2. VISUALS: Detailed Mapping
+            // 3. VISUALS: Expanded atlas with fallback
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
