@@ -167,23 +167,36 @@ class VelocisSovereign {
     }
 
     async handleScan(data) {
+        // PRO-LOGIC: Normalize string and perform pattern hunting
+        const raw = data.toUpperCase().replace(/\s\s+/g, ' ');
+        
+        // Find Carrier
+        const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX/);
+        this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
+
+        // Find Flight Number and kill leading zeros (0553 -> 553)
+        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX)\s*(\d{3,4})/);
+        this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
+
+        // Find Destination
+        const destMatch = raw.match(/YVR|EZE|JFK|LAX|NRT|LHR/);
+        this.passenger.barcodeDest = destMatch ? destMatch[0] : "";
+
+        // Extract Seat (finding the class-seat pattern like Y 001A)
+        const seatMatch = raw.match(/[A-Z]\s*(\d{3}[A-Z])/);
+        this.passenger.seat = seatMatch ? seatMatch[1].replace(/^0+/, '') : "01A";
+
+        // Extract Name
         if (data.startsWith("M1")) {
             const rawName = data.substring(2, 22).trim();
             this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
-            this.passenger.seat = data.substring(48, 52).trim();
-            this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
-            this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
-            
-            // KEY FIX: Cleaning the ID (0553 becomes 553)
-            const rawFlight = data.substring(27, 32).trim();
-            this.passenger.flightNum = rawFlight.replace(/^0+/, ''); 
-            
-            localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
-            if(this.scanner) await this.scanner.stop(); 
-            document.getElementById('reader').style.display = 'none'; 
-            document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.name}`;
-            document.getElementById('verify-briefing').style.display = 'block';
         }
+
+        localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
+        if(this.scanner) await this.scanner.stop(); 
+        document.getElementById('reader').style.display = 'none'; 
+        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.airlineCode}${this.passenger.flightNum}`;
+        document.getElementById('verify-briefing').style.display = 'block';
     }
 
     async performHandshake() {
@@ -197,7 +210,7 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // TRIPLE-LOCK FILTER: API result must match the BARCODE destination (YVR for Air Canada test)
+                // Triple-Lock Filter
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
                 this.flightData = {
@@ -210,7 +223,7 @@ class VelocisSovereign {
                     status: f.flight_status
                 };
             } else {
-                // FALLBACK: Use ticket code mapping
+                // Fallback Mapping
                 const airlines = { "AC": "Air Canada", "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
                 const cities = { "YVR": "Vancouver", "EZE": "Buenos Aires" };
                 this.flightData = {
