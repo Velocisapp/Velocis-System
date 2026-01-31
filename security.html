@@ -166,8 +166,8 @@ class VelocisSovereign {
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
         const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX)\s*(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
-        const destMatch = raw.match(/YVR|EZE|JFK|LAX|HKG|LHR|FRA|NRT|DEL|DXB|MEL|EWR|SIN|ZRH/);
-        this.passenger.barcodeDest = destMatch ? destMatch[0] : "";
+        const destMatch = raw.match(/[A-Z]{3}/g);
+        this.passenger.barcodeDest = destMatch ? destMatch[destMatch.length - 1] : "";
         const seatMatch = raw.match(/[A-Z]\s*(\d{3}[A-Z])/);
         this.passenger.seat = seatMatch ? seatMatch[1].replace(/^0+/, '') : "01A";
 
@@ -187,14 +187,12 @@ class VelocisSovereign {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "QUERYING PAID MANIFEST...";
 
-        // PAID TIER PROTOCOL: Use Airline + FlightNumber + Carrier Lock for strict filtering
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
             let res = await fetch(url);
             let json = await res.json();
             
-            // SOVEREIGN ARBITRATION: Find the specific leg matching your scanned carrier and ticket destination
             let f = null;
             if(json.data && json.data.length > 0) {
                 f = json.data.find(leg => 
@@ -203,7 +201,6 @@ class VelocisSovereign {
                 ) || json.data.find(leg => leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
             }
 
-            // DYNAMIC SANITIZATION: No hardcoding. Extract city from airport name and strip noise
             let cityRaw = f && f.arrival.airport ? f.arrival.airport : this.passenger.barcodeDest;
             let cityClean = cityRaw.split('(')[0].split('Int')[0].split('Air')[0].trim();
 
@@ -236,14 +233,26 @@ class VelocisSovereign {
         document.getElementById('arrival-context-text').innerText = this.flightData.arrivalCity;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-        const cityQuery = this.flightData.arrivalCity.toLowerCase();
-        const visual = document.getElementById('dest-visualizer');
-        if(visual) {
-            const atlas = { "vancouver": "1559511260-66a654ae982a", "tokyo": "1540959733332-eab4deabeeaf", "melbourne": "1545044846-351ba102b4d5", "london": "1513635269975-59663e0ac1ad", "new york": "1496442226666-8d4d0e62e6e9", "newark": "1496442226666-8d4d0e62e6e9", "dubai": "1512453979798-5ea266f8880c", "frankfurt": "1541031310-91c6e6123a10", "zurich": "1530121115-373f15d2a938" };
+        setTimeout(() => {
+            const cityQuery = this.flightData.arrivalCity.toLowerCase();
+            const visual = document.getElementById('dest-visualizer');
+            
+            const atlas = {
+                "usa": "1496442226666-8d4d0e62e6e9", "new york": "1496442226666-8d4d0e62e6e9", "canada": "1503310483224-22d69a39a997", "mexico": "1512813190353-c84039d5f75a", "jamaica": "1503756235033-076193fe3b51", "cuba": "1504829852364-758ece571499", "dominican": "1524311545610-d7904d79e671", "costa rica": "1492338194477-e93cf583b870", "panama": "1515964893451-f76274438341", "bahamas": "1505307222302-3f82216060c5",
+                "argentina": "1589909202802-8f4aadce1849", "buenos": "1589909202802-8f4aadce1849", "brazil": "1483729558481-8e3c84b31211", "chile": "1537243912193-4774304b4097", "peru": "1526364978144-19623e6f9555", "colombia": "1533690105115-ee3830230c33", "ecuador": "1515949117622-42e76383e5a5",
+                "uk": "1513635269975-59663e0ac1ad", "london": "1513635269975-59663e0ac1ad", "france": "1502603300340-061d22384b8d", "paris": "1502603300340-061d22384b8d", "germany": "1528301721711-d079611c97d0", "frankfurt": "1541031310-91c6e6123a10", "italy": "1552832230-c0199092ec44", "spain": "1539561968-7b973fb3001f", "switzerland": "1530121115-373f15d2a938", "zurich": "1530121115-373f15d2a938", "greece": "1500595046608-1fa210c4f1e4", "netherlands": "1516703483864-1fe3667222c1", "belgium": "1490216413233-311859c24946", "austria": "1516903529263-ad79643f07a0", "sweden": "1501463353821-4f1a2cc351ba", "norway": "1519727771962-d93cb7ad1244", "denmark": "1513322739837-124b8969796e", "finland": "1535490596395-58f709ef6b17", "portugal": "1506161453986-7a7005114798", "ireland": "1469501539128-097561858547", "poland": "1512411032822-19e3427776b2", "turkey": "1535914223403-1ef5ce05e4fb", "russia": "1513322739837-124b8969796e", "czech": "1541334646-047a06488340", "hungary": "1507208793391-ec5753889b70", "iceland": "1476611317441-2558f62c3820", "croatia": "1540939233-3636780c115c",
+                "japan": "1540959733332-eab4deabeeaf", "tokyo": "1540959733332-eab4deabeeaf", "china": "1478436127367-e43586847823", "korea": "1538485499251-8a27d995f64d", "thailand": "1508009603772-19a60aa00e23", "vietnam": "1528272027318-98517281e7d2", "singapore": "1525625293386-3f8f99389edd", "malaysia": "1523991031257-36e6fe846430", "india": "1524230572395-9257662fa9c6", "indonesia": "1535401255261-0d6df9b195bf", "philippines": "1516239482915-09527027c99a", "taiwan": "1492666673255-2d64be2c7612", "maldives": "1514282401153-be721884498e",
+                "uae": "1512453979798-5ea266f8880c", "dubai": "1512453979798-5ea266f8880c", "saudi": "1589816353917-d1aeb7399dec", "qatar": "1513297858339-18ae3395d38a", "israel": "1513430343407-2856627c2f6d", "jordan": "1515949117622-42e76383e5a5",
+                "egypt": "1554443484-99743dec7831", "south africa": "1533615437142-7abc5822070d", "morocco": "1541819712-783832145392", "kenya": "1583064313184-4ee97fd15f00", "ethiopia": "1542736667-069246bdbc6d", "addis": "1542736667-069246bdbc6d", "tanzania": "1518349071597-291771199341", "nigeria": "1596702316538-4033758f8b0e",
+                "australia": "1545044846-351ba102b4d5", "melbourne": "1545044846-351ba102b4d5", "new zealand": "1507699622143-579c016c5236", "fiji": "1473950117833-29a9978f8c4e"
+            };
+
             let imgId = "1436491865332-7a61a109c0f3"; 
-            for (let k in atlas) { if(cityQuery.includes(k)) imgId = atlas[k]; }
-            visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1200&q=80')`;
-        }
+            for (let k in atlas) { 
+                if(cityQuery.includes(k)) { imgId = atlas[k]; break; } 
+            }
+            visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=800&q=60')`;
+        }, 300);
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { 
