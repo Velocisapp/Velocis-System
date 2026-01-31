@@ -177,12 +177,13 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "SOVEREIGN SYNCING...";
+        syncBtn.innerText = "AUTHENTICATING...";
         
+        // INSTANT MAPS (Sovereign Truth)
         const cityMap = { "EZE": "Buenos Aires", "NRT": "Tokyo", "JNB": "Johannesburg", "BRU": "Brussels", "PVG": "Shanghai" };
         const airlineNames = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas", "CX": "Cathay Pacific" };
 
-        // 1. INSTANT BUILD (TICKET IS THE TRUTH)
+        // 1. INSTANT BUILD FROM BARCODE (DO NOT WAIT FOR API)
         this.flightData = {
             flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
             airline: airlineNames[this.passenger.airlineCode] || "Your Airline",
@@ -190,33 +191,27 @@ class VelocisSovereign {
             gate: "TBD", terminal: "1", counter: "AIRLINE DESK",
             arrivalCity: cityMap[this.passenger.barcodeDest] || "Local",
             status: "scheduled",
-            logo: `https://www.google.com/s2/favicons?domain=${(this.passenger.airlineCode === 'AA' ? 'aa.com' : 'airline.com')}&sz=64`
+            logo: `https://www.google.com/s2/favicons?domain=aa.com&sz=64`
         };
 
-        // 2. SAVE TRUTH IMMEDIATELY
+        // 2. FORCE SAVE & UNLOCK
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+        
+        syncBtn.style.display = 'none';
+        document.getElementById('initiate-btn').style.display = 'block';
 
-        // 3. UNLOCK START BUTTON INSTANTLY (BYPASS HANG)
-        setTimeout(() => {
-            syncBtn.style.display = 'none';
-            document.getElementById('initiate-btn').style.display = 'block';
-        }, 300);
-
-        // 4. BACKGROUND SILENT SYNC (IGNORE ERRORS)
+        // 3. BACKGROUND API SYNC (NON-BLOCKING)
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
-        fetch(url)
-            .then(r => r.json())
-            .then(json => {
-                if(json.data && json.data.length > 0) {
-                    let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
-                    this.flightData.gate = f.departure.gate || "TBD";
-                    this.flightData.status = f.flight_status;
-                    this.flightData.airline = f.airline.name;
-                    localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-                }
-            })
-            .catch(e => console.warn("Sovereign truth preserved. API ignored."));
+        fetch(url).then(r => r.json()).then(json => {
+            if(json.data && json.data.length > 0) {
+                // Ensure API result matches barcode truth
+                let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
+                this.flightData.gate = f.departure.gate || "TBD";
+                this.flightData.status = f.flight_status;
+                localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+            }
+        }).catch(e => console.log("API check bypassed. Barcode truth preserved."));
     }
 
     start(isRestore = false) {
@@ -226,18 +221,18 @@ class VelocisSovereign {
             const cityName = this.flightData.dest.toUpperCase();
             const cityDisplayName = this.flightData.arrivalCity;
             
+            // DYNAMIC TRANSPORT BUTTON
             const transportBtn = document.getElementById('transport-options-btn');
             if (transportBtn) transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
 
+            // DYNAMIC BACKGROUND (PREVENT BLACK SCREEN)
             const atlas = {
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
-                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`,
-                "PVG": `https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?auto=format&fit=crop&w=1200&q=80`
+                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`
             };
             const visual = document.getElementById('dest-visualizer');
-            const bgImg = atlas[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80';
-            if(visual) visual.style.backgroundImage = `url('${bgImg}')`;
+            if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80'}')`;
             
             if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = cityName;
             if(document.getElementById('hud-gate')) document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
