@@ -150,22 +150,13 @@ class VelocisSovereign {
     }
 
     async handleScan(data) {
-        // PRO-LOGIC: Pattern hunting with whitespace normalization
         const raw = data.toUpperCase().replace(/\s\s+/g, ' ');
-        
-        // Find Carrier
         const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
-
-        // Find Flight Number and kill leading zeros
         const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF)\s*(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
-
-        // Find Destination
         const destMatch = raw.match(/YVR|EZE|JFK|LAX|HKG|LHR|FRA|NRT|DEL|DXB/);
         this.passenger.barcodeDest = destMatch ? destMatch[0] : "";
-
-        // Extract Seat (finding the class-seat pattern like Y 001A)
         const seatMatch = raw.match(/[A-Z]\s*(\d{3}[A-Z])/);
         this.passenger.seat = seatMatch ? seatMatch[1].replace(/^0+/, '') : "01A";
 
@@ -184,7 +175,6 @@ class VelocisSovereign {
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "QUERYING LIVE API...";
-        
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}`;
         
         try {
@@ -192,13 +182,9 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // IDENTITY GUARD: Filter by exact carrier code AND destination code
+                // IDENTITY GUARD: Strict match for carrier AND destination
                 let f = json.data.find(x => x.airline.iata === this.passenger.airlineCode && x.arrival.iata === this.passenger.barcodeDest);
-                
-                // Secondary check: carrier match only
                 if (!f) f = json.data.find(x => x.airline.iata === this.passenger.airlineCode);
-                
-                // Final fallback
                 if (!f) f = json.data[0];
 
                 this.flightData = {
@@ -238,11 +224,10 @@ class VelocisSovereign {
         document.getElementById('text-gate').innerText = this.flightData.gate;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-        // DYNAMIC VISUALIZER (FIXED)
         const cityQuery = this.flightData.arrivalCity.toLowerCase();
         const visual = document.getElementById('dest-visualizer');
         if(visual) {
-            visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1542736667-069246bdbc6d?auto=format&fit=crop&w=1200&q=80')`; // LA Fallback
+            visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1542736667-069246bdbc6d?auto=format&fit=crop&w=1200&q=80')`;
             if(cityQuery.includes('tokyo') || cityQuery.includes('nrt')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80')`;
             if(cityQuery.includes('vancouver')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=1200&q=80')`;
             if(cityQuery.includes('london')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80')`;
