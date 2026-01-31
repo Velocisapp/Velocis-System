@@ -31,6 +31,10 @@
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; }
+
+        /* FIXED: Starbucks Logo Scaling */
+        .sb-logo { height: 35px !important; width: auto !important; max-width: 35px; }
+        .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -169,8 +173,10 @@ class VelocisSovereign {
             this.passenger.seat = data.substring(48, 52).trim();
             this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
             this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
-            // CLEAN DATA: Strips leading zeros so the API returns real data
-            this.passenger.flightNum = data.substring(27, 32).trim().replace(/^0+/, ''); 
+            
+            // KEY FIX: Cleaning the ID (0553 becomes 553)
+            const rawFlight = data.substring(27, 32).trim();
+            this.passenger.flightNum = rawFlight.replace(/^0+/, ''); 
             
             localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
             if(this.scanner) await this.scanner.stop(); 
@@ -191,25 +197,25 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // TRIPLE-LOCK FILTER: Match against ticket destination code
+                // TRIPLE-LOCK FILTER: API result must match the BARCODE destination (YVR for Air Canada test)
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
                 this.flightData = {
                     flight: f.flight.iata,
                     airline: f.airline.name, 
                     dest: f.arrival.iata,
-                    arrivalCity: f.arrival.airport.split(' ')[0],
                     gate: f.departure.gate || "TBD",
                     terminal: f.departure.terminal || "1",
+                    arrivalCity: f.arrival.airport ? f.arrival.airport.split(' ')[0] : "Destination",
                     status: f.flight_status
                 };
             } else {
-                // FALLBACK: Use local dictionary mapping for codes
-                const airlines = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
-                const cities = { "EZE": "Buenos Aires" };
+                // FALLBACK: Use ticket code mapping
+                const airlines = { "AC": "Air Canada", "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
+                const cities = { "YVR": "Vancouver", "EZE": "Buenos Aires" };
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: airlines[this.passenger.airlineCode] || "International Carrier",
+                    airline: airlines[this.passenger.airlineCode] || "Validated Carrier",
                     dest: this.passenger.barcodeDest,
                     arrivalCity: cities[this.passenger.barcodeDest] || "Destination",
                     gate: "TBD", terminal: "1", status: "scheduled"
@@ -228,7 +234,7 @@ class VelocisSovereign {
         const cityName = this.flightData.dest.toUpperCase();
         const cityDisplayName = this.flightData.arrivalCity;
         
-        // 1. HUD POPULATION
+        // HUD POPULATION
         document.getElementById('hud-city').innerText = cityName;
         document.getElementById('hud-gate').innerText = "GATE " + (this.flightData.gate || "TBD");
         document.getElementById('text-brief-airline').innerText = this.flightData.airline;
@@ -236,12 +242,15 @@ class VelocisSovereign {
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-        // 2. DYNAMIC BACKGROUND
-        const atlas = { "EZE": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80" };
+        // DYNAMIC BACKGROUND
+        const atlas = { 
+            "EZE": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80",
+            "YVR": "https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=1200&q=80"
+        };
         const visual = document.getElementById('dest-visualizer');
-        if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || ""}')`;
+        if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80"}')`;
 
-        // 3. UI TRANSITION & BRIDGE REVEAL
+        // RE-WIRING THE BRIDGE & UI TRANSITION
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { 
             const bridge = document.getElementById('market-bridge');
