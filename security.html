@@ -163,7 +163,7 @@ class VelocisSovereign {
             const rawName = data.substring(2, 22).trim();
             this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
             this.passenger.seat = data.substring(48, 52).trim();
-            // EXTRACT DATA DIRECTLY FROM BARCODE
+            // TRIPLE-LOCK CAPTURE
             this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
             this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
             this.passenger.flightNum = data.substring(27, 32).trim().replace(/^0+/, '');
@@ -179,35 +179,41 @@ class VelocisSovereign {
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "AUTHENTICATING...";
-        try {
-            // STRICTOR API QUERY: Force Airline Match
-            let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
-            let res = await fetch(url);
-            let json = await res.json();
-            
-            if(json.data && json.data.length > 0) {
-                // TRIPLE-LOCK DESTINATION CHECK: Ignore results not matching the Barcode Destination
-                let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
-                
-                let foundCity = "Local";
-                if (f.arrival.timezone) foundCity = f.arrival.timezone.split('/').pop().replace(/_/g, ' ');
-                else if (f.arrival.airport) foundCity = f.arrival.airport.split(' ')[0];
+        
+        // PRESET SOVEREIGN TRUTH (City Mapping)
+        const cityMap = { "EZE": "Buenos Aires", "NRT": "Tokyo", "JNB": "Johannesburg", "BRU": "Brussels", "PVG": "Shanghai" };
+        const airlineNames = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas", "CX": "Cathay Pacific" };
 
-                this.flightData = {
-                    flight: f.flight.iata, airline: f.airline.name, 
-                    dest: this.passenger.barcodeDest, // Absolute Sovereign truth from Barcode
-                    gate: f.departure.gate || "TBD", 
-                    terminal: f.departure.terminal || "1", counter: f.departure.checkin_counter || "AIRLINE DESK",
-                    arrivalCity: (this.passenger.barcodeDest === "EZE") ? "Buenos Aires" : foundCity, 
-                    status: f.flight_status,
-                    logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
-                };
-                
+        // STEP 1: IMMEDIATELY BUILD TRIP FROM BARCODE DATA (NO HANGING)
+        this.flightData = {
+            flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
+            airline: airlineNames[this.passenger.airlineCode] || "Your Airline",
+            dest: this.passenger.barcodeDest,
+            gate: "TBD", terminal: "1", counter: "AIRLINE DESK",
+            arrivalCity: cityMap[this.passenger.barcodeDest] || "Local",
+            status: "scheduled",
+            logo: `https://www.google.com/s2/favicons?domain=${(this.passenger.airlineCode === 'AA' ? 'aa.com' : 'airline.com')}&sz=64`
+        };
+
+        // STEP 2: SAVE LOCALLY AND UNLOCK DASHBOARD INSTANTLY
+        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+        syncBtn.style.display = 'none';
+        document.getElementById('initiate-btn').style.display = 'block';
+
+        // STEP 3: TRY LIVE API IN THE BACKGROUND (DO NOT WAIT)
+        let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
+        
+        fetch(url).then(res => res.json()).then(json => {
+            if(json.data && json.data.length > 0) {
+                // Background update if API result matches our ticket's destination
+                let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
+                this.flightData.gate = f.departure.gate || "TBD";
+                this.flightData.status = f.flight_status;
+                this.flightData.airline = f.airline.name;
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-                syncBtn.style.display = 'none';
-                document.getElementById('initiate-btn').style.display = 'block';
+                // If dashboard is already open, updates will apply on next start/restore
             }
-        } catch(e) { syncBtn.innerText = "SYNC ERROR"; }
+        }).catch(e => console.log("Background sync skipped/blocked. Using local truth."));
     }
 
     start(isRestore = false) {
@@ -228,17 +234,18 @@ class VelocisSovereign {
 
             if (this.flightData.status === "landed" || this.flightData.status === "arrived") {
                 if (step4Header) step4Header.innerText = "Arrival Hub";
-                if (step4Text) step4Text.innerText = `welcome to ${cityDisplayName}. Local guidance and baggage tracking is now active.`;
+                if (step4Text) step4Text.innerText = `welcome to ${cityDisplayName}. Local guidance is now active.`;
             } else {
                 if (step4Header) step4Header.innerText = "Preparing Arrival";
                 if (step4Text) step4Text.innerText = `we are coordinating your arrival logistics. Once you land in ${cityDisplayName}, local transit and baggage data will activate here.`;
             }
 
-            // VISUAL MAPPING
+            // VISUAL MAPPING (NO BLACK SCREENS)
             const atlas = {
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
-                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`
+                "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`,
+                "PVG": `https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?auto=format&fit=crop&w=1200&q=80`
             };
             const visual = document.getElementById('dest-visualizer');
             if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80'}')`;
