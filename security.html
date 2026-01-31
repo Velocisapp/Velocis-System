@@ -55,7 +55,7 @@
 
 <div id="dest-visualizer">
     <div id="market-bridge">
-        <a class="cta-btn" href="index.html#esim-connectivity-hub">CONNECTIVITY OPTIONS</a>
+        <a class="cta-btn" href="idea.html#esim-connectivity-hub">BREEZE NETWORK HUB</a>
         <div id="reset-trip" onclick="engine.resetTrip()">SCAN NEW TICKET</div>
     </div>
     <div class="hud-overlay">
@@ -90,11 +90,11 @@
             <div class="airline-box" id="logo-2">----</div>
         </div>
         <div class="framed-title">Check-Point</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Verified for arrival in <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. Activate global connectivity before boarding:
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
+            Verified for arrival in <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. Activate Breeze global connectivity:
         </div>
         <div class="esim-cta" style="margin-top:20px;">
-            <button class="slim-btn" onclick="window.location.href='index.html#esim-connectivity-hub'">ACTIVATE TRAVEL eSIM</button>
+            <button class="slim-btn" onclick="window.location.href='idea.html#esim-connectivity-hub'">ACTIVATE BREEZE DATA</button>
         </div>
     </div>
 
@@ -104,9 +104,9 @@
             <div class="airline-box" id="logo-3">----</div>
         </div>
         <div class="framed-title" id="card-gate">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
             Monitoring Gate <span id="text-gate" style="color:var(--v-gold); font-weight:800;">--</span>, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. 
-            Consider a coffee break while you wait for your flight:
+            Consider a coffee break while you wait:
         </div>
         <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
@@ -124,7 +124,7 @@
         </div>
         <div class="framed-title" id="stage-header-4" style="color:white; border-color:white;">Preparing Arrival</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, <span id="arrival-context-text">we are coordinating your arrival logistics. Once you land, local transit and baggage data will activate here.</span>
+            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, <span id="arrival-context-text">we are coordinating your arrival logistics. Once you land, local transit data will activate here.</span>
         </div>
     </div>
 </div>
@@ -186,7 +186,6 @@ class VelocisSovereign {
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "QUERYING LIVE API...";
-        // KEY FIX: Forced &airline_iata parameter to block collisions (SpiceJet/Kenya)
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
@@ -194,25 +193,23 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // Secondary check: verify destination matches ticket
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
                 this.flightData = {
                     flight: f.flight.iata,
                     airline: f.airline.name, 
                     dest: f.arrival.iata,
-                    gate: f.departure.gate || (this.passenger.flightNum === '22' ? "B10" : (this.passenger.flightNum === '93' ? "14" : "TBD")),
+                    gate: f.departure.gate || (this.passenger.flightNum === '400' ? "Z25" : (this.passenger.flightNum === '22' ? "B10" : "TBD")),
                     arrivalCity: f.arrival.airport ? f.arrival.airport.split(' ')[0] : this.passenger.barcodeDest,
                     status: f.flight_status.toUpperCase()
                 };
             } else {
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: this.passenger.airlineCode === 'SQ' ? "Singapore Airlines" : (this.passenger.airlineCode === 'QF' ? "Qantas Airways" : "Active Carrier"),
+                    airline: this.passenger.airlineCode + " Flight",
                     dest: this.passenger.barcodeDest,
                     arrivalCity: this.passenger.barcodeDest,
-                    gate: this.passenger.flightNum === '22' ? "B10" : (this.passenger.flightNum === '93' ? "14" : "TBD"), 
-                    status: "SCHEDULED"
+                    gate: "TBD", status: "SCHEDULED"
                 };
             }
 
@@ -233,18 +230,17 @@ class VelocisSovereign {
         document.getElementById('text-checkpoint-city').innerText = this.flightData.arrivalCity;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('text-gate').innerText = this.flightData.gate;
+        document.getElementById('arrival-context-text').innerText = this.flightData.arrivalCity;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
         const cityQuery = this.flightData.arrivalCity.toLowerCase();
         const visual = document.getElementById('dest-visualizer');
         if(visual) {
             visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1542736667-069246bdbc6d?auto=format&fit=crop&w=1200&q=80')`;
-            if(cityQuery.includes('tokyo') || cityQuery.includes('nrt')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80')`;
+            if(cityQuery.includes('tokyo')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80')`;
             if(cityQuery.includes('vancouver')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=1200&q=80')`;
             if(cityQuery.includes('london')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80')`;
-            if(cityQuery.includes('melbourne')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1545044846-351ba102b4d5?auto=format&fit=crop&w=1200&q=80')`;
-            if(cityQuery.includes('newark') || cityQuery.includes('new york')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80')`;
-            if(cityQuery.includes('singapore')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80')`;
+            if(cityQuery.includes('new york') || cityQuery.includes('jfk')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80')`;
         }
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
