@@ -186,7 +186,7 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data[0];
                 
-                // DATA DETECTIVE: Hunts for city directly in manifest
+                // Aggressive city detection: ensures "Buenos Aires" overrides Brussels/Shanghai
                 let foundCity = "Local";
                 if (f.arrival.timezone) foundCity = f.arrival.timezone.split('/').pop().replace(/_/g, ' ');
                 else if (f.arrival.airport) foundCity = f.arrival.airport.split(' ')[0];
@@ -200,7 +200,6 @@ class VelocisSovereign {
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().replace(/\s/g, '')}.com&sz=64`
                 };
                 
-                // FORCE OVERWRITE: Aggressively save fresh data
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 syncBtn.style.display = 'none';
                 document.getElementById('initiate-btn').style.display = 'block';
@@ -216,35 +215,35 @@ class VelocisSovereign {
             const cityDisplayName = this.flightData.arrivalCity || "Local";
             const isArrived = (this.flightData.status === "landed" || this.flightData.status === "arrived");
             
-            // 1. DYNAMIC BUTTON (NO TOKYO DEFAULT)
+            // 1. Contextual UI Logic for Step 4
             const transportBtn = document.getElementById('transport-options-btn');
+            const step4Header = document.getElementById('stage-header-4');
+            const step4Text = document.getElementById('arrival-context-text');
+
             if (transportBtn) {
                 transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
             }
 
-            // 2. CONTEXTUAL STAGE MESSAGING
-            const stageHeader = document.getElementById('stage-header-4');
-            const statusText = document.getElementById('arrival-context-text');
-            if(isArrived) {
-                if(stageHeader) stageHeader.innerText = "Arrival Hub";
-                if(statusText) statusText.innerText = `welcome to ${cityDisplayName}. Local guidance and baggage tracking is now active.`;
+            if (isArrived) {
+                if (step4Header) step4Header.innerText = "Arrival Hub";
+                if (step4Text) step4Text.innerText = `welcome to ${cityDisplayName}. Local guidance and baggage tracking is now active.`;
             } else {
-                if(stageHeader) stageHeader.innerText = "Preparing Arrival";
-                if(statusText) statusText.innerText = `we are coordinating your arrival logistics. Once you land in ${cityDisplayName}, local transit and baggage data will activate here.`;
+                if (step4Header) step4Header.innerText = "Preparing Arrival";
+                if (step4Text) step4Text.innerText = `we are coordinating your arrival logistics. Once you land in ${cityDisplayName}, local transit and baggage data will activate here.`;
             }
 
-            // 3. VISUALS: Expanded atlas with fallback
+            // 2. VISUALS: Destination Backgrounds
             const atlas = {
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
                 "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`,
-                "PVG": `https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?auto=format&fit=crop&w=1200&q=80`,
-                "BRU": `https://images.unsplash.com/photo-1563294314-169827051381?auto=format&fit=crop&w=1200&q=80`
+                "PVG": `https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?auto=format&fit=crop&w=1200&q=80`
             };
             const defaultImg = `https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80`;
             const visual = document.getElementById('dest-visualizer');
             if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || defaultImg}')`;
             
+            // 3. UI Data Population
             if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = cityName;
             if(document.getElementById('hud-gate')) document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             if(document.getElementById('hud-door')) document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
