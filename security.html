@@ -22,20 +22,15 @@
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
         
+        #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: auto; }
+        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; text-transform: uppercase; }
+        #reset-trip { pointer-events: auto !important; font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
+
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
-
-        #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
-        .cta-btn { pointer-events: auto !important; color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); letter-spacing: 1px; text-transform: uppercase; }
-        #reset-trip { pointer-events: auto !important; font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; display: inline-block; }
-
-        .esim-cta { margin-top: 20px; background: linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(0,198,255,0.2) 100%); border: 1px solid rgba(0,122,255,0.4); border-radius: 20px; padding: 20px; text-align: center; }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-
-        .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; }
-        .sb-logo { height: 35px; width: 35px; }
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -81,8 +76,8 @@
         <div class="framed-title" id="card-door">Door --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
             Welcome, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. We are synchronized with <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">your flight</span>. 
-            Confirming seat <span id="text-seat" style="color:var(--v-gold); font-weight:800;">--</span>. <br><br>
-            VELOCIS is now guiding you step-by-step. Head to Entrance <span id="text-door" style="color:var(--v-gold); font-weight:800;">--</span> for <span id="text-counter" style="color:var(--v-gold); font-weight:800;">AIRLINE DESK</span>.
+            Seat: <span id="text-seat" style="color:var(--v-gold); font-weight:800;">--</span>. <br><br>
+            VELOCIS is now guiding you step-by-step.
         </div>
     </div>
 
@@ -93,8 +88,7 @@
         </div>
         <div class="framed-title">Check-Point</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Passenger <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span> verified for arrival in <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. <br><br>
-            Activate global connectivity before boarding:
+            Verified for arrival in <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>. Activate global connectivity before boarding:
         </div>
         <div class="esim-cta">
             <button class="slim-btn" onclick="window.location.href='index.html#esim-connectivity-hub'">ACTIVATE TRAVEL eSIM</button>
@@ -152,7 +146,12 @@ class VelocisSovereign {
         }
     }
 
-    async resetTrip() { localStorage.clear(); window.location.reload(); }
+    async resetTrip() {
+        if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+    }
 
     async startScanner() {
         document.getElementById('reader').style.display = 'block';
@@ -170,7 +169,7 @@ class VelocisSovereign {
             this.passenger.seat = data.substring(48, 52).trim();
             this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
             this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
-            // CLEAN DATA: Forces "953" instead of "0953" for API success
+            // CLEAN DATA: Strips leading zeros so the API returns real data
             this.passenger.flightNum = data.substring(27, 32).trim().replace(/^0+/, ''); 
             
             localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
@@ -205,7 +204,7 @@ class VelocisSovereign {
                     status: f.flight_status
                 };
             } else {
-                // FALLBACK: Barcode Sovereignty logic (Real Names from Codes)
+                // FALLBACK: Use local dictionary mapping for codes
                 const airlines = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
                 const cities = { "EZE": "Buenos Aires" };
                 this.flightData = {
@@ -220,28 +219,35 @@ class VelocisSovereign {
             localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
             syncBtn.style.display = 'none';
             document.getElementById('initiate-btn').style.display = 'block';
+            this.start();
         } catch(e) { syncBtn.innerText = "SYNC ERROR"; }
     }
 
-    start() {
+    start(isRestore = false) {
         if(!this.flightData) return;
         const cityName = this.flightData.dest.toUpperCase();
         const cityDisplayName = this.flightData.arrivalCity;
         
-        // 1. DATA POPULATION
+        // 1. HUD POPULATION
         document.getElementById('hud-city').innerText = cityName;
-        document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
+        document.getElementById('hud-gate').innerText = "GATE " + (this.flightData.gate || "TBD");
         document.getElementById('text-brief-airline').innerText = this.flightData.airline;
         document.getElementById('text-checkpoint-city').innerText = cityDisplayName;
+        document.getElementById('text-seat').innerText = this.passenger.seat;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-        // 2. DYNAMIC BACKGROUND RESTORATION
+        // 2. DYNAMIC BACKGROUND
         const atlas = { "EZE": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80" };
         const visual = document.getElementById('dest-visualizer');
         if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || ""}')`;
 
-        // 3. UI TRANSITION
+        // 3. UI TRANSITION & BRIDGE REVEAL
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        setTimeout(() => { 
+            const bridge = document.getElementById('market-bridge');
+            if(bridge) bridge.style.opacity = "1"; 
+        }, 1000);
+        
         const logoHTML = `${this.flightData.flight}`;
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
     }
