@@ -124,7 +124,7 @@
         </div>
         <div class="framed-title" id="stage-header-4" style="color:white; border-color:white;">Preparing Arrival</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, <span id="arrival-context-text">we are coordinating your arrival logistics. Once you land, local transit data will activate here.</span>
+            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, <span id="arrival-context-text">we are coordinating your arrival logistics. Once you land, local transit and baggage data will activate here.</span>
         </div>
     </div>
 </div>
@@ -186,6 +186,7 @@ class VelocisSovereign {
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "QUERYING LIVE API...";
+        
         const cityTruth = { "JFK": "New York", "EWR": "Newark", "FRA": "Frankfurt", "LAX": "Los Angeles", "SIN": "Singapore", "MEL": "Melbourne", "NRT": "Tokyo", "LHR": "London", "EZE": "Buenos Aires" };
 
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
@@ -195,12 +196,13 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
+                // UNIVERSAL TRUTH: Cross-reference API list with the physical barcode destination
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
                 this.flightData = {
                     flight: f.flight.iata,
                     airline: f.airline.name, 
-                    dest: this.passenger.barcodeDest, // Force ticket truth
+                    dest: this.passenger.barcodeDest, // BARCODE IS THE SOVEREIGN BOSS
                     gate: f.departure.gate || (this.passenger.flightNum === '400' ? "Z25" : (this.passenger.flightNum === '22' ? "B10" : "TBD")),
                     arrivalCity: cityTruth[this.passenger.barcodeDest] || (f.arrival.airport ? f.arrival.airport.split(' ')[0] : this.passenger.barcodeDest),
                     status: f.flight_status.toUpperCase()
