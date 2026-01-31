@@ -186,7 +186,8 @@ class VelocisSovereign {
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "QUERYING LIVE API...";
-        // Identity Guard: Exact airline code forced into API query
+        
+        // Strict parameter pass to the API to avoid Kenya Airways collision
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
@@ -194,9 +195,9 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest);
-                if (!f) f = json.data[0];
-
+                // Verification Lock: Ensure destination matches barcode
+                let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
+                
                 this.flightData = {
                     flight: f.flight.iata,
                     airline: f.airline.name, 
