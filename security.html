@@ -175,7 +175,7 @@ class VelocisSovereign {
             this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
             this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
             
-            // KEY FIX: Sanitizing flight number for the API (Turning "0953" into "953")
+            // KEY FIX: Cleaning the ID (Strips leading zeros so the API returns real data)
             const rawFlight = data.substring(27, 32).trim();
             this.passenger.flightNum = rawFlight.replace(/^0+/, ''); 
             
@@ -191,7 +191,6 @@ class VelocisSovereign {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "AUTHENTICATING...";
         
-        // 1. DYNAMIC API CALL WITH CLEAN DATA
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
@@ -199,7 +198,7 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // TRIPLE-LOCK FILTER: Match API result to Barcode Destination Code
+                // FILTER: pick result matching Barcode Destination Code
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
                 let foundCity = "Local";
@@ -217,14 +216,14 @@ class VelocisSovereign {
                     logo: `https://www.google.com/s2/favicons?domain=${f.airline.name.toLowerCase().split(' ')[0]}.com&sz=64`
                 };
             } else {
-                // 2. SOVEREIGN FALLBACK: Use Barcode mapping if API is silent or mismatched
+                // FALLBACK: Use Barcode truth if API is silent
                 const airlineNames = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
                 const cityNames = { "EZE": "Buenos Aires", "NRT": "Tokyo" };
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: airlineNames[this.passenger.airlineCode] || "American Airlines",
+                    airline: airlineNames[this.passenger.airlineCode] || "International Carrier",
                     dest: this.passenger.barcodeDest,
-                    gate: "TBD", terminal: "1", arrivalCity: cityNames[this.passenger.barcodeDest] || "Buenos Aires", status: "scheduled",
+                    gate: "TBD", terminal: "1", arrivalCity: cityNames[this.passenger.barcodeDest] || "Destination", status: "scheduled",
                     logo: `https://www.google.com/s2/favicons?domain=aa.com&sz=64`
                 };
             }
@@ -234,24 +233,8 @@ class VelocisSovereign {
             document.getElementById('initiate-btn').style.display = 'block';
 
         } catch(e) { 
-            syncBtn.innerText = "CONNECTION ERROR - RETRYING..."; 
-            // Bypass hang with Sovereign truth if internet fails
-            this.handleLocalSync();
+            syncBtn.innerText = "CONNECTION ERROR"; 
         }
-    }
-
-    handleLocalSync() {
-        const cityNames = { "EZE": "Buenos Aires" };
-        this.flightData = {
-            flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-            airline: "American Airlines",
-            dest: this.passenger.barcodeDest,
-            arrivalCity: cityNames[this.passenger.barcodeDest] || "Buenos Aires",
-            gate: "TBD", terminal: "1", status: "scheduled", logo: ""
-        };
-        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        document.getElementById('sync-manifest-btn').style.display = 'none';
-        document.getElementById('initiate-btn').style.display = 'block';
     }
 
     start(isRestore = false) {
@@ -270,9 +253,16 @@ class VelocisSovereign {
             if(document.getElementById('text-seat')) document.getElementById('text-seat').innerText = this.passenger.seat;
             if(document.getElementById('text-gate')) document.getElementById('text-gate').innerText = this.flightData.gate;
 
-            const atlas = { "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80` };
+            // REAL-TIME BACKGROUND LOGIC
             const visual = document.getElementById('dest-visualizer');
-            if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80'}')`;
+            if(visual) {
+                // Use a dynamic search link to avoid hardcoding specific local paths
+                const query = cityDisplayName.replace(/ /g, '-').toLowerCase();
+                visual.style.backgroundImage = `url('https://source.unsplash.com/1200x800/?city,${query},landmark')`;
+                
+                // Fallback for EZE specific testing if Unsplash dynamic search is slow
+                if(cityName === "EZE") visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80')`;
+            }
             
             const logoHTML = `${this.flightData.flight}`;
             [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
