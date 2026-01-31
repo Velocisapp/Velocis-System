@@ -144,8 +144,6 @@ class VelocisSovereign {
         if(this.scanner) { try { await this.scanner.stop(); } catch(e) {} }
         localStorage.clear();
         sessionStorage.clear();
-        this.flightData = null;
-        this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", barcodeDest: "" };
         window.location.reload();
     }
 
@@ -163,9 +161,11 @@ class VelocisSovereign {
             const rawName = data.substring(2, 22).trim();
             this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
             this.passenger.seat = data.substring(48, 52).trim();
-            this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase();
-            this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase();
-            this.passenger.flightNum = data.substring(27, 32).trim().replace(/^0+/, '');
+            
+            // TRIPLE-LOCK EXTRACTION: The barcode is the Sovereign Key
+            this.passenger.barcodeDest = data.substring(22, 25).trim().toUpperCase(); // e.g. EZE
+            this.passenger.airlineCode = data.substring(25, 27).trim().toUpperCase(); // e.g. AA
+            this.passenger.flightNum = data.substring(27, 32).trim().replace(/^0+/, ''); // e.g. 953
             
             localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
             if(this.scanner) await this.scanner.stop(); 
@@ -179,39 +179,46 @@ class VelocisSovereign {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "AUTHENTICATING...";
         
-        // INSTANT MAPS (Sovereign Truth)
+        // 1. SOVEREIGN INTEL MAP (Instant Global Logic)
         const cityMap = { "EZE": "Buenos Aires", "NRT": "Tokyo", "JNB": "Johannesburg", "BRU": "Brussels", "PVG": "Shanghai" };
         const airlineNames = { "AA": "American Airlines", "AR": "Aerolíneas Argentinas", "CX": "Cathay Pacific" };
 
-        // 1. INSTANT BUILD FROM BARCODE (DO NOT WAIT FOR API)
+        // 2. BUILD FLIGHT STATE IMMEDIATELY (BARCODE TRUTH FIRST)
         this.flightData = {
             flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-            airline: airlineNames[this.passenger.airlineCode] || "Your Airline",
+            airline: airlineNames[this.passenger.airlineCode] || "Global Partner",
             dest: this.passenger.barcodeDest,
             gate: "TBD", terminal: "1", counter: "AIRLINE DESK",
-            arrivalCity: cityMap[this.passenger.barcodeDest] || "Local",
+            arrivalCity: cityMap[this.passenger.barcodeDest] || "Destination",
             status: "scheduled",
-            logo: `https://www.google.com/s2/favicons?domain=aa.com&sz=64`
+            logo: `https://www.google.com/s2/favicons?domain=${(this.passenger.airlineCode === 'AA' ? 'aa.com' : 'partner.com')}&sz=64`
         };
 
-        // 2. FORCE SAVE & UNLOCK
+        // 3. PERSIST LOCALLY (No API dependency for basic unlock)
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        
-        syncBtn.style.display = 'none';
-        document.getElementById('initiate-btn').style.display = 'block';
 
-        // 3. BACKGROUND API SYNC (NON-BLOCKING)
-        let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
+        // 4. UNLOCK DASHBOARD INSTANTLY
+        setTimeout(() => {
+            syncBtn.style.display = 'none';
+            document.getElementById('initiate-btn').style.display = 'block';
+            this.start(); // Unlock everything immediately
+        }, 400);
+
+        // 5. SILENT BACKGROUND HANDSHAKE (Validate without blocking)
+        const url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         fetch(url).then(r => r.json()).then(json => {
             if(json.data && json.data.length > 0) {
-                // Ensure API result matches barcode truth
+                // Only update if the API destination matches our barcode "Sovereign Key"
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
-                this.flightData.gate = f.departure.gate || "TBD";
-                this.flightData.status = f.flight_status;
-                localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+                if(f.arrival.iata === this.passenger.barcodeDest) {
+                    this.flightData.gate = f.departure.gate || "TBD";
+                    this.flightData.status = f.flight_status;
+                    this.flightData.airline = f.airline.name;
+                    localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+                }
             }
-        }).catch(e => console.log("API check bypassed. Barcode truth preserved."));
+        }).catch(e => console.warn("API Offline: Sovereign data maintained."));
     }
 
     start(isRestore = false) {
@@ -221,23 +228,29 @@ class VelocisSovereign {
             const cityName = this.flightData.dest.toUpperCase();
             const cityDisplayName = this.flightData.arrivalCity;
             
-            // DYNAMIC TRANSPORT BUTTON
+            // DYNAMIC LOCAL TRANSPORT BUTTON
             const transportBtn = document.getElementById('transport-options-btn');
             if (transportBtn) transportBtn.innerHTML = `<span style="color:var(--v-gold); margin-right:5px;">●</span>${cityDisplayName} Transport Guide`;
 
-            // DYNAMIC BACKGROUND (PREVENT BLACK SCREEN)
+            // DYNAMIC CITY BACKGROUND
             const atlas = {
                 "EZE": `https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80`,
                 "NRT": `https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80`,
                 "JNB": `https://images.unsplash.com/photo-1549420084-5a21dfd9a103?auto=format&fit=crop&w=1200&q=80`
             };
             const visual = document.getElementById('dest-visualizer');
-            if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80'}')`;
+            const bgImg = atlas[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80';
+            if(visual) visual.style.backgroundImage = `url('${bgImg}')`;
             
             if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = cityName;
             if(document.getElementById('hud-gate')) document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
             if(document.getElementById('hud-door')) document.getElementById('hud-door').innerText = "DOOR " + this.flightData.terminal;
+            
+            // POPULATE ALL DATA POINTS
             document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
+            if(document.getElementById('text-seat')) document.getElementById('text-seat').innerText = this.passenger.seat;
+            if(document.getElementById('text-brief-airline')) document.getElementById('text-brief-airline').innerText = this.flightData.airline;
+            if(document.getElementById('text-gate')) document.getElementById('text-gate').innerText = this.flightData.gate;
 
             const logoHTML = `${this.flightData.flight}`;
             [1,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = logoHTML; });
