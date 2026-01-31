@@ -55,7 +55,7 @@
 
 <div id="dest-visualizer">
     <div id="market-bridge">
-        <a class="cta-btn" href="idea.html#esim-connectivity-hub">INTERNET OPTIONS</a>
+        <a class="cta-btn" href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ">INTERNET OPTIONS</a>
         <div id="reset-trip" onclick="engine.resetTrip()">SCAN NEW TICKET</div>
     </div>
     <div class="hud-overlay">
@@ -186,7 +186,6 @@ class VelocisSovereign {
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "QUERYING LIVE API...";
-        
         const cityTruth = { "JFK": "New York", "EWR": "Newark", "FRA": "Frankfurt", "LAX": "Los Angeles", "SIN": "Singapore", "MEL": "Melbourne", "NRT": "Tokyo", "LHR": "London", "EZE": "Buenos Aires" };
 
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
