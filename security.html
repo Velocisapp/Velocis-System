@@ -171,15 +171,15 @@ class VelocisSovereign {
         const raw = data.toUpperCase().replace(/\s\s+/g, ' ');
         
         // Find Carrier
-        const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX/);
+        const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
 
         // Find Flight Number and kill leading zeros (0553 -> 553)
-        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX)\s*(\d{3,4})/);
+        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH)\s*(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
 
         // Find Destination
-        const destMatch = raw.match(/YVR|EZE|JFK|LAX|NRT|LHR/);
+        const destMatch = raw.match(/YVR|EZE|JFK|LAX|HKG|LHR|FRA/);
         this.passenger.barcodeDest = destMatch ? destMatch[0] : "";
 
         // Extract Seat (finding the class-seat pattern like Y 001A)
@@ -210,7 +210,7 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // Triple-Lock Filter
+                // Professional apps filter by both number AND destination
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
                 this.flightData = {
@@ -220,18 +220,16 @@ class VelocisSovereign {
                     gate: f.departure.gate || "TBD",
                     terminal: f.departure.terminal || "1",
                     arrivalCity: f.arrival.airport ? f.arrival.airport.split(' ')[0] : "Destination",
-                    status: f.flight_status
+                    status: f.flight_status.toUpperCase()
                 };
             } else {
-                // Fallback Mapping
-                const airlines = { "AC": "Air Canada", "AA": "American Airlines", "AR": "Aerolíneas Argentinas" };
-                const cities = { "YVR": "Vancouver", "EZE": "Buenos Aires" };
+                // Professional fallback: Don't guess, use the barcode codes
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: airlines[this.passenger.airlineCode] || "Validated Carrier",
+                    airline: this.passenger.airlineCode + " Flight",
                     dest: this.passenger.barcodeDest,
-                    arrivalCity: cities[this.passenger.barcodeDest] || "Destination",
-                    gate: "TBD", terminal: "1", status: "scheduled"
+                    arrivalCity: this.passenger.barcodeDest,
+                    gate: "TBD", status: "SCHEDULED"
                 };
             }
 
@@ -239,7 +237,7 @@ class VelocisSovereign {
             syncBtn.style.display = 'none';
             document.getElementById('initiate-btn').style.display = 'block';
             this.start();
-        } catch(e) { syncBtn.innerText = "SYNC ERROR"; }
+        } catch(e) { this.start(); }
     }
 
     start(isRestore = false) {
@@ -255,13 +253,12 @@ class VelocisSovereign {
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-        // DYNAMIC BACKGROUND
-        const atlas = { 
-            "EZE": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80",
-            "YVR": "https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=1200&q=80"
-        };
+        // DYNAMIC VISUALIZER
+        const cityQuery = this.flightData.arrivalCity.toLowerCase();
         const visual = document.getElementById('dest-visualizer');
-        if(visual) visual.style.backgroundImage = `url('${atlas[cityName] || "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80"}')`;
+        if(visual) {
+            visual.style.backgroundImage = `url('https://source.unsplash.com/1600x900/?city,${cityQuery},landmark')`;
+        }
 
         // RE-WIRING THE BRIDGE & UI TRANSITION
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
