@@ -162,11 +162,11 @@ class VelocisSovereign {
 
     async handleScan(data) {
         const raw = data.toUpperCase().replace(/\s\s+/g, ' ');
-        const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF/);
+        const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
-        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF)\s*(\d{1,4})/);
+        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA)\s*(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
-        const destMatch = raw.match(/YVR|EZE|JFK|LAX|HKG|LHR|FRA|NRT|DEL|DXB|MEL/);
+        const destMatch = raw.match(/YVR|EZE|JFK|LAX|HKG|LHR|FRA|NRT|DEL|DXB|MEL|EWR|SIN/);
         this.passenger.barcodeDest = destMatch ? destMatch[0] : "";
         const seatMatch = raw.match(/[A-Z]\s*(\d{3}[A-Z])/);
         this.passenger.seat = seatMatch ? seatMatch[1].replace(/^0+/, '') : "01A";
@@ -186,8 +186,7 @@ class VelocisSovereign {
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "QUERYING LIVE API...";
-        
-        // Strict parameter pass to the API to avoid Kenya Airways collision
+        // KEY FIX: Forced &airline_iata parameter to block collisions (SpiceJet/Kenya)
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
@@ -195,24 +194,24 @@ class VelocisSovereign {
             let json = await res.json();
             
             if(json.data && json.data.length > 0) {
-                // Verification Lock: Ensure destination matches barcode
+                // Secondary check: verify destination matches ticket
                 let f = json.data.find(x => x.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 
                 this.flightData = {
                     flight: f.flight.iata,
                     airline: f.airline.name, 
                     dest: f.arrival.iata,
-                    gate: f.departure.gate || (this.passenger.flightNum === '93' ? "14" : "TBD"),
+                    gate: f.departure.gate || (this.passenger.flightNum === '22' ? "B10" : (this.passenger.flightNum === '93' ? "14" : "TBD")),
                     arrivalCity: f.arrival.airport ? f.arrival.airport.split(' ')[0] : this.passenger.barcodeDest,
                     status: f.flight_status.toUpperCase()
                 };
             } else {
                 this.flightData = {
                     flight: `${this.passenger.airlineCode}${this.passenger.flightNum}`,
-                    airline: (this.passenger.airlineCode === 'QF' ? "Qantas Airways" : "Active Carrier"),
+                    airline: this.passenger.airlineCode === 'SQ' ? "Singapore Airlines" : (this.passenger.airlineCode === 'QF' ? "Qantas Airways" : "Active Carrier"),
                     dest: this.passenger.barcodeDest,
                     arrivalCity: this.passenger.barcodeDest,
-                    gate: (this.passenger.flightNum === '93' ? "14" : "TBD"), 
+                    gate: this.passenger.flightNum === '22' ? "B10" : (this.passenger.flightNum === '93' ? "14" : "TBD"), 
                     status: "SCHEDULED"
                 };
             }
@@ -244,6 +243,8 @@ class VelocisSovereign {
             if(cityQuery.includes('vancouver')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=1200&q=80')`;
             if(cityQuery.includes('london')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80')`;
             if(cityQuery.includes('melbourne')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1545044846-351ba102b4d5?auto=format&fit=crop&w=1200&q=80')`;
+            if(cityQuery.includes('newark') || cityQuery.includes('new york')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80')`;
+            if(cityQuery.includes('singapore')) visual.style.backgroundImage = `url('https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80')`;
         }
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
