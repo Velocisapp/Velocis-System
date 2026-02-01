@@ -168,22 +168,28 @@ class VelocisSovereign {
         const rawName = raw.substring(2, 22).trim();
         this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || "Traveler";
 
-        // 3. IATA FIELD MAPPING (Absolute Authority)
-        if (raw.startsWith("M1")) {
-            // Origin (30-32) and Destination (33-35)
-            this.passenger.barcodeDest = raw.substring(33, 36).trim();
-            const origin = raw.substring(30, 33).trim();
+        // 3. IATA CARRIER ANCHOR: Search for the 2-letter Carrier + Flight Block
+        // This is a much more stable landmark than fixed indices
+        const carrierMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
+        
+        if (carrierMatch) {
+            this.passenger.airlineCode = carrierMatch[0].substring(0, 2).trim();
+            this.passenger.flightNum = parseInt(carrierMatch[1], 10).toString();
             
-            // Carrier (36-38) and Flight Number (39-43)
-            this.passenger.airlineCode = raw.substring(36, 39).trim();
-            this.passenger.flightNum = parseInt(raw.substring(39, 44).trim(), 10).toString();
-
-            // FAIL-SAFE: If indices capture name-junk (like CIA or NEA), 
-            // search strictly AFTER index 22 for the 6-letter route block.
-            const routeBlock = raw.substring(22).replace(/\s/g, '').match(/[A-Z]{6}/);
-            if (this.passenger.barcodeDest.length < 3 || this.passenger.name.includes(this.passenger.barcodeDest)) {
-                if (routeBlock) this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
+            // 4. LOOK BACKWARDS FOR ROUTE: IATA pairs Sitting 6 characters BEFORE the Carrier
+            const carrierPos = raw.indexOf(carrierMatch[0]);
+            if (carrierPos >= 6) {
+                const routeBlock = raw.substring(carrierPos - 6, carrierPos).trim();
+                // Take the 2nd half of the route block as the Destination IATA
+                this.passenger.barcodeDest = routeBlock.substring(routeBlock.length - 3);
             }
+        }
+
+        // FAIL-SAFE: If indices capture name-junk or numbers, find the first 6-letter route AFTER index 22
+        if (!/^[A-Z]{3}$/.test(this.passenger.barcodeDest) || this.passenger.name.includes(this.passenger.barcodeDest)) {
+            const searchPart = raw.substring(22).replace(/\s/g, '');
+            const routeMatch = searchPart.match(/[A-Z]{6}/);
+            if (routeMatch) this.passenger.barcodeDest = routeMatch[0].substring(3, 6);
         }
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
@@ -195,33 +201,39 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "CLEARING MANIFEST..."; 
+        syncBtn.innerText = "SOVEREIGN AUTHORIZATION...";
 
-        const hardMap = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "HND": "Tokyo" };
-        let cleanDest = this.passenger.barcodeDest.toUpperCase();
-        let forcedCity = hardMap[cleanDest] || cleanDest;
-
-        this.flightData = {
-            flight: this.passenger.airlineCode + this.passenger.flightNum,
-            airline: this.passenger.airlineCode + " Official",
-            dest: cleanDest,
-            gate: "TBD",
-            status: "CONFIRMED",
-            arrivalCity: forcedCity
-        };
-
+        // UNIVERSAL GLOBAL POSITIONING: Ask the Cloud for the real city name
+        const targetIata = this.passenger.barcodeDest.toUpperCase();
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
             let res = await fetch(url);
             let json = await res.json();
+            
             if(json.data && json.data.length > 0) {
-                let f = json.data.find(leg => leg.arrival.iata === cleanDest) || json.data[0];
-                this.flightData.airline = f.airline.name;
-                this.flightData.gate = f.departure.gate || "TBD";
-                this.flightData.status = f.flight_status.toUpperCase();
+                // Specific matching leg logic
+                let f = json.data.find(leg => leg.arrival.iata === targetIata) || json.data[0];
+                this.flightData = {
+                    flight: this.passenger.airlineCode + this.passenger.flightNum,
+                    airline: f.airline.name,
+                    dest: targetIata,
+                    gate: f.departure.gate || "TBD",
+                    status: f.flight_status.toUpperCase(),
+                    arrivalCity: f.arrival.airport // GLOBAL TRUTH FROM API
+                };
+            } else {
+                // Emergency fallback if API is unreachable
+                this.flightData = {
+                    flight: this.passenger.airlineCode + this.passenger.flightNum,
+                    airline: this.passenger.airlineCode,
+                    dest: targetIata,
+                    gate: "TBD",
+                    status: "VERIFIED",
+                    arrivalCity: targetIata 
+                };
             }
-        } catch(e) { console.log("Supplement failed - Sovereign ground truth maintained."); }
+        } catch(e) { console.error("Global Handshake Failure"); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -232,6 +244,7 @@ class VelocisSovereign {
     start(isRestore = false) {
         if(!this.flightData) return;
         
+        // AGNOSTIC VISUAL ATLAS: Checks both IATA and Real City Name
         const visual = document.getElementById('dest-visualizer');
         const cityKey = String(this.flightData.arrivalCity).toLowerCase().trim();
         const iataKey = String(this.flightData.dest).toLowerCase().trim();
@@ -250,6 +263,7 @@ class VelocisSovereign {
         }
         visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1200&q=80')`;
 
+        // UI RENDER
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
