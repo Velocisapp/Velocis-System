@@ -162,16 +162,19 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
+        // 1. ZONE A: NAME FIREWALL & REFINED SEAT SEEKER
         let namePart = raw.substring(2, 22).trim();
         const pnrAnchor = namePart.search(/\sE[A-Z0-9]{5,6}/);
         if (pnrAnchor !== -1) namePart = namePart.substring(0, pnrAnchor).trim();
         let nameArray = namePart.split('/');
         this.passenger.name = nameArray[nameArray.length - 1].replace(/\sE[A-Z0-9]+$/, '').trim();
 
-        const seatMatch = raw.match(/\s([0-9]{2,3}[A-Z])\s/);
+        const seatMatch = raw.match(/\s([0-9]{1,3}[A-Z])(\s|$)/);
         this.passenger.seat = seatMatch ? seatMatch[1] : "--";
 
+        // 2. ZONE B: STRUCTURAL HUNTER (IATA Sequence Lock)
         const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
+        
         if (structuralMatch) {
             this.passenger.barcodeDest = structuralMatch[1].substring(3, 6);
             this.passenger.airlineCode = structuralMatch[2];
@@ -187,12 +190,13 @@ class VelocisSovereign {
             }
         }
 
+        // 3. ZONE C: SOVEREIGN RESOLUTION (Local Memory & Learning)
         const learnedAtlas = JSON.parse(localStorage.getItem('velocis_atlas') || '{}');
         const hardcodedAtlas = { 
             "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", 
             "JFK": "New York", "LHR": "London", "DXB": "Dubai", "FCO": "Rome", 
             "MEX": "Mexico City", "CAI": "Cairo", "IST": "Istanbul", "SIN": "Singapore",
-            "BKK": "Bangkok", "KEF": "Reykjavik", "GRU": "Sao Paulo"
+            "BKK": "Bangkok", "KEF": "Reykjavik", "GRU": "Sao Paulo", "HND": "Tokyo"
         };
         const targetIata = this.passenger.barcodeDest;
         const cityValue = hardcodedAtlas[targetIata] || learnedAtlas[targetIata] || targetIata;
@@ -248,13 +252,15 @@ class VelocisSovereign {
         if(!this.flightData) return;
         const visual = document.getElementById('dest-visualizer');
         
+        // GLOBAL VISUAL PACK
         const gallery = { 
             "paris": "1502603300340-061d22384b8d", "madrid": "1539561968-7b973fb3001f", 
             "new york": "1496442226666-8d4d0e62e6e9", "london": "1513635269975-59663e0ac1ad", 
             "rome": "1523906630138-024507c65961", "addis ababa": "1589339274704-5f543666d92f", 
             "santiago": "1500311708740-d336a49f96cd", "mexico": "1512813190353-c8203f9f37a8",
             "bangkok": "1506973031904-de15df7d1739", "tokyo": "1540944447495-45197ac93c8d",
-            "istanbul": "1545155487-6e9596395b0e", "reykjavik": "1521401830884-d1d3f2131241"
+            "istanbul": "1545155487-6e9596395b0e", "reykjavik": "1521401830884-d1d3f2131241",
+            "cairo": "1503914035633-8fd9f0d1b9d1"
         };
 
         let imgId = "1436491865332-7a61a109c0f3"; 
@@ -277,6 +283,7 @@ class VelocisSovereign {
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
+        
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
 }
