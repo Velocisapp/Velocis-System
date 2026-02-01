@@ -167,7 +167,7 @@ class VelocisSovereign {
         const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
 
-        // POSITIONAL EXTRACTION FIX: Destination IATA is ALWAYS index 33-35 in M1 format
+        // POSITIONAL EXTRACTION: The Destination is ALWAYS index 33-35 in standard M1 BCBP format
         if (raw.startsWith("M1")) {
             this.passenger.barcodeDest = raw.substring(33, 36).trim();
             const rawName = raw.substring(2, 22).trim();
@@ -177,7 +177,7 @@ class VelocisSovereign {
             this.passenger.barcodeDest = destMatch ? destMatch[destMatch.length - 1] : "MAD";
         }
 
-        // Veto security 'OCI' tag if caught incorrectly
+        // Safety: Prevent 'OCI' security tag from being captured as destination
         if(this.passenger.barcodeDest === "OCI") this.passenger.barcodeDest = "MAD";
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
@@ -191,7 +191,6 @@ class VelocisSovereign {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "AUTHORIZING MANIFEST..."; 
 
-        // SOVEREIGN PRIORITY: Lock geography before API connects
         const hardMap = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "HND": "Tokyo" };
         let cleanDest = this.passenger.barcodeDest.toUpperCase();
         let forcedCity = hardMap[cleanDest] || cleanDest;
@@ -216,7 +215,7 @@ class VelocisSovereign {
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
             }
-        } catch(e) { console.log("Supplement failed - Sovereign ground truth maintained."); }
+        } catch(e) { console.log("Supplement failed - Authoritative local data used."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -227,7 +226,6 @@ class VelocisSovereign {
     start(isRestore = false) {
         if(!this.flightData) return;
         
-        // AGGRESSIVE VISUAL ATLAS: Cross-references IATA code for 100% background hit
         const visual = document.getElementById('dest-visualizer');
         const cityKey = String(this.flightData.arrivalCity).toLowerCase().trim();
         const iataKey = String(this.flightData.dest).toLowerCase().trim();
@@ -246,7 +244,6 @@ class VelocisSovereign {
         }
         visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1200&q=80')`;
 
-        // UI RENDER
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
