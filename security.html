@@ -163,44 +163,36 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // ZONE A: MULTI-LEVEL NAME SANITIZER
-        let namePart = raw.substring(2, 22).trim();
-        const pnrAnchor = namePart.search(/\sE[A-Z0-9]{5,6}/);
-        if (pnrAnchor !== -1) namePart = namePart.substring(0, pnrAnchor).trim();
-        
-        // Multi-segment slash handling (DE/LA/CRUZ/JUAN)
-        let nameArray = namePart.split('/');
-        this.passenger.name = nameArray[nameArray.length - 1] || "Traveler";
-        this.passenger.name = this.passenger.name.replace(/\sE[A-Z0-9]+$/, '').trim();
+        // 1. ZONE A: NAME FIREWALL (Indices 2-22)
+        const namePart = raw.substring(2, 22).trim();
+        const names = namePart.split('/');
+        this.passenger.name = names[names.length - 1].replace(/\sE[A-Z0-9]+$/, '').trim();
 
-        // ZONE B: FILTERED UNIVERSAL PATTERN LANDMARK
-        const dataSearch = raw.substring(22);
-        // We find all matches and skip the one that looks like a PNR starting with E
-        const allMatches = [...dataSearch.matchAll(/([A-Z0-9]{2})\s*(\d{1,4})/g)];
-        const flightMatch = allMatches.find(m => !m[1].startsWith('E')) || allMatches[0];
+        // 2. THE STRUCTURAL HUNTER
+        // We look for the 6-letter Route (e.g. JFKADD) followed immediately by the Airline Landmark.
+        // This is the most robust way to skip the PNR (EET0099) at the beginning.
+        const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
         
-        if (flightMatch) {
-            this.passenger.airlineCode = flightMatch[1];
-            this.passenger.flightNum = parseInt(flightMatch[2], 10).toString();
-
-            // ZONE C: THE ROUTE ISOLATION
-            const landmarkIndex = dataSearch.indexOf(flightMatch[0]);
-            const prefix = dataSearch.substring(0, landmarkIndex).replace(/\s/g, '');
-            const routeBlock = prefix.match(/[A-Z]{6}$/); 
-            
-            if (routeBlock) {
-                this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
-            } else {
-                this.passenger.barcodeDest = prefix.substring(prefix.length - 3);
+        if (structuralMatch) {
+            this.passenger.barcodeDest = structuralMatch[1].substring(3, 6);
+            this.passenger.airlineCode = structuralMatch[2];
+            this.passenger.flightNum = parseInt(structuralMatch[3], 10).toString();
+        } else {
+            // FALLBACK: Landmark Anchor for irregular spacing
+            const anchor = raw.substring(22).match(/([A-Z0-9]{2})\s+(\d{1,4})/g);
+            if (anchor) {
+                const lastMatch = anchor[anchor.length - 1].split(/\s+/);
+                this.passenger.airlineCode = lastMatch[0];
+                this.passenger.flightNum = parseInt(lastMatch[1], 10).toString();
             }
         }
 
-        // SOVEREIGN RESOLUTION (Local Atlas)
+        // 3. SOVEREIGN RESOLUTION (Local Atlas)
         const atlas = { 
-            "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", 
-            "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", 
-            "FRA": "Frankfurt", "FCO": "Rome", "HEL": "Helsinki", 
-            "ZRH": "Zurich", "DAC": "Dhaka", "SYD": "Sydney"
+            "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", 
+            "MAD": "Madrid", "JFK": "New York", "LHR": "London", 
+            "DXB": "Dubai", "HND": "Tokyo", "FRA": "Frankfurt", 
+            "FCO": "Rome", "HEL": "Helsinki", "ZRH": "Zurich" 
         };
         const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
@@ -238,7 +230,7 @@ class VelocisSovereign {
                 this.flightData.status = f.flight_status.toUpperCase();
                 this.flightData.arrivalCity = (f.arrival && f.arrival.iata === this.passenger.barcodeDest) ? f.arrival.airport : this.flightData.arrivalCity;
             }
-        } catch(e) { console.log("Supplement offline - Barcode authority held."); }
+        } catch(e) { console.log("Supplement failed - Barcode authority held."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -262,7 +254,8 @@ class VelocisSovereign {
             "helsinki": "1516738962228-5103ea2917d0", "hel": "1516738962228-5103ea2917d0",
             "zurich": "1534161432884-d7d3f2131241", "zrh": "1534161432884-d7d3f2131241",
             "rome": "1523906630138-024507c65961", "fco": "1523906630138-024507c65961",
-            "dhaka": "1589339274704-5f543666d92f", "dac": "1589339274704-5f543666d92f"
+            "addis ababa": "1589339274704-5f543666d92f", "add": "1589339274704-5f543666d92f",
+            "santiago": "1500311708740-d336a49f96cd", "scl": "1500311708740-d336a49f96cd"
         };
 
         let imgId = "1436491865332-7a61a109c0f3"; 
