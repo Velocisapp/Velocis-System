@@ -161,24 +161,36 @@ class VelocisSovereign {
     }
 
     async handleScan(data) {
-        const raw = data.toUpperCase().trim();
+        // CLEANING AND SPACE-REMOVAL
+        const raw = data.toUpperCase().trim().replace(/\s+/g, '');
+        
+        // 1. CARRIER/FLIGHT
         const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
-        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
+        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
 
-        // POSITIONAL EXTRACTION: The Destination is ALWAYS index 33-35 in standard M1 BCBP format
-        if (raw.startsWith("M1")) {
-            this.passenger.barcodeDest = raw.substring(33, 36).trim();
-            const rawName = raw.substring(2, 22).trim();
-            this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
+        // 2. PATTERN-BASED ANCHOR (Immune to Blank/Shift errors)
+        // We hunt for the 6-letter IATA string (Origin+Dest)
+        const locationMatches = raw.match(/[A-Z]{6}/g);
+        if (locationMatches && locationMatches.length > 0) {
+            // Take the second half of the 6-letter block as the Destination
+            this.passenger.barcodeDest = locationMatches[0].substring(3, 6);
         } else {
-            const destMatch = raw.match(/[A-Z]{3}/g);
-            this.passenger.barcodeDest = destMatch ? destMatch[destMatch.length - 1] : "MAD";
+            // Emergency fallback if 6-letter block is missing
+            const iataMatches = raw.match(/[A-Z]{3}/g);
+            this.passenger.barcodeDest = iataMatches ? iataMatches[iataMatches.length - 2] : "MAD";
         }
 
-        // Safety: Prevent 'OCI' security tag from being captured as destination
-        if(this.passenger.barcodeDest === "OCI") this.passenger.barcodeDest = "MAD";
+        // Veto security indicators like 'OCI' to prevent corruption
+        if (this.passenger.barcodeDest === "OCI" || !this.passenger.barcodeDest) {
+            this.passenger.barcodeDest = "CDG";
+        }
+
+        if (raw.startsWith("M1")) {
+            const rawName = raw.substring(2, 22).trim();
+            this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
+        }
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         if(this.scanner) await this.scanner.stop(); 
@@ -189,8 +201,9 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "AUTHORIZING MANIFEST..."; 
+        syncBtn.innerText = "AUTHORIZING...";
 
+        // PROTOCOL 1: Absolute Manifest Authority
         const hardMap = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "HND": "Tokyo" };
         let cleanDest = this.passenger.barcodeDest.toUpperCase();
         let forcedCity = hardMap[cleanDest] || cleanDest;
@@ -210,12 +223,13 @@ class VelocisSovereign {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
+                // Supplementary API data (Gate and Carrier only)
                 let f = json.data.find(leg => leg.arrival.iata === cleanDest) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
             }
-        } catch(e) { console.log("Supplement failed - Authoritative local data used."); }
+        } catch(e) { console.log("API Bypass - Ground truth maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -244,6 +258,7 @@ class VelocisSovereign {
         }
         visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1200&q=80')`;
 
+        // UI Update
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
