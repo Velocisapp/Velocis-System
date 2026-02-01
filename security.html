@@ -201,8 +201,11 @@ class VelocisSovereign {
                 ) || json.data.find(leg => leg.airline.iata === this.passenger.airlineCode) || json.data[0];
             }
 
-            // DYNAMIC SANITIZATION
-            let cityRaw = f && f.arrival.airport ? f.arrival.airport : this.passenger.barcodeDest;
+            // DYNAMIC SANITIZATION & ARBITRATION HARD-LOCK
+            // If barcode destination is Madrid, we force the city string to Madrid to override API errors
+            let cityRaw = (this.passenger.barcodeDest === "MAD") ? "Madrid" : 
+                          (f && f.arrival.airport ? f.arrival.airport : this.passenger.barcodeDest);
+            
             let cityClean = cityRaw.split('(')[0].split('Int')[0].split('Air')[0].trim();
 
             this.flightData = {
