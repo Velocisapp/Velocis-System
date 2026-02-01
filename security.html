@@ -163,25 +163,28 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // ZONE A: NAME FIREWALL & SANITIZER
+        // ZONE A: MULTI-LEVEL NAME SANITIZER
         let namePart = raw.substring(2, 22).trim();
-        // Remove PNR bleeds (Starts with space + E + alphanumeric)
-        const pnrBleed = namePart.search(/\sE[A-Z0-9]{5}/);
-        if (pnrBleed !== -1) namePart = namePart.substring(0, pnrBleed).trim();
+        const pnrAnchor = namePart.search(/\sE[A-Z0-9]{5,6}/);
+        if (pnrAnchor !== -1) namePart = namePart.substring(0, pnrAnchor).trim();
         
-        this.passenger.name = namePart.split('/')[1] || namePart.split('/')[0] || "Traveler";
+        // Multi-segment slash handling (DE/LA/CRUZ/JUAN)
+        let nameArray = namePart.split('/');
+        this.passenger.name = nameArray[nameArray.length - 1] || "Traveler";
         this.passenger.name = this.passenger.name.replace(/\sE[A-Z0-9]+$/, '').trim();
 
-        // ZONE B: UNIVERSAL PATTERN LANDMARK
+        // ZONE B: FILTERED UNIVERSAL PATTERN LANDMARK
         const dataSearch = raw.substring(22);
-        const universalMatch = dataSearch.match(/([A-Z0-9]{2})\s*(\d{1,4})/);
+        // We find all matches and skip the one that looks like a PNR starting with E
+        const allMatches = [...dataSearch.matchAll(/([A-Z0-9]{2})\s*(\d{1,4})/g)];
+        const flightMatch = allMatches.find(m => !m[1].startsWith('E')) || allMatches[0];
         
-        if (universalMatch) {
-            this.passenger.airlineCode = universalMatch[1];
-            this.passenger.flightNum = parseInt(universalMatch[2], 10).toString();
+        if (flightMatch) {
+            this.passenger.airlineCode = flightMatch[1];
+            this.passenger.flightNum = parseInt(flightMatch[2], 10).toString();
 
-            // ZONE C: ROUTE ISOLATION
-            const landmarkIndex = dataSearch.indexOf(universalMatch[0]);
+            // ZONE C: THE ROUTE ISOLATION
+            const landmarkIndex = dataSearch.indexOf(flightMatch[0]);
             const prefix = dataSearch.substring(0, landmarkIndex).replace(/\s/g, '');
             const routeBlock = prefix.match(/[A-Z]{6}$/); 
             
@@ -196,7 +199,8 @@ class VelocisSovereign {
         const atlas = { 
             "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", 
             "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", 
-            "FRA": "Frankfurt", "FCO": "Rome", "HEL": "Helsinki", "ZRH": "Zurich"
+            "FRA": "Frankfurt", "FCO": "Rome", "HEL": "Helsinki", 
+            "ZRH": "Zurich", "DAC": "Dhaka", "SYD": "Sydney"
         };
         const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
@@ -257,7 +261,8 @@ class VelocisSovereign {
             "dubai": "1512453979798-5ea266f8880c", "dxb": "1512453979798-5ea266f8880c",
             "helsinki": "1516738962228-5103ea2917d0", "hel": "1516738962228-5103ea2917d0",
             "zurich": "1534161432884-d7d3f2131241", "zrh": "1534161432884-d7d3f2131241",
-            "rome": "1523906630138-024507c65961", "fco": "1523906630138-024507c65961"
+            "rome": "1523906630138-024507c65961", "fco": "1523906630138-024507c65961",
+            "dhaka": "1589339274704-5f543666d92f", "dac": "1589339274704-5f543666d92f"
         };
 
         let imgId = "1436491865332-7a61a109c0f3"; 
