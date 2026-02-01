@@ -163,20 +163,24 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // ZONE A: NAME FIREWALL
-        const namePart = raw.substring(2, 22).trim();
+        // ZONE A: NAME FIREWALL & SANITIZER
+        let namePart = raw.substring(2, 22).trim();
+        // Remove PNR bleeds (Starts with space + E + alphanumeric)
+        const pnrBleed = namePart.search(/\sE[A-Z0-9]{5}/);
+        if (pnrBleed !== -1) namePart = namePart.substring(0, pnrBleed).trim();
+        
         this.passenger.name = namePart.split('/')[1] || namePart.split('/')[0] || "Traveler";
+        this.passenger.name = this.passenger.name.replace(/\sE[A-Z0-9]+$/, '').trim();
 
         // ZONE B: UNIVERSAL PATTERN LANDMARK
-        // No hardcoded list. Matches any 2 uppercase chars followed by numbers.
         const dataSearch = raw.substring(22);
-        const universalMatch = dataSearch.match(/([A-Z]{2})\s*(\d{1,4})/);
+        const universalMatch = dataSearch.match(/([A-Z0-9]{2})\s*(\d{1,4})/);
         
         if (universalMatch) {
             this.passenger.airlineCode = universalMatch[1];
             this.passenger.flightNum = parseInt(universalMatch[2], 10).toString();
 
-            // ZONE C: THE ROUTE ISOLATION
+            // ZONE C: ROUTE ISOLATION
             const landmarkIndex = dataSearch.indexOf(universalMatch[0]);
             const prefix = dataSearch.substring(0, landmarkIndex).replace(/\s/g, '');
             const routeBlock = prefix.match(/[A-Z]{6}$/); 
@@ -188,10 +192,11 @@ class VelocisSovereign {
             }
         }
 
-        // SOVEREIGN RESOLUTION (Local Database for 3-months advance support)
+        // SOVEREIGN RESOLUTION (Local Atlas)
         const atlas = { 
             "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", 
-            "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", "FRA": "Frankfurt", "FCO": "Rome" 
+            "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", 
+            "FRA": "Frankfurt", "FCO": "Rome", "HEL": "Helsinki", "ZRH": "Zurich"
         };
         const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
@@ -229,7 +234,7 @@ class VelocisSovereign {
                 this.flightData.status = f.flight_status.toUpperCase();
                 this.flightData.arrivalCity = (f.arrival && f.arrival.iata === this.passenger.barcodeDest) ? f.arrival.airport : this.flightData.arrivalCity;
             }
-        } catch(e) { console.log("Supplement offline - Ticket authority maintained."); }
+        } catch(e) { console.log("Supplement offline - Barcode authority held."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -249,7 +254,10 @@ class VelocisSovereign {
             "new york": "1496442226666-8d4d0e62e6e9", "jfk": "1496442226666-8d4d0e62e6e9",
             "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad",
             "tokyo": "1540944447495-45197ac93c8d", "hnd": "1540944447495-45197ac93c8d",
-            "dubai": "1512453979798-5ea266f8880c", "dxb": "1512453979798-5ea266f8880c"
+            "dubai": "1512453979798-5ea266f8880c", "dxb": "1512453979798-5ea266f8880c",
+            "helsinki": "1516738962228-5103ea2917d0", "hel": "1516738962228-5103ea2917d0",
+            "zurich": "1534161432884-d7d3f2131241", "zrh": "1534161432884-d7d3f2131241",
+            "rome": "1523906630138-024507c65961", "fco": "1523906630138-024507c65961"
         };
 
         let imgId = "1436491865332-7a61a109c0f3"; 
