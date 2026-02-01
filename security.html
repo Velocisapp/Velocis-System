@@ -167,17 +167,26 @@ class VelocisSovereign {
         const rawName = raw.substring(2, 22).trim();
         this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || "Traveler";
 
-        // 2. IATA FIELD MAPPING - Using standard string offsets
+        // 2. IATA FIELD MAPPING - Fixed-Length Authority
         if (raw.startsWith("M1")) {
+            // Destination is standard at 33-35
             this.passenger.barcodeDest = raw.substring(33, 36).trim();
             this.passenger.airlineCode = raw.substring(36, 39).trim();
             
-            // THE FIX: Direct string capture of flight number to prevent "0 1" parseInt errors
+            // THE FIX: Direct string capture of flight number to prevent parseInt splitting
             const rawFlight = raw.substring(39, 44).trim();
-            this.passenger.flightNum = rawFlight.replace(/^0+/, ''); // Removes leading zeros only
+            this.passenger.flightNum = rawFlight.replace(/^0+/, ''); 
+
+            // FAIL-SAFE: Look specifically for the first 6-letter city pair block after the name field
+            const searchSection = raw.substring(22).replace(/\s/g, '');
+            const routeBlock = searchSection.match(/[A-Z]{6}/);
+            
+            if (!/^[A-Z]{3}$/.test(this.passenger.barcodeDest) || this.passenger.name.includes(this.passenger.barcodeDest)) {
+                if (routeBlock) this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
+            }
         }
 
-        // 3. SOVEREIGN PRE-RESOLUTION: Map city locally for "Future Ticket" support (3 months in advance)
+        // 3. SOVEREIGN PRE-RESOLUTION: Support tickets purchased 3 months in advance
         const globalAtlas = { 
             "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", 
             "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", 
@@ -185,7 +194,7 @@ class VelocisSovereign {
         };
         const resolvedCity = globalAtlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
-        // 4. OFFLINE MANIFEST: Establish the record based purely on barcode data
+        // 4. OFFLINE MANIFEST: Establish truth from barcode immediately
         this.flightData = {
             flight: this.passenger.airlineCode + this.passenger.flightNum,
             airline: this.passenger.airlineCode + " Official",
@@ -215,14 +224,14 @@ class VelocisSovereign {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                // Leg matching logic: API data is used only to supplement the manifest
-                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
-                this.flightData.airline = f.airline.name;
-                this.flightData.gate = f.departure.gate || "--";
-                this.flightData.status = f.flight_status.toUpperCase();
-                this.flightData.arrivalCity = f.arrival.airport || this.flightData.arrivalCity;
+                // Leg matching logic: Only update if the API confirms our destination
+                let correctLeg = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
+                this.flightData.airline = correctLeg.airline.name;
+                this.flightData.gate = correctLeg.departure.gate || "--";
+                this.flightData.status = correctLeg.flight_status.toUpperCase();
+                this.flightData.arrivalCity = correctLeg.arrival.airport || this.flightData.arrivalCity;
             }
-        } catch(e) { console.log("Supplement offline - Ticket authority maintained."); }
+        } catch(e) { console.log("Supplement failed - Ticket authority maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -251,7 +260,7 @@ class VelocisSovereign {
         }
         visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1200&q=80')`;
 
-        // UI RENDER
+        // UI SYNC
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
