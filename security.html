@@ -29,6 +29,8 @@
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
+        .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .sb-logo { height: 35px; width: auto; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 11px; text-transform: uppercase; }
     </style>
 </head>
@@ -98,7 +100,14 @@
         <div class="framed-title" id="card-gate-title">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
             Watching Gate <span id="text-gate-detail" style="color:var(--v-gold); font-weight:800;">--</span> for you, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.<br><br>
-            You have time for a refreshment. Enjoy a moment of calm before departure.
+            You have time for a refreshment. Enjoy a moment of calm before departure:
+        </div>
+        <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
+            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
+            <div style="text-align:right;">
+                <div style="color:var(--v-gold); font-size:8px; font-weight:900; letter-spacing:1px; margin-bottom:2px;">VELOCIS PERK</div>
+                <div style="background: var(--v-blue); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">15% OFF</div>
+            </div>
         </div>
     </div>
 
