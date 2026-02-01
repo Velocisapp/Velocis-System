@@ -161,36 +161,42 @@ class VelocisSovereign {
     }
 
     async handleScan(data) {
-        // 1. DATA CLEANING (Retain spaces for field isolation)
         const raw = data.toUpperCase();
         
-        // 2. NAME ISOLATION (Resolution 792: Indices 2-21)
+        // 1. EXTRACT NAME (Indices 2-21)
         const rawName = raw.substring(2, 22).trim();
         this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || "Traveler";
 
-        // 3. IATA CARRIER ANCHOR: Search for the 2-letter Carrier + Flight Block
-        // This is a much more stable landmark than fixed indices
-        const carrierMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
-        
-        if (carrierMatch) {
-            this.passenger.airlineCode = carrierMatch[0].substring(0, 2).trim();
-            this.passenger.flightNum = parseInt(carrierMatch[1], 10).toString();
+        // 2. IATA FIELD MAPPING - Fixed-Length Authority
+        if (raw.startsWith("M1")) {
+            // Destination is standard at 33-35
+            this.passenger.barcodeDest = raw.substring(33, 36).trim();
+            this.passenger.airlineCode = raw.substring(36, 39).trim();
+            this.passenger.flightNum = parseInt(raw.substring(39, 44).trim(), 10).toString();
+
+            // FAIL-SAFE: Look specifically for the first 6-letter city pair block after the name field
+            const searchSection = raw.substring(22).replace(/\s/g, '');
+            const routeBlock = searchSection.match(/[A-Z]{6}/);
             
-            // 4. LOOK BACKWARDS FOR ROUTE: IATA pairs Sitting 6 characters BEFORE the Carrier
-            const carrierPos = raw.indexOf(carrierMatch[0]);
-            if (carrierPos >= 6) {
-                const routeBlock = raw.substring(carrierPos - 6, carrierPos).trim();
-                // Take the 2nd half of the route block as the Destination IATA
-                this.passenger.barcodeDest = routeBlock.substring(routeBlock.length - 3);
+            // If the fixed index caught junk (numbers or name parts), use the routeBlock
+            if (!/^[A-Z]{3}$/.test(this.passenger.barcodeDest) || this.passenger.name.includes(this.passenger.barcodeDest)) {
+                if (routeBlock) this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
             }
         }
 
-        // FAIL-SAFE: If indices capture name-junk or numbers, find the first 6-letter route AFTER index 22
-        if (!/^[A-Z]{3}$/.test(this.passenger.barcodeDest) || this.passenger.name.includes(this.passenger.barcodeDest)) {
-            const searchPart = raw.substring(22).replace(/\s/g, '');
-            const routeMatch = searchPart.match(/[A-Z]{6}/);
-            if (routeMatch) this.passenger.barcodeDest = routeMatch[0].substring(3, 6);
-        }
+        // 3. SOVEREIGN PRE-RESOLUTION: Map city name locally before any API call
+        const atlas = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "LPB": "La Paz", "CCS": "Caracas" };
+        const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
+
+        // 4. OFFLINE MANIFEST: Create the record instantly so it works 3 months in advance
+        this.flightData = {
+            flight: this.passenger.airlineCode + this.passenger.flightNum,
+            airline: this.passenger.airlineCode + " Official",
+            dest: this.passenger.barcodeDest,
+            gate: "--",
+            status: "SCHEDULED",
+            arrivalCity: cityValue
+        };
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         if(this.scanner) await this.scanner.stop(); 
@@ -201,39 +207,25 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "SOVEREIGN AUTHORIZATION...";
+        syncBtn.innerText = "SYNCING LIVE DATA..."; 
 
-        // UNIVERSAL GLOBAL POSITIONING: Ask the Cloud for the real city name
         const targetIata = this.passenger.barcodeDest.toUpperCase();
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
             let res = await fetch(url);
             let json = await res.json();
-            
             if(json.data && json.data.length > 0) {
-                // Specific matching leg logic
-                let f = json.data.find(leg => leg.arrival.iata === targetIata) || json.data[0];
-                this.flightData = {
-                    flight: this.passenger.airlineCode + this.passenger.flightNum,
-                    airline: f.airline.name,
-                    dest: targetIata,
-                    gate: f.departure.gate || "TBD",
-                    status: f.flight_status.toUpperCase(),
-                    arrivalCity: f.arrival.airport // GLOBAL TRUTH FROM API
-                };
-            } else {
-                // Emergency fallback if API is unreachable
-                this.flightData = {
-                    flight: this.passenger.airlineCode + this.passenger.flightNum,
-                    airline: this.passenger.airlineCode,
-                    dest: targetIata,
-                    gate: "TBD",
-                    status: "VERIFIED",
-                    arrivalCity: targetIata 
-                };
+                // Find the specific leg matching our ticket's destination
+                let correctLeg = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
+                
+                // Supplement the existing offline manifest with live details if found
+                this.flightData.airline = correctLeg.airline.name;
+                this.flightData.gate = correctLeg.departure.gate || "--";
+                this.flightData.status = correctLeg.flight_status.toUpperCase();
+                this.flightData.arrivalCity = correctLeg.arrival.airport || this.flightData.arrivalCity;
             }
-        } catch(e) { console.error("Global Handshake Failure"); }
+        } catch(e) { console.log("Supplement failed - Ticket authority maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -244,22 +236,20 @@ class VelocisSovereign {
     start(isRestore = false) {
         if(!this.flightData) return;
         
-        // AGNOSTIC VISUAL ATLAS: Checks both IATA and Real City Name
         const visual = document.getElementById('dest-visualizer');
-        const cityKey = String(this.flightData.arrivalCity).toLowerCase().trim();
         const iataKey = String(this.flightData.dest).toLowerCase().trim();
+        const cityKey = String(this.flightData.arrivalCity).toLowerCase().trim();
         
-        const atlas = {
+        const gallery = {
             "paris": "1502603300340-061d22384b8d", "cdg": "1502603300340-061d22384b8d",
             "madrid": "1539561968-7b973fb3001f", "mad": "1539561968-7b973fb3001f",
             "new york": "1496442226666-8d4d0e62e6e9", "jfk": "1496442226666-8d4d0e62e6e9",
-            "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad",
-            "dubai": "1512453979798-5ea266f8880c", "dxb": "1512453979798-5ea266f8880c"
+            "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad"
         };
 
         let imgId = "1436491865332-7a61a109c0f3"; 
-        for (let k in atlas) { 
-            if(cityKey.includes(k) || iataKey === k) { imgId = atlas[k]; break; } 
+        for (let k in gallery) { 
+            if(cityKey.includes(k) || iataKey === k) { imgId = gallery[k]; break; } 
         }
         visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1200&q=80')`;
 
@@ -269,7 +259,6 @@ class VelocisSovereign {
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('text-brief-airline').innerText = this.flightData.airline;
         document.getElementById('text-checkpoint-city').innerText = this.flightData.arrivalCity;
-        document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('text-gate').innerText = this.flightData.gate;
         document.getElementById('arrival-context-text').innerText = this.flightData.arrivalCity;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
