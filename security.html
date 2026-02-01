@@ -163,33 +163,27 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // ZONE A: THE NAME FIREWALL
-        // We isolate indices 2-22 immediately and stop looking at them.
+        // ZONE A: NAME FIREWALL
         const namePart = raw.substring(2, 22).trim();
         this.passenger.name = namePart.split('/')[1] || namePart.split('/')[0] || "Traveler";
 
-        // ZONE B: THE DATA SEARCH (Everything AFTER the name)
+        // ZONE B: UNIVERSAL PATTERN LANDMARK
+        // No hardcoded list. Matches any 2 uppercase chars followed by numbers.
         const dataSearch = raw.substring(22);
+        const universalMatch = dataSearch.match(/([A-Z]{2})\s*(\d{1,4})/);
         
-        // Find the Airline Landmark (Carrier + Numbers)
-        // This is resistant to sliding because it hunts for the pattern.
-        const flightMatch = dataSearch.match(/(AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
-        
-        if (flightMatch) {
-            this.passenger.airlineCode = flightMatch[1];
-            this.passenger.flightNum = parseInt(flightMatch[2], 10).toString();
+        if (universalMatch) {
+            this.passenger.airlineCode = universalMatch[1];
+            this.passenger.flightNum = parseInt(universalMatch[2], 10).toString();
 
             // ZONE C: THE ROUTE ISOLATION
-            // We search for the 6-letter block (JFKFRA) sitting before the landmark.
-            const landmarkIndex = dataSearch.indexOf(flightMatch[0]);
+            const landmarkIndex = dataSearch.indexOf(universalMatch[0]);
             const prefix = dataSearch.substring(0, landmarkIndex).replace(/\s/g, '');
             const routeBlock = prefix.match(/[A-Z]{6}$/); 
             
             if (routeBlock) {
-                // Take second half (the Destination)
                 this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
             } else {
-                // Fallback for tight formatting
                 this.passenger.barcodeDest = prefix.substring(prefix.length - 3);
             }
         }
