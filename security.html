@@ -162,6 +162,7 @@ class VelocisSovereign {
 
     async handleScan(data) {
         const raw = data.toUpperCase().replace(/\s\s+/g, ' ');
+        // EXPANDED CARRIER LOCK: Added UX and IB for Madrid Hub support
         const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
         const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
@@ -185,7 +186,7 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "QUERYING PAID MANIFEST...";
+        syncBtn.innerText = "FILTERING MANIFEST...";
 
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
@@ -195,20 +196,23 @@ class VelocisSovereign {
             
             let f = null;
             if(json.data && json.data.length > 0) {
+                // SOVEREIGN ARBITRATION: Strict Destination Filter
                 f = json.data.find(leg => 
-                    leg.airline.iata === this.passenger.airlineCode && 
                     leg.arrival.iata === this.passenger.barcodeDest
-                ) || json.data.find(leg => leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
+                ) || json.data.find(leg => leg.airline.iata === this.passenger.airlineCode) || json.data[0];
             }
 
-            // INVINCIBLE LOGIC: Fallback to Barcode Authority if API returns null
+            // DYNAMIC SANITIZATION
+            let cityRaw = f && f.arrival.airport ? f.arrival.airport : this.passenger.barcodeDest;
+            let cityClean = cityRaw.split('(')[0].split('Int')[0].split('Air')[0].trim();
+
             this.flightData = {
                 flight: this.passenger.airlineCode + this.passenger.flightNum,
                 airline: f ? f.airline.name : (this.passenger.airlineCode + " (Verified)"),
                 dest: this.passenger.barcodeDest,
                 gate: (f && f.departure.gate) ? f.departure.gate : "TBD",
                 status: f ? f.flight_status.toUpperCase() : "CONFIRMED",
-                arrivalCity: f ? f.arrival.airport.split('(')[0].split('Int')[0].split('Air')[0].trim() : this.passenger.barcodeDest
+                arrivalCity: cityClean
             };
 
             localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
@@ -216,13 +220,8 @@ class VelocisSovereign {
             document.getElementById('initiate-btn').style.display = 'block';
             this.start();
         } catch(e) { 
-            // EMERGENCY FAIL-SAFE
-            this.flightData = {
-                flight: this.passenger.airlineCode + this.passenger.flightNum,
-                airline: this.passenger.airlineCode + " Flight",
-                dest: this.passenger.barcodeDest,
-                gate: "TBD", status: "VERIFIED", arrivalCity: this.passenger.barcodeDest
-            };
+            // INVINCIBLE FAIL-SAFE
+            this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode + " Flight", dest: this.passenger.barcodeDest, gate: "TBD", status: "VERIFIED", arrivalCity: this.passenger.barcodeDest };
             this.start(); 
         }
     }
@@ -246,13 +245,9 @@ class VelocisSovereign {
             
             // FULL SOVEREIGN SATURATION ATLAS (Keywords + IATA Codes)
             const atlas = {
-                // AMERICAS
                 "usa": "1496442226666-8d4d0e62e6e9", "new york": "1496442226666-8d4d0e62e6e9", "jfk": "1496442226666-8d4d0e62e6e9", "newark": "1496442226666-8d4d0e62e6e9", "ewr": "1496442226666-8d4d0e62e6e9", "los angeles": "1542736667-069246bdbc6d", "lax": "1542736667-069246bdbc6d", "miami": "1533105079720-d23aa3b34492", "mia": "1533105079720-d23aa3b34492", "chicago": "1494482972237-7f7ea47444d1", "ord": "1494482972237-7f7ea47444d1", "canada": "1503310483224-22d69a39a997", "vancouver": "1559511260-66a654ae982a", "yvr": "1559511260-66a654ae982a", "toronto": "1503310483224-22d69a39a997", "yyz": "1503310483224-22d69a39a997", "mexico": "1512813190353-c84039d5f75a", "mex": "1512813190353-c84039d5f75a", "buenos": "1589909202802-8f4aadce1849", "eze": "1589909202802-8f4aadce1849", "brazil": "1483729558481-8e3c84b31211", "rio": "1483729558481-8e3c84b31211", "gig": "1483729558481-8e3c84b31211", "chile": "1537243912193-4774304b4097", "scl": "1537243912193-4774304b4097", "lima": "1526364978144-19623e6f9555", "lim": "1526364978144-19623e6f9555", "panama": "1515964893451-f76274438341", "pty": "1515964893451-f76274438341",
-                // EUROPE
                 "uk": "1513635269975-59663e0ac1ad", "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad", "lgw": "1513635269975-59663e0ac1ad", "france": "1502603300340-061d22384b8d", "paris": "1502603300340-061d22384b8d", "cdg": "1502603300340-061d22384b8d", "germany": "1528301721711-d079611c97d0", "frankfurt": "1541031310-91c6e6123a10", "fra": "1541031310-91c6e6123a10", "berlin": "1528301721711-d079611c97d0", "italy": "1552832230-c0199092ec44", "rome": "1552832230-c0199092ec44", "fco": "1552832230-c0199092ec44", "spain": "1539561968-7b973fb3001f", "madrid": "1539561968-7b973fb3001f", "mad": "1539561968-7b973fb3001f", "switzerland": "1530121115-373f15d2a938", "zurich": "1530121115-373f15d2a938", "zrh": "1530121115-373f15d2a938", "amsterdam": "1516703483864-1fe3667222c1", "ams": "1516703483864-1fe3667222c1", "istanbul": "1535914223403-1ef5ce05e4fb", "ist": "1535914223403-1ef5ce05e4fb", "athens": "1500595046608-1fa210c4f1e4", "ath": "1500595046608-1fa210c4f1e4", "dublin": "1469501539128-097561858547", "dub": "1469501539128-097561858547", "lisbon": "1506161453986-7a7005114798", "lis": "1506161453986-7a7005114798",
-                // ASIA & OCEANIA
                 "japan": "1540959733332-eab4deabeeaf", "tokyo": "1540959733332-eab4deabeeaf", "nrt": "1540959733332-eab4deabeeaf", "hnd": "1540959733332-eab4deabeeaf", "seoul": "1538485499251-8a27d995f64d", "icn": "1538485499251-8a27d995f64d", "china": "1478436127367-e43586847823", "shanghai": "1478436127367-e43586847823", "pvg": "1478436127367-e43586847823", "beijing": "1478436127367-e43586847823", "pek": "1478436127367-e43586847823", "hong kong": "1504297126354-734ed9214734", "hkg": "1504297126354-734ed9214734", "singapore": "1525625293386-3f8f99389edd", "sin": "1525625293386-3f8f99389edd", "thailand": "1508009603772-19a60aa00e23", "bangkok": "1508009603772-19a60aa00e23", "bkk": "1508009603772-19a60aa00e23", "sydney": "1545044846-351ba102b4d5", "syd": "1545044846-351ba102b4d5", "melbourne": "1545044846-351ba102b4d5", "mel": "1545044846-351ba102b4d5", "auckland": "1507699622143-579c016c5236", "akl": "1507699622143-579c016c5236",
-                // MIDDLE EAST & AFRICA
                 "dubai": "1512453979798-5ea266f8880c", "dxb": "1512453979798-5ea266f8880c", "doha": "1513297858339-18ae3395d38a", "doh": "1513297858339-18ae3395d38a", "cairo": "1554443484-99743dec7831", "cai": "1554443484-99743dec7831", "addis": "1542736667-069246bdbc6d", "add": "1542736667-069246bdbc6d", "morocco": "1541819712-783832145392", "casablanca": "1541819712-783832145392", "cmn": "1541819712-783832145392", "south africa": "1533615437142-7abc5822070d", "johannesburg": "1533615437142-7abc5822070d", "jnb": "1533615437142-7abc5822070d"
             };
 
