@@ -161,34 +161,37 @@ class VelocisSovereign {
     }
 
     async handleScan(data) {
-        // CLEANING AND SPACE-REMOVAL
+        // IATA RESILIENT CLEANING
         const raw = data.toUpperCase().trim().replace(/\s+/g, '');
         
-        // 1. CARRIER/FLIGHT
+        // 1. EXTRACT FLIGHT IDENTIFIER
         const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
         const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
 
-        // 2. PATTERN-BASED ANCHOR (Immune to Blank/Shift errors)
-        // We hunt for the 6-letter IATA string (Origin+Dest)
-        const locationMatches = raw.match(/[A-Z]{6}/g);
-        if (locationMatches && locationMatches.length > 0) {
-            // Take the second half of the 6-letter block as the Destination
-            this.passenger.barcodeDest = locationMatches[0].substring(3, 6);
+        // 2. FORENSIC ANCHOR: Search for the 6-letter route block (Origin+Dest)
+        // IATA Resolution 792: Destination is the second 3-letter chunk in this block
+        const routeMatches = raw.match(/[A-Z]{6}/g);
+        if (routeMatches && routeMatches.length > 0) {
+            // Take characters 3, 4, 5 of the first 6-letter block found
+            this.passenger.barcodeDest = routeMatches[0].substring(3, 6);
         } else {
-            // Emergency fallback if 6-letter block is missing
+            // Secondary Pattern Fallback
             const iataMatches = raw.match(/[A-Z]{3}/g);
-            this.passenger.barcodeDest = iataMatches ? iataMatches[iataMatches.length - 2] : "MAD";
+            this.passenger.barcodeDest = iataMatches ? iataMatches[iataMatches.length - 2] : "";
         }
 
-        // Veto security indicators like 'OCI' to prevent corruption
+        // Veto security 'OCI' indicator or empty results
         if (this.passenger.barcodeDest === "OCI" || !this.passenger.barcodeDest) {
-            this.passenger.barcodeDest = "CDG";
+            // Search all 3-letter blocks for one that isn't security or airline code
+            const allPossible = raw.match(/[A-Z]{3}/g) || [];
+            this.passenger.barcodeDest = allPossible.find(c => c !== "OCI" && c !== this.passenger.airlineCode) || "MAD";
         }
 
         if (raw.startsWith("M1")) {
-            const rawName = raw.substring(2, 22).trim();
+            // Standard name extraction from first 20 characters
+            const rawName = data.substring(2, 22).trim();
             this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
         }
 
@@ -201,16 +204,16 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "AUTHORIZING...";
+        syncBtn.innerText = "SOVEREIGN AUTHORIZATION...";
 
-        // PROTOCOL 1: Absolute Manifest Authority
+        // PROTOCOL 1: Absolute Authority (Geography locked BEFORE API call)
         const hardMap = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "HND": "Tokyo" };
         let cleanDest = this.passenger.barcodeDest.toUpperCase();
         let forcedCity = hardMap[cleanDest] || cleanDest;
 
         this.flightData = {
             flight: this.passenger.airlineCode + this.passenger.flightNum,
-            airline: this.passenger.airlineCode + " Sovereign",
+            airline: this.passenger.airlineCode + " Official",
             dest: cleanDest,
             gate: "TBD",
             status: "CONFIRMED",
@@ -223,13 +226,13 @@ class VelocisSovereign {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                // Supplementary API data (Gate and Carrier only)
+                // Secondary Data Supplement (Gate/Status only - API cannot overwrite destination)
                 let f = json.data.find(leg => leg.arrival.iata === cleanDest) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
             }
-        } catch(e) { console.log("API Bypass - Ground truth maintained."); }
+        } catch(e) { console.log("Supplement offline - Authority maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -240,6 +243,7 @@ class VelocisSovereign {
     start(isRestore = false) {
         if(!this.flightData) return;
         
+        // PROTOCOL 2: Instant Background Handshake (Check both Name and IATA code)
         const visual = document.getElementById('dest-visualizer');
         const cityKey = String(this.flightData.arrivalCity).toLowerCase().trim();
         const iataKey = String(this.flightData.dest).toLowerCase().trim();
@@ -258,7 +262,7 @@ class VelocisSovereign {
         }
         visual.style.backgroundImage = `url('https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1200&q=80')`;
 
-        // UI Update
+        // UI SYNC
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
