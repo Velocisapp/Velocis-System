@@ -161,41 +161,47 @@ class VelocisSovereign {
     }
 
     async handleScan(data) {
-        // 1. DATA CLEANING: Remove all whitespace to prevent index shifting
         const raw = data.toUpperCase();
-        const clean = raw.replace(/\s+/g, '');
         
-        // 2. NAME ISOLATION (Resolution 792 indices)
-        const namePart = raw.substring(2, 22).trim();
-        this.passenger.name = namePart.split('/')[1] || namePart.split('/')[0] || "Traveler";
+        // 1. NAME ISOLATION (Indices 2-22)
+        const nameBlock = raw.substring(2, 22).trim();
+        this.passenger.name = nameBlock.split('/')[1] || nameBlock.split('/')[0] || "Traveler";
 
-        // 3. ROUTE HUNTER: Look for the 6-letter city pair AFTER the name
-        // We search the 'clean' version specifically for capital letter blocks
-        const searchZone = clean.substring(10); 
-        const routeMatch = searchZone.match(/[A-Z]{6}/);
-        if (routeMatch) {
-            this.passenger.barcodeDest = routeMatch[0].substring(3, 6);
+        // 2. LANDMARK ANCHOR: Locate Carrier Landmark (e.g. IB 6250 or NH 0110)
+        // This is resistant to sliding/shifting because it searches for the pattern, not a fixed position
+        const trackerMatch = raw.match(/(AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
+        
+        if (trackerMatch) {
+            this.passenger.airlineCode = trackerMatch[1];
+            // Capture full flight number (0110 -> 110)
+            this.passenger.flightNum = parseInt(trackerMatch[2], 10).toString();
+            
+            // MATH ANCHOR: Destination is physically sitting 3 chars before the landmark
+            const carrierIndex = raw.indexOf(trackerMatch[0]);
+            if (carrierIndex >= 3) {
+                this.passenger.barcodeDest = raw.substring(carrierIndex - 3, carrierIndex).trim();
+            }
         }
 
-        // 4. AIRLINE & FLIGHT HUNTER: Landmarks for Carriers
-        const flightMatch = clean.match(/(AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)(\d{1,4})/);
-        if (flightMatch) {
-            this.passenger.airlineCode = flightMatch[1];
-            // Fix leading zero "0 1" error by using the full captured group
-            this.passenger.flightNum = parseInt(flightMatch[2], 10).toString();
+        // 3. FAIL-SAFE: Verify 3-letter integrity
+        if (!/^[A-Z]{3}$/.test(this.passenger.barcodeDest)) {
+            const searchSection = raw.substring(22).replace(/\s/g, '');
+            const routeBlock = searchSection.match(/[A-Z]{6}/);
+            if (routeBlock) this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
         }
 
-        // 5. LOCAL ADVANCE MAP: Resolution for 3 months ahead
-        const atlas = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "HND": "Tokyo" };
-        const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
+        // 4. SOVEREIGN PRE-RESOLUTION: Map city locally so it works 3 months in advance
+        const atlas = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "HND": "Tokyo", "DXB": "Dubai", "CCS": "Caracas" };
+        const resolvedCity = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
+        // 5. OFFLINE MANIFEST (Barcode Authority)
         this.flightData = {
             flight: this.passenger.airlineCode + this.passenger.flightNum,
             airline: this.passenger.airlineCode + " Official",
             dest: this.passenger.barcodeDest,
             gate: "--",
             status: "SCHEDULED",
-            arrivalCity: cityValue
+            arrivalCity: resolvedCity
         };
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
@@ -211,19 +217,20 @@ class VelocisSovereign {
         const syncBtn = document.getElementById('sync-manifest-btn');
         syncBtn.innerText = "SYNCING LIVE DATA..."; 
 
+        const targetIata = this.passenger.barcodeDest.toUpperCase();
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
+                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "--";
                 this.flightData.status = f.flight_status.toUpperCase();
                 this.flightData.arrivalCity = f.arrival.airport || this.flightData.arrivalCity;
             }
-        } catch(e) { console.log("Supplement offline."); }
+        } catch(e) { console.log("Supplement offline - Ticket authority maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -242,7 +249,8 @@ class VelocisSovereign {
             "madrid": "1539561968-7b973fb3001f", "mad": "1539561968-7b973fb3001f",
             "new york": "1496442226666-8d4d0e62e6e9", "jfk": "1496442226666-8d4d0e62e6e9",
             "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad",
-            "tokyo": "1540944447495-45197ac93c8d", "hnd": "1540944447495-45197ac93c8d"
+            "tokyo": "1540944447495-45197ac93c8d", "hnd": "1540944447495-45197ac93c8d",
+            "dubai": "1512453979798-5ea266f8880c", "dxb": "1512453979798-5ea266f8880c"
         };
 
         let imgId = "1436491865332-7a61a109c0f3"; 
@@ -254,6 +262,7 @@ class VelocisSovereign {
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('text-brief-airline').innerText = this.flightData.airline;
         document.getElementById('text-checkpoint-city').innerText = this.flightData.arrivalCity;
+        document.getElementById('arrival-context-text').innerText = this.flightData.arrivalCity;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
