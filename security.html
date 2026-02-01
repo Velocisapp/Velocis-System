@@ -163,35 +163,44 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // 1. NAME ISOLATION (Resolution 792 indices)
+        // ZONE A: THE NAME FIREWALL
+        // We isolate indices 2-22 immediately and stop looking at them.
         const namePart = raw.substring(2, 22).trim();
         this.passenger.name = namePart.split('/')[1] || namePart.split('/')[0] || "Traveler";
 
-        // 2. LANDMARK ANCHOR: Locate Carrier Landmark (e.g. AF 0012 or BA 0117)
-        // This stops "0 1" errors and index sliding.
-        const trackerMatch = raw.match(/(AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
+        // ZONE B: THE DATA SEARCH (Everything AFTER the name)
+        const dataSearch = raw.substring(22);
         
-        if (trackerMatch) {
-            this.passenger.airlineCode = trackerMatch[1];
-            this.passenger.flightNum = parseInt(trackerMatch[2], 10).toString();
+        // Find the Airline Landmark (Carrier + Numbers)
+        // This is resistant to sliding because it hunts for the pattern.
+        const flightMatch = dataSearch.match(/(AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
+        
+        if (flightMatch) {
+            this.passenger.airlineCode = flightMatch[1];
+            this.passenger.flightNum = parseInt(flightMatch[2], 10).toString();
+
+            // ZONE C: THE ROUTE ISOLATION
+            // We search for the 6-letter block (JFKFRA) sitting before the landmark.
+            const landmarkIndex = dataSearch.indexOf(flightMatch[0]);
+            const prefix = dataSearch.substring(0, landmarkIndex).replace(/\s/g, '');
+            const routeBlock = prefix.match(/[A-Z]{6}$/); 
             
-            // 3. ARRIVAL ISOLATION (The Target Shift)
-            // Destination code (CDG) always sits directly against the Airline Code in the pair JFKCDG.
-            const carrierPos = raw.indexOf(trackerMatch[0]);
-            if (carrierPos >= 3) {
-                // We take the 3 letters immediately touching the landmark
-                this.passenger.barcodeDest = raw.substring(carrierPos - 3, carrierPos).trim();
+            if (routeBlock) {
+                // Take second half (the Destination)
+                this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
+            } else {
+                // Fallback for tight formatting
+                this.passenger.barcodeDest = prefix.substring(prefix.length - 3);
             }
         }
 
-        // 4. SOVEREIGN PRE-RESOLUTION: Atlas support for offline/future tickets
+        // SOVEREIGN RESOLUTION (Local Database for 3-months advance support)
         const atlas = { 
             "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", 
-            "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", "NRT": "Tokyo" 
+            "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", "FRA": "Frankfurt", "FCO": "Rome" 
         };
         const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
-        // 5. OFFLINE MANIFEST: Immediate authority from the ticket
         this.flightData = {
             flight: this.passenger.airlineCode + this.passenger.flightNum,
             airline: this.passenger.airlineCode + " Official",
@@ -212,23 +221,21 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "SYNCING LIVE DATA..."; 
+        syncBtn.innerText = "SOVEREIGN SYNC..."; 
 
-        const targetIata = this.passenger.barcodeDest.toUpperCase();
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                // Find the leg matching our arrival, or fallback to first result
-                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
+                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "--";
                 this.flightData.status = f.flight_status.toUpperCase();
-                this.flightData.arrivalCity = (f.arrival && f.arrival.iata === targetIata) ? f.arrival.airport : this.flightData.arrivalCity;
+                this.flightData.arrivalCity = (f.arrival && f.arrival.iata === this.passenger.barcodeDest) ? f.arrival.airport : this.flightData.arrivalCity;
             }
-        } catch(e) { console.log("Supplement failed - Ticket ground truth held."); }
+        } catch(e) { console.log("Supplement offline - Ticket authority maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
