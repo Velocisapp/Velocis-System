@@ -163,45 +163,42 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // 1. NAME ISOLATION (Indices 2-22)
-        const nameBlock = raw.substring(2, 22).trim();
-        this.passenger.name = nameBlock.split('/')[1] || nameBlock.split('/')[0] || "Traveler";
+        // 1. NAME ISOLATION (Resolution 792 indices)
+        const namePart = raw.substring(2, 22).trim();
+        this.passenger.name = namePart.split('/')[1] || namePart.split('/')[0] || "Traveler";
 
-        // 2. LANDMARK ANCHOR: Locate Carrier Landmark (e.g. IB 6250 or NH 0110)
-        // This is resistant to sliding/shifting because it searches for the pattern, not a fixed position
+        // 2. LANDMARK ANCHOR: Locate Carrier Landmark (e.g. AF 0012 or BA 0117)
+        // This stops "0 1" errors and index sliding.
         const trackerMatch = raw.match(/(AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
         
         if (trackerMatch) {
             this.passenger.airlineCode = trackerMatch[1];
-            // Capture full flight number (0110 -> 110)
             this.passenger.flightNum = parseInt(trackerMatch[2], 10).toString();
             
-            // MATH ANCHOR: Destination is physically sitting 3 chars before the landmark
-            const carrierIndex = raw.indexOf(trackerMatch[0]);
-            if (carrierIndex >= 3) {
-                this.passenger.barcodeDest = raw.substring(carrierIndex - 3, carrierIndex).trim();
+            // 3. ARRIVAL ISOLATION (The Target Shift)
+            // Destination code (CDG) always sits directly against the Airline Code in the pair JFKCDG.
+            const carrierPos = raw.indexOf(trackerMatch[0]);
+            if (carrierPos >= 3) {
+                // We take the 3 letters immediately touching the landmark
+                this.passenger.barcodeDest = raw.substring(carrierPos - 3, carrierPos).trim();
             }
         }
 
-        // 3. FAIL-SAFE: Verify 3-letter integrity
-        if (!/^[A-Z]{3}$/.test(this.passenger.barcodeDest)) {
-            const searchSection = raw.substring(22).replace(/\s/g, '');
-            const routeBlock = searchSection.match(/[A-Z]{6}/);
-            if (routeBlock) this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
-        }
+        // 4. SOVEREIGN PRE-RESOLUTION: Atlas support for offline/future tickets
+        const atlas = { 
+            "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", 
+            "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", "NRT": "Tokyo" 
+        };
+        const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
-        // 4. SOVEREIGN PRE-RESOLUTION: Map city locally so it works 3 months in advance
-        const atlas = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "HND": "Tokyo", "DXB": "Dubai", "CCS": "Caracas" };
-        const resolvedCity = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
-
-        // 5. OFFLINE MANIFEST (Barcode Authority)
+        // 5. OFFLINE MANIFEST: Immediate authority from the ticket
         this.flightData = {
             flight: this.passenger.airlineCode + this.passenger.flightNum,
             airline: this.passenger.airlineCode + " Official",
             dest: this.passenger.barcodeDest,
             gate: "--",
             status: "SCHEDULED",
-            arrivalCity: resolvedCity
+            arrivalCity: cityValue
         };
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
@@ -224,13 +221,14 @@ class VelocisSovereign {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
+                // Find the leg matching our arrival, or fallback to first result
                 let f = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "--";
                 this.flightData.status = f.flight_status.toUpperCase();
-                this.flightData.arrivalCity = f.arrival.airport || this.flightData.arrivalCity;
+                this.flightData.arrivalCity = (f.arrival && f.arrival.iata === targetIata) ? f.arrival.airport : this.flightData.arrivalCity;
             }
-        } catch(e) { console.log("Supplement offline - Ticket authority maintained."); }
+        } catch(e) { console.log("Supplement failed - Ticket ground truth held."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
