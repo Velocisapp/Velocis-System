@@ -167,41 +167,40 @@ class VelocisSovereign {
         const rawName = raw.substring(2, 22).trim();
         this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || "Traveler";
 
-        // 2. IATA FIELD MAPPING - Fixed-Length Authority
+        // 2. IATA FIELD MAPPING - Using standard string offsets
         if (raw.startsWith("M1")) {
-            // Destination is standard at 33-35
             this.passenger.barcodeDest = raw.substring(33, 36).trim();
             this.passenger.airlineCode = raw.substring(36, 39).trim();
-            this.passenger.flightNum = parseInt(raw.substring(39, 44).trim(), 10).toString();
-
-            // FAIL-SAFE: Look specifically for the first 6-letter city pair block after the name field
-            const searchSection = raw.substring(22).replace(/\s/g, '');
-            const routeBlock = searchSection.match(/[A-Z]{6}/);
             
-            // If the fixed index caught junk (numbers or name parts), use the routeBlock
-            if (!/^[A-Z]{3}$/.test(this.passenger.barcodeDest) || this.passenger.name.includes(this.passenger.barcodeDest)) {
-                if (routeBlock) this.passenger.barcodeDest = routeBlock[0].substring(3, 6);
-            }
+            // THE FIX: Direct string capture of flight number to prevent "0 1" parseInt errors
+            const rawFlight = raw.substring(39, 44).trim();
+            this.passenger.flightNum = rawFlight.replace(/^0+/, ''); // Removes leading zeros only
         }
 
-        // 3. SOVEREIGN PRE-RESOLUTION: Map city name locally before any API call
-        const atlas = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "LPB": "La Paz", "CCS": "Caracas" };
-        const cityValue = atlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
+        // 3. SOVEREIGN PRE-RESOLUTION: Map city locally for "Future Ticket" support (3 months in advance)
+        const globalAtlas = { 
+            "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", 
+            "LHR": "London", "DXB": "Dubai", "HND": "Tokyo", 
+            "CCS": "Caracas", "LPB": "La Paz" 
+        };
+        const resolvedCity = globalAtlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
 
-        // 4. OFFLINE MANIFEST: Create the record instantly so it works 3 months in advance
+        // 4. OFFLINE MANIFEST: Establish the record based purely on barcode data
         this.flightData = {
             flight: this.passenger.airlineCode + this.passenger.flightNum,
             airline: this.passenger.airlineCode + " Official",
             dest: this.passenger.barcodeDest,
             gate: "--",
             status: "SCHEDULED",
-            arrivalCity: cityValue
+            arrivalCity: resolvedCity
         };
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
+        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+        
         if(this.scanner) await this.scanner.stop(); 
         document.getElementById('reader').style.display = 'none'; 
-        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.passenger.airlineCode}${this.passenger.flightNum}`;
+        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
     }
 
@@ -216,16 +215,14 @@ class VelocisSovereign {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                // Find the specific leg matching our ticket's destination
-                let correctLeg = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
-                
-                // Supplement the existing offline manifest with live details if found
-                this.flightData.airline = correctLeg.airline.name;
-                this.flightData.gate = correctLeg.departure.gate || "--";
-                this.flightData.status = correctLeg.flight_status.toUpperCase();
-                this.flightData.arrivalCity = correctLeg.arrival.airport || this.flightData.arrivalCity;
+                // Leg matching logic: API data is used only to supplement the manifest
+                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
+                this.flightData.airline = f.airline.name;
+                this.flightData.gate = f.departure.gate || "--";
+                this.flightData.status = f.flight_status.toUpperCase();
+                this.flightData.arrivalCity = f.arrival.airport || this.flightData.arrivalCity;
             }
-        } catch(e) { console.log("Supplement failed - Ticket authority maintained."); }
+        } catch(e) { console.log("Supplement offline - Ticket authority maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -244,7 +241,8 @@ class VelocisSovereign {
             "paris": "1502603300340-061d22384b8d", "cdg": "1502603300340-061d22384b8d",
             "madrid": "1539561968-7b973fb3001f", "mad": "1539561968-7b973fb3001f",
             "new york": "1496442226666-8d4d0e62e6e9", "jfk": "1496442226666-8d4d0e62e6e9",
-            "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad"
+            "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad",
+            "tokyo": "1540944447495-45197ac93c8d", "hnd": "1540944447495-45197ac93c8d"
         };
 
         let imgId = "1436491865332-7a61a109c0f3"; 
