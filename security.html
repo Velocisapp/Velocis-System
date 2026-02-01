@@ -195,15 +195,15 @@ class VelocisSovereign {
             
             let f = null;
             if(json.data && json.data.length > 0) {
-                // SOVEREIGN ARBITRATION: Finding exact destination match to prevent "Thai Data Leak"
+                // GEOGRAPHIC ANCHOR: Filter results to match the Barcode's Destination IATA
                 f = json.data.find(leg => 
-                    leg.arrival.iata === this.passenger.barcodeDest
+                    leg.arrival.iata.toUpperCase() === this.passenger.barcodeDest.toUpperCase()
                 ) || json.data.find(leg => leg.airline.iata === this.passenger.airlineCode) || json.data[0];
             }
 
-            // DYNAMIC SANITIZATION & ARBITRATION HARD-LOCK
-            // If barcode destination is Madrid, we force the city string to Madrid to override API errors
+            // ARBITRATION HARD-LOCK: Overrides API confusion for flagship routes
             let cityRaw = (this.passenger.barcodeDest === "MAD") ? "Madrid" : 
+                          (this.passenger.barcodeDest === "CDG") ? "Paris" :
                           (f && f.arrival.airport ? f.arrival.airport : this.passenger.barcodeDest);
             
             let cityClean = cityRaw.split('(')[0].split('Int')[0].split('Air')[0].trim();
@@ -245,7 +245,7 @@ class VelocisSovereign {
             const cityQuery = String(this.flightData.arrivalCity).toLowerCase();
             const visual = document.getElementById('dest-visualizer');
             
-            // FULL SOVEREIGN SATURATION ATLAS (Keywords + IATA Codes)
+            // FULL SOVEREIGN SATURATION ATLAS
             const atlas = {
                 "usa": "1496442226666-8d4d0e62e6e9", "new york": "1496442226666-8d4d0e62e6e9", "jfk": "1496442226666-8d4d0e62e6e9", "newark": "1496442226666-8d4d0e62e6e9", "ewr": "1496442226666-8d4d0e62e6e9", "los angeles": "1542736667-069246bdbc6d", "lax": "1542736667-069246bdbc6d", "miami": "1533105079720-d23aa3b34492", "mia": "1533105079720-d23aa3b34492", "chicago": "1494482972237-7f7ea47444d1", "ord": "1494482972237-7f7ea47444d1", "canada": "1503310483224-22d69a39a997", "vancouver": "1559511260-66a654ae982a", "yvr": "1559511260-66a654ae982a", "toronto": "1503310483224-22d69a39a997", "yyz": "1503310483224-22d69a39a997", "mexico": "1512813190353-c84039d5f75a", "mex": "1512813190353-c84039d5f75a", "buenos": "1589909202802-8f4aadce1849", "eze": "1589909202802-8f4aadce1849", "brazil": "1483729558481-8e3c84b31211", "rio": "1483729558481-8e3c84b31211", "gig": "1483729558481-8e3c84b31211", "chile": "1537243912193-4774304b4097", "scl": "1537243912193-4774304b4097", "lima": "1526364978144-19623e6f9555", "lim": "1526364978144-19623e6f9555", "panama": "1515964893451-f76274438341", "pty": "1515964893451-f76274438341",
                 "uk": "1513635269975-59663e0ac1ad", "london": "1513635269975-59663e0ac1ad", "lhr": "1513635269975-59663e0ac1ad", "lgw": "1513635269975-59663e0ac1ad", "france": "1502603300340-061d22384b8d", "paris": "1502603300340-061d22384b8d", "cdg": "1502603300340-061d22384b8d", "germany": "1528301721711-d079611c97d0", "frankfurt": "1541031310-91c6e6123a10", "fra": "1541031310-91c6e6123a10", "berlin": "1528301721711-d079611c97d0", "italy": "1552832230-c0199092ec44", "rome": "1552832230-c0199092ec44", "fco": "1552832230-c0199092ec44", "spain": "1539561968-7b973fb3001f", "madrid": "1539561968-7b973fb3001f", "mad": "1539561968-7b973fb3001f", "switzerland": "1530121115-373f15d2a938", "zurich": "1530121115-373f15d2a938", "zrh": "1530121115-373f15d2a938", "amsterdam": "1516703483864-1fe3667222c1", "ams": "1516703483864-1fe3667222c1", "istanbul": "1535914223403-1ef5ce05e4fb", "ist": "1535914223403-1ef5ce05e4fb", "athens": "1500595046608-1fa210c4f1e4", "ath": "1500595046608-1fa210c4f1e4", "dublin": "1469501539128-097561858547", "dub": "1469501539128-097561858547", "lisbon": "1506161453986-7a7005114798", "lis": "1506161453986-7a7005114798",
