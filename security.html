@@ -162,7 +162,6 @@ class VelocisSovereign {
 
     async handleScan(data) {
         const raw = data.toUpperCase().replace(/\s\s+/g, ' ');
-        // EXPANDED CARRIER LOCK: Added UX and IB for Madrid Hub support
         const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
         const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
@@ -186,7 +185,7 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "FILTERING MANIFEST...";
+        syncBtn.innerText = "QUERYING PAID MANIFEST...";
 
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
@@ -196,7 +195,7 @@ class VelocisSovereign {
             
             let f = null;
             if(json.data && json.data.length > 0) {
-                // SOVEREIGN ARBITRATION: Strict Destination Filter
+                // SOVEREIGN ARBITRATION: Finding exact destination match to prevent "Thai Data Leak"
                 f = json.data.find(leg => 
                     leg.arrival.iata === this.passenger.barcodeDest
                 ) || json.data.find(leg => leg.airline.iata === this.passenger.airlineCode) || json.data[0];
