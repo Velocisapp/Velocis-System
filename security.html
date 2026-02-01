@@ -145,15 +145,12 @@ class VelocisSovereign {
             this.flightData = JSON.parse(savedM);
             this.passenger = JSON.parse(savedP);
             
-            // SELF-HEALING: Auto-refresh if data is more than 30 mins old
+            // SELF-HEALING: Trigger refresh if data is older than 30 mins
             const now = Date.now();
             const ageMins = (now - (this.passenger.lastSync || 0)) / 60000;
-            
             if (ageMins > 30 && this.flightData.status !== "LANDED") {
-                console.log("Stale data detected. Triggering background refresh...");
-                setTimeout(() => this.performHandshake(true), 1000);
+                setTimeout(() => this.performHandshake(true), 1500);
             }
-            
             setTimeout(() => this.start(true), 300);
         }
     }
@@ -171,14 +168,12 @@ class VelocisSovereign {
 
     async handleScan(data) {
         const raw = data.toUpperCase();
-        
         let namePart = raw.substring(2, 22).trim();
         const pnrAnchor = namePart.search(/\sE[A-Z0-9]{5,6}/);
         if (pnrAnchor !== -1) namePart = namePart.substring(0, pnrAnchor).trim();
         let nameArray = namePart.split('/');
         this.passenger.name = nameArray[nameArray.length - 1].replace(/\sE[A-Z0-9]+$/, '').trim();
 
-        // SEAT SEEKER
         const seatMatch = raw.match(/\s([0-9]{1,3}[A-Z])(\s|$)/);
         this.passenger.seat = seatMatch ? seatMatch[1] : "--";
 
@@ -199,18 +194,11 @@ class VelocisSovereign {
         }
 
         const learnedAtlas = JSON.parse(localStorage.getItem('velocis_atlas') || '{}');
-        const hardcodedAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "FCO": "Rome", "MEX": "Mexico City", "BKK": "Bangkok", "KEF": "Reykjavik", "GRU": "Sao Paulo", "HND": "Tokyo" };
+        const hardcodedAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "FCO": "Rome", "MEX": "Mexico City", "BKK": "Bangkok", "KEF": "Reykjavik", "GRU": "Sao Paulo", "HND": "Tokyo", "SYD": "Sydney", "ICN": "Seoul", "ALG": "Algiers", "CMN": "Casablanca", "GEO": "Georgetown", "JNB": "Johannesburg", "ATH": "Athens" };
         const targetIata = this.passenger.barcodeDest;
         const cityValue = hardcodedAtlas[targetIata] || learnedAtlas[targetIata] || targetIata;
 
-        this.flightData = {
-            flight: this.passenger.airlineCode + this.passenger.flightNum,
-            airline: this.passenger.airlineCode + " Official",
-            dest: targetIata,
-            gate: "--",
-            status: "SCHEDULED",
-            arrivalCity: cityValue
-        };
+        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode + " Official", dest: targetIata, gate: "--", status: "SCHEDULED", arrivalCity: cityValue };
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
@@ -222,10 +210,8 @@ class VelocisSovereign {
 
     async performHandshake(isAuto = false) {
         if(!isAuto) document.getElementById('sync-manifest-btn').innerText = "SOVEREIGN SYNC..."; 
-        
         const learnedAtlas = JSON.parse(localStorage.getItem('velocis_atlas') || '{}');
         const targetIata = this.passenger.barcodeDest;
-
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         
         try {
@@ -234,16 +220,14 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data.find(leg => leg.arrival && leg.arrival.iata === targetIata) || json.data[0];
                 this.flightData.airline = f.airline.name;
-                
-                // SMART GATE: Show TBD if the airport hasn't assigned it yet
                 this.flightData.gate = (f.departure && f.departure.gate) ? f.departure.gate : "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
                 this.passenger.lastSync = Date.now();
                 
-                // LIVE BROADCAST
+                // LIVE UI UPDATE
                 document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
                 document.getElementById('card-gate-title').innerText = "Gate " + this.flightData.gate;
-                document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD") ? "the airport to assign a gate" : this.flightData.gate;
+                document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD") ? "the airport to assign your gate" : this.flightData.gate;
 
                 if (f.arrival && f.arrival.iata === targetIata && f.arrival.airport) {
                     this.flightData.arrivalCity = f.arrival.airport;
@@ -251,11 +235,10 @@ class VelocisSovereign {
                     localStorage.setItem('velocis_atlas', JSON.stringify(learnedAtlas));
                 }
             }
-        } catch(e) { console.log("Supplement failed."); }
+        } catch(e) { console.log("Handshake failed."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
-        
         if(!isAuto) {
             document.getElementById('sync-manifest-btn').style.display = 'none';
             document.getElementById('initiate-btn').style.display = 'block';
@@ -263,20 +246,10 @@ class VelocisSovereign {
         this.start();
     }
 
-    start(isRestore = false) {
+    start() {
         if(!this.flightData) return;
         const visual = document.getElementById('dest-visualizer');
-        
-        const gallery = { 
-            "paris": "1502603300340-061d22384b8d", "madrid": "1539561968-7b973fb3001f", 
-            "new york": "1496442226666-8d4d0e62e6e9", "london": "1513635269975-59663e0ac1ad", 
-            "rome": "1523906630138-024507c65961", "addis ababa": "1589339274704-5f543666d92f", 
-            "santiago": "1500311708740-d336a49f96cd", "mexico": "1512813190353-c8203f9f37a8",
-            "bangkok": "1506973031904-de15df7d1739", "tokyo": "1540944447495-45197ac93c8d",
-            "istanbul": "1545155487-6e9596395b0e", "reykjavik": "1521401830884-d1d3f2131241",
-            "cairo": "1503914035633-8fd9f0d1b9d1"
-        };
-
+        const gallery = { "paris": "1502603300340-061d22384b8d", "madrid": "1539561968-7b973fb3001f", "new york": "1496442226666-8d4d0e62e6e9", "london": "1513635269975-59663e0ac1ad", "rome": "1523906630138-024507c65961", "addis ababa": "1589339274704-5f543666d92f", "santiago": "1500311708740-d336a49f96cd", "mexico": "1512813190353-c8203f9f37a8", "bangkok": "1506973031904-de15df7d1739", "tokyo": "1540944447495-45197ac93c8d", "haneda": "1540944447495-45197ac93c8d", "istanbul": "1545155487-6e9596395b0e", "reykjavik": "1521401830884-d1d3f2131241", "athens": "1515942661537-3000ce811d51", "johannesburg": "1541037803407-3532f3c328d4", "cairo": "1503914035633-8fd9f0d1b9d1" };
         let imgId = "1436491865332-7a61a109c0f3"; 
         const cityKey = this.flightData.arrivalCity.toLowerCase();
         for (let k in gallery) { if(cityKey.includes(k)) { imgId = gallery[k]; break; } }
@@ -295,7 +268,6 @@ class VelocisSovereign {
 
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
-        
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
 }
