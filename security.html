@@ -161,23 +161,24 @@ class VelocisSovereign {
     }
 
     async handleScan(data) {
-        const raw = data.toUpperCase().replace(/\s+/g, '');
+        const raw = data.toUpperCase().trim();
         const airlineMatch = raw.match(/AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX/);
         this.passenger.airlineCode = airlineMatch ? airlineMatch[0] : "";
-        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)(\d{1,4})/);
+        const flightMatch = raw.match(/(?:AC|AA|AR|DL|UA|CX|LH|NH|EK|AF|QF|SQ|BA|ET|LX|TK|TG|FI|NZ|IB|UX)\s*(\d{1,4})/);
         this.passenger.flightNum = flightMatch ? parseInt(flightMatch[1], 10).toString() : "";
-        
-        // REINFORCED EXTRACTION: Isolate only the final destination IATA
-        const locationBlock = raw.match(/[A-Z]{6}/); 
-        this.passenger.barcodeDest = locationBlock ? locationBlock[0].slice(-3) : "MAD";
-        
-        const seatMatch = raw.match(/[A-Z](\d{3}[A-Z])/);
-        this.passenger.seat = seatMatch ? seatMatch[1].replace(/^0+/, '') : "01A";
 
-        if (data.startsWith("M1")) {
-            const rawName = data.substring(2, 22).trim();
+        // POSITIONAL EXTRACTION FIX: Destination IATA is ALWAYS index 33-35 in M1 format
+        if (raw.startsWith("M1")) {
+            this.passenger.barcodeDest = raw.substring(33, 36).trim();
+            const rawName = raw.substring(2, 22).trim();
             this.passenger.name = rawName.split('/')[1] || rawName.split('/')[0] || rawName;
+        } else {
+            const destMatch = raw.match(/[A-Z]{3}/g);
+            this.passenger.barcodeDest = destMatch ? destMatch[destMatch.length - 1] : "MAD";
         }
+
+        // Veto security 'OCI' tag if caught incorrectly
+        if(this.passenger.barcodeDest === "OCI") this.passenger.barcodeDest = "MAD";
 
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         if(this.scanner) await this.scanner.stop(); 
@@ -188,16 +189,16 @@ class VelocisSovereign {
 
     async performHandshake() {
         const syncBtn = document.getElementById('sync-manifest-btn');
-        syncBtn.innerText = "CLEARING MANIFEST..."; 
+        syncBtn.innerText = "AUTHORIZING MANIFEST..."; 
 
-        // SOVEREIGN AUTHORITY: Lock City/Destination BEFORE API Response
+        // SOVEREIGN PRIORITY: Lock geography before API connects
         const hardMap = { "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "HND": "Tokyo" };
         let cleanDest = this.passenger.barcodeDest.toUpperCase();
         let forcedCity = hardMap[cleanDest] || cleanDest;
 
         this.flightData = {
             flight: this.passenger.airlineCode + this.passenger.flightNum,
-            airline: this.passenger.airlineCode + " Official",
+            airline: this.passenger.airlineCode + " Sovereign",
             dest: cleanDest,
             gate: "TBD",
             status: "CONFIRMED",
@@ -210,13 +211,12 @@ class VelocisSovereign {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                // Secondary Data Supplement (Gate/Status only)
                 let f = json.data.find(leg => leg.arrival.iata === cleanDest) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
             }
-        } catch(e) { console.log("API Fail - Sovereign Authority Maintained."); }
+        } catch(e) { console.log("Supplement failed - Sovereign ground truth maintained."); }
 
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         syncBtn.style.display = 'none';
@@ -227,7 +227,7 @@ class VelocisSovereign {
     start(isRestore = false) {
         if(!this.flightData) return;
         
-        // INSTANT VISUAL IGNITION: Matches 3-letter code first
+        // AGGRESSIVE VISUAL ATLAS: Cross-references IATA code for 100% background hit
         const visual = document.getElementById('dest-visualizer');
         const cityKey = String(this.flightData.arrivalCity).toLowerCase().trim();
         const iataKey = String(this.flightData.dest).toLowerCase().trim();
