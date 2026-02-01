@@ -31,7 +31,7 @@
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .sb-logo { height: 35px; width: auto; }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 11px; text-transform: uppercase; }
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 12px; text-transform: uppercase; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -70,13 +70,13 @@
 <div id="mission-tray">
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. ENTRANCE</div>
+            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. DEPLOYMENT</div>
             <div class="airline-box" id="logo-1">----</div>
         </div>
-        <div class="framed-title">Boarding</div>
+        <div class="framed-title">Check-In</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. We are synchronized with <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">your flight</span>.<br><br>
-            Your journey is our priority. VELOCIS is now guiding you through every terminal landmark.
+            Welcome to the airport, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. Please proceed to the <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">airline</span> counter to finalize your manifest.<br><br>
+            Your journey begins here. VELOCIS is now tracking your terminal clearance.
         </div>
     </div>
 
@@ -87,9 +87,10 @@
         </div>
         <div class="framed-title">Checkpoint</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
-            Clearance verified for arrival in <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.<br><br>
-            Travel with peace of mind. Ensure your digital connection is ready before you land.
+            Clearance verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.<br><br>
+            Travel with peace of mind. Ensure your digital connection is active before departure:
         </div>
+        <button class="slim-btn" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">ACTIVATE BREEZE ESIM</button>
     </div>
 
     <div class="mission-step">
@@ -116,10 +117,10 @@
             <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
             <div class="airline-box" id="logo-4">----</div>
         </div>
-        <div class="framed-title" style="color:white; border-color:white;">Welcome</div>
+        <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
             <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, we are preparing your arrival logistics.<br><br>
-            Soon, local transit and baggage claim data for <span id="arrival-context-text" style="font-weight:800;">your destination</span> will activate here.
+            Baggage claim and local transit data for <span id="arrival-context-text" style="font-weight:800;">your destination</span> will activate here upon touchdown.
         </div>
     </div>
 </div>
@@ -227,7 +228,6 @@ class VelocisSovereign {
 
     start() {
         if(!this.flightData) return;
-        
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
