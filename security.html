@@ -32,7 +32,6 @@
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .sb-logo { height: 35px; width: auto; }
         
-        /* TACTICAL PULSE & SCANNER */
         .pulse-dot { width: 8px; height: 8px; background: #4CD964; border-radius: 50%; position: relative; }
         .pulse-dot::after { content: ""; position: absolute; width: 100%; height: 100%; background: inherit; border-radius: inherit; animation: pulse 2s infinite; opacity: 0.8; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
@@ -166,10 +165,7 @@ class VelocisSovereign {
         if (savedM && savedP) {
             this.flightData = JSON.parse(savedM);
             this.passenger = JSON.parse(savedP);
-            const ageMins = (Date.now() - (this.passenger.lastSync || 0)) / 60000;
-            if (ageMins > 30 && this.flightData.status !== "LANDED") {
-                setTimeout(() => this.performHandshake(true), 1500);
-            }
+            // Instant Start if data exists
             setTimeout(() => this.start(), 300);
         }
     }
@@ -212,10 +208,7 @@ class VelocisSovereign {
         }
 
         const hAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "FCO": "Rome", "MEX": "Mexico City", "BKK": "Bangkok", "KEF": "Reykjavik", "GRU": "Sao Paulo", "HND": "Tokyo", "SYD": "Sydney", "ICN": "Seoul", "ALG": "Algiers", "CMN": "Casablanca", "GEO": "Georgetown", "JNB": "Johannesburg", "ATH": "Athens", "SIN": "Singapore" };
-        const lAtlas = JSON.parse(localStorage.getItem('velocis_atlas') || '{}');
-        const cityValue = hAtlas[this.passenger.barcodeDest] || lAtlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
-
-        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode + " Official", dest: this.passenger.barcodeDest, gate: "--", status: "SCHEDULED", arrivalCity: cityValue };
+        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode + " Official", dest: this.passenger.barcodeDest, gate: "--", status: "SCHEDULED", arrivalCity: hAtlas[this.passenger.barcodeDest] || this.passenger.barcodeDest };
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
@@ -225,34 +218,29 @@ class VelocisSovereign {
         document.getElementById('verify-briefing').style.display = 'block';
     }
 
-    async performHandshake(isAuto = false) {
-        if(!isAuto) document.getElementById('sync-manifest-btn').innerText = "SOVEREIGN SYNC..."; 
+    async performHandshake() {
+        document.getElementById('sync-manifest-btn').innerText = "SOVEREIGN SYNC..."; 
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
-        try {
-            let res = await fetch(url);
-            let json = await res.json();
+        
+        // Non-blocking fetch: Switch UI even if API is slow
+        fetch(url).then(res => res.json()).then(json => {
             if(json.data && json.data.length > 0) {
                 let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = (f.departure && f.departure.gate) ? f.departure.gate : "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
-                this.passenger.lastSync = Date.now();
-                if (f.arrival && f.arrival.iata === this.passenger.barcodeDest && f.arrival.airport) {
-                    this.flightData.arrivalCity = f.arrival.airport;
-                }
+                if (f.arrival && f.arrival.airport) this.flightData.arrivalCity = f.arrival.airport;
+                localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
             }
-        } catch(e) { console.log(e); }
-        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
-        if(!isAuto) {
-            document.getElementById('sync-manifest-btn').style.display = 'none';
-            document.getElementById('initiate-btn').style.display = 'block';
-        }
-        this.start();
+        }).catch(() => console.warn("API Offline - Running in Local Mode"));
+
+        document.getElementById('sync-manifest-btn').style.display = 'none';
+        document.getElementById('initiate-btn').style.display = 'block';
     }
 
     start() {
         if(!this.flightData) return;
+        
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
