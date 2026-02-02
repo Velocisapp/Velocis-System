@@ -31,7 +31,13 @@
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .sb-logo { height: 35px; width: auto; }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 12px; text-transform: uppercase; cursor: pointer; margin-top: 15px; }
+        
+        /* PULSE ANIMATION */
+        .pulse-dot { width: 8px; height: 8px; background: #4CD964; border-radius: 50%; position: relative; }
+        .pulse-dot::after { content: ""; position: absolute; width: 100%; height: 100%; background: inherit; border-radius: inherit; animation: pulse 2s infinite; opacity: 0.8; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
+
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 12px; text-transform: uppercase; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     </style>
 </head>
 <body>
@@ -90,7 +96,9 @@
             Clearance verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.<br><br>
             Travel with peace of mind. Ensure your digital connection is active before departure:
         </div>
-        <button class="slim-btn" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">ACTIVATE BREEZE ESIM</button>
+        <button class="slim-btn" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
+            <div class="pulse-dot"></div> ACTIVATE BREEZE ESIM
+        </button>
     </div>
 
     <div class="mission-step">
@@ -228,6 +236,7 @@ class VelocisSovereign {
 
     start() {
         if(!this.flightData) return;
+        
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
