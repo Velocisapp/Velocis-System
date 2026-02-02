@@ -154,7 +154,7 @@ class VelocisSovereign {
     }
     async resetTrip() { localStorage.clear(); window.location.reload(); }
     async startScanner() {
-        localStorage.clear(); // MEMORY FLUSH TO PREVENT "TRAVELER" BUG
+        localStorage.clear(); // CRITICAL MEMORY FLUSH
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
@@ -164,7 +164,7 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // --- PROTECTED CORE: YESTERDAY'S WORKING EXTRACTION ---
+        // --- PEAK EXTRACTION LOGIC (UNCHANGED) ---
         let namePart = raw.substring(2, 22).trim();
         if (namePart.includes('/')) {
             let parts = namePart.split('/');
