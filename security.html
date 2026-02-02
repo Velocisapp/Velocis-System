@@ -32,12 +32,18 @@
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .sb-logo { height: 35px; width: auto; }
         
-        /* PULSE ANIMATION */
+        /* TACTICAL PULSE & SCANNER */
         .pulse-dot { width: 8px; height: 8px; background: #4CD964; border-radius: 50%; position: relative; }
         .pulse-dot::after { content: ""; position: absolute; width: 100%; height: 100%; background: inherit; border-radius: inherit; animation: pulse 2s infinite; opacity: 0.8; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
 
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 12px; text-transform: uppercase; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .scanner-line { width: 40px; height: 2px; background: var(--v-gold); position: relative; overflow: hidden; }
+        .scanner-line::after { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #FFF, transparent); animation: scan 2s linear infinite; }
+        @keyframes scan { 100% { left: 100%; } }
+
+        .network-grid { display: grid; gap: 10px; margin-top: 20px; }
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 11px; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
+        .btn-sky { border: 1px solid var(--v-gold); color: var(--v-gold); background: rgba(255,215,0,0.05); cursor: default; }
     </style>
 </head>
 <body>
@@ -92,13 +98,24 @@
             <div class="airline-box" id="logo-2">----</div>
         </div>
         <div class="framed-title">Checkpoint</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
-            Clearance verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.<br><br>
-            Travel with peace of mind. Ensure your digital connection is active before departure:
+        
+        <div style="margin-top:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; font-size:10px; color:var(--v-gold); font-weight:900; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:10px;">
+            <div class="scanner-line"></div> SIGNAL SCANNING...
         </div>
-        <button class="slim-btn" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
-            <div class="pulse-dot"></div> ACTIVATE BREEZE ESIM
-        </button>
+
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
+            Clearance verified. Select your communication deployment:
+        </div>
+        
+        <div class="network-grid">
+            <div class="slim-btn btn-sky">
+                🛰️ GIGSKY AERO-LINK (PENDING)
+            </div>
+            
+            <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" class="slim-btn">
+                <div class="pulse-dot"></div> DEPLOY BREEZE ON-LAND
+            </a>
+        </div>
     </div>
 
     <div class="mission-step">
@@ -236,7 +253,6 @@ class VelocisSovereign {
 
     start() {
         if(!this.flightData) return;
-        
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
