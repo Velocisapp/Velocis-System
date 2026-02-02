@@ -10,7 +10,7 @@
     <style>
         :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,1) 0%, rgba(0,198,255,1) 100%); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,1) 0%, rgba(0,198,255,1) 100%); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
         .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; cursor: pointer; }
@@ -29,9 +29,6 @@
         .pulse-dot { width: 8px; height: 8px; background: #4CD964; border-radius: 50%; position: relative; }
         .pulse-dot::after { content: ""; position: absolute; width: 100%; height: 100%; background: inherit; border-radius: inherit; animation: pulse 2s infinite; opacity: 0.8; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
-        .scanner-line { width: 40px; height: 2px; background: var(--v-gold); position: relative; overflow: hidden; }
-        .scanner-line::after { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #FFF, transparent); animation: scan 2s linear infinite; }
-        @keyframes scan { 100% { left: 100%; } }
         .network-grid { display: grid; gap: 10px; margin-top: 20px; }
         .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 11px; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
         .btn-sky { border: 1px solid var(--v-gold); color: var(--v-gold); background: rgba(255,215,0,0.1); }
@@ -79,7 +76,7 @@
         <div class="framed-title">Check-In</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
             Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. We are synchronized with <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">your flight</span>.<br><br>
-            Please proceed to the check-in counter to finalize your manifest.
+            Please proceed to the counter to finalize your terminal manifest.
         </div>
     </div>
 
@@ -89,9 +86,6 @@
             <div class="airline-box" id="logo-2">----</div>
         </div>
         <div class="framed-title">Checkpoint</div>
-        <div style="margin-top:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; font-size:10px; color:var(--v-gold); font-weight:900; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:10px;">
-            <div class="scanner-line"></div> SIGNAL SCANNING...
-        </div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
             Clearance verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.<br><br>
             Select your communication deployment:
@@ -99,7 +93,7 @@
         <div class="network-grid">
             <a href="https://plans.gigsky.com/K31267/2CTPL/" class="slim-btn btn-sky">🛰️ DEPLOY IN-FLIGHT (GIGSKY)</a>
             <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" class="slim-btn">
-                <div class="pulse-dot"></div> DEPLOY BREEZE ON-LAND
+                <div class="pulse-dot"></div> DEPLOY ON-LAND (BREEZE)
             </a>
         </div>
     </div>
@@ -141,7 +135,6 @@ class VelocisSovereign {
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
         this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", barcodeDest: "" };
-        this.scanner = null;
         this.init();
     }
     init() {
@@ -176,7 +169,7 @@ class VelocisSovereign {
             this.passenger.airlineCode = structuralMatch[2];
             this.passenger.flightNum = parseInt(structuralMatch[3], 10).toString();
         }
-        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode + " Official", dest: this.passenger.barcodeDest || "DEST", gate: "--", status: "READY", arrivalCity: this.passenger.barcodeDest || "Destination" };
+        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode, dest: this.passenger.barcodeDest || "DEST", gate: "--", status: "READY", arrivalCity: "Destination" };
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         if(this.scanner) await this.scanner.stop(); 
@@ -189,11 +182,9 @@ class VelocisSovereign {
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         fetch(url).then(res => res.json()).then(json => {
             if(json.data && json.data.length > 0) {
-                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
-                this.flightData.airline = f.airline.name;
+                let f = json.data[0];
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
-                this.flightData.arrivalCity = f.arrival.airport || this.passenger.barcodeDest;
                 localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
                 this.paintUI(); 
             }
@@ -211,8 +202,7 @@ class VelocisSovereign {
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('card-gate-title').innerText = "Gate " + this.flightData.gate;
-        document.getElementById('text-brief-airline').innerText = this.flightData.airline;
-        document.getElementById('text-checkpoint-city').innerText = this.flightData.arrivalCity;
+        document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD" || this.flightData.gate === "--") ? "terminal displays" : this.flightData.gate;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
