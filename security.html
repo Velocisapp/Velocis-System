@@ -10,29 +10,28 @@
     <style>
         :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,1) 0%, rgba(0,198,255,1) 100%); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
+
         .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; cursor: pointer; }
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
+        
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
+        
         #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; }
         .cta-btn { color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); text-transform: uppercase; }
         #reset-trip { font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; }
+
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .sb-logo { height: 35px; width: auto; }
-        .pulse-dot { width: 8px; height: 8px; background: #4CD964; border-radius: 50%; position: relative; }
-        .pulse-dot::after { content: ""; position: absolute; width: 100%; height: 100%; background: inherit; border-radius: inherit; animation: pulse 2s infinite; opacity: 0.8; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
-        .network-grid { display: grid; gap: 15px; margin-top: 25px; }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 11px; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 2px; text-decoration: none; }
-        .btn-label { font-size: 8px; opacity: 0.7; letter-spacing: 1px; font-weight: 800; }
-        .btn-sky { border: 1px solid var(--v-gold); color: var(--v-gold); background: rgba(255,215,0,0.1); }
+        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 12px; text-transform: uppercase; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -75,9 +74,9 @@
             <div class="airline-box" id="logo-1">----</div>
         </div>
         <div class="framed-title">Check-In</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height: 1.5;">
-            Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. We are synchronized with <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">your airline</span>.<br><br>
-            Please proceed to the <span id="text-brief-airline-2" style="font-weight:800; color:white;">carrier</span> desk at <span id="text-counter" style="color:var(--v-gold); font-weight:800;">Counters 10-24</span> to finalize your manifest.
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
+            Welcome to the airport, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. Please proceed to the <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">airline</span> counter to finalize your manifest.<br><br>
+            Your journey begins here. VELOCIS is now tracking your terminal clearance.
         </div>
     </div>
 
@@ -88,19 +87,10 @@
         </div>
         <div class="framed-title">Checkpoint</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
-            Clearance verified for arrival in <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.<br><br>
-            Select your required connectivity spectrum:
+            Clearance verified for <span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.<br><br>
+            Travel with peace of mind. Ensure your digital connection is active before departure:
         </div>
-        <div class="network-grid">
-            <a href="https://plans.gigsky.com/K31267/2CTPL/" class="slim-btn btn-sky">
-                <span class="btn-label">SATELLITE ROAMING</span>
-                🛰️ DEPLOY IN-FLIGHT (GIGSKY)
-            </a>
-            <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" class="slim-btn">
-                <span class="btn-label">TERRESTRIAL DATA</span>
-                <div style="display:flex; align-items:center; gap:8px;"><div class="pulse-dot"></div> DEPLOY ON-LAND (BREEZE)</div>
-            </a>
-        </div>
+        <button class="slim-btn" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">ACTIVATE BREEZE ESIM</button>
     </div>
 
     <div class="mission-step">
@@ -127,10 +117,10 @@
             <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
             <div class="airline-box" id="logo-4">----</div>
         </div>
-        <div class="framed-title" style="color:white; border-color:white;">Welcome</div>
+        <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
             <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, we are preparing your arrival logistics.<br><br>
-            Soon, local transit and baggage claim data for <span id="arrival-context-text" style="font-weight:800;">your destination</span> will activate here.
+            Baggage claim and local transit data for <span id="arrival-context-text" style="font-weight:800;">your destination</span> will activate here upon touchdown.
         </div>
     </div>
 </div>
@@ -140,96 +130,118 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", barcodeDest: "" };
+        this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", barcodeDest: "", lastSync: 0 };
+        this.scanner = null;
         this.init();
     }
+
     init() {
         const savedM = localStorage.getItem('velocis_manifest');
         const savedP = localStorage.getItem('velocis_passenger');
         if (savedM && savedP) {
             this.flightData = JSON.parse(savedM);
             this.passenger = JSON.parse(savedP);
+            const ageMins = (Date.now() - (this.passenger.lastSync || 0)) / 60000;
+            if (ageMins > 30 && this.flightData.status !== "LANDED") {
+                setTimeout(() => this.performHandshake(true), 1500);
+            }
             setTimeout(() => this.start(), 300);
         }
     }
-    async resetTrip() { localStorage.clear(); window.location.reload(); }
+
+    async resetTrip() { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }
+
     async startScanner() {
-        localStorage.clear(); // CRITICAL MEMORY FLUSH
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        try { await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
+        try {
+            await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
+
     async handleScan(data) {
         const raw = data.toUpperCase();
-        
-        // --- PEAK EXTRACTION LOGIC (UNCHANGED) ---
         let namePart = raw.substring(2, 22).trim();
-        if (namePart.includes('/')) {
-            let parts = namePart.split('/');
-            this.passenger.name = parts[parts.length - 1].split(' ')[0].trim();
-        }
+        const pnrAnchor = namePart.search(/\sE[A-Z0-9]{5,6}/);
+        if (pnrAnchor !== -1) namePart = namePart.substring(0, pnrAnchor).trim();
+        let nameArray = namePart.split('/');
+        this.passenger.name = nameArray[nameArray.length - 1].replace(/\sE[A-Z0-9]+$/, '').trim();
         
         const seatMatch = raw.match(/\s([0-9]{1,3}[A-Z])(\s|$)/);
         this.passenger.seat = seatMatch ? seatMatch[1] : "--";
+
         const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
         if (structuralMatch) {
             this.passenger.barcodeDest = structuralMatch[1].substring(3, 6);
             this.passenger.airlineCode = structuralMatch[2];
             this.passenger.flightNum = parseInt(structuralMatch[3], 10).toString();
+        } else {
+            const anchor = raw.substring(22).match(/([A-Z0-9]{2})\s+(\d{1,4})/g);
+            if (anchor) {
+                const lastMatch = anchor[anchor.length - 1].split(/\s+/);
+                this.passenger.airlineCode = lastMatch[0];
+                this.passenger.flightNum = parseInt(lastMatch[1], 10).toString();
+                this.passenger.barcodeDest = raw.substring(raw.indexOf(lastMatch[0]) - 3, raw.indexOf(lastMatch[0])).trim();
+            }
         }
 
         const hAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "FCO": "Rome", "MEX": "Mexico City", "BKK": "Bangkok", "KEF": "Reykjavik", "GRU": "Sao Paulo", "HND": "Tokyo", "SYD": "Sydney", "ICN": "Seoul", "ALG": "Algiers", "CMN": "Casablanca", "GEO": "Georgetown", "JNB": "Johannesburg", "ATH": "Athens", "SIN": "Singapore" };
-        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode, dest: this.passenger.barcodeDest || "DEST", gate: "--", status: "READY", arrivalCity: hAtlas[this.passenger.barcodeDest] || "Destination" };
+        const lAtlas = JSON.parse(localStorage.getItem('velocis_atlas') || '{}');
+        const cityValue = hAtlas[this.passenger.barcodeDest] || lAtlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
+
+        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode + " Official", dest: this.passenger.barcodeDest, gate: "--", status: "SCHEDULED", arrivalCity: cityValue };
         
-        this.paintUI();
+        localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
+        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         if(this.scanner) await this.scanner.stop(); 
         document.getElementById('reader').style.display = 'none'; 
         document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
     }
-    performHandshake() {
-        this.start();
+
+    async performHandshake(isAuto = false) {
+        if(!isAuto) document.getElementById('sync-manifest-btn').innerText = "SOVEREIGN SYNC..."; 
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
-        fetch(url).then(res => res.json()).then(json => {
+        try {
+            let res = await fetch(url);
+            let json = await res.json();
             if(json.data && json.data.length > 0) {
-                let f = json.data[0];
+                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 this.flightData.airline = f.airline.name;
-                this.flightData.gate = f.departure.gate || "TBD";
+                this.flightData.gate = (f.departure && f.departure.gate) ? f.departure.gate : "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
-                this.flightData.arrivalCity = f.arrival.airport || this.passenger.barcodeDest;
-                localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-                localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
-                this.paintUI(); 
+                this.passenger.lastSync = Date.now();
+                if (f.arrival && f.arrival.iata === this.passenger.barcodeDest && f.arrival.airport) {
+                    this.flightData.arrivalCity = f.arrival.airport;
+                }
             }
-        }).catch(() => console.log("Background API update active."));
+        } catch(e) { console.log(e); }
+        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
+        localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
+        if(!isAuto) {
+            document.getElementById('sync-manifest-btn').style.display = 'none';
+            document.getElementById('initiate-btn').style.display = 'block';
+        }
+        this.start();
     }
+
     start() {
-        if(!this.flightData) return;
-        this.paintUI();
-        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 800);
-    }
-    paintUI() {
         if(!this.flightData) return;
         document.getElementById('hud-city').innerText = this.flightData.dest;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('card-gate-title').innerText = "Gate " + this.flightData.gate;
-        document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD" || this.flightData.gate === "--") ? "terminal displays" : this.flightData.gate;
+        document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD") ? "the airport to assign your gate" : this.flightData.gate;
         document.getElementById('text-brief-airline').innerText = this.flightData.airline;
-        document.getElementById('text-brief-airline-2').innerText = this.flightData.airline;
         document.getElementById('text-checkpoint-city').innerText = this.flightData.arrivalCity;
         document.getElementById('arrival-context-text').innerText = this.flightData.arrivalCity;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
+
+        document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
-        
-        // Counter Logic calculation
-        const code = (this.flightData.airline || "A").charCodeAt(0);
-        const startNum = (code % 20) * 5 + 10;
-        document.getElementById('text-counter').innerText = `Counters ${startNum}-${startNum + 12}`;
     }
 }
 const engine = new VelocisSovereign();
