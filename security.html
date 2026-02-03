@@ -32,8 +32,8 @@
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .sb-logo { height: 35px; width: auto; }
 
-        /* eSIM DUAL CTA Styles */
-        .esim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
+        /* HIGH-VISIBILITY eSIM Styles */
+        .esim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
         .esim-option { background: rgba(255,255,255,0.15); padding: 20px 10px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.25); text-align: center; cursor: pointer; transition: all 0.3s ease; }
         .esim-option:active { transform: scale(0.95); background: var(--v-gold); border-color: var(--v-gold); }
         .esim-option:active span { color: black !important; }
@@ -106,7 +106,7 @@
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:15px; line-height: 1.4;">
             Clearance verified for <br><span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.
         </div>
-
+        
         <div style="margin-top: 30px; text-align: center;">
             <div style="color:white; font-weight:900; font-size: 13px;"><span class="dyn-passenger-name">Yourden</span>, going international?</div>
             <div style="color:var(--v-gold); font-weight:800; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Stay Online Worldwide</div>
@@ -188,7 +188,7 @@ class VelocisSovereign {
         this.rawString = data.toUpperCase().trim();
         const raw = this.rawString;
 
-        // 🛡️ SURGICAL Core 1: Heritage Name Logic
+        // 🛡️ UNTOUCHABLE 1: Heritage Name Logic
         if (raw.includes("AGUILERA") || raw.includes("YOUE") || raw.includes("YOURDEN")) {
             this.passenger.name = "Yourden"; 
         } else if (raw.includes('/')) {
@@ -197,19 +197,26 @@ class VelocisSovereign {
             this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
         }
 
-        // 🛡️ SURGICAL Core 2: 18K Seat logic
+        // 🛡️ UNTOUCHABLE 2: 18K Seat logic
         const airEuropaSeat = raw.match(/[YBMF]\d*(\d{2,3}[A-Z])/);
         const deltaSeat = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
         let s = airEuropaSeat ? airEuropaSeat[1] : (deltaSeat ? deltaSeat[1] : "--");
         this.passenger.seat = s.replace(/^0+/, '');
 
-        // Route Anchors (IATA Standard)
-        const structuralMatch = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
-        if (structuralMatch) {
-            this.passenger.origin = structuralMatch[1];      
-            this.passenger.destination = structuralMatch[2]; 
-            this.passenger.airlineCode = structuralMatch[3];
-            this.passenger.flightNum = structuralMatch[4];
+        // 🛡️ SURGICAL SPIRIT HUB FIX + Standard Recovery
+        const spiritHook = raw.match(/(PUJ)\s*(FLL)\s*(NK)\s*(\d{1,5})/);
+        const standardHook = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
+        
+        if (spiritHook) {
+            this.passenger.origin = "PUJ";
+            this.passenger.destination = "FLL";
+            this.passenger.airlineCode = "NK";
+            this.passenger.flightNum = spiritHook[4].replace(/^0+/, '');
+        } else if (standardHook) {
+            this.passenger.origin = standardHook[1];      
+            this.passenger.destination = standardHook[2]; 
+            this.passenger.airlineCode = standardHook[3];
+            this.passenger.flightNum = standardHook[4];
         }
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "UA": "United", "NK": "Spirit" };
@@ -274,7 +281,7 @@ class VelocisSovereign {
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         
-        // Factual Greeting (Card 1)
+        // APPLYING FACTUAL GREETING
         document.getElementById('card-1-greeting').innerHTML = `
             Welcome <span style="color:white; font-weight:800;">${this.passenger.name}</span>, your departure airport is <span style="color:var(--v-gold); font-weight:800;">${depInfo.name} airport - ${depInfo.city}</span> and you are heading to <span style="color:var(--v-gold); font-weight:800;">${arrInfo.name} airport / ${arrInfo.city}</span>.
         `;
