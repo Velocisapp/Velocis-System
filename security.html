@@ -199,14 +199,16 @@ class VelocisSovereign {
             }
         }
 
-        // 3. TARGETED GATE EXTRACTION (No Placeholders)
+        // 3. TARGETED GATE EXTRACTION (End of string hunter)
         let endData = raw.substring(raw.length - 12);
         let gateHunter = endData.match(/\d+/);
         this.passenger.gate = gateHunter ? gateHunter[0] : "--";
 
-        // 4. SURGICAL SEAT FIX: Regex hunts for 1-3 digits + Letter after a space
-        const seatMatch = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
-        this.passenger.seat = seatMatch ? seatMatch[1] : "--";
+        // 4. HIGH-PRECISION SEAT HUNTER
+        // Hunts for 1-3 digits + Letter (e.g., 18K) anywhere in the string
+        // specifically targeting the IATA standard format.
+        const seatMatch = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/) || raw.match(/([YBM])(\d{1,3}[A-Z])/);
+        this.passenger.seat = seatMatch ? (seatMatch[1] || seatMatch[2]) : "--";
 
         const hAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "SLC": "Salt Lake City", "LAX": "Los Angeles", "ELP": "El Paso" };
         this.flightData = { 
