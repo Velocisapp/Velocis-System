@@ -74,8 +74,8 @@
             <div class="airline-box" id="logo-1">----</div>
         </div>
         <div class="framed-title">Check-In</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>. Please proceed to the <span id="text-brief-airline" style="color:var(--v-gold); font-weight:800;">airline</span> counter.
+        <div id="card-1-greeting" style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
+            Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.
         </div>
     </div>
 
@@ -116,7 +116,7 @@
         </div>
         <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, local transit and baggage claim for <br><span id="arrival-context-text" style="font-weight:800; color: var(--v-gold);">Your Destination</span> will activate here.
+            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, local transit for <br><span id="arrival-context-text" style="font-weight:800; color: var(--v-gold);">Destination</span> will activate here.
         </div>
     </div>
 </div>
@@ -126,7 +126,7 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", barcodeDest: "", lastSync: 0 };
+        this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", origin: "", destination: "" };
         this.scanner = null;
         this.init();
     }
@@ -154,8 +154,9 @@ class VelocisSovereign {
 
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
+        console.log("VELOCIS_DEBUG_RAW_STRING:", raw);
 
-        // 🛡️ UNTOUCHABLE: Yourden Name Logic
+        // 🛡️ UNTOUCHABLE 1: Yourden Name Logic
         if (raw.includes('/')) {
             let segments = raw.split('/');
             let lastNameBlock = segments[0].replace('M1', '');
@@ -167,17 +168,19 @@ class VelocisSovereign {
             }
         }
 
-        // 🛡️ UNTOUCHABLE: 18K Seat Logic
+        // 🛡️ UNTOUCHABLE 2: 18K Seat logic (cleaning leading zero)
         const airEuropaSeat = raw.match(/[YBMF]\d*(\d{2,3}[A-Z])/);
         const deltaSeat = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
         let s = airEuropaSeat ? airEuropaSeat[1] : (deltaSeat ? deltaSeat[1] : "--");
         this.passenger.seat = s.replace(/^0+/, '');
 
-        const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
+        // NEW: Route Anchors (IATA Standard: Origin + Destination)
+        const structuralMatch = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
         if (structuralMatch) {
-            this.passenger.barcodeDest = structuralMatch[1].substring(3, 6);
-            this.passenger.airlineCode = structuralMatch[2];
-            this.passenger.flightNum = structuralMatch[3];
+            this.passenger.origin = structuralMatch[1];      // e.g., JFK or MIA
+            this.passenger.destination = structuralMatch[2]; // e.g., MAD
+            this.passenger.airlineCode = structuralMatch[3];
+            this.passenger.flightNum = structuralMatch[4];
         }
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "UA": "United" };
@@ -186,10 +189,9 @@ class VelocisSovereign {
         this.flightData = { 
             flight: this.passenger.airlineCode + this.passenger.flightNum, 
             airline: displayAirline, 
-            dest: this.passenger.barcodeDest, 
+            dest: this.passenger.destination, 
             gate: "--", 
-            status: "IDENTIFIED",
-            arrivalCity: this.passenger.barcodeDest
+            status: "IDENTIFIED"
         };
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
@@ -198,6 +200,7 @@ class VelocisSovereign {
         document.getElementById('reader').style.display = 'none'; 
         document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
+
         this.start();
     }
 
@@ -208,15 +211,13 @@ class VelocisSovereign {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
+                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.destination) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
-                this.passenger.lastSync = Date.now();
             }
         } catch(e) { console.log(e); }
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         if(!isAuto) {
             document.getElementById('sync-manifest-btn').style.display = 'none';
             document.getElementById('initiate-btn').style.display = 'block';
@@ -227,30 +228,32 @@ class VelocisSovereign {
     start() {
         if(!this.flightData) return;
 
-        // 🏛️ Professional Geographic Atlas
-        const AIRPORT_ATLAS = {
-            "MAD": "Madrid-Barajas Adolfo Suárez International Airport",
-            "MIA": "Miami International Airport",
-            "JFK": "John F. Kennedy International Airport",
-            "MEM": "Memphis International Airport",
-            "LHR": "London Heathrow International",
-            "ORY": "Paris Orly Airport",
-            "CDG": "Charles de Gaulle Airport"
+        // 🏛️ Sovereign Geographic Atlas (Hardcoded for Professional Clarity)
+        const ATLAS = {
+            "MAD": { name: "Madrid-Barajas Adolfo Suárez International", city: "Madrid" },
+            "MIA": { name: "Miami International", city: "Miami" },
+            "JFK": { name: "John F. Kennedy Airport", city: "New York City" },
+            "MEM": { name: "Memphis International", city: "Memphis" },
+            "CDG": { name: "Charles de Gaulle", city: "Paris" }
         };
 
-        const fullAirportName = AIRPORT_ATLAS[this.flightData.dest] || this.flightData.dest;
+        const depInfo = ATLAS[this.passenger.origin] || { name: this.passenger.origin, city: "" };
+        const arrInfo = ATLAS[this.passenger.destination] || { name: this.passenger.destination, city: "" };
 
-        document.getElementById('hud-city').innerText = this.flightData.dest;
+        // Updating UI
+        document.getElementById('hud-city').innerText = this.passenger.destination;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('text-seat').innerText = this.passenger.seat;
-        document.getElementById('text-brief-airline').innerText = this.flightData.airline;
         
-        // Update mission cards with Full Professional Names
-        document.getElementById('text-checkpoint-city').innerText = fullAirportName;
-        document.getElementById('arrival-context-text').innerText = fullAirportName;
+        // APPLYING PROFESSIONAL GREETING (Card 1)
+        document.getElementById('card-1-greeting').innerHTML = `
+            Hi, <span style="color:white; font-weight:800;">${this.passenger.name}</span>. You are currently at <span style="color:var(--v-gold); font-weight:800;">${depInfo.name}</span> airport - ${depInfo.city} and heading to <span style="color:var(--v-gold); font-weight:800;">${arrInfo.name}</span> Airport / ${arrInfo.city}.
+        `;
+
+        document.getElementById('text-checkpoint-city').innerText = arrInfo.name;
+        document.getElementById('arrival-context-text').innerText = arrInfo.name;
         document.getElementById('card-gate-title').innerText = "Gate " + this.flightData.gate;
-        document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD") ? "the airport to assign your gate" : this.flightData.gate;
         
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
