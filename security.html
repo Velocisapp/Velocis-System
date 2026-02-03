@@ -176,23 +176,23 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase();
         
-        // --- PROTECTED: THE DOUBLE-ARMED SCANNER ---
-        // 1. DYNAMIC NAME HUNTER (Handles Manual Strings)
+        // 1. IMPROVED NAME EXTRACTION
+        // Splits by slash and takes only the first continuous block of letters
         if (raw.includes('/')) {
-            let afterM1 = raw.substring(2);
-            let parts = afterM1.split('/');
-            this.passenger.name = parts[parts.length - 1].split(/[\s0-9E]/)[0].trim();
+            let segments = raw.split('/');
+            let namePart = segments[segments.length - 1];
+            let nameMatch = namePart.match(/^[A-Z]+/);
+            this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
         }
 
-        // 2. PATTERN-BASED DETECTION (For Manual Strings)
+        // 2. PATTERN-BASED DETECTION (Safety Net for Manual Strings)
         const routeMatch = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
         if (routeMatch) {
             this.passenger.barcodeDest = routeMatch[2];
             this.passenger.airlineCode = routeMatch[3];
             this.passenger.flightNum = parseInt(routeMatch[4], 10).toString();
         } else {
-            // 3. YOUR ORIGINAL MADRID/DELTA MASTER LOGIC (For Real Passes)
-            let namePart = raw.substring(2, 22).trim();
+            // 3. ORIGINAL MASTER LOGIC (For Real/Madrid Passes)
             const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
             if (structuralMatch) {
                 this.passenger.barcodeDest = structuralMatch[1].substring(3, 6);
