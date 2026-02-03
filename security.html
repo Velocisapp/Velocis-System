@@ -200,15 +200,15 @@ class VelocisSovereign {
         }
 
         // 3. TARGETED GATE EXTRACTION (No Placeholders)
-        // United often stores Gate/Terminal info in the final 10 digits
         let endData = raw.substring(raw.length - 12);
         let gateHunter = endData.match(/\d+/);
-        this.passenger.gate = gateHunter ? gateHunter[0] : "82"; // Extracted from LAX real-time data
+        this.passenger.gate = gateHunter ? gateHunter[0] : "--";
 
-        const seatMatch = raw.match(/\s([0-9]{1,3}[A-Z])(\s|$)/);
+        // 4. SURGICAL SEAT FIX: Regex hunts for 1-3 digits + Letter after a space
+        const seatMatch = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
         this.passenger.seat = seatMatch ? seatMatch[1] : "--";
 
-        const hAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "SLC": "Salt Lake City" };
+        const hAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "SLC": "Salt Lake City", "LAX": "Los Angeles", "ELP": "El Paso" };
         this.flightData = { 
             flight: this.passenger.airlineCode + this.passenger.flightNum, 
             airline: this.passenger.airlineCode, 
@@ -235,7 +235,6 @@ class VelocisSovereign {
             if(json.data && json.data.length > 0) {
                 let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.barcodeDest) || json.data[0];
                 this.flightData.airline = f.airline.name;
-                // Preserve the extracted Gate 82 if API returns null
                 this.flightData.gate = f.departure.gate || this.passenger.gate;
                 this.flightData.status = f.flight_status.toUpperCase();
                 this.passenger.lastSync = Date.now();
