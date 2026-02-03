@@ -39,9 +39,19 @@
         .esim-option:active span { color: black !important; }
         .esim-label { font-size: 11px; font-weight: 900; text-transform: uppercase; color: white; display: block; margin-bottom: 5px; }
         .esim-desc { font-size: 7px; color: var(--v-gold); font-weight: 800; text-transform: uppercase; opacity: 0.9; }
+
+        /* DEBUG STYLES */
+        #raw-view-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; padding: 20px; color: #00FF00; font-family: monospace; font-size: 12px; overflow-y: auto; word-break: break-all; }
+        .debug-btn { background: none; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.5); font-size: 9px; font-weight: 900; padding: 8px; border-radius: 8px; margin-top: 15px; cursor: pointer; width: 100%; }
     </style>
 </head>
 <body>
+
+<div id="raw-view-overlay" onclick="this.style.display='none'">
+    <div style="color:white; margin-bottom: 10px; font-weight: 900;">[X-RAY MANIFEST DATA]</div>
+    <div id="raw-string-content"></div>
+    <div style="color:var(--v-gold); font-top: 20px;">TICKET DATA ENDS. TAP TO CLOSE.</div>
+</div>
 
 <div id="entry-screen">
     <div class="glass-card">
@@ -53,6 +63,7 @@
             <div id="ident-label" style="color:var(--v-gold); font-size:11px; font-weight:900; margin-bottom:10px; text-transform:uppercase;"></div>
             <button id="sync-manifest-btn" style="width:100%; height:70px; background:var(--v-gold); color:black; border:none; border-radius:22px; font-weight:900;" onclick="engine.performHandshake()">AUTHORIZE TRIP</button>
             <button id="initiate-btn" style="width:100%; height:70px; background:white; color:black; border:none; border-radius:22px; font-weight:900; margin-top:20px; display:none;" onclick="engine.start()">START MY TRIP</button>
+            <button class="debug-btn" onclick="engine.showXRay()">VIEW RAW DATA</button>
         </div>
     </div>
 </div>
@@ -93,24 +104,22 @@
         </div>
         <div class="framed-title">Checkpoint</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:15px; line-height: 1.4;">
-            Clearance verified for <br><span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.
-        </div>
-
-        <div style="margin-top: 30px; text-align: center;">
-            <div style="color:white; font-weight:900; font-size: 13px;">
-                <span class="dyn-passenger-name">Yourden</span>, going international?
-            </div>
-            <div style="color:var(--v-gold); font-weight:800; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Stay Online Worldwide</div>
+            Clearance verified for <br><span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800; font-size: 18px;">Destination</span>.
         </div>
         
+        <div style="margin-top: 30px; text-align: center;">
+            <div style="color:white; font-weight:900; font-size: 13px;"><span class="dyn-passenger-name">Yourden</span>, going international?</div>
+            <div style="color:var(--v-gold); font-weight:800; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Stay Online Worldwide</div>
+        </div>
+
         <div class="esim-grid">
             <div class="esim-option" onclick="window.location.href='https://www.gigsky.com/'">
                 <span class="esim-label" style="color:#00C6FF">GigSky eSIM</span>
-                <span class="esim-desc">In-Flight Ready</span>
+                <span class="esim-desc">IN-FLIGHT OPTIMIZED</span>
             </div>
             <div class="esim-option" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'">
                 <span class="esim-label" style="color:#FF9500">Breeze eSIM</span>
-                <span class="esim-desc">Ground Data</span>
+                <span class="esim-desc">GROUND CONNECTIVITY</span>
             </div>
         </div>
     </div>
@@ -149,6 +158,7 @@
 class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
+        this.rawString = "";
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
         this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", origin: "", destination: "" };
         this.scanner = null;
@@ -176,8 +186,14 @@ class VelocisSovereign {
         } catch (err) { console.error(err); }
     }
 
+    showXRay() {
+        document.getElementById('raw-string-content').innerText = this.rawString;
+        document.getElementById('raw-view-overlay').style.display = 'block';
+    }
+
     async handleScan(data) {
-        const raw = data.toUpperCase().trim();
+        this.rawString = data.toUpperCase().trim();
+        const raw = this.rawString;
 
         // 🛡️ UNTOUCHABLE Core 1: Heritage Name Logic
         if (raw.includes('/')) {
@@ -251,12 +267,13 @@ class VelocisSovereign {
     start() {
         if(!this.flightData) return;
 
-        // Sovereign Geographic Atlas
         const ATLAS = {
             "MAD": { name: "Madrid Barajas International", city: "Madrid" },
             "MIA": { name: "Miami International", city: "Miami" },
             "JFK": { name: "JFK", city: "New York City" },
-            "MEM": { name: "Memphis International", city: "Memphis" }
+            "MEM": { name: "Memphis International", city: "Memphis" },
+            "PUJ": { name: "Punta Cana International", city: "Punta Cana" },
+            "FLL": { name: "Fort Lauderdale-Hollywood", city: "Fort Lauderdale" }
         };
 
         const depInfo = ATLAS[this.passenger.origin] || { name: this.passenger.origin, city: "" };
