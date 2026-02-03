@@ -16,12 +16,12 @@
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
 
         .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; cursor: pointer; }
-        #hard-reset-btn { font-size: 10px; color: white; opacity: 0.6; text-decoration: underline; margin-top: 20px; cursor: pointer; border: none; background: none; }
         
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
         
+        /* MARKET BRIDGE: The Navigation Loop */
         #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; }
         .cta-btn { color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); text-transform: uppercase; }
         #reset-trip { font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; }
@@ -48,7 +48,6 @@
             <button id="sync-manifest-btn" style="width:100%; height:70px; background:var(--v-gold); color:black; border:none; border-radius:22px; font-weight:900;" onclick="engine.performHandshake()">AUTHORIZE TRIP</button>
             <button id="initiate-btn" style="width:100%; height:70px; background:white; color:black; border:none; border-radius:22px; font-weight:900; margin-top:20px; display:none;" onclick="engine.start()">START MY TRIP</button>
         </div>
-        <button id="hard-reset-btn" onclick="engine.resetTrip()">CLEAR ALL DATA</button>
     </div>
 </div>
 
@@ -144,13 +143,19 @@ class VelocisSovereign {
         }
     }
 
-    resetTrip() { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }
+    /* THE LOOP FUNCTION */
+    async resetTrip() { 
+        localStorage.clear(); 
+        sessionStorage.clear(); 
+        window.location.reload(); 
+    }
 
     async startScanner() {
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        try { await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
+        try {
+            await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
 
@@ -194,6 +199,7 @@ class VelocisSovereign {
         document.getElementById('reader').style.display = 'none'; 
         document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
+
         this.start();
     }
 
@@ -232,8 +238,12 @@ class VelocisSovereign {
         document.getElementById('card-gate-title').innerText = "Gate " + this.flightData.gate;
         document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD") ? "the airport to assign your gate" : this.flightData.gate;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
+        
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        
+        /* SHOW THE RESET LOOP BUTTON */
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
+        
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
 }
