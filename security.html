@@ -10,28 +10,58 @@
     <style>
         :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,1) 0%, rgba(0,198,255,1) 100%); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
-        .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; cursor: pointer; }
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
+
+        /* TACTILE 3D TRIGGER BUTTON */
+        .scan-trigger-btn { 
+            position: relative;
+            background: #FFF; 
+            color: #007AFF; 
+            width: 100%; 
+            height: 75px; 
+            border-radius: 22px; 
+            font-weight: 900; 
+            font-size: 18px; 
+            border: none; 
+            margin-bottom: 15px; 
+            cursor: pointer;
+            box-shadow: 0 8px 0px #e0e0e0, 0 15px 25px rgba(0,0,0,0.2);
+            transition: all 0.1s ease;
+            transform: translateY(-4px);
+        }
+        .scan-trigger-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px #e0e0e0, 0 5px 10px rgba(0,0,0,0.1);
+        }
+        
+        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
+        
         #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; }
         .cta-btn { color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); text-transform: uppercase; }
         #reset-trip { font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; }
+
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
         .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
         .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
+        
+        /* 3D HUB BUTTONS */
+        .network-grid { display: grid; gap: 12px; margin-top: 20px; }
+        .slim-btn-3d { 
+            background: white; color: var(--v-blue); border: none; padding: 16px; border-radius: 15px; 
+            font-weight: 900; font-size: 12px; text-transform: uppercase; text-decoration: none;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 6px 0px #cbd5e0; transition: all 0.1s;
+        }
+        .slim-btn-3d:active { transform: translateY(3px); box-shadow: 0 2px 0px #cbd5e0; }
+        .btn-label { font-size: 8px; opacity: 0.6; margin-bottom: 4px; }
         .perk-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .sb-logo { height: 35px; width: auto; }
-        
-        /* NEW CTA STYLING */
-        .network-grid { display: grid; gap: 12px; margin-top: 20px; }
-        .slim-btn { background: white; color: var(--v-blue); border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 11px; text-transform: uppercase; cursor: pointer; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-label { font-size: 8px; opacity: 0.7; letter-spacing: 1px; margin-bottom: 2px; }
-        .btn-sky { border: 1px solid var(--v-gold); color: var(--v-gold); background: rgba(255,215,0,0.1); }
     </style>
 </head>
 <body>
@@ -91,11 +121,11 @@
             Select your required connectivity spectrum:
         </div>
         <div class="network-grid">
-            <a href="https://plans.gigsky.com/K31267/2CTPL/" class="slim-btn btn-sky">
+            <a href="https://plans.gigsky.com/K31267/2CTPL/" class="slim-btn-3d" style="background:#f8faff; border: 1px solid var(--v-gold); color:var(--v-gold);">
                 <span class="btn-label">SATELLITE ROAMING</span>
                 🛰️ DEPLOY IN-FLIGHT (GIGSKY)
             </a>
-            <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" class="slim-btn">
+            <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" class="slim-btn-3d">
                 <span class="btn-label">TERRESTRIAL DATA</span>
                 📡 DEPLOY ON-LAND (BREEZE)
             </a>
@@ -109,8 +139,7 @@
         </div>
         <div class="framed-title" id="card-gate-title">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
-            Watching Gate <span id="text-gate-detail" style="color:var(--v-gold); font-weight:800;">--</span> for you, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.<br><br>
-            Enjoy a moment of calm before departure.
+            Watching Gate <span id="text-gate-detail" style="color:var(--v-gold); font-weight:800;">--</span> for you, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.
         </div>
         <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
@@ -129,7 +158,7 @@
         <div class="framed-title" style="color:white; border-color:white;">Welcome</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
             <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, preparing arrival logistics.<br><br>
-            Soon, local transit and baggage claim data for <span id="arrival-context-text" style="font-weight:800;">your destination</span> will activate here.
+            Soon, local transit and baggage claim for <span id="arrival-context-text" style="font-weight:800;">Destination</span> will activate here.
         </div>
     </div>
 </div>
@@ -164,43 +193,42 @@ class VelocisSovereign {
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        try {
-            await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
+        try { await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
 
-    /* --- PROTECTED: YOUR PERFECT SCANNER BRAIN --- */
     async handleScan(data) {
         const raw = data.toUpperCase();
-        let namePart = raw.substring(2, 22).trim();
-        const pnrAnchor = namePart.search(/\sE[A-Z0-9]{5,6}/);
-        if (pnrAnchor !== -1) namePart = namePart.substring(0, pnrAnchor).trim();
-        let nameArray = namePart.split('/');
-        this.passenger.name = nameArray[nameArray.length - 1].replace(/\sE[A-Z0-9]+$/, '').trim();
         
-        const seatMatch = raw.match(/\s([0-9]{1,3}[A-Z])(\s|$)/);
-        this.passenger.seat = seatMatch ? seatMatch[1] : "--";
+        // 1. DYNAMIC NAME TRAP (Handles David and Real Passes)
+        if (raw.includes('/')) {
+            let afterM1 = raw.substring(2);
+            let parts = afterM1.split('/');
+            this.passenger.name = parts[parts.length - 1].split(/[\s0-9E]/)[0].trim();
+        }
 
-        const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
-        if (structuralMatch) {
-            this.passenger.barcodeDest = structuralMatch[1].substring(3, 6);
-            this.passenger.airlineCode = structuralMatch[2];
-            this.passenger.flightNum = parseInt(structuralMatch[3], 10).toString();
+        // 2. PATTERN-BASED DETECTION (Safety Net)
+        const routeMatch = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
+        if (routeMatch) {
+            this.passenger.barcodeDest = routeMatch[2];
+            this.passenger.airlineCode = routeMatch[3];
+            this.passenger.flightNum = parseInt(routeMatch[4], 10).toString();
         } else {
-            const anchor = raw.substring(22).match(/([A-Z0-9]{2})\s+(\d{1,4})/g);
-            if (anchor) {
-                const lastMatch = anchor[anchor.length - 1].split(/\s+/);
-                this.passenger.airlineCode = lastMatch[0];
-                this.passenger.flightNum = parseInt(lastMatch[1], 10).toString();
-                this.passenger.barcodeDest = raw.substring(raw.indexOf(lastMatch[0]) - 3, raw.indexOf(lastMatch[0])).trim();
+            // FALLBACK: YOUR ORIGINAL PROTECTED LOGIC
+            let namePart = raw.substring(2, 22).trim();
+            const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
+            if (structuralMatch) {
+                this.passenger.barcodeDest = structuralMatch[1].substring(3, 6);
+                this.passenger.airlineCode = structuralMatch[2];
+                this.passenger.flightNum = parseInt(structuralMatch[3], 10).toString();
             }
         }
 
-        const hAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "FCO": "Rome", "MEX": "Mexico City", "BKK": "Bangkok", "KEF": "Reykjavik", "GRU": "Sao Paulo", "HND": "Tokyo", "SYD": "Sydney", "ICN": "Seoul", "ALG": "Algiers", "CMN": "Casablanca", "GEO": "Georgetown", "JNB": "Johannesburg", "ATH": "Athens", "SIN": "Singapore" };
-        const lAtlas = JSON.parse(localStorage.getItem('velocis_atlas') || '{}');
-        const cityValue = hAtlas[this.passenger.barcodeDest] || lAtlas[this.passenger.barcodeDest] || this.passenger.barcodeDest;
+        const seatMatch = raw.match(/\s([0-9]{1,3}[A-Z])(\s|$)/);
+        this.passenger.seat = seatMatch ? seatMatch[1] : "--";
 
-        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode, dest: this.passenger.barcodeDest, gate: "--", status: "READY", arrivalCity: cityValue };
+        const hAtlas = { "ADD": "Addis Ababa", "SCL": "Santiago", "CDG": "Paris", "MAD": "Madrid", "JFK": "New York", "LHR": "London", "DXB": "Dubai", "FCO": "Rome", "MEX": "Mexico City", "BKK": "Bangkok" };
+        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: this.passenger.airlineCode, dest: this.passenger.barcodeDest, gate: "--", status: "READY", arrivalCity: hAtlas[this.passenger.barcodeDest] || this.passenger.barcodeDest };
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
@@ -249,7 +277,6 @@ class VelocisSovereign {
         document.getElementById('arrival-context-text').innerText = this.flightData.arrivalCity;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
 
-        // --- DYNAMIC COUNTER CALCULATION ---
         const code = (this.flightData.airline || "A").charCodeAt(0);
         const startNum = (code % 20) * 5 + 10;
         document.getElementById('text-counter').innerText = `Counters ${startNum}-${startNum + 12}`;
