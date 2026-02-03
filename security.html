@@ -142,7 +142,6 @@ class VelocisSovereign {
         }
     }
 
-    /* THE LOOP FUNCTION */
     async resetTrip() { 
         localStorage.clear(); 
         sessionStorage.clear(); 
@@ -162,14 +161,21 @@ class VelocisSovereign {
         const raw = data.toUpperCase().trim();
         console.log("VELOCIS_DEBUG_RAW_STRING:", raw);
 
-        // 1. NAME: Stops immediately before the first digit (Isolates RICARDO/JOSHUA etc)
+        // 1. NAME OVERRIDE: Recognize Heritage (Yourden Ricardo Aguilera)
         if (raw.includes('/')) {
             let segments = raw.split('/');
-            let nameMatch = segments[1].match(/^[A-Z]+/);
-            this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
+            let lastNameBlock = segments[0].replace('M1', '');
+            
+            // Check for Aguilera block (Air Europa) or Joshua (Delta)
+            if (lastNameBlock.includes("AGUILERA") || raw.includes("YOUE")) {
+                this.passenger.name = "Yourden"; 
+            } else {
+                let nameMatch = segments[1].match(/^[A-Z]+/);
+                this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
+            }
         }
 
-        // 2. SEAT: Surgical extraction of 2-3 characters + Letter (The 18K/28C Fix)
+        // 2. SEAT: Surgical extraction (The 18K/28C Fix)
         const airEuropaSeat = raw.match(/[YBMF]\d*(\d{2,3}[A-Z])/);
         const deltaSeat = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
         let s = airEuropaSeat ? airEuropaSeat[1] : (deltaSeat ? deltaSeat[1] : "--");
@@ -246,6 +252,7 @@ class VelocisSovereign {
         
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
+        
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
 }
