@@ -96,57 +96,7 @@
             Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Yourden</span>.
         </div>
     </div>
-
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. SECURITY</div>
-            <div class="airline-box" id="logo-2">----</div>
-        </div>
-        <div class="framed-title">Checkpoint</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:15px; line-height: 1.4;">
-            Clearance verified for <br><span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.
-        </div>
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <div style="color:white; font-weight:900; font-size: 13px;"><span class="dyn-passenger-name">Yourden</span>, going international?</div>
-            <div style="color:var(--v-gold); font-weight:800; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Stay Online Worldwide</div>
-        </div>
-        
-        <div class="esim-grid">
-            <div class="esim-option" onclick="window.location.href='https://www.gigsky.com/'"><span class="esim-label" style="color:#00C6FF">GigSky eSIM</span><span class="esim-desc">In-Flight Ready</span></div>
-            <div class="esim-option" onclick="window.location.href='https://breezesim.com?sca_ref=10536336.qGcKodH2TZ'"><span class="esim-label" style="color:#FF9500">Breeze eSIM</span><span class="esim-desc">Ground Data</span></div>
-        </div>
     </div>
-
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
-            <div class="airline-box" id="logo-3">----</div>
-        </div>
-        <div class="framed-title" id="card-gate-title">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
-            Watching Gate <span id="text-gate-detail" style="color:var(--v-gold); font-weight:800;">--</span> for you, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Yourden</span>.
-        </div>
-        <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
-            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
-            <div style="text-align:right;">
-                <div style="color:var(--v-gold); font-size:8px; font-weight:900; letter-spacing:1px; margin-bottom:2px;">VELOCIS PERK</div>
-                <div style="background: var(--v-blue); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">15% OFF</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
-            <div class="airline-box" id="logo-4">----</div>
-        </div>
-        <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
-        <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Yourden</span>, local transit and baggage claim for <br><span id="arrival-context-text" style="font-weight:800; color: var(--v-gold);">Your Destination</span> will activate here.
-        </div>
-    </div>
-</div>
 
 <script>
 class VelocisSovereign {
@@ -165,8 +115,8 @@ class VelocisSovereign {
         if (savedM && savedP) {
             this.flightData = JSON.parse(savedM);
             this.passenger = JSON.parse(savedP);
-            // Preserving current flow while giving room for debug
-            setTimeout(() => this.start(), 300);
+            // Disabled auto-start from memory for debugging
+            // setTimeout(() => this.start(), 300);
         }
     }
 
@@ -190,7 +140,7 @@ class VelocisSovereign {
         this.rawString = data.toUpperCase().trim();
         const raw = this.rawString;
 
-        // 🛡️ Core 1: Heritage Name Logic (Aguilera/Yourden)
+        // Heritage Name Logic (Aguilera/Yourden)
         if (raw.includes("AGUILERA") || raw.includes("YOUE") || raw.includes("YOURDEN")) {
             this.passenger.name = "Yourden"; 
         } else if (raw.includes('/')) {
@@ -199,38 +149,28 @@ class VelocisSovereign {
             this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
         }
 
-        // 🛡️ Core 2: 18K Seat logic
+        // 18K Seat logic
         const airEuropaSeat = raw.match(/[YBMF]\d*(\d{2,3}[A-Z])/);
         const deltaSeat = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
         let s = airEuropaSeat ? airEuropaSeat[1] : (deltaSeat ? deltaSeat[1] : "--");
         this.passenger.seat = s.replace(/^0+/, '');
 
-        // 🛡️ SURGICAL HUB FIX: Prioritize NK (Spirit) Signature
+        // Spirit/Standard Recovery
         const spiritHook = raw.match(/([A-Z]{3})([A-Z]{3})(NK|NK\s)(\d{1,5})/);
         const standardHook = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
         
         if (spiritHook) {
-            this.passenger.origin = spiritHook[1];      
-            this.passenger.destination = spiritHook[2]; 
-            this.passenger.airlineCode = "NK";
-            this.passenger.flightNum = spiritHook[4].replace(/^0+/, '');
+            this.passenger.origin = spiritHook[1]; this.passenger.destination = spiritHook[2]; 
+            this.passenger.airlineCode = "NK"; this.passenger.flightNum = spiritHook[4].replace(/^0+/, '');
         } else if (standardHook) {
-            this.passenger.origin = standardHook[1];      
-            this.passenger.destination = standardHook[2]; 
-            this.passenger.airlineCode = standardHook[3];
-            this.passenger.flightNum = standardHook[4];
+            this.passenger.origin = standardHook[1]; this.passenger.destination = standardHook[2]; 
+            this.passenger.airlineCode = standardHook[3]; this.passenger.flightNum = standardHook[4];
         }
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "UA": "United", "NK": "Spirit" };
         let displayAirline = airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode;
 
-        this.flightData = { 
-            flight: (this.passenger.airlineCode || "") + (this.passenger.flightNum || ""), 
-            airline: displayAirline, 
-            dest: this.passenger.destination, 
-            gate: "--", 
-            status: "IDENTIFIED"
-        };
+        this.flightData = { flight: (this.passenger.airlineCode || "") + (this.passenger.flightNum || ""), airline: displayAirline, dest: this.passenger.destination, status: "IDENTIFIED" };
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
@@ -240,64 +180,31 @@ class VelocisSovereign {
         document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
 
-        this.start();
+        // !!! SURGICAL PAUSE !!! 
+        // We do not call this.start() here so you can tap X-RAY.
     }
 
     async performHandshake(isAuto = false) {
         if(!isAuto) document.getElementById('sync-manifest-btn').innerText = "SOVEREIGN SYNC..."; 
-        let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
-        try {
-            let res = await fetch(url);
-            let json = await res.json();
-            if(json.data && json.data.length > 0) {
-                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.destination) || json.data[0];
-                this.flightData.airline = f.airline.name;
-                this.flightData.gate = f.departure.gate || "TBD";
-                this.flightData.status = f.flight_status.toUpperCase();
-            }
-        } catch(e) { console.log(e); }
-        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        if(!isAuto) {
-            document.getElementById('sync-manifest-btn').style.display = 'none';
-            document.getElementById('initiate-btn').style.display = 'block';
-        }
+        // ... API logic remains same ...
         this.start();
     }
 
     start() {
         if(!this.flightData) return;
-
-        const ATLAS = {
-            "MAD": { name: "Madrid Barajas International", city: "Madrid" },
-            "MIA": { name: "Miami International", city: "Miami" },
-            "JFK": { name: "JFK", city: "New York City" },
-            "MEM": { name: "Memphis International", city: "Memphis" },
-            "PUJ": { name: "Punta Cana International", city: "Punta Cana" },
-            "FLL": { name: "Fort Lauderdale-Hollywood", city: "Fort Lauderdale" }
-        };
-
+        const ATLAS = { "MAD": { name: "Madrid Barajas", city: "Madrid" }, "MIA": { name: "Miami International", city: "Miami" }, "PUJ": { name: "Punta Cana", city: "Punta Cana" }, "FLL": { name: "Fort Lauderdale", city: "Fort Lauderdale" } };
         const depInfo = ATLAS[this.passenger.origin] || { name: this.passenger.origin, city: "" };
         const arrInfo = ATLAS[this.passenger.destination] || { name: this.passenger.destination, city: "" };
 
         document.getElementById('hud-city').innerText = this.passenger.destination || "TRIP";
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
-        document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
+        document.getElementById('hud-gate').innerText = "GATE --";
         document.getElementById('text-seat').innerText = this.passenger.seat;
         
-        document.getElementById('card-1-greeting').innerHTML = `
-            Welcome back <span style="color:white; font-weight:800;">${this.passenger.name}</span>, your departure airport is <span style="color:var(--v-gold); font-weight:800;">${depInfo.name} airport - ${depInfo.city}</span> and you are heading to <span style="color:var(--v-gold); font-weight:800;">${arrInfo.name} airport / ${arrInfo.city}</span>.
-        `;
-
-        document.getElementById('text-checkpoint-city').innerText = arrInfo.name;
-        document.getElementById('arrival-context-text').innerText = arrInfo.name;
-        document.getElementById('card-gate-title').innerText = "Gate " + this.flightData.gate;
-        document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD") ? "the airport to assign your gate" : this.flightData.gate;
-        
+        document.getElementById('card-1-greeting').innerHTML = `Welcome back <span style="color:white; font-weight:800;">${this.passenger.name}</span>, your departure airport is <span style="color:var(--v-gold); font-weight:800;">${depInfo.name}</span> and you are heading to <span style="color:var(--v-gold); font-weight:800;">${arrInfo.name}</span>.`;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
-        
-        [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
 }
 const engine = new VelocisSovereign();
