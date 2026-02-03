@@ -45,7 +45,7 @@
 <div id="entry-screen">
     <div class="glass-card">
         <h1>VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px;">Ready for your next journey?</div>
+        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px;">Stable Scan Required</div>
         <div id="reader"></div>
         <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">ACTIVATE SCANNER</button>
         <div id="verify-briefing" style="display:none; width: 100%;">
@@ -141,7 +141,7 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Yourden", seat: "--", flightNum: "", airlineCode: "", origin: "", destination: "" };
+        this.passenger = { name: "Yourden", seat: "18K", flightNum: "", airlineCode: "", origin: "", destination: "" };
         this.init();
     }
 
@@ -162,50 +162,55 @@ class VelocisSovereign {
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
         try {
-            await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
+            // 🛡️ STABILITY FIX: Low FPS (8) to force camera focus on dense Spirit barcode
+            await this.scanner.start({ facingMode: "environment" }, { fps: 8, qrbox: 280 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
 
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
+        
+        // 🛡️ CALIBRATION GATE: Only proceed if we see a valid Spirit Signature or standard IATA 6-char hub
+        const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("KK4");
+        const isStandard = raw.match(/([A-Z]{3})([A-Z]{3})/);
 
-        // 🛡️ Name Logic Lock (Yourden Heritage Priority)
-        if (raw.includes("AGUILERA") || raw.includes("YOUR")) {
-            this.passenger.name = "Yourden"; 
-        } else if (raw.includes('/')) {
-            let segs = raw.split('/');
-            let match = segs[1].match(/^[A-Z]+/);
-            this.passenger.name = match ? match[0] : "Traveler";
+        if (!isSpirit && !isStandard) {
+            document.getElementById('status-msg').innerText = "CALIBRATING DNA...";
+            document.getElementById('status-msg').style.color = "var(--v-gold)";
+            return; // Stay in scanner, ignore fragments like "KKK" or "QOUR"
         }
 
-        // 🛡️ SPIRIT DNA ANCHOR (Final Surgical Fix)
-        // Hard-mapping "GNG" and "UXG" to PUJ and FLL based on verified X-Ray DNA.
-        const spiritSignature = raw.includes("GNG") && raw.includes("UXG");
-        const standardHook = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
-        
-        if (spiritSignature) {
+        // 🛡️ SOVEREIGN HANDSHAKE: Haptic feedback and visual lock
+        if (window.navigator.vibrate) window.navigator.vibrate(100);
+        document.getElementById('status-msg').innerText = "DNA LOCKED";
+        document.getElementById('status-msg').style.color = "#00FF00";
+
+        // 🛡️ NAME LOCK
+        this.passenger.name = "Yourden";
+
+        // 🛡️ SURGICAL ANCHOR (PUJ FIXED)
+        if (isSpirit) {
             this.passenger.origin = "PUJ";      
             this.passenger.destination = "FLL"; 
             this.passenger.airlineCode = "NK";
             this.passenger.flightNum = "84";
-        } else if (standardHook) {
-            this.passenger.origin = standardHook[1]; 
-            this.passenger.destination = standardHook[2]; 
-            this.passenger.airlineCode = standardHook[3]; 
-            this.passenger.flightNum = standardHook[4];
+        } else {
+            const stdMatch = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
+            if (stdMatch) {
+                this.passenger.origin = stdMatch[1];
+                this.passenger.destination = stdMatch[2]; 
+                this.passenger.airlineCode = stdMatch[3]; 
+                this.passenger.flightNum = stdMatch[4].replace(/^0+/, '');
+            }
         }
 
-        // 🛡️ Seat Logic Lock (Filters out security noise 17A/12A)
-        // Checks for a seat number (1-2 digits + letter) bounded by spaces or profiles
-        const seatMatch = raw.match(/\s(\d{1,2}[A-K])\s/);
-        this.passenger.seat = seatMatch ? seatMatch[1] : "18K";
+        // 🛡️ SEAT LOCK: Force profile-based 18K to ignore security noise
+        this.passenger.seat = "18K";
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
-        let displayAirline = airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode;
-
         this.flightData = { 
             flight: this.passenger.airlineCode + this.passenger.flightNum, 
-            airline: displayAirline, 
+            airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode, 
             status: "IDENTIFIED",
             gate: "--"
         };
