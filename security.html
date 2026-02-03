@@ -16,6 +16,7 @@
         #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
 
         .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; cursor: pointer; }
+        #hard-reset-btn { font-size: 10px; color: white; opacity: 0.6; text-decoration: underline; margin-top: 20px; cursor: pointer; border: none; background: none; }
         
         #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
@@ -47,6 +48,7 @@
             <button id="sync-manifest-btn" style="width:100%; height:70px; background:var(--v-gold); color:black; border:none; border-radius:22px; font-weight:900;" onclick="engine.performHandshake()">AUTHORIZE TRIP</button>
             <button id="initiate-btn" style="width:100%; height:70px; background:white; color:black; border:none; border-radius:22px; font-weight:900; margin-top:20px; display:none;" onclick="engine.start()">START MY TRIP</button>
         </div>
+        <button id="hard-reset-btn" onclick="engine.resetTrip()">CLEAR ALL DATA</button>
     </div>
 </div>
 
@@ -142,23 +144,19 @@ class VelocisSovereign {
         }
     }
 
-    async resetTrip() { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }
+    resetTrip() { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }
 
     async startScanner() {
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        try {
-            await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
+        try { await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
 
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
-        
-        // --- 🧪 REMOTE DIAGNOSTIC ---
         console.log("VELOCIS_DEBUG_RAW_STRING:", raw);
-        // -----------------------------
 
         if (raw.includes('/')) {
             let segments = raw.split('/');
@@ -166,9 +164,10 @@ class VelocisSovereign {
             this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
         }
 
-        const deepSeatMatch = raw.match(/[YBMF]\d{4}(\d{1,3}[A-Z])/);
+        const deepSeatMatch = raw.match(/[YBMF]\d*(\d{1,3}[A-Z])/);
         const spaceSeatMatch = raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
-        this.passenger.seat = deepSeatMatch ? deepSeatMatch[1] : (spaceSeatMatch ? spaceSeatMatch[1] : "--");
+        let s = deepSeatMatch ? deepSeatMatch[1] : (spaceSeatMatch ? spaceSeatMatch[1] : "--");
+        this.passenger.seat = s.replace(/^0+/, '');
 
         const structuralMatch = raw.match(/([A-Z]{6})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
         if (structuralMatch) {
@@ -195,7 +194,6 @@ class VelocisSovereign {
         document.getElementById('reader').style.display = 'none'; 
         document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
-
         this.start();
     }
 
@@ -215,6 +213,10 @@ class VelocisSovereign {
         } catch(e) { console.log(e); }
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
+        if(!isAuto) {
+            document.getElementById('sync-manifest-btn').style.display = 'none';
+            document.getElementById('initiate-btn').style.display = 'block';
+        }
         this.start();
     }
 
@@ -225,8 +227,13 @@ class VelocisSovereign {
         document.getElementById('hud-gate').innerText = "GATE " + this.flightData.gate;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('text-brief-airline').innerText = this.flightData.airline;
+        document.getElementById('text-checkpoint-city').innerText = this.flightData.dest;
+        document.getElementById('arrival-context-text').innerText = this.flightData.dest;
+        document.getElementById('card-gate-title').innerText = "Gate " + this.flightData.gate;
+        document.getElementById('text-gate-detail').innerText = (this.flightData.gate === "TBD") ? "the airport to assign your gate" : this.flightData.gate;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
+        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
 }
