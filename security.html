@@ -169,7 +169,7 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
 
-        // 🛡️ Core 1: Heritage Name Logic
+        // 🛡️ Locked Name Logic
         if (raw.includes("AGUILERA") || raw.includes("YOUR")) {
             this.passenger.name = "Yourden"; 
         } else if (raw.includes('/')) {
@@ -178,12 +178,12 @@ class VelocisSovereign {
             this.passenger.name = match ? match[0] : "Traveler";
         }
 
-        // 🛡️ Core 2: 18K Seat logic
+        // 🛡️ Locked Seat Logic (18K Focus)
         const seatMatch = raw.match(/[YBMF]\d*(\d{2,3}[A-Z])/) || raw.match(/\s(\d{1,3}[A-Z])(\s|$)/);
         this.passenger.seat = seatMatch ? seatMatch[1].replace(/^0+/, '') : "--";
 
-        // 🛡️ SURGICAL SPIRIT DNA ALIGNMENT
-        // DNA match: Specifically finds GNG and UXG based on Spirit's scrambled format
+        // 🛡️ SPIRIT DNA FIX (Surgical Alignment)
+        // Scans specifically for the GNG/UXG sequence from the X-Ray DNA string
         const spiritDNA = raw.match(/GNG.*UXG/);
         const standardHook = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
         
@@ -193,10 +193,8 @@ class VelocisSovereign {
             this.passenger.airlineCode = "NK";
             this.passenger.flightNum = "987";
         } else if (standardHook) {
-            this.passenger.origin = standardHook[1]; 
-            this.passenger.destination = standardHook[2]; 
-            this.passenger.airlineCode = standardHook[3]; 
-            this.passenger.flightNum = standardHook[4];
+            this.passenger.origin = standardHook[1]; this.passenger.destination = standardHook[2]; 
+            this.passenger.airlineCode = standardHook[3]; this.passenger.flightNum = standardHook[4];
         }
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
@@ -257,6 +255,7 @@ class VelocisSovereign {
         
         document.getElementById('card-1-greeting').innerHTML = `Welcome back <span style="color:white; font-weight:800;">${this.passenger.name}</span>, your departure airport is <span style="color:var(--v-gold); font-weight:800;">${depInfo.name}</span> and you are heading to <span style="color:var(--v-gold); font-weight:800;">${arrInfo.name}</span>.`;
         document.getElementById('text-checkpoint-city').innerText = arrInfo.name;
+        document.getElementById('arrival-context-text').innerText = arrInfo.name;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
