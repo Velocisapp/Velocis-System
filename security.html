@@ -194,6 +194,7 @@ class VelocisSovereign {
         console.log("VELOCIS_TRIAGE_INTAKE:", raw);
 
         // 🛡️ UNTOUCHABLE Triage Switchboard
+        // Tunnel Logic: Separating Legacy Standards from Proprietary Noise
         const isSpirit = raw.includes("KK") || raw.includes("NK") || raw.includes("GNG") || raw.includes("UXG");
 
         if (isSpirit) {
@@ -202,6 +203,7 @@ class VelocisSovereign {
                 let segments = raw.split('/');
                 this.passenger.name = raw.includes("AGUILERA") ? "Yourden" : (segments[1].match(/^[A-Z]+/)?.[0] || "Traveler");
             }
+            // Hunt for specific Spirit 'KK' signature to avoid index errors
             let sMatch = raw.match(/KK([1-9]\d?[A-K])/);
             this.passenger.seat = sMatch ? sMatch[1] : "4I"; 
             
