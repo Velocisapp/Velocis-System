@@ -80,7 +80,43 @@
             Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.
         </div>
     </div>
+
+    <div class="mission-step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. SECURITY</div>
+            <div class="airline-box" id="logo-2">----</div>
+        </div>
+        <div class="framed-title">Checkpoint</div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:15px; line-height: 1.4;">
+            Clearance verified for <br><span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.
+        </div>
+        <div class="esim-grid">
+            <div class="esim-option" onclick="window.location.href='https://www.gigsky.com/'">GigSky eSIM</div>
+            <div class="esim-option" onclick="window.location.href='https://breezesim.com'">Breeze eSIM</div>
+        </div>
     </div>
+
+    <div class="mission-step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
+            <div class="airline-box" id="logo-3">----</div>
+        </div>
+        <div class="framed-title" id="card-gate-title">Gate --</div>
+        <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
+            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
+            <div style="background: var(--v-blue); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">15% OFF</div>
+        </div>
+    </div>
+
+    <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
+            <div class="airline-box" id="logo-4">----</div>
+        </div>
+        <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
+        <div id="arrival-context-text" style="color:white; margin-top:20px; font-size:18px;">Final destination data loading...</div>
+    </div>
+</div>
 
 <script>
 class VelocisSovereign {
@@ -108,16 +144,10 @@ class VelocisSovereign {
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         
-        // 👁️ AUTONOMOUS EYE: High-Res Configuration for Dense Barcodes
         const scanConfig = {
             fps: 25, 
             qrbox: { width: 280, height: 200 },
-            videoConstraints: {
-                facingMode: "environment",
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-                focusMode: "continuous"
-            }
+            videoConstraints: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 }, focusMode: "continuous" }
         };
 
         this.scanner = new Html5Qrcode("reader");
@@ -128,11 +158,9 @@ class VelocisSovereign {
 
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
-        console.log("VELOCIS_SOVEREIGN_SCAN:", raw);
+        console.log("VELOCIS_RAW_INPUT:", raw);
 
-        // 🛡️ UNIVERSAL SIGNATURE ENGINE (Logic Vault)
-        
-        // 1. UNIVERSAL NAME HUNT (Anchor: /)
+        // LAYER 1: IDENTITY (Mirror extraction - JOSUHUA remains JOSUHUA)
         const nameMatch = raw.match(/([A-Z]+)\/([A-Z]+)/);
         if (nameMatch) {
             const lastName = nameMatch[1].replace('M1', '');
@@ -140,33 +168,33 @@ class VelocisSovereign {
             this.passenger.name = (lastName.includes("AGUILERA") || raw.includes("YOUE")) ? "Yourden" : firstName;
         }
 
-        // 2. UNIVERSAL SEAT HUNT (Signature: Number + Letter A-K)
-        // Works for: 18K (UX), 8C (DL), 4I (NK), 1G (HA), 22A (UA)
-        const seatSignature = raw.match(/(?:KK|OUW|UXG|SEA|[YBMF])\d*([1-9]\d?[A-K])/) || 
-                              raw.match(/(?:\s|^)([1-9]\d?[A-K])(?:\s|$)/) || 
-                              raw.match(/([1-9]\d?[A-K])/);
-        this.passenger.seat = seatSignature ? seatSignature[1].replace(/^0+/, '') : "--";
+        // LAYER 2: ASSIGNMENT (Universal Seat Hunt)
+        const seatSig = raw.match(/(?:KK|OUW|UXG|SEA|[YBMF])\d*([1-9]\d?[A-K])/) || 
+                        raw.match(/(?:\s|^)([1-9]\d?[A-K])(?:\s|$)/) || 
+                        raw.match(/([1-9]\d?[A-K])/);
+        this.passenger.seat = seatSig ? seatSig[1].replace(/^0+/, '') : "--";
 
-        // 3. UNIVERSAL ROUTE HUNT (Signature: 3-Letter IATA Pair)
-        const routeSignature = raw.match(/([A-Z]{3})([A-Z]{3})/);
-        if (routeSignature) {
-            this.passenger.origin = routeSignature[1];
-            this.passenger.destination = routeSignature[2];
+        // LAYER 3: GEOGRAPHY (3-Letter IATA Pair Hunt)
+        const routeSig = raw.match(/([A-Z]{3})([A-Z]{3})/);
+        if (routeSig) {
+            this.passenger.origin = routeSig[1];
+            this.passenger.destination = routeSig[2];
         }
 
-        // 4. UNIVERSAL CARRIER HUNT (Signature: 2-Digit Code + Number)
-        const flightSignature = raw.match(/([A-Z0-9]{2})\s*(\d{1,4})/);
-        if (flightSignature) {
-            this.passenger.airlineCode = flightSignature[1];
-            this.passenger.flightNum = flightSignature[2].replace(/^0+/, '');
+        // LAYER 4: LOGISTICS (Carrier + Number)
+        const flightSig = raw.match(/([A-Z0-9]{2})\s*(\d{1,4})/);
+        if (flightSig) {
+            this.passenger.airlineCode = flightSig[1];
+            this.passenger.flightNum = flightSig[2].replace(/^0+/, '');
         }
 
-        // UI SYNC & TRANSITION
+        // MASTER UI SYNC
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit", "HA": "Hawaiian", "UA": "United" };
         this.flightData = { 
             flight: this.passenger.airlineCode + this.passenger.flightNum, 
             airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode, 
-            status: "IDENTIFIED"
+            status: "IDENTIFIED",
+            dest: this.passenger.destination
         };
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
@@ -175,7 +203,6 @@ class VelocisSovereign {
         document.getElementById('reader').style.display = 'none'; 
         document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
-        if (window.navigator.vibrate) window.navigator.vibrate(50);
         this.start();
     }
 
@@ -202,15 +229,17 @@ class VelocisSovereign {
 
     start() {
         if(!this.flightData) return;
-        const ATLAS = {
-            "MAD": "Madrid", "MIA": "Miami", "JFK": "New York City",
-            "PUJ": "Punta Cana", "FLL": "Fort Lauderdale", "HNL": "Honolulu", "LAS": "Las Vegas"
-        };
+        const ATLAS = { "MAD": "Madrid", "PUJ": "Punta Cana", "FLL": "Fort Lauderdale", "JFK": "New York", "HNL": "Honolulu" };
         const destCity = ATLAS[this.passenger.destination] || this.passenger.destination;
+        
         document.getElementById('hud-city').innerText = this.passenger.destination;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('card-1-greeting').innerHTML = `Welcome back <b>${this.passenger.name}</b>, your mission to <b>${destCity}</b> is initiated.`;
+        
+        document.getElementById('text-checkpoint-city').innerText = destCity;
+        document.getElementById('arrival-context-text').innerText = `Preparing for arrival in ${destCity}.`;
+        
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
