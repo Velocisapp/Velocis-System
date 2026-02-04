@@ -156,7 +156,7 @@ class VelocisSovereign {
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
         try {
-            // FIX: Environment mode strictly enforced to prevent selfie-camera launch
+            // BACK CAMERA FORCED
             await this.scanner.start({ facingMode: "environment" }, { fps: 25, qrbox: 250 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
@@ -164,20 +164,20 @@ class VelocisSovereign {
     handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // 1. DYNAMIC IDENTITY EXTRACTION
+        // 1. DYNAMIC IDENTITY (IATA Standard Slash Extraction)
         if (raw.includes('/')) {
             let segments = raw.split('/');
             let nameMatch = segments[1].match(/^[A-Z]+/);
             this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
         }
 
-        // 2. HEURISTIC SEAT SEARCH (Dynamic Pattern Matching)
-        // Correctly isolates seat from Spirit noise (OUW/KKK) or Standard blocks
-        const heuristicMatch = raw.match(/(?:OUW|KKK|UXG|GNG|[YBMF])\d*([1-9]\d?[A-K])/) || raw.match(/([1-9]\d?[A-K])/);
-        this.passenger.seat = heuristicMatch ? heuristicMatch[1] : "--";
+        // 2. DYNAMIC SEAT RECOVERY (Regex targeting High-Density carrier noise)
+        // Searches for number (1-99) + Letter (A-K) specifically.
+        const seatPattern = raw.match(/(?:OUW|KKK|GNG|UXG|[YBMF])\d*([1-9]\d?[A-K])/) || raw.match(/([1-9]\d?[A-K])/);
+        this.passenger.seat = seatPattern ? seatPattern[1] : "--";
 
         // 3. ROUTE DETECTION
-        const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("NK");
+        const isSpirit = raw.includes("NK") || raw.includes("GNG") || raw.includes("UXG");
         if (isSpirit) {
             this.passenger.origin = "PUJ";
             this.passenger.destination = "FLL";
@@ -194,11 +194,17 @@ class VelocisSovereign {
         }
 
         const airlineMap = { "NK": "Spirit", "UX": "Air Europa", "DL": "Delta" };
-        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode, status: "IDENTIFIED", gate: "--" };
+        this.flightData = { 
+            flight: this.passenger.airlineCode + this.passenger.flightNum, 
+            airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode, 
+            status: "IDENTIFIED", 
+            gate: "--" 
+        };
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        if(this.scanner) this.scanner.stop(); 
+        
+        if(this.scanner) this.scanner.stop();
         document.getElementById('reader').style.display = 'none'; 
         document.getElementById('ident-label').innerText = `LOCKED: ${this.flightData.flight}`;
         document.getElementById('verify-briefing').style.display = 'block';
@@ -228,13 +234,15 @@ class VelocisSovereign {
 
     start() {
         if(!this.flightData) return;
-        const ATLAS = { "PUJ": "Punta Cana", "FLL": "Fort Lauderdale", "MAD": "Madrid", "MIA": "Miami" };
+        const ATLAS = { "PUJ": "Punta Cana", "FLL": "Fort Lauderdale", "MAD": "Madrid", "MIA": "Miami", "MEM": "Memphis" };
         const arrName = ATLAS[this.passenger.destination] || this.passenger.destination;
+        
         document.getElementById('hud-city').innerText = this.passenger.destination;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('text-checkpoint-city').innerText = arrName;
         document.getElementById('arrival-context-text').innerText = arrName;
+        
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
         setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
