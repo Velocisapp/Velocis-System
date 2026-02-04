@@ -12,8 +12,10 @@
         body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
         #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,1) 0%, rgba(0,198,255,1) 100%); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
-        #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
+        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; overflow-y: auto; max-height: 85vh; }
+        
+        #reader { width: 100% !important; border-radius: 25px; overflow: hidden; border: none !important; background: #000; }
+        #reader__dashboard_section_csr button { background: var(--v-gold) !important; color: black !important; padding: 12px 20px; border-radius: 12px; font-weight: 900; border: none; text-transform: uppercase; cursor: pointer; margin-top: 10px; }
 
         .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; cursor: pointer; }
         
@@ -35,6 +37,7 @@
         .esim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
         .esim-option { background: rgba(255,255,255,0.15); padding: 20px 10px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.25); text-align: center; cursor: pointer; transition: all 0.3s ease; }
         .esim-option:active { transform: scale(0.95); background: var(--v-gold); border-color: var(--v-gold); }
+        .esim-option:active span { color: black !important; }
         .esim-label { font-size: 11px; font-weight: 900; text-transform: uppercase; color: white; display: block; margin-bottom: 5px; }
         .esim-desc { font-size: 7px; color: var(--v-gold); font-weight: 800; text-transform: uppercase; opacity: 0.9; }
     </style>
@@ -46,7 +49,6 @@
         <h1>VELOCIS</h1>
         <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px;">Stable Scan Required</div>
         <div id="reader"></div>
-        <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">ACTIVATE SCANNER</button>
         <div id="verify-briefing" style="display:none; width: 100%;">
             <div id="ident-label" style="color:var(--v-gold); font-size:11px; font-weight:900; margin-bottom:10px; text-transform:uppercase;"></div>
             <button id="sync-manifest-btn" style="width:100%; height:70px; background:var(--v-gold); color:black; border:none; border-radius:22px; font-weight:900;" onclick="engine.performHandshake()">AUTHORIZE TRIP</button>
@@ -80,7 +82,7 @@
         </div>
         <div class="framed-title">Check-In</div>
         <div id="card-1-greeting" style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Yourden</span>.
+            Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.
         </div>
     </div>
 
@@ -106,7 +108,7 @@
         </div>
         <div class="framed-title" id="card-gate-title">Gate --</div>
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px;">
-            Watching Gate <span id="text-gate-detail" style="color:var(--v-gold); font-weight:800;">--</span> for you, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Yourden</span>.
+            Watching Gate <span id="text-gate-detail" style="color:var(--v-gold); font-weight:800;">--</span> for you, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.
         </div>
         <div class="perk-box" onclick="window.location.href='https://www.starbucks.com/rewards'">
             <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg">
@@ -124,7 +126,7 @@
         </div>
         <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Yourden</span>, local transit and baggage claim for <br><span id="arrival-context-text" style="font-weight:800; color: var(--v-gold);">Your Destination</span> will activate here.
+            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, local transit for <br><span id="arrival-context-text" style="font-weight:800; color: var(--v-gold);">Destination</span> will activate here.
         </div>
     </div>
 </div>
@@ -134,87 +136,83 @@ class VelocisSovereign {
     constructor() { 
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Yourden", seat: "18K", flightNum: "", airlineCode: "", origin: "", destination: "" };
+        this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", origin: "", destination: "" };
         this.init();
     }
 
     init() {
         const savedM = localStorage.getItem('velocis_manifest');
-        const savedP = localStorage.getItem('velocis_passenger');
-        if (savedM && savedP) {
+        if (savedM) {
             this.flightData = JSON.parse(savedM);
-            this.passenger = JSON.parse(savedP);
+            const savedP = localStorage.getItem('velocis_passenger');
+            if (savedP) this.passenger = JSON.parse(savedP);
             setTimeout(() => this.start(), 300);
+        } else {
+            this.launchUniversalScanner();
         }
     }
 
     async resetTrip() { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }
 
-    async startScanner() {
-        document.getElementById('reader').style.display = 'block';
-        document.getElementById('scan-btn').style.display = 'none';
-        this.scanner = new Html5Qrcode("reader");
-        try {
-            await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
-        } catch (err) { console.error(err); }
+    launchUniversalScanner() {
+        const config = { fps: 25, qrbox: {width: 250, height: 250} };
+        const scanner = new Html5QrcodeScanner("reader", config, false);
+        
+        scanner.render((decodedText) => {
+            if (window.navigator.vibrate) window.navigator.vibrate(50);
+            this.handleScan(decodedText);
+            scanner.clear();
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('verify-briefing').style.display = 'block';
+        });
     }
 
-    async handleScan(data) {
+    handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // 🛡️ CONFIDENCE TRIGGER: Vibrate when locked
-        if (window.navigator.vibrate) window.navigator.vibrate(100);
+        // DYNAMIC NAME EXTRACTION
+        if (raw.includes('/')) {
+            let segments = raw.split('/');
+            let nameMatch = segments[1].match(/^[A-Z]+/);
+            this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
+        }
 
-        // 🛡️ DNA LOGIC: Check for Spirit signatures (GNG/UXG/NK)
+        // SURGICAL SEAT RECOVERY (Targets Spirit noise while staying dynamic)
+        const seatMatch = raw.match(/(?:OUW|KKK|UXG|GNG|[YBMF])\d*([1-9]\d?[A-K])/) || raw.match(/([1-9]\d?[A-K])/);
+        this.passenger.seat = seatMatch ? seatMatch[1] : "--";
+
+        // ROUTE DETECTION
         const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("NK");
-
         if (isSpirit) {
-            this.passenger.origin = "PUJ";      
-            this.passenger.destination = "FLL"; 
+            this.passenger.origin = "PUJ";
+            this.passenger.destination = "FLL";
             this.passenger.airlineCode = "NK";
             this.passenger.flightNum = "84";
-            this.passenger.seat = "18K"; // 🛡️ Anchor Spirit Seat
         } else {
-            // Standard Heritage Logic for Air Europa/Delta
             const stdMatch = raw.match(/([A-Z]{3})([A-Z]{3})\s*([A-Z0-9]{2})\s*(\d{1,4})/);
             if (stdMatch) {
                 this.passenger.origin = stdMatch[1];
-                this.passenger.destination = stdMatch[2]; 
-                this.passenger.airlineCode = stdMatch[3]; 
+                this.passenger.destination = stdMatch[2];
+                this.passenger.airlineCode = stdMatch[3];
                 this.passenger.flightNum = stdMatch[4].replace(/^0+/, '');
             }
-            const seatMatch = raw.match(/\s(\d{1,3}[A-K])(\s|$)/);
-            this.passenger.seat = seatMatch ? seatMatch[1] : "18K";
         }
 
-        this.passenger.name = "Yourden";
-
-        const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
-        this.flightData = { 
-            flight: this.passenger.airlineCode + this.passenger.flightNum, 
-            airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode, 
-            status: "IDENTIFIED",
-            gate: "--"
-        };
+        const airlineMap = { "NK": "Spirit", "UX": "Air Europa", "DL": "Delta" };
+        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode, status: "IDENTIFIED", gate: "--" };
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        if(this.scanner) await this.scanner.stop(); 
-        document.getElementById('reader').style.display = 'none'; 
-        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
-        document.getElementById('verify-briefing').style.display = 'block';
-
-        this.start();
+        document.getElementById('ident-label').innerText = `LOCKED: ${this.flightData.flight}`;
     }
 
     async performHandshake(isAuto = false) {
-        if(!isAuto) document.getElementById('sync-manifest-btn').innerText = "SOVEREIGN SYNC..."; 
         let url = `https://api.aviationstack.com/v1/flights?access_key=${this.apiKey}&flight_number=${this.passenger.flightNum}&airline_iata=${this.passenger.airlineCode}`;
         try {
             let res = await fetch(url);
             let json = await res.json();
             if(json.data && json.data.length > 0) {
-                let f = json.data.find(l => l.arrival && l.arrival.iata === this.passenger.destination) || json.data[0];
+                let f = json.data.find(leg => leg.arrival && leg.arrival.iata === this.passenger.destination) || json.data[0];
                 this.flightData.airline = f.airline.name;
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
@@ -230,25 +228,18 @@ class VelocisSovereign {
 
     start() {
         if(!this.flightData) return;
-        const ATLAS = { 
-            "PUJ": { name: "Punta Cana International", city: "Punta Cana" }, 
-            "FLL": { name: "Fort Lauderdale-Hollywood", city: "Fort Lauderdale" }, 
-            "MAD": { name: "Madrid Barajas International", city: "Madrid" }, 
-            "MIA": { name: "Miami International", city: "Miami" } 
-        };
-        const depInfo = ATLAS[this.passenger.origin] || { name: this.passenger.origin, city: "" };
-        const arrInfo = ATLAS[this.passenger.destination] || { name: this.passenger.destination, city: "" };
-
+        const ATLAS = { "PUJ": "Punta Cana", "FLL": "Fort Lauderdale", "MAD": "Madrid", "MIA": "Miami" };
+        const arrName = ATLAS[this.passenger.destination] || this.passenger.destination;
+        
         document.getElementById('hud-city').innerText = this.passenger.destination;
         document.getElementById('mission-status-pill').innerText = this.flightData.status;
         document.getElementById('text-seat').innerText = this.passenger.seat;
+        document.getElementById('text-checkpoint-city').innerText = arrName;
+        document.getElementById('arrival-context-text').innerText = arrName;
         
-        document.getElementById('card-1-greeting').innerHTML = `Welcome back <span style="color:white; font-weight:800;">${this.passenger.name}</span>, your departure airport is <span style="color:var(--v-gold); font-weight:800;">${depInfo.name}</span> and you are heading to <span style="color:var(--v-gold); font-weight:800;">${arrInfo.name}</span>.`;
-        document.getElementById('text-checkpoint-city').innerText = arrInfo.name;
-        document.getElementById('arrival-context-text').innerText = arrInfo.name;
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        setTimeout(() => { document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
+        setTimeout(() => { if(document.getElementById('market-bridge')) document.getElementById('market-bridge').style.opacity = "1"; }, 1000);
         [1,2,3,4].forEach(i => { if(document.getElementById(`logo-${i}`)) document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight; });
     }
 }
