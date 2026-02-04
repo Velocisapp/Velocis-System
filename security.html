@@ -21,9 +21,9 @@
         .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
         .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
         
-        #market-bridge { position: absolute; top: 42%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 0; transition: opacity 1.5s ease; }
-        .cta-btn { color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); text-transform: uppercase; }
-        #reset-trip { font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; }
+        #market-bridge { position: absolute; top: 40%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 1 !important; visibility: visible !important; }
+        .cta-btn { color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); text-transform: uppercase; pointer-events: auto; }
+        #reset-trip { font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; pointer-events: auto; }
 
         #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
         .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
@@ -49,7 +49,7 @@
 
 <div id="dest-visualizer">
     <div id="market-bridge">
-        <a class="cta-btn" href="#mission-tray">INTERNET OPTIONS</a>
+        <a class="cta-btn" href="#mission-tray">MISSION DETAILS</a>
         <div id="reset-trip" onclick="engine.resetTrip()">SCAN NEW TICKET</div>
     </div>
     <div class="hud-overlay">
@@ -75,7 +75,6 @@
             Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.
         </div>
     </div>
-
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. SECURITY</div>
@@ -85,24 +84,15 @@
         <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:15px; line-height: 1.4;">
             Clearance verified for <br><span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.
         </div>
-        <div class="esim-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px;">
-            <div class="esim-option" style="background: rgba(255,255,255,0.15); padding: 20px 10px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.25); text-align: center; color: white;" onclick="window.location.href='https://www.gigsky.com/'">GigSky</div>
-            <div class="esim-option" style="background: rgba(255,255,255,0.15); padding: 20px 10px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.25); text-align: center; color: white;" onclick="window.location.href='https://breezesim.com'">Breeze</div>
-        </div>
     </div>
-
     <div class="mission-step">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
             <div class="airline-box" id="logo-3">----</div>
         </div>
         <div class="framed-title" id="card-gate-title">Gate --</div>
-        <div class="perk-box" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 12px 18px; border: 1px solid rgba(255,215,0,0.15); margin-top: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="window.location.href='https://www.starbucks.com/rewards'">
-            <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg" style="height:35px;">
-            <div style="background: var(--v-blue); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">15% OFF</div>
-        </div>
+        <div style="color:rgba(255,255,255,0.85); margin-top:20px;">Gate information locked.</div>
     </div>
-
     <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
@@ -119,6 +109,7 @@ class VelocisSovereign {
         this.flightData = null; 
         this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
         this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", origin: "", destination: "" };
+        this.scanner = null;
         this.init();
     }
 
@@ -132,7 +123,11 @@ class VelocisSovereign {
         }
     }
 
-    async resetTrip() { localStorage.clear(); window.location.reload(); }
+    async resetTrip() { 
+        localStorage.clear(); 
+        sessionStorage.clear(); 
+        window.location.reload(); 
+    }
 
     async startScanner() {
         document.getElementById('reader').style.display = 'block';
@@ -145,17 +140,15 @@ class VelocisSovereign {
     handleProtocolScan(data) {
         const raw = data.toUpperCase().trim();
         const words = raw.split(/[^A-Z0-9]/).filter(w => w.length > 0);
-
-        // --- PROTOCOL SWITCH: AIRPORT TRUTH MAP ---
         const HUB_TRUTH = ["MAD", "MIA", "PUJ", "EWR", "ZRH", "JFK", "FLL"];
         
-        // 1. IDENTITY NEURAL HUNT
+        // 1. IDENTITY (Neural Match)
         const idMatch = raw.match(/([A-Z]+)\/([A-Z]+)/);
         if (idMatch) {
             this.passenger.name = raw.includes("JOSUHUA") ? "JOSUHUA" : (raw.includes("BRIAN") ? "BRIAN" : idMatch[2]);
         }
 
-        // 2. PROBABILISTIC GEOGRAPHY (The "ARD" Killer)
+        // 2. GEOGRAPHY (Probabilistic - Kills 'ARD' corruption)
         let bestDest = "DEST";
         let maxScore = -1;
         words.forEach(word => {
@@ -166,14 +159,14 @@ class VelocisSovereign {
         });
         this.passenger.destination = bestDest;
 
-        // 3. LOGISTICS SIGNATURE (Carrier + Number)
+        // 3. LOGISTICS
         const carrierMatch = raw.match(/([A-Z]{2})\s*(\d{1,4})/) || raw.match(/([A-Z]{2})(\d{1,4})/);
         if (carrierMatch) {
             this.passenger.airlineCode = carrierMatch[1];
             this.passenger.flightNum = carrierMatch[2].replace(/^0+/, '');
         }
 
-        // 4. ASSIGNMENT SIGNATURE (Shape Hunting: [Digits][Letter])
+        // 4. ASSIGNMENT (Shape Detection)
         const seatMatch = raw.match(/(\d{1,3}[A-K])/);
         this.passenger.seat = seatMatch ? seatMatch[1] : "--";
 
@@ -189,7 +182,7 @@ class VelocisSovereign {
 
     async performHandshake() {
         document.getElementById('sync-manifest-btn').innerText = "AUTHORIZING...";
-        // ... API logic remains same but feeds this.start()
+        // Simulated API handshake - results passed to UI
         this.start();
     }
 
@@ -202,9 +195,19 @@ class VelocisSovereign {
         document.getElementById('text-seat').innerText = this.passenger.seat;
         document.getElementById('card-1-greeting').innerHTML = `Welcome back <b>${this.passenger.name}</b>, your mission to <b>${city}</b> is locked.`;
         document.getElementById('text-checkpoint-city').innerText = city;
+        
         document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        [1,2,3,4].forEach(i => document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight);
+        
+        // RE-VISIBLE THE ACTION BRIDGE
+        document.getElementById('market-bridge').style.opacity = "1";
+        document.getElementById('market-bridge').style.visibility = "visible";
+
+        [1,2,3,4].forEach(i => {
+            if(document.getElementById(`logo-${i}`)) {
+                document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight;
+            }
+        });
     }
 }
 const engine = new VelocisSovereign();
