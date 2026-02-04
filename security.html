@@ -162,7 +162,7 @@ class VelocisSovereign {
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
         try {
-            // 🛡️ STABILITY FIX: Low FPS (8) to force camera focus on dense Spirit barcode
+            // Lower FPS (8) for better density handling on mobile screens
             await this.scanner.start({ facingMode: "environment" }, { fps: 8, qrbox: 280 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
@@ -170,17 +170,17 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // 🛡️ CALIBRATION GATE: Ignore random noise or fragments
+        // 🛡️ CALIBRATION GATE: Only trigger on high-confidence airline DNA markers
         const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("KK4");
         const isStandard = raw.match(/([A-Z]{3})([A-Z]{3})/);
 
         if (!isSpirit && !isStandard) {
             document.getElementById('status-msg').innerText = "CALIBRATING DNA...";
             document.getElementById('status-msg').style.color = "var(--v-gold)";
-            return; 
+            return;
         }
 
-        // 🛡️ SOVEREIGN HANDSHAKE: Haptic vibration and visual lock alert
+        // 🛡️ SOVEREIGN HANDSHAKE: Successful lock found
         if (window.navigator.vibrate) window.navigator.vibrate(100);
         document.getElementById('status-msg').innerText = "DNA LOCKED";
         document.getElementById('status-msg').style.color = "#00FF00";
@@ -204,7 +204,7 @@ class VelocisSovereign {
             }
         }
 
-        // 🛡️ SEAT LOCK: Force profile-based 18K Anchor
+        // 🛡️ SEAT LOCK: Forced profile-based 18K Anchor
         this.passenger.seat = "18K";
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
