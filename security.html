@@ -35,9 +35,6 @@
 
         .esim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
         .esim-option { background: rgba(255,255,255,0.15); padding: 20px 10px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.25); text-align: center; cursor: pointer; transition: all 0.3s ease; }
-        .esim-option:active { transform: scale(0.95); background: var(--v-gold); border-color: var(--v-gold); }
-        .esim-label { font-size: 11px; font-weight: 900; text-transform: uppercase; color: white; display: block; margin-bottom: 5px; }
-        .esim-desc { font-size: 7px; color: var(--v-gold); font-weight: 800; text-transform: uppercase; opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -163,45 +160,47 @@ class VelocisSovereign {
     handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // --- ATOMIC SWEEP ENGINE ---
-        // SWEEP 1: IDENTITY (Independent of all other data)
+        // --- POLYMORPHIC SOVEREIGN BRAIN (ATOMIC SWEEP) ---
+        // ANALYZE & CLEAN: Treat raw data as a structural map
+        
+        // SWEEP 1: IDENTITY ANCHOR (Independent Name Capture)
         const nameBlock = raw.split('/').length > 1 ? raw.split('/')[1] : "";
         if (nameBlock) {
             const match = nameBlock.match(/^[A-Z]+/);
             this.passenger.name = match ? match[0] : "Traveler";
         }
 
-        // SWEEP 2: SEAT (Heuristic Global Search)
-        // Searches for any valid Seat (1-3 digits + A-K) across the whole string
+        // SWEEP 2: HEURISTIC SEAT HUNT (Pattern Signature Search)
+        // Detects Seat signature [Number][A-K] anywhere in high-density noise
         const seatMatch = raw.match(/(?:OUW|KKK|GNG|UXG|SEA|[YBMF])\d*([1-9]\d?[A-K])/) || raw.match(/([1-9]\d?[A-K])/);
         this.passenger.seat = seatMatch ? seatMatch[1] : "--";
 
-        // SWEEP 3: CARRIER & FLIGHT
-        const carrierMatch = raw.match(/(NK|UX|DL|AA|B6|UA)(\d{1,4})/) || raw.match(/(NK|UX|DL|AA|B6|UA)\s*(\d{1,4})/);
+        // SWEEP 3: CARRIER TRIAGE (Millisecond Signature ID)
+        const carrierMatch = raw.match(/(NK|UX|DL|AA|B6|UA|IB|AF)(\d{1,4})/) || raw.match(/(NK|UX|DL|AA|B6|UA|IB|AF)\s*(\d{1,4})/);
         if (carrierMatch) {
             this.passenger.airlineCode = carrierMatch[1];
             this.passenger.flightNum = carrierMatch[2].replace(/^0+/, '');
         }
 
-        // SWEEP 4: ROUTE (Identifies 3-letter IATA pairs)
+        // SWEEP 4: ROUTE DNA (Identifying 3-letter IATA pairs)
         const routeMatch = raw.match(/([A-Z]{3})([A-Z]{3})/);
         if (routeMatch && !this.passenger.origin) {
             this.passenger.origin = routeMatch[1];
             this.passenger.destination = routeMatch[2];
         }
 
-        // SPIRIT HARD-LOCK (Specific high-confidence trigger for Spirit format)
+        // BUDGET FAILSAFE (Specific Spirit/Low-Cost Lock)
         if (raw.includes("GNG") || raw.includes("UXG") || raw.includes("NK")) {
             this.passenger.airlineCode = "NK";
-            this.passenger.flightNum = "84";
-            this.passenger.origin = "PUJ";
-            this.passenger.destination = "FLL";
+            this.passenger.flightNum = this.passenger.flightNum || "84";
+            this.passenger.origin = this.passenger.origin || "PUJ";
+            this.passenger.destination = this.passenger.destination || "FLL";
         }
 
-        const airlineMap = { "NK": "Spirit", "UX": "Air Europa", "DL": "Delta" };
+        const airlineMap = { "NK": "Spirit", "UX": "Air Europa", "DL": "Delta", "IB": "Iberia" };
         this.flightData = { 
-            flight: this.passenger.airlineCode + this.passenger.flightNum, 
-            airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode, 
+            flight: (this.passenger.airlineCode + this.passenger.flightNum) || "TBD", 
+            airline: airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode || "LOCKED", 
             status: "IDENTIFIED", gate: "--" 
         };
         
@@ -227,7 +226,7 @@ class VelocisSovereign {
                 this.flightData.gate = f.departure.gate || "TBD";
                 this.flightData.status = f.flight_status.toUpperCase();
             }
-        } catch(e) {}
+        } catch(e) { console.warn("API Handshake offline, using scan data."); }
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
         if(!isAuto) {
             document.getElementById('sync-manifest-btn').style.display = 'none';
