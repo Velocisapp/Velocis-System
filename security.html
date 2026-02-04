@@ -162,7 +162,7 @@ class VelocisSovereign {
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
         try {
-            // Lower FPS (8) for better density handling on mobile screens
+            // 🛡️ STABILITY FIX: Low FPS (8) to force focus on high-density Spirit barcode
             await this.scanner.start({ facingMode: "environment" }, { fps: 8, qrbox: 280 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
@@ -170,7 +170,7 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // 🛡️ CALIBRATION GATE: Only trigger on high-confidence airline DNA markers
+        // 🛡️ STABILITY CALIBRATION: Reject noise like "KKK" or "QOUR"
         const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("KK4");
         const isStandard = raw.match(/([A-Z]{3})([A-Z]{3})/);
 
@@ -180,12 +180,12 @@ class VelocisSovereign {
             return;
         }
 
-        // 🛡️ SOVEREIGN HANDSHAKE: Successful lock found
+        // 🛡️ HANDSHAKE SUCCESS: Feedback triggers
         if (window.navigator.vibrate) window.navigator.vibrate(100);
         document.getElementById('status-msg').innerText = "DNA LOCKED";
         document.getElementById('status-msg').style.color = "#00FF00";
 
-        // 🛡️ NAME LOCK
+        // 🛡️ IDENTITY LOCK
         this.passenger.name = "Yourden";
 
         // 🛡️ SURGICAL ANCHOR (PUJ FIXED)
@@ -204,7 +204,7 @@ class VelocisSovereign {
             }
         }
 
-        // 🛡️ SEAT LOCK: Forced profile-based 18K Anchor
+        // 🛡️ SEAT ANCHOR
         this.passenger.seat = "18K";
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
