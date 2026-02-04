@@ -37,7 +37,6 @@
         .esim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
         .esim-option { background: rgba(255,255,255,0.15); padding: 20px 10px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.25); text-align: center; cursor: pointer; transition: all 0.3s ease; }
         .esim-option:active { transform: scale(0.95); background: var(--v-gold); border-color: var(--v-gold); }
-        .esim-option:active span { color: black !important; }
         .esim-label { font-size: 11px; font-weight: 900; text-transform: uppercase; color: white; display: block; margin-bottom: 5px; }
         .esim-desc { font-size: 7px; color: var(--v-gold); font-weight: 800; text-transform: uppercase; opacity: 0.9; }
     </style>
@@ -126,7 +125,7 @@
         </div>
         <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
         <div style="color:white; margin-top:20px; font-size:18px; line-height:1.4;">
-            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, local transit for <br><span id="arrival-context-text" style="font-weight:800; color: var(--v-gold);">Destination</span> will activate here.
+            <span class="dyn-passenger-name" style="color:var(--v-gold); font-weight:800;">Traveler</span>, baggage claim for <br><span id="arrival-context-text" style="font-weight:800; color: var(--v-gold);">Destination</span> will activate here.
         </div>
     </div>
 </div>
@@ -170,18 +169,19 @@ class VelocisSovereign {
     handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // DYNAMIC NAME EXTRACTION
+        // 🛡️ DYNAMIC IDENTITY: Extract name from IATA slash pattern
         if (raw.includes('/')) {
             let segments = raw.split('/');
             let nameMatch = segments[1].match(/^[A-Z]+/);
             this.passenger.name = nameMatch ? nameMatch[0] : "Traveler";
         }
 
-        // SURGICAL SEAT RECOVERY (Targets Spirit noise while staying dynamic)
-        const seatMatch = raw.match(/(?:OUW|KKK|UXG|GNG|[YBMF])\d*([1-9]\d?[A-K])/) || raw.match(/([1-9]\d?[A-K])/);
-        this.passenger.seat = seatMatch ? seatMatch[1] : "--";
+        // 🧠 HEURISTIC SEAT SEARCH: Pattern scanning ignores Spirit noise
+        // Search priorities: Alpha-prefixed seat (Standard) or standalone 1-3 digit + letter (Low-cost)
+        const heuristicMatch = raw.match(/(?:OUW|KKK|UXG|GNG|[YBMF])\d*([1-9]\d?[A-K])/) || raw.match(/([1-9]\d?[A-K])/);
+        this.passenger.seat = heuristicMatch ? heuristicMatch[1] : "--";
 
-        // ROUTE DETECTION
+        // 🌍 DYNAMIC ROUTE DETECTION
         const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("NK");
         if (isSpirit) {
             this.passenger.origin = "PUJ";
