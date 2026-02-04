@@ -162,7 +162,7 @@ class VelocisSovereign {
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
         try {
-            // STABILITY ENHANCEMENT: Lowering FPS to 8 ensures better focus on high-density Spirit lines
+            // STABILITY FIX: Low FPS (8) forces camera to achieve deep focus on dense barcodes
             await this.scanner.start({ facingMode: "environment" }, { fps: 8, qrbox: 280 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
@@ -170,7 +170,7 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // CALIBRATION GATE: Ignore messy data fragments
+        // CALIBRATION GATE: Ignore messy fragments like "KKK"
         const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("KK4");
         const isStandard = raw.match(/([A-Z]{3})([A-Z]{3})/);
 
@@ -180,15 +180,15 @@ class VelocisSovereign {
             return;
         }
 
-        // PHYSICAL FEEDBACK: Trigger vibration on successful handshake
+        // PHYSICAL HANDSHAKE: Vibrate and visual lock
         if (window.navigator.vibrate) window.navigator.vibrate(100);
         document.getElementById('status-msg').innerText = "DNA LOCKED";
         document.getElementById('status-msg').style.color = "#00FF00";
 
-        // IDENTITY LOCK
+        // IDENTITY ANCHOR
         this.passenger.name = "Yourden";
 
-        // SURGICAL ANCHORS (PUJ FIXED)
+        // SURGICAL DNA MAPPING (PUJ FIXED)
         if (isSpirit) {
             this.passenger.origin = "PUJ";      
             this.passenger.destination = "FLL"; 
@@ -204,7 +204,7 @@ class VelocisSovereign {
             }
         }
 
-        // SEAT PROFILE ANCHOR
+        // SEAT LOCK
         this.passenger.seat = "18K";
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
@@ -217,7 +217,6 @@ class VelocisSovereign {
         
         localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
         localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        
         if(this.scanner) await this.scanner.stop(); 
         document.getElementById('reader').style.display = 'none'; 
         document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
