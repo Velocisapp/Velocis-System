@@ -161,7 +161,7 @@ class VelocisSovereign {
         const raw = data.toUpperCase().trim();
         
         // --- POLYMORPHIC SOVEREIGN BRAIN (ATOMIC SWEEP) ---
-        // ANALYZE & CLEAN: Treat raw data as a structural map
+        // ANALYZE & CLEAN: Treat raw data as a structural map 
         
         // SWEEP 1: IDENTITY ANCHOR (Independent Name Capture)
         const nameBlock = raw.split('/').length > 1 ? raw.split('/')[1] : "";
@@ -175,21 +175,21 @@ class VelocisSovereign {
         const seatMatch = raw.match(/(?:OUW|KKK|GNG|UXG|SEA|[YBMF])\d*([1-9]\d?[A-K])/) || raw.match(/([1-9]\d?[A-K])/);
         this.passenger.seat = seatMatch ? seatMatch[1] : "--";
 
-        // SWEEP 3: CARRIER TRIAGE (Millisecond Signature ID)
+        // SWEEP 3: CARRIER TRIAGE (Signature ID)
         const carrierMatch = raw.match(/(NK|UX|DL|AA|B6|UA|IB|AF)(\d{1,4})/) || raw.match(/(NK|UX|DL|AA|B6|UA|IB|AF)\s*(\d{1,4})/);
         if (carrierMatch) {
             this.passenger.airlineCode = carrierMatch[1];
             this.passenger.flightNum = carrierMatch[2].replace(/^0+/, '');
         }
 
-        // SWEEP 4: ROUTE DNA (Identifying 3-letter IATA pairs)
+        // SWEEP 4: ROUTE DNA (Identifying IATA pairs)
         const routeMatch = raw.match(/([A-Z]{3})([A-Z]{3})/);
         if (routeMatch && !this.passenger.origin) {
             this.passenger.origin = routeMatch[1];
             this.passenger.destination = routeMatch[2];
         }
 
-        // BUDGET FAILSAFE (Specific Spirit/Low-Cost Lock)
+        // BUDGET FAILSAFE (Specific Spirit/Low-Cost Lock) 
         if (raw.includes("GNG") || raw.includes("UXG") || raw.includes("NK")) {
             this.passenger.airlineCode = "NK";
             this.passenger.flightNum = this.passenger.flightNum || "84";
