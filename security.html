@@ -162,7 +162,7 @@ class VelocisSovereign {
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
         try {
-            // 🛡️ STABILITY FIX: Low FPS (8) to force focus on high-density Spirit barcode
+            // 🛡️ STABILITY FIX: Low FPS (8) to force camera focus on dense Spirit barcode
             await this.scanner.start({ facingMode: "environment" }, { fps: 8, qrbox: 280 }, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
@@ -204,7 +204,7 @@ class VelocisSovereign {
             }
         }
 
-        // 🛡️ SEAT ANCHOR
+        // 🛡️ SEAT ANCHOR: Forced profile-based 18K Anchor to ignore security noise
         this.passenger.seat = "18K";
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
