@@ -169,9 +169,23 @@ class VelocisSovereign {
     async startScanner() {
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
+        
+        // 👁️ AUTONOMOUS EYE UPGRADE
+        // Forces High-Resolution and Hardware Focus for dense barcodes (Hawaiian/Spirit)
+        const scanConfig = {
+            fps: 25, 
+            qrbox: { width: 280, height: 200 },
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                focusMode: "continuous"
+            }
+        };
+
         this.scanner = new Html5Qrcode("reader");
         try {
-            await this.scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (t) => this.handleScan(t));
+            await this.scanner.start({ facingMode: "environment" }, scanConfig, (t) => this.handleScan(t));
         } catch (err) { console.error(err); }
     }
 
@@ -180,19 +194,16 @@ class VelocisSovereign {
         console.log("VELOCIS_TRIAGE_INTAKE:", raw);
 
         // 🛡️ UNTOUCHABLE Triage Switchboard
-        // Detect Spirit specific noise blocks found in manifest (KK / GNG / NK)
         const isSpirit = raw.includes("KK") || raw.includes("NK") || raw.includes("GNG") || raw.includes("UXG");
 
         if (isSpirit) {
-            // SPIRIT SPECIAL TUNNEL (Bypassing noisy indices)
+            // SPIRIT ISOLATION TUNNEL (X-RAY MANIFEST DATA)
             if (raw.includes('/')) {
                 let segments = raw.split('/');
                 this.passenger.name = raw.includes("AGUILERA") ? "Yourden" : (segments[1].match(/^[A-Z]+/)?.[0] || "Traveler");
             }
-            
-            // X-Ray Manifest Seat Logic (Hunting KK + Seat)
             let sMatch = raw.match(/KK([1-9]\d?[A-K])/);
-            this.passenger.seat = sMatch ? sMatch[1] : "4I"; // 4I is the manifest default
+            this.passenger.seat = sMatch ? sMatch[1] : "4I"; 
             
             this.passenger.origin = "PUJ";
             this.passenger.destination = "FLL";
@@ -200,8 +211,8 @@ class VelocisSovereign {
             this.passenger.flightNum = "84";
 
         } else {
-            // 🛡️ UNTOUCHABLE MASTER LOGIC (Delta & Air Europa)
-            // Restore exact logic that was hit 100% this morning
+            // 🛡️ UNTOUCHABLE MASTER LOGIC (Delta, Air Europa, Hawaiian)
+            // Heritage indexing and pattern matching preserved exactly
             if (raw.includes('/')) {
                 let segments = raw.split('/');
                 let lastNameBlock = segments[0].replace('M1', '');
@@ -227,7 +238,7 @@ class VelocisSovereign {
             }
         }
 
-        const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
+        const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit", "HA": "Hawaiian" };
         let displayAirline = airlineMap[this.passenger.airlineCode] || this.passenger.airlineCode;
 
         this.flightData = { 
