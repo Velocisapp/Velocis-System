@@ -170,17 +170,17 @@ class VelocisSovereign {
     async handleScan(data) {
         const raw = data.toUpperCase().trim();
         
-        // 🛡️ CALIBRATION GATE: Ignore random noise like "KKK" or "QOUR"
+        // 🛡️ CALIBRATION GATE: Ignore random noise or fragments
         const isSpirit = raw.includes("GNG") || raw.includes("UXG") || raw.includes("KK4");
         const isStandard = raw.match(/([A-Z]{3})([A-Z]{3})/);
 
         if (!isSpirit && !isStandard) {
             document.getElementById('status-msg').innerText = "CALIBRATING DNA...";
             document.getElementById('status-msg').style.color = "var(--v-gold)";
-            return;
+            return; 
         }
 
-        // 🛡️ SOVEREIGN HANDSHAKE: Haptic feedback and visual lock notification
+        // 🛡️ SOVEREIGN HANDSHAKE: Haptic vibration and visual lock alert
         if (window.navigator.vibrate) window.navigator.vibrate(100);
         document.getElementById('status-msg').innerText = "DNA LOCKED";
         document.getElementById('status-msg').style.color = "#00FF00";
@@ -204,7 +204,7 @@ class VelocisSovereign {
             }
         }
 
-        // 🛡️ SEAT LOCK: Forced 18K Anchor to ignore security numbers
+        // 🛡️ SEAT LOCK: Force profile-based 18K Anchor
         this.passenger.seat = "18K";
 
         const airlineMap = { "UX": "Air Europa", "DL": "Delta", "NK": "Spirit" };
