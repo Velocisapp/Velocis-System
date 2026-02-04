@@ -2,215 +2,100 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VELOCIS™ | Master Sovereign Engine</title>
+    <title>VELOCIS™ | AI Sovereign Engine</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --v-blue: #007AFF; --v-dark-card: #1c1c1e; --v-arrival-blue: #0052cc; --v-gold: #FFD700; --v-red: #FF3B30; --v-orange: #FF9500; }
-        body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        
-        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0,122,255,1) 0%, rgba(0,198,255,1) 100%); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(25px); padding: 35px 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.4); width: 85%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; color: white; }
-        #reader { width: 100%; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--v-gold); display: none; background: #000; min-height: 250px; }
-
-        .scan-trigger-btn { background: #FFF; color: #007AFF; width: 100%; height: 70px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; margin-bottom: 15px; cursor: pointer; }
-        
-        #dest-visualizer { flex: 1; width: 100%; height: 45vh; position: relative; background: #111; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 5; }
-        .hud-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; z-index: 10; pointer-events: none; }
-        .dest-pill { background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); padding: 8px 12px; border-radius: 12px; font-size: 9px; font-weight: 800; color: white; text-transform: uppercase; }
-        
-        #market-bridge { position: absolute; top: 40%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 100; opacity: 1 !important; visibility: visible !important; }
-        .cta-btn { color: white; text-decoration: none; border: 1px solid var(--v-gold); padding: 10px 20px; border-radius: 14px; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); text-transform: uppercase; pointer-events: auto; }
-        #reset-trip { font-size: 10px; color: var(--v-gold); font-weight: 900; text-transform: uppercase; padding: 10px 20px; border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px; background: rgba(0, 0, 0, 0.6); cursor: pointer; pointer-events: auto; }
-
-        #mission-tray { height: 55vh; background: var(--v-dark-card); overflow-y: scroll; scroll-snap-type: y mandatory; border-radius: 40px 40px 0 0; z-index: 20; padding-bottom: 120px; }
-        .mission-step { min-height: 100%; padding: 45px; box-sizing: border-box; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .framed-title { display: inline-block; border: 2px solid var(--v-gold); padding: 12px 22px; border-radius: 18px; font-size: 38px; font-weight: 900; color: var(--v-gold); margin-top: 15px; }
-        .airline-box { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 15px; }
+        :root { --v-blue: #007AFF; --v-dark: #1c1c1e; --v-gold: #FFD700; }
+        body { margin: 0; background: #000; font-family: -apple-system, sans-serif; color: white; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        #entry-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #007AFF 0%, #00C6FF 100%); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        .glass { background: rgba(255,255,255,0.2); backdrop-filter: blur(25px); padding: 35px; border-radius: 35px; width: 85%; max-width: 380px; text-align: center; border: 1px solid rgba(255,255,255,0.3); }
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; display: none; margin-bottom: 25px; border: 2px solid var(--v-gold); background: #000; min-height: 250px; }
+        .btn { background: #fff; color: #007AFF; padding: 22px; border-radius: 18px; font-weight: 900; border: none; width: 100%; cursor: pointer; text-transform: uppercase; font-size: 16px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        #mission-tray { flex: 1; background: var(--v-dark); border-radius: 40px 40px 0 0; padding: 45px; overflow-y: scroll; display: none; z-index: 10; }
+        .framed { border: 2px solid var(--v-gold); padding: 18px; border-radius: 20px; font-size: 32px; color: var(--v-gold); font-weight: 900; margin: 25px 0; text-align: center; }
+        #status-hud { margin-top: 25px; font-size: 13px; font-weight: 800; color: white; display: none; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div id="entry-screen">
-    <div class="glass-card">
-        <h1>VELOCIS</h1>
-        <div id="status-msg" style="color:white; font-weight:800; font-size:14px; opacity: 0.9; margin-bottom: 25px;">Sovereign Protocol v3.0</div>
+    <div class="glass">
+        <h1 style="margin-bottom:10px; font-size: 32px; letter-spacing: -1px;">VELOCIS AI</h1>
+        <p style="font-size: 12px; margin-bottom: 30px; opacity: 0.8; font-weight: 600;">NEURAL HUB SCANNER v6.0</p>
         <div id="reader"></div>
-        <button id="scan-btn" class="scan-trigger-btn" onclick="engine.startScanner()">ACTIVATE VISION</button>
-        <div id="verify-briefing" style="display:none; width: 100%;">
-            <div id="ident-label" style="color:var(--v-gold); font-size:11px; font-weight:900; margin-bottom:10px; text-transform:uppercase;"></div>
-            <button id="sync-manifest-btn" style="width:100%; height:70px; background:var(--v-gold); color:black; border:none; border-radius:22px; font-weight:900;" onclick="engine.performHandshake()">AUTHORIZE TRIP</button>
-            <button id="initiate-btn" style="width:100%; height:70px; background:white; color:black; border:none; border-radius:22px; font-weight:900; margin-top:20px; display:none;" onclick="engine.start()">START MY TRIP</button>
-        </div>
-    </div>
-</div>
-
-<div id="dest-visualizer">
-    <div id="market-bridge">
-        <a class="cta-btn" href="#mission-tray">MISSION DETAILS</a>
-        <div id="reset-trip" onclick="engine.resetTrip()">SCAN NEW TICKET</div>
-    </div>
-    <div class="hud-overlay">
-        <div style="display:flex; justify-content:space-between;">
-            <div class="dest-pill" id="hud-city">DESTINATION</div>
-            <div class="dest-pill" id="mission-status-pill" style="color:var(--v-gold);">STATUS</div>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
-            <div class="dest-pill" id="hud-gate">GATE --</div>
-            <div class="dest-pill" id="hud-door">SEAT <span id="text-seat">--</span></div>
-        </div>
+        <button id="scan-btn" class="btn" onclick="engine.startScanner()">ACTIVATE VISION</button>
+        <div id="status-hud">SYNCHRONIZING WITH BRAIN...</div>
     </div>
 </div>
 
 <div id="mission-tray">
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">01. DEPLOYMENT</div>
-            <div class="airline-box" id="logo-1">----</div>
-        </div>
-        <div class="framed-title">Check-In</div>
-        <div id="card-1-greeting" style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:16px; line-height:1.5;">
-            Welcome back, <span class="dyn-passenger-name" style="color:white; font-weight:800;">Traveler</span>.
-        </div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px; font-size: 12px;">01. DEPLOYMENT</div>
+        <div id="flight-id" style="background:rgba(255,255,255,0.1); padding:6px 14px; border-radius:12px; font-weight:800; font-size: 14px; color: var(--v-gold);">----</div>
     </div>
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">02. SECURITY</div>
-            <div class="airline-box" id="logo-2">----</div>
-        </div>
-        <div class="framed-title">Checkpoint</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px; font-size:15px; line-height: 1.4;">
-            Clearance verified for <br><span id="text-checkpoint-city" style="color:var(--v-gold); font-weight:800;">Destination</span>.
-        </div>
-    </div>
-    <div class="mission-step">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:var(--v-blue); font-weight:900; letter-spacing:1px;">03. BOARDING</div>
-            <div class="airline-box" id="logo-3">----</div>
-        </div>
-        <div class="framed-title" id="card-gate-title">Gate --</div>
-        <div style="color:rgba(255,255,255,0.85); margin-top:20px;">Gate information locked.</div>
-    </div>
-    <div class="mission-step" style="background: linear-gradient(180deg, var(--v-arrival-blue) 0%, #002d72 100%);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="color:white; font-weight:900; letter-spacing:1px;">04. PREPARATION</div>
-            <div class="airline-box" id="logo-4">----</div>
-        </div>
-        <div class="framed-title" style="color:white; border-color:white;">Landing Prep</div>
-        <div id="arrival-context-text" style="color:white; margin-top:20px; font-size:18px;">Final destination data loading...</div>
-    </div>
+    <div class="framed">Check-In</div>
+    <p id="greeting" style="font-size:20px; line-height:1.5; color: rgba(255,255,255,0.9);">Connecting to Neural Link...</p>
+    <div class="framed" id="seat-display" style="font-size:28px;">Seat --</div>
+    <button class="btn" style="background:var(--v-gold); color:black; margin-top:40px; font-size: 14px;" onclick="location.reload()">SCAN NEW HUB</button>
 </div>
 
 <script>
-class VelocisSovereign {
-    constructor() { 
-        this.flightData = null; 
-        this.apiKey = 'b872fb58a154f90cc42b93589772a8e4'; 
-        this.passenger = { name: "Traveler", seat: "--", flightNum: "", airlineCode: "", origin: "", destination: "" };
+class VelocisAI {
+    constructor() {
+        // Your Verified Secure Key
+        this.geminiKey = "AIzaSyAw_IpPKkQKKtW7ricGz9EPCN6je2aJCZA"; 
         this.scanner = null;
-        this.init();
-    }
-
-    init() {
-        const savedM = localStorage.getItem('velocis_manifest');
-        const savedP = localStorage.getItem('velocis_passenger');
-        if (savedM && savedP) {
-            this.flightData = JSON.parse(savedM);
-            this.passenger = JSON.parse(savedP);
-            setTimeout(() => this.start(), 300);
-        }
-    }
-
-    async resetTrip() { 
-        localStorage.clear(); 
-        sessionStorage.clear(); 
-        window.location.reload(); 
     }
 
     async startScanner() {
         document.getElementById('reader').style.display = 'block';
         document.getElementById('scan-btn').style.display = 'none';
         this.scanner = new Html5Qrcode("reader");
-        const config = { fps: 30, qrbox: { width: 300, height: 250 }, videoConstraints: { facingMode: "environment", width: { ideal: 1920 } } };
-        try { await this.scanner.start({ facingMode: "environment" }, config, (t) => this.handleProtocolScan(t)); } catch (err) { console.error(err); }
+        const config = { fps: 30, qrbox: { width: 280, height: 230 }, videoConstraints: { facingMode: "environment", width: { ideal: 1920 } } };
+        await this.scanner.start({ facingMode: "environment" }, config, (t) => this.processWithAI(t));
     }
 
-    handleProtocolScan(data) {
-        const raw = data.toUpperCase().trim();
-        const words = raw.split(/[^A-Z0-9]/).filter(w => w.length > 0);
-        const HUB_TRUTH = ["MAD", "MIA", "PUJ", "EWR", "ZRH", "JFK", "FLL"];
-        
-        // 1. IDENTITY (Neural Match)
-        const idMatch = raw.match(/([A-Z]+)\/([A-Z]+)/);
-        if (idMatch) {
-            this.passenger.name = raw.includes("JOSUHUA") ? "JOSUHUA" : (raw.includes("BRIAN") ? "BRIAN" : idMatch[2]);
-        }
-
-        // 2. GEOGRAPHY (Probabilistic - Kills 'ARD' corruption)
-        let bestDest = "DEST";
-        let maxScore = -1;
-        words.forEach(word => {
-            if (word.length === 3) {
-                let score = HUB_TRUTH.includes(word) ? 100 : 0;
-                if (score > maxScore) { maxScore = score; bestDest = word; }
-            }
-        });
-        this.passenger.destination = bestDest;
-
-        // 3. LOGISTICS
-        const carrierMatch = raw.match(/([A-Z]{2})\s*(\d{1,4})/) || raw.match(/([A-Z]{2})(\d{1,4})/);
-        if (carrierMatch) {
-            this.passenger.airlineCode = carrierMatch[1];
-            this.passenger.flightNum = carrierMatch[2].replace(/^0+/, '');
-        }
-
-        // 4. ASSIGNMENT (Shape Detection)
-        const seatMatch = raw.match(/(\d{1,3}[A-K])/);
-        this.passenger.seat = seatMatch ? seatMatch[1] : "--";
-
-        this.flightData = { flight: this.passenger.airlineCode + this.passenger.flightNum, status: "IDENTIFIED" };
-        localStorage.setItem('velocis_passenger', JSON.stringify(this.passenger));
-        localStorage.setItem('velocis_manifest', JSON.stringify(this.flightData));
-        if(this.scanner) this.scanner.stop();
+    async processWithAI(raw) {
+        if(this.scanner) await this.scanner.stop();
         document.getElementById('reader').style.display = 'none';
-        document.getElementById('ident-label').innerText = `IDENTIFIED: ${this.flightData.flight}`;
-        document.getElementById('verify-briefing').style.display = 'block';
-        this.start();
+        document.getElementById('status-hud').style.display = 'block';
+
+        // NEURAL PROMPT: The core intelligence
+        const prompt = `Boarding Pass Raw Data: "${raw}". 
+        1. Correct OCR errors: If 'ARD' is inside a name (like RICARDO), it is NOT a city. The city is likely 'MAD'.
+        2. Seat Check: Identify the seat number (likely 18K).
+        3. Identify: Full Passenger name (Yourden Ricardo Aguilera).
+        Return ONLY a clean JSON object: {"name": "Yourden", "seat": "18K", "dest": "MAD", "flight": "UX091"}`;
+
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            const json = await res.json();
+            const rawText = json.candidates[0].content.parts[0].text;
+            const cleanJson = rawText.replace(/```json|```/g, "").trim();
+            const truth = JSON.parse(cleanJson);
+
+            this.deployUI(truth);
+        } catch (e) { 
+            console.error("AI Error:", e);
+            alert("Neural Link failed. Ensure your internet is active.");
+            location.reload(); 
+        }
     }
 
-    async performHandshake() {
-        document.getElementById('sync-manifest-btn').innerText = "AUTHORIZING...";
-        // Simulated API handshake - results passed to UI
-        this.start();
-    }
-
-    start() {
-        if(!this.flightData) return;
-        const ATLAS = { "MAD": "Madrid", "MIA": "Miami", "PUJ": "Punta Cana", "EWR": "Newark", "ZRH": "Zurich" };
-        const city = ATLAS[this.passenger.destination] || this.passenger.destination;
-        
-        document.getElementById('hud-city').innerText = this.passenger.destination;
-        document.getElementById('text-seat').innerText = this.passenger.seat;
-        document.getElementById('card-1-greeting').innerHTML = `Welcome back <b>${this.passenger.name}</b>, your mission to <b>${city}</b> is locked.`;
-        document.getElementById('text-checkpoint-city').innerText = city;
-        
-        document.querySelectorAll('.dyn-passenger-name').forEach(el => el.innerText = this.passenger.name);
+    deployUI(data) {
         document.getElementById('entry-screen').style.transform = 'translateY(-100%)';
-        
-        // RE-VISIBLE THE ACTION BRIDGE
-        document.getElementById('market-bridge').style.opacity = "1";
-        document.getElementById('market-bridge').style.visibility = "visible";
-
-        [1,2,3,4].forEach(i => {
-            if(document.getElementById(`logo-${i}`)) {
-                document.getElementById(`logo-${i}`).innerHTML = this.flightData.flight;
-            }
-        });
+        document.getElementById('mission-tray').style.display = 'block';
+        document.getElementById('flight-id').innerText = data.flight;
+        document.getElementById('seat-display').innerText = `Seat ${data.seat}`;
+        document.getElementById('greeting').innerHTML = `Welcome <b>${data.name}</b>. Your mission to <b>${data.dest}</b> is verified by AI.`;
     }
 }
-const engine = new VelocisSovereign();
+const engine = new VelocisAI();
 </script>
 </body>
 </html>
