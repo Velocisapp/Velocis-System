@@ -9,10 +9,9 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: prompt + " Respond ONLY with raw JSON." }, 
+          { text: prompt + " Respond ONLY with a raw JSON object. No markdown, no backticks, no conversational text." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
-        // THIS IS THE FIX: Disable the safety filters that are causing the rejection
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -23,21 +22,20 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    
-    if (data.promptFeedback && data.promptFeedback.blockReason) {
-        return res.status(500).json({ error: "Google Safety Block", details: data.promptFeedback.blockReason });
-    }
-
     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // Safety Net: This regex finds the { } block even if the AI adds "Here is your JSON:"
     const jsonMatch = aiText.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
-      res.status(200).json(JSON.parse(jsonMatch[0]));
+      // Parse the cleaned JSON and send it to the phone
+      const cleanData = JSON.parse(jsonMatch[0]);
+      res.status(200).json(cleanData);
     } else {
-      res.status(500).json({ error: "AI Format Error", raw: aiText });
+      res.status(500).json({ error: "Data Extraction Failed", raw: aiText });
     }
 
   } catch (error) {
-    res.status(500).json({ error: "Neural Link Crash", details: error.message });
+    res.status(500).json({ error: "System Desync", details: error.message });
   }
 }
