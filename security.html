@@ -33,14 +33,17 @@
             <div id="reader"></div>
             <div class="scan-line"></div>
         </div>
-        <div id="status-display" class="w-full py-4 border border-[#d4af37] text-[#d4af37] text-center font-bold uppercase rounded-lg opacity-80">
-            Hold Steady Over Ticket
-        </div>
+        
+        <button id="scan-btn" onclick="captureForAI()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-transform">
+            Initialize AI Scan
+        </button>
+        
+        <p class="text-[9px] text-center mt-2 opacity-50 uppercase italic">Barcode auto-detect active | Hold steady before tapping</p>
     </div>
 
     <div id="results-area" class="hidden">
         <div class="grid grid-cols-1 gap-3 mb-8">
-            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">Scan New Ticket</button>
+            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">Reset Mission</button>
         </div>
 
         <div id="card1" class="card">
@@ -58,12 +61,11 @@
 
     <script>
         const html5QrCode = new Html5Qrcode("reader");
-        const statusDisplay = document.getElementById('status-display');
+        const btn = document.getElementById('scan-btn');
         const originPill = document.getElementById('origin-pill');
         let isProcessing = false;
 
-        // FIXED: Removed strict aspectRatio to fix the "zoomed" cropping
-        // Optimized for iPhone wide-angle sensors
+        // FIXED CONFIG: Wide-angle sensor access without cropping
         const config = { 
             fps: 10, 
             videoConstraints: {
@@ -72,27 +74,26 @@
             }
         };
 
+        // Initialize Barcode Engine (Fast-Track)
         html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
             if (!isProcessing) processData(null, decodedText);
         }).catch(err => console.error("Camera Init Error", err));
 
-        const aiLoop = setInterval(() => {
-            if (!isProcessing && html5QrCode.isScanning) {
-                captureForAI();
-            }
-        }, 4000);
-
+        // MANUAL AI TRIGGER
         async function captureForAI() {
+            if (isProcessing) return;
             isProcessing = true;
+
+            btn.innerText = "LINKING...";
+            btn.classList.add('opacity-50');
             originPill.innerText = "ANALYZING...";
             originPill.classList.add('animate-pulse');
 
             try {
                 const videoElement = document.querySelector('#reader video');
-                if (!videoElement) throw new Error("Video element not found");
-
                 const canvas = document.createElement('canvas');
-                // Capture at 1024px width for sharp text extraction
+                
+                // High-resolution capture for OCR
                 canvas.width = 1024; 
                 canvas.height = videoElement.videoHeight * (1024 / videoElement.videoWidth);
                 const ctx = canvas.getContext('2d');
@@ -106,24 +107,17 @@
                 });
                 
                 const data = await res.json();
+                handleResponse(data);
 
-                if (data.name && data.name !== "---" && !data.error) {
-                    clearInterval(aiLoop);
-                    handleResponse(data);
-                } else {
-                    isProcessing = false;
-                    originPill.innerText = "READY";
-                    originPill.classList.remove('animate-pulse');
-                }
             } catch (e) {
                 console.error("AI Capture Error:", e);
-                isProcessing = false;
+                resetUI();
             }
         }
 
         async function processData(image, rawBarcode) {
             isProcessing = true;
-            statusDisplay.innerText = "BARCODE DETECTED...";
+            originPill.innerText = "INTEL DETECTED...";
             
             const res = await fetch('/api/scan.js', {
                 method: 'POST',
@@ -135,17 +129,28 @@
 
         function handleResponse(data) {
             if (html5QrCode.isScanning) html5QrCode.stop();
+            
             document.getElementById('scanner-section').style.display = 'none';
             document.getElementById('results-area').classList.remove('hidden');
             document.getElementById('debug-log').style.display = 'block';
             document.getElementById('debug-text').innerText = JSON.stringify(data);
+
             document.getElementById('user-name').innerText = data.name || "Commander";
             document.getElementById('dep-city').innerText = data.origin || "---";
             document.getElementById('arr-city').innerText = data.destination || "---";
             document.getElementById('counter-info').innerText = data.airline || "---";
+
             document.querySelectorAll('.card').forEach((c, i) => {
                 setTimeout(() => c.style.display = 'block', i * 200);
             });
+        }
+
+        function resetUI() {
+            isProcessing = false;
+            btn.innerText = "Initialize AI Scan";
+            btn.classList.remove('opacity-50');
+            originPill.innerText = "READY";
+            originPill.classList.remove('animate-pulse');
         }
     </script>
 </body>
