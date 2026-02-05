@@ -1,22 +1,31 @@
 export default async function handler(req, res) {
   try {
-    const { image, prompt } = JSON.parse(req.body);
+    // Universal Body Loader (Fixes the "undefined" crash)
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const { image, prompt } = body;
+    
     const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "API Key Missing from Vercel Settings" });
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt + " Respond ONLY with raw JSON. No markdown." }, { inline_data: { mime_type: "image/jpeg", data: image } }] }]
+        contents: [{ parts: [
+          { text: prompt + " Respond ONLY with raw JSON. No markdown." }, 
+          { inline_data: { mime_type: "image/jpeg", data: image } }
+        ]}]
       })
     });
 
     const data = await response.json();
     
-    // Extracting the text safely
-    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    
-    // Safety Net: Find the JSON block even if the AI adds extra words
+    // Safety check for Google's response
+    if (!data.candidates || !data.candidates[0]) {
+        return res.status(500).json({ error: "Google AI Rejected Request", details: data });
+    }
+
+    const aiText = data.candidates[0].content.parts[0].text || "";
     const jsonMatch = aiText.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
@@ -26,6 +35,6 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
-    res.status(500).json({ error: "System Reset Required", details: error.message });
+    res.status(500).json({ error: "Neural Link Crash", details: error.message });
   }
 }
