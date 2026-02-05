@@ -3,6 +3,9 @@ export default async function handler(req, res) {
     const { image, prompt } = JSON.parse(req.body);
     const apiKey = process.env.GEMINI_API_KEY;
 
+    // Check 1: Is the key even there?
+    if (!apiKey) return res.status(500).json({ error: "API Key Missing from Vercel" });
+
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -13,20 +16,17 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     
-    if (!data.candidates || !data.candidates[0].content) {
-       return res.status(500).json({ error: "AI could not read the ticket" });
+    // Check 2: What did Google say?
+    if (data.error) {
+       return res.status(500).json({ error: `Google Error: ${data.error.message}` });
     }
 
-    let aiText = data.candidates[0].content.parts[0].text;
-    
-    // Safety Net: Find the JSON inside the text no matter what
+    const aiText = data.candidates[0].content.parts[0].text;
     const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      res.status(200).json(JSON.parse(jsonMatch[0]));
-    } else {
-      res.status(500).json({ error: "Invalid AI Format" });
-    }
+    res.status(200).json(JSON.parse(jsonMatch[0]));
+
   } catch (error) {
-    res.status(500).json({ error: "Neural Link Processing Failed" });
+    // This is what you are seeing now. Let's make it tell us the truth:
+    res.status(500).json({ error: "AI Engine Crash", details: error.message });
   }
 }
