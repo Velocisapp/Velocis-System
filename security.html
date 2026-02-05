@@ -62,14 +62,13 @@
         const originPill = document.getElementById('origin-pill');
         let isProcessing = false;
 
-        // FIXED CONFIG: Removed strict aspectRatio to fix the "zoomed" camera view
+        // FIXED: Removed strict aspectRatio to fix the "zoomed" cropping
+        // Optimized for iPhone wide-angle sensors
         const config = { 
             fps: 10, 
-            qrbox: { width: 280, height: 280 },
             videoConstraints: {
                 facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                focusMode: "continuous"
             }
         };
 
@@ -93,7 +92,8 @@
                 if (!videoElement) throw new Error("Video element not found");
 
                 const canvas = document.createElement('canvas');
-                canvas.width = 1024; // High resolution for OCR
+                // Capture at 1024px width for sharp text extraction
+                canvas.width = 1024; 
                 canvas.height = videoElement.videoHeight * (1024 / videoElement.videoWidth);
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
