@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ | MISSION CONTROL</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { background: #000; color: #d4af37; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
         .pill { background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; border-radius: 50px; padding: 4px 12px; font-size: 10px; font-weight: bold; }
@@ -13,9 +14,11 @@
         .card { background: rgba(20, 20, 20, 0.95); border-left: 3px solid #d4af37; padding: 15px; margin-bottom: 12px; display: none; animation: slideUp 0.5s ease-out forwards; }
         .blue-label { color: #3b82f6; font-size: 10px; font-weight: bold; letter-spacing: 1px; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .scan-line { position: absolute; width: 100%; height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; z-index: 10; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; z-index: 10; pointer-events: none; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
         #debug-log { background: #111; border: 1px dashed #d4af37; color: #fff; font-size: 9px; padding: 10px; margin-top: 20px; word-break: break-all; opacity: 0.8; display: none; }
+        #reader { width: 100% !important; border: none !important; }
+        #reader video { object-fit: cover !important; }
     </style>
 </head>
 <body class="p-6">
@@ -27,10 +30,11 @@
 
     <div id="scanner-section">
         <div id="scanner-container" class="relative w-full aspect-[4/3] border border-[#d4af37]/40 rounded-lg overflow-hidden mb-6">
-            <video id="camera" class="w-full h-full object-cover" autoplay playsinline></video>
+            <div id="reader"></div>
             <div class="scan-line"></div>
         </div>
-        <button id="scan-btn" onclick="runAIScan()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg">Initialize Scan</button>
+        <button id="scan-btn" onclick="captureForAI()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg">Initialize AI Scan</button>
+        <p class="text-[9px] text-center mt-2 opacity-50 uppercase italic">Barcode auto-detection active...</p>
     </div>
 
     <div id="results-area" class="hidden">
@@ -51,39 +55,51 @@
         </div>
     </div>
 
-    <div id="error-overlay" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-10 text-center z-[100]">
-        <div>
-            <p id="error-title" class="text-red-500 font-bold mb-2">NEURAL LINK FAILED</p>
-            <p id="error-msg" class="text-white text-[10px] opacity-60 uppercase mb-6"></p>
-            <button onclick="location.reload()" class="px-6 py-2 border border-red-500 text-red-500 text-[10px] uppercase">Retry Handshake</button>
-        </div>
-    </div>
-
     <script>
-        const video = document.getElementById('camera');
-        
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(s => video.srcObject = s);
+        const html5QrCode = new Html5Qrcode("reader");
+        const btn = document.getElementById('scan-btn');
+
+        // Start Barcode Scanner immediately
+        const config = { 
+            fps: 15, 
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.333334
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config,
+            (decodedText) => {
+                // BARCODE SUCCESS: Skip AI, process data directly
+                processBarcode(decodedText);
+                html5QrCode.stop();
+            }
+        ).catch(err => console.error("Camera access failed", err));
+
+        async function processBarcode(raw) {
+            btn.innerText = "BARCODE DETECTED...";
+            // We send raw barcode to AI to "translate" it into readable JSON
+            const res = await fetch('/api/scan.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: null, rawBarcode: raw })
+            });
+            handleResponse(await res.json());
         }
 
-        async function runAIScan() {
-            const btn = document.getElementById('scan-btn');
-            const debugWindow = document.getElementById('debug-log');
-            const debugText = document.getElementById('debug-text');
-            
-            btn.innerText = "LINKING...";
+        async function captureForAI() {
+            btn.innerText = "CAPTURING...";
             btn.disabled = true;
             
             try {
-                const canvas = document.createElement('canvas');
-                const targetWidth = 600; 
-                const scale = targetWidth / video.videoWidth;
-                canvas.width = targetWidth;
-                canvas.height = video.videoHeight * scale;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                // Capture current frame as image
+                const canvas = document.querySelector('#reader video');
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.videoWidth;
+                tempCanvas.height = canvas.videoHeight;
+                const ctx = tempCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, 0);
+                const image = tempCanvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
                 const res = await fetch('/api/scan.js', {
                     method: 'POST',
@@ -91,32 +107,29 @@
                     body: JSON.stringify({ image })
                 });
                 
-                const data = await res.json();
-                
-                // Always show debug window on result area
-                document.getElementById('scanner-section').style.display = 'none';
-                document.getElementById('results-area').classList.remove('hidden');
-                debugWindow.style.display = 'block';
-
-                if (!res.ok) {
-                    debugText.innerText = "ERROR FROM SERVER: " + (data.raw || data.error || "Unknown Error");
-                    throw new Error("Extraction Failed");
-                }
-
-                debugText.innerText = "SUCCESS: " + JSON.stringify(data);
-
-                document.getElementById('user-name').innerText = data.name || "Commander";
-                document.getElementById('dep-city').innerText = data.origin || "---";
-                document.getElementById('arr-city').innerText = data.destination || "---";
-                document.getElementById('counter-info').innerText = data.airline || "Airline Detected";
-
-                document.querySelectorAll('.card').forEach((c, i) => {
-                    setTimeout(() => c.style.display = 'block', i * 200);
-                });
-
+                handleResponse(await res.json());
             } catch (e) {
                 console.error(e);
+                btn.innerText = "SCAN FAILED";
+                btn.disabled = false;
             }
+        }
+
+        function handleResponse(data) {
+            document.getElementById('scanner-section').style.display = 'none';
+            document.getElementById('results-area').classList.remove('hidden');
+            document.getElementById('debug-log').style.display = 'block';
+            document.getElementById('debug-text').innerText = JSON.stringify(data);
+
+            document.getElementById('user-name').innerText = data.name || "Commander";
+            document.getElementById('dep-city').innerText = data.origin || "---";
+            document.getElementById('arr-city').innerText = data.destination || "---";
+            document.getElementById('counter-info').innerText = data.airline || "Airline Detected";
+
+            document.querySelectorAll('.card').forEach((c, i) => {
+                setTimeout(() => c.style.display = 'block', i * 200);
+            });
+            if(html5QrCode.isScanning) html5QrCode.stop();
         }
     </script>
 </body>
