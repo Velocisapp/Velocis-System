@@ -4,8 +4,8 @@ export default async function handler(req, res) {
     const { image } = body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // FIX: Updated to 'gemini-1.5-flash-latest' to resolve the 404 Model Not Found error
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    // FIX: Switched to stable v1 endpoint and explicit model path to resolve 404 errors
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -39,12 +39,11 @@ export default async function handler(req, res) {
       const jsonStr = aiText.substring(start, end + 1);
       res.status(200).json(JSON.parse(jsonStr));
     } else {
-      // If text is found but not in JSON format, send raw text to the debug window
+      // Send raw text back to the debug window if JSON fails
       res.status(200).json({ name: "DATA FORMAT ERROR", airline: "Check Debug", raw: aiText });
     }
 
   } catch (error) {
-    // Catch-all for server crashes to keep the phone app from freezing
     res.status(200).json({ error: "Server Crash", raw: error.message });
   }
 }
