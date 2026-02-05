@@ -1,17 +1,16 @@
 export default async function handler(req, res) {
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { image } = body;
+    const { image } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // 2026 UPDATE: Using Gemini 2.0 Flash (Stable)
-    // The v1 endpoint is now required for these newer models
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    // 2026 PRODUCTION PATH: Switching to 2.5 Flash-Lite to bypass the "Limit 0" 
+    // bug affecting 2.0 models on new billing accounts.
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: "Extract the name, airline, gate, origin, and destination from this boarding pass. Format as raw JSON only." }, 
+          { text: "Extract: passenger name, airline, flight, gate, origin, destination. Return ONLY raw JSON." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}]
       })
@@ -20,7 +19,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (data.error) {
-        // This will now show the REAL error in your debug box (e.g., "Invalid Key" or "Model retired")
+        // This will now show the REAL error (e.g., if you still need to click "Finish Setup")
         return res.status(200).json({ error: "Google API Error", raw: data.error.message });
     }
 
