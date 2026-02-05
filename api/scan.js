@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: prompt + " I am a traveler in a hurry. Look closely at this image. Extract any name, flight number, airline, and destination you can see. If you aren't sure, give me your best guess. Respond ONLY with a raw JSON object." }, 
+          { text: "Read every word on this ticket carefully. Find the passenger name, flight number, airline, gate, and destination. Even if it's blurry, provide your absolute best guess. Respond ONLY with raw JSON: { \"name\": \"\", \"airline\": \"\", \"gate\": \"\", \"origin\": \"\", \"destination\": \"\" }" }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
         safetySettings: [
@@ -24,18 +24,16 @@ export default async function handler(req, res) {
     const data = await response.json();
     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Find the JSON block even if the AI adds conversation
     const start = aiText.indexOf('{');
     const end = aiText.lastIndexOf('}');
     
     if (start !== -1 && end !== -1) {
-      const jsonString = aiText.substring(start, end + 1);
-      res.status(200).json(JSON.parse(jsonString));
+      res.status(200).json(JSON.parse(aiText.substring(start, end + 1)));
     } else {
-      // This triggers the "Mission Data Obscured" message on your phone
+      // THIS LOGS THE ERROR SO YOU CAN SEE IT ON YOUR IMAC
+      console.log("AI COULD NOT READ IMAGE. RAW RESPONSE:", aiText);
       res.status(500).json({ error: "Mission Data Obscured", raw: aiText });
     }
-
   } catch (error) {
     res.status(500).json({ error: "Neural Desync", details: error.message });
   }
