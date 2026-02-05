@@ -4,28 +4,23 @@ export default async function handler(req, res) {
     const { image } = body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // FIX: Using gemini-1.5-flash-8b on v1beta. This is the "high-availability" model path.
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`, {
+    // 2026 UPDATE: Using Gemini 2.0 Flash (Stable)
+    // The v1 endpoint is now required for these newer models
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: "OCR this boarding pass. Extract: name, airline, gate, origin, destination. Format as raw JSON only." }, 
+          { text: "Extract the name, airline, gate, origin, and destination from this boarding pass. Format as raw JSON only." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
-        ]}],
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-        ]
+        ]}]
       })
     });
 
     const data = await response.json();
     
-    // Check for Google API errors (like the 404 we've been seeing)
     if (data.error) {
+        // This will now show the REAL error in your debug box (e.g., "Invalid Key" or "Model retired")
         return res.status(200).json({ error: "Google API Error", raw: data.error.message });
     }
 
