@@ -4,12 +4,13 @@ export default async function handler(req, res) {
     const { image } = body;
     const apiKey = process.env.GEMINI_API_KEY;
 
+    // Direct, simple fetch to Google
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: "List the text found on this boarding pass for: Name, Airline, Flight Number, Gate, Origin, and Destination. Use 'NOT FOUND' for missing items. Respond ONLY with raw JSON." }, 
+          { text: "OCR this image and extract all text. Format as JSON: { \"name\": \"\", \"airline\": \"\", \"gate\": \"\", \"origin\": \"\", \"destination\": \"\" }. If you can't find info, use '---'." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
         safetySettings: [
@@ -22,21 +23,28 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Clean backticks and extra text
-    aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
+    // Check if Google sent an error (like Quota or Key issue)
+    if (data.error) {
+        return res.status(200).json({ error: "Google API Error", raw: data.error.message });
+    }
+
+    let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI SENT EMPTY RESPONSE";
+    
+    // Attempt to find JSON
     const start = aiText.indexOf('{');
     const end = aiText.lastIndexOf('}');
     
     if (start !== -1 && end !== -1) {
-      res.status(200).json(JSON.parse(aiText.substring(start, end + 1)));
+      const jsonStr = aiText.substring(start, end + 1);
+      res.status(200).json(JSON.parse(jsonStr));
     } else {
-      // Log the actual text the AI sent back to your Vercel Logs
-      console.error("AI RAW RESPONSE:", aiText);
-      res.status(500).json({ error: "Mission Data Obscured", raw: aiText });
+      // SUCCESS: Even if it's not JSON, we send the text back so your debug window can show it
+      res.status(200).json({ name: "SCAN FAILED", airline: "Check Debug", raw: aiText });
     }
+
   } catch (error) {
-    res.status(500).json({ error: "System Desync" });
+    // If the server crashes, it will now send the error message to your phone
+    res.status(200).json({ error: "Server Crash", raw: error.message });
   }
 }
