@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: "Act as a flight logistics officer. Extract: 1. Full Passenger Name 2. Airline Name 3. Flight Number 4. Boarding Gate (if not found, use 'SEE MONITOR') 5. Seat Number 6. Departure City 7. Arrival City. If you see 'ZONA DE EMBARQUE', that is the gate area. Respond ONLY with a raw JSON object." }, 
+          { text: "OCR this boarding pass. Extract the passenger name, flight number, airline, gate, origin, and destination. If a field is missing, use 'SEE MONITOR'. Return ONLY a raw JSON object." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
         safetySettings: [
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Advanced Cleaning to handle backticks or conversational text
+    // This cleans out markdown and conversation to ensure only the JSON remains
     aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
     const start = aiText.indexOf('{');
     const end = aiText.lastIndexOf('}');
@@ -32,9 +32,9 @@ export default async function handler(req, res) {
     if (start !== -1 && end !== -1) {
       res.status(200).json(JSON.parse(aiText.substring(start, end + 1)));
     } else {
-      res.status(500).json({ error: "Intelligence Obscured" });
+      res.status(500).json({ error: "Mission Data Obscured", raw: aiText });
     }
   } catch (error) {
-    res.status(500).json({ error: "System Desync" });
+    res.status(500).json({ error: "System Desync", details: error.message });
   }
 }
