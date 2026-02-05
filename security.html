@@ -91,18 +91,20 @@
             btn.disabled = true;
             
             try {
+                // VISION FIX: 800px width provides much clearer text for the AI
                 const canvas = document.createElement('canvas');
-                const targetWidth = 400;
+                const targetWidth = 800; 
                 const scale = targetWidth / video.videoWidth;
                 canvas.width = targetWidth;
                 canvas.height = video.videoHeight * scale;
                 
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const image = canvas.toDataURL('image/jpeg', 0.3).split(',')[1];
+                
+                // QUALITY BOOST: 0.6 ensures text is readable without being too heavy
+                const image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
-                // NEW SOFT PROMPT: Encourages AI to guess if blurry to avoid "Rejected" status
-                const prompt = "Act as a travel assistant. Scan this ticket and extract: passenger name, airline, gate, origin city, destination city. If blurry, make a best guess. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
+                const prompt = "Act as a travel assistant. Look at this boarding pass and extract: passenger name, airline, gate, origin city, destination city. If blurry, make a best guess based on patterns. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
 
                 const res = await fetch('/api/scan.js', {
                     method: 'POST',
@@ -117,6 +119,7 @@
 
                 const data = await res.json();
                 
+                // UI Mapping
                 document.getElementById('user-name').innerText = data.name || "Commander";
                 document.getElementById('dep-city').innerText = data.origin || "Unknown";
                 document.getElementById('arr-city').innerText = data.destination || "Unknown";
@@ -124,6 +127,7 @@
                 document.getElementById('counter-info').innerText = `Proceed to ${data.airline || 'Airline'} Counters`;
                 document.getElementById('origin-pill').innerText = (data.origin || "Ready").substring(0,3).toUpperCase();
 
+                // Sequence Animation
                 document.getElementById('scanner-section').style.display = 'none';
                 document.getElementById('results-area').classList.remove('hidden');
                 document.querySelectorAll('.card').forEach((c, i) => {
