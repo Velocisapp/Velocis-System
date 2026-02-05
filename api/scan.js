@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: "OCR this boarding pass. Extract the passenger name, flight number, airline, gate, origin, and destination. If a field is missing, use 'SEE MONITOR'. Return ONLY a raw JSON object." }, 
+          { text: "List the text found on this boarding pass for: Name, Airline, Flight Number, Gate, Origin, and Destination. Use 'NOT FOUND' for missing items. Respond ONLY with raw JSON." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
         safetySettings: [
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // This cleans out markdown and conversation to ensure only the JSON remains
+    // Clean backticks and extra text
     aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
     const start = aiText.indexOf('{');
     const end = aiText.lastIndexOf('}');
@@ -32,9 +32,11 @@ export default async function handler(req, res) {
     if (start !== -1 && end !== -1) {
       res.status(200).json(JSON.parse(aiText.substring(start, end + 1)));
     } else {
+      // Log the actual text the AI sent back to your Vercel Logs
+      console.error("AI RAW RESPONSE:", aiText);
       res.status(500).json({ error: "Mission Data Obscured", raw: aiText });
     }
   } catch (error) {
-    res.status(500).json({ error: "System Desync", details: error.message });
+    res.status(500).json({ error: "System Desync" });
   }
 }
