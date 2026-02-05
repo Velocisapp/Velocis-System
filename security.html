@@ -38,12 +38,12 @@
             Initialize AI Scan
         </button>
         
-        <p class="text-[9px] text-center mt-2 opacity-50 uppercase italic">Barcode auto-detect active | Hold steady before tapping</p>
+        <p class="text-[9px] text-center mt-2 opacity-50 uppercase italic">Hold steady and tap button when text is sharp</p>
     </div>
 
     <div id="results-area" class="hidden">
         <div class="grid grid-cols-1 gap-3 mb-8">
-            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">Reset Mission</button>
+            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">New Mission</button>
         </div>
 
         <div id="card1" class="card">
@@ -55,7 +55,7 @@
 
         <div id="debug-log">
             <p style="color: #d4af37; margin-bottom: 5px;">[DEBUG NEURAL LINK RESPONSE]</p>
-            <div id="debug-text">Awaiting data...</div>
+            <div id="debug-text">Awaiting manual trigger...</div>
         </div>
     </div>
 
@@ -65,7 +65,7 @@
         const originPill = document.getElementById('origin-pill');
         let isProcessing = false;
 
-        // FIXED CONFIG: Wide-angle view. No forced aspect ratio zoom.
+        // WIDE-ANGLE CONFIG: No forced aspect ratio or zoom-cropping
         const config = { 
             fps: 10, 
             videoConstraints: {
@@ -74,12 +74,12 @@
             }
         };
 
-        // Initialize Barcode Engine (Silent Background)
+        // Start Barcode Engine (Fast-Track) - Only fires if it sees an Aztec/QR code
         html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
             if (!isProcessing) processData(null, decodedText);
         }).catch(err => console.error("Camera Init Error", err));
 
-        // MANUAL AI TRIGGER: Only fires when YOU tap
+        // THE ONLY TRIGGER: Manual Button Tap
         async function captureForAI() {
             if (isProcessing) return;
             isProcessing = true;
@@ -93,7 +93,7 @@
                 const videoElement = document.querySelector('#reader video');
                 const canvas = document.createElement('canvas');
                 
-                // Higher resolution for OCR accuracy
+                // High-resolution snapshot for AI
                 canvas.width = 1024; 
                 canvas.height = videoElement.videoHeight * (1024 / videoElement.videoWidth);
                 const ctx = canvas.getContext('2d');
@@ -110,7 +110,7 @@
                 handleResponse(data);
 
             } catch (e) {
-                console.error("AI Capture Error:", e);
+                console.error("Manual Capture Error:", e);
                 resetUI();
             }
         }
