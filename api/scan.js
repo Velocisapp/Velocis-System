@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: prompt + " Respond with a JSON object. If you cannot find a piece of data, put 'TBD'." }, 
+          { text: prompt + " I am a traveler in a hurry. Look closely at this image. Extract any name, flight number, airline, and destination you can see. If you aren't sure, give me your best guess. Respond ONLY with a raw JSON object." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
         safetySettings: [
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // NEW LOGIC: This finds the FIRST { and the LAST } and extracts everything between them
+    // Find the JSON block even if the AI adds conversation
     const start = aiText.indexOf('{');
     const end = aiText.lastIndexOf('}');
     
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       const jsonString = aiText.substring(start, end + 1);
       res.status(200).json(JSON.parse(jsonString));
     } else {
-      // Fallback: If AI fails to give JSON, we send the raw text so we can see what it saw
+      // This triggers the "Mission Data Obscured" message on your phone
       res.status(500).json({ error: "Mission Data Obscured", raw: aiText });
     }
 
