@@ -12,9 +12,20 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    const aiText = data.candidates[0].content.parts[0].text;
-    const cleanJson = aiText.replace(/```json|```/g, "").trim();
-    res.status(200).json(JSON.parse(cleanJson));
+    
+    if (!data.candidates || !data.candidates[0].content) {
+       return res.status(500).json({ error: "AI could not read the ticket" });
+    }
+
+    let aiText = data.candidates[0].content.parts[0].text;
+    
+    // Safety Net: Find the JSON inside the text no matter what
+    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      res.status(200).json(JSON.parse(jsonMatch[0]));
+    } else {
+      res.status(500).json({ error: "Invalid AI Format" });
+    }
   } catch (error) {
     res.status(500).json({ error: "Neural Link Processing Failed" });
   }
