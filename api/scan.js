@@ -4,8 +4,8 @@ export default async function handler(req, res) {
     const { image } = body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // Direct, simple fetch to Google
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // FIX: Updated to 'gemini-1.5-flash-latest' to resolve the 404 Model Not Found error
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
     let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI SENT EMPTY RESPONSE";
     
-    // Attempt to find JSON
+    // Attempt to find JSON block
     const start = aiText.indexOf('{');
     const end = aiText.lastIndexOf('}');
     
@@ -39,12 +39,12 @@ export default async function handler(req, res) {
       const jsonStr = aiText.substring(start, end + 1);
       res.status(200).json(JSON.parse(jsonStr));
     } else {
-      // SUCCESS: Even if it's not JSON, we send the text back so your debug window can show it
-      res.status(200).json({ name: "SCAN FAILED", airline: "Check Debug", raw: aiText });
+      // If text is found but not in JSON format, send raw text to the debug window
+      res.status(200).json({ name: "DATA FORMAT ERROR", airline: "Check Debug", raw: aiText });
     }
 
   } catch (error) {
-    // If the server crashes, it will now send the error message to your phone
+    // Catch-all for server crashes to keep the phone app from freezing
     res.status(200).json({ error: "Server Crash", raw: error.message });
   }
 }
