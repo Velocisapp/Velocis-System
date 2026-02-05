@@ -79,17 +79,24 @@
 
         async function runAIScan() {
             const btn = document.getElementById('scan-btn');
-            btn.innerText = "EXTRACTING DATA...";
+            btn.innerText = "LINKING...";
             
+            // LIGHTWEIGHT COMPRESSION LOGIC
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            const image = canvas.toDataURL('image/jpeg').split(',')[1];
+            const scale = 800 / video.videoWidth;
+            canvas.width = 800;
+            canvas.height = video.videoHeight * scale;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Lowering quality to 0.5 to bypass Vercel payload limits
+            const image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
             const prompt = "Extract passenger name, airline, gate, origin city, and destination city. Return JSON: {name, airline, gate, origin, destination}";
 
             try {
-               const res = await fetch('/api/scan.js', {
+                const res = await fetch('/api/scan.js', {
                     method: 'POST',
                     body: JSON.stringify({ image, prompt })
                 });
@@ -98,7 +105,6 @@
 
                 const data = await res.json();
                 
-                // Inject real data
                 document.getElementById('user-name').innerText = data.name || "Commander";
                 document.getElementById('dep-city').innerText = data.origin || "Unknown";
                 document.getElementById('arr-city').innerText = data.destination || "Unknown";
@@ -106,7 +112,6 @@
                 document.getElementById('counter-info').innerText = `Proceed to ${data.airline || 'Airline'} Counters`;
                 document.getElementById('origin-pill').innerText = (data.origin || "Ready").substring(0,3).toUpperCase();
 
-                // Reveal Cards
                 document.getElementById('scanner-section').style.display = 'none';
                 document.getElementById('results-area').classList.remove('hidden');
                 document.querySelectorAll('.card').forEach((c, i) => {
