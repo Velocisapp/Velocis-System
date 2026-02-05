@@ -67,44 +67,60 @@
 
     <div id="error-overlay" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-10 text-center z-[100]">
         <div>
-            <p class="text-red-500 font-bold mb-2">NEURAL LINK FAILED</p>
-            <p class="text-white text-[10px] opacity-60 uppercase mb-6">API Connection Interrupted</p>
+            <p id="error-title" class="text-red-500 font-bold mb-2">NEURAL LINK FAILED</p>
+            <p id="error-msg" class="text-white text-[10px] opacity-60 uppercase mb-6">API Connection Interrupted</p>
             <button onclick="location.reload()" class="px-6 py-2 border border-red-500 text-red-500 text-[10px] uppercase">Retry Handshake</button>
         </div>
     </div>
 
     <script>
         const video = document.getElementById('camera');
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(s => video.srcObject = s);
+        
+        // Safari Compatibility Check
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(s => video.srcObject = s)
+                .catch(err => {
+                    document.getElementById('status-pill').innerText = "Camera Denied";
+                    document.getElementById('status-pill').classList.replace('text-green-500', 'text-red-500');
+                });
+        }
 
         async function runAIScan() {
             const btn = document.getElementById('scan-btn');
             btn.innerText = "LINKING...";
+            btn.disabled = true;
             
-            // LIGHTWEIGHT COMPRESSION LOGIC
-            const canvas = document.createElement('canvas');
-            const scale = 800 / video.videoWidth;
-            canvas.width = 800;
-            canvas.height = video.videoHeight * scale;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Lowering quality to 0.5 to bypass Vercel payload limits
-            const image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-
-            const prompt = "Extract passenger name, airline, gate, origin city, and destination city. Return JSON: {name, airline, gate, origin, destination}";
-
             try {
+                // Tactical Compression (400px width is the "Sweet Spot" for Vercel speed)
+                const canvas = document.createElement('canvas');
+                const targetWidth = 400;
+                const scale = targetWidth / video.videoWidth;
+                canvas.width = targetWidth;
+                canvas.height = video.videoHeight * scale;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // 0.3 Quality prevents "Payload Too Large" 413 errors
+                const image = canvas.toDataURL('image/jpeg', 0.3).split(',')[1];
+
+                const prompt = "Extract: passenger name, airline, gate, origin city, destination city. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
+
                 const res = await fetch('/api/scan.js', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image, prompt })
                 });
                 
-                if (!res.ok) throw new Error();
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.error || 'Connection Lost');
+                }
 
                 const data = await res.json();
                 
+                // UI Mapping
                 document.getElementById('user-name').innerText = data.name || "Commander";
                 document.getElementById('dep-city').innerText = data.origin || "Unknown";
                 document.getElementById('arr-city').innerText = data.destination || "Unknown";
@@ -112,12 +128,16 @@
                 document.getElementById('counter-info').innerText = `Proceed to ${data.airline || 'Airline'} Counters`;
                 document.getElementById('origin-pill').innerText = (data.origin || "Ready").substring(0,3).toUpperCase();
 
+                // Sequence Animation
                 document.getElementById('scanner-section').style.display = 'none';
                 document.getElementById('results-area').classList.remove('hidden');
                 document.querySelectorAll('.card').forEach((c, i) => {
                     setTimeout(() => c.style.display = 'block', i * 200);
                 });
+
             } catch (e) {
+                console.error("Scan Error:", e);
+                document.getElementById('error-msg').innerText = e.message || "Interrupted";
                 document.getElementById('error-overlay').classList.remove('hidden');
             }
         }
