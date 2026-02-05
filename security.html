@@ -6,123 +6,108 @@
     <title>VELOCIS™ | MISSION CONTROL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000; color: #d4af37; font-family: 'Courier New', Courier, monospace; }
+        body { background: #000; color: #d4af37; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
         .pill { background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; border-radius: 50px; padding: 4px 12px; font-size: 10px; font-weight: bold; }
         .velocis-btn { border: 2px solid #d4af37; background: transparent; color: #d4af37; transition: all 0.3s; }
         .velocis-btn:active { background: #d4af37; color: #000; }
         .card { background: rgba(20, 20, 20, 0.95); border-left: 3px solid #d4af37; padding: 15px; margin-bottom: 12px; display: none; animation: slideUp 0.5s ease-out forwards; }
         .blue-label { color: #3b82f6; font-size: 10px; font-weight: bold; letter-spacing: 1px; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .scan-line { height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; z-index: 10; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
     </style>
 </head>
 <body class="p-6">
 
     <div class="flex justify-between items-center mb-8">
-        <div id="origin-pill" class="pill">SCANNING...</div>
-        <div id="status-pill" class="pill text-green-500">SYSTEM ACTIVE</div>
+        <div id="origin-pill" class="pill uppercase">Ready</div>
+        <div id="status-pill" class="pill text-green-500 uppercase">System Active</div>
     </div>
 
     <div id="scanner-section">
         <div id="scanner-container" class="relative w-full aspect-[4/3] border border-[#d4af37]/40 rounded-lg overflow-hidden mb-6">
             <video id="camera" class="w-full h-full object-cover grayscale" autoplay playsinline></video>
-            <div class="absolute inset-0 scan-line"></div>
+            <div class="scan-line"></div>
         </div>
-        <button id="scan-btn" onclick="runAIScan()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg shadow-lg shadow-yellow-900/20">Initialize Scan</button>
+        <button id="scan-btn" onclick="runAIScan()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg">Initialize Scan</button>
     </div>
 
     <div id="results-area" class="hidden">
-        
         <div class="grid grid-cols-1 gap-3 mb-8">
             <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold">Internet Options</button>
-            <button onclick="resetScanner()" class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10">Scan New Ticket</button>
+            <button onclick="location.reload()" class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10">Scan New Ticket</button>
         </div>
 
         <div id="card1" class="card">
             <div class="blue-label mb-1">01. DEPLOYMENT</div>
-            <h3 class="text-white text-sm font-bold uppercase">Welcome, <span id="user-name">Commander</span></h3>
-            <p class="text-white/70 text-[11px] mt-2 leading-relaxed">Route: <span id="dep-city" class="text-[#d4af37]">...</span> to <span id="arr-city" class="text-[#d4af37]">...</span></p>
-            <p id="counter-info" class="text-white/90 text-xs mt-2 font-bold italic"></p>
+            <h3 class="text-white text-sm font-bold uppercase">Welcome, <span id="user-name">...</span></h3>
+            <p class="text-white/70 text-[11px] mt-2">Route: <span id="dep-city" class="text-[#d4af37]">...</span> to <span id="arr-city" class="text-[#d4af37]">...</span></p>
+            <p id="counter-info" class="text-white/90 text-xs mt-2 font-bold italic italic uppercase"></p>
         </div>
 
         <div id="card2" class="card">
             <div class="blue-label mb-1">02. SECURITY & COMMS</div>
-            <p class="text-white text-[11px] mb-3">Check-in at <span id="gate-info" class="text-[#d4af37]">Gate ...</span>. Secure international data link:</p>
+            <p class="text-white text-[11px] mb-3 uppercase">Check-in at <span id="gate-info" class="text-[#d4af37]">Gate ...</span>. Secure data link:</p>
             <div class="flex gap-6">
-                <a href="https://breezesim.com" class="text-blue-400 text-[10px] underline tracking-widest">BREEZE eSIM</a>
-                <a href="https://gigsky.com" class="text-blue-400 text-[10px] underline tracking-widest">GIGSKY eSIM</a>
+                <a href="https://breezesim.com" class="text-blue-400 text-[10px] underline">BREEZE eSIM</a>
+                <a href="https://gigsky.com" class="text-blue-400 text-[10px] underline">GIGSKY eSIM</a>
             </div>
         </div>
 
         <div id="card3" class="card">
             <div class="blue-label mb-1">03. HUD REWARDS</div>
-            <p class="text-white text-xs">15% OFF Starbucks coffee active at this terminal terminal with Velocis™ ID.</p>
+            <p class="text-white text-xs uppercase">15% OFF Starbucks coffee active at this terminal with Velocis™ ID.</p>
         </div>
 
         <div id="card4" class="card">
             <div class="blue-label mb-1">04. LOCAL LOGISTICS</div>
-            <p class="text-white text-[11px]">Baggage belt and local transport decrypted upon arrival at <span id="dest-code">...</span>.</p>
-        </div>
-    </div>
-
-    <div id="error-overlay" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-10 text-center z-[100]">
-        <div>
-            <p class="text-red-500 font-bold mb-2">NEURAL LINK FAILED</p>
-            <p class="text-white text-[10px] opacity-60 uppercase">Ensure local server or Vercel is active</p>
-            <button onclick="location.reload()" class="mt-6 px-6 py-2 border border-red-500 text-red-500 text-[10px] uppercase">Retry Handshake</button>
+            <p class="text-white text-[11px] uppercase">Baggage belt and transport data decrypted upon arrival at destination.</p>
         </div>
     </div>
 
     <script>
         const video = document.getElementById('camera');
-        
-        async function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(s => video.srcObject = s);
+
+        async function runAIScan() {
+            const btn = document.getElementById('scan-btn');
+            btn.innerText = "EXTRACTING DATA...";
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const image = canvas.toDataURL('image/jpeg').split(',')[1];
+
+            // This tells Gemini what to look for without any hardcoded names
+            const prompt = "Extract passenger name, origin city, destination city, gate, and airline. Return JSON: {name, origin, destination, gate, airline}";
+
             try {
-                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                video.srcObject = s;
-            } catch(e) {
-                console.error("Camera access denied");
+                // It will automatically use the GEMINI_API_KEY you saved in Vercel
+                const res = await fetch('/api/scan', {
+                    method: 'POST',
+                    body: JSON.stringify({ image, prompt })
+                });
+                
+                const data = await res.json();
+                
+                // Inject real data into your HUD
+                document.getElementById('user-name').innerText = data.name || "Commander";
+                document.getElementById('dep-city').innerText = data.origin || "Unknown";
+                document.getElementById('arr-city').innerText = data.destination || "Unknown";
+                document.getElementById('gate-info').innerText = data.gate || "TBD";
+                document.getElementById('counter-info').innerText = `Proceed to ${data.airline} Counters`;
+                document.getElementById('origin-pill').innerText = (data.origin || "Ready").substring(0,3);
+
+                // Reveal Cards
+                document.getElementById('scanner-section').style.display = 'none';
+                document.getElementById('results-area').classList.remove('hidden');
+                document.querySelectorAll('.card').forEach((c, i) => {
+                    setTimeout(() => c.style.display = 'block', i * 200);
+                });
+            } catch (e) {
+                btn.innerText = "NEURAL LINK FAILED";
             }
         }
-
-        function runAIScan() {
-            const btn = document.getElementById('scan-btn');
-            btn.innerText = "ANALYZING...";
-            
-            // Simulating a failed handshake check
-            const isVercelActive = true; // This would be a real health check in production
-
-            setTimeout(() => {
-                if(!isVercelActive) {
-                    document.getElementById('error-overlay').classList.remove('hidden');
-                    return;
-                }
-
-                // AI Success: Transition UI
-                document.getElementById('scanner-section').classList.add('hidden');
-                document.getElementById('results-area').classList.remove('hidden');
-                
-                // Inject Dynamic Data (This would come from Gemini)
-                document.getElementById('origin-pill').innerText = "MIA";
-                document.getElementById('dep-city').innerText = "Miami Intl";
-                document.getElementById('arr-city').innerText = "Madrid Barajas";
-                document.getElementById('dest-code').innerText = "MAD";
-                document.getElementById('counter-info').innerText = "Proceed to Counters: 35-47";
-                document.getElementById('gate-info').innerText = "Gate E6";
-
-                // Show cards with delay
-                document.querySelectorAll('.card').forEach((card, i) => {
-                    setTimeout(() => { card.style.display = 'block'; }, i * 200);
-                });
-            }, 2000);
-        }
-
-        function resetScanner() {
-            location.reload(); // Simplest way to reset the neural link and camera
-        }
-
-        startCamera();
     </script>
 </body>
 </html>
