@@ -89,7 +89,7 @@
             const prompt = "Extract passenger name, airline, gate, origin city, and destination city. Return JSON: {name, airline, gate, origin, destination}";
 
             try {
-                const res = await fetch('/api/scan', {
+               const res = await fetch('/api/scan.js', {
                     method: 'POST',
                     body: JSON.stringify({ image, prompt })
                 });
