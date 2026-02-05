@@ -15,6 +15,7 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .scan-line { position: absolute; width: 100%; height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; z-index: 10; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        #debug-log { background: #111; border: 1px dashed #d4af37; color: #fff; font-size: 9px; padding: 10px; margin-top: 20px; word-break: break-all; opacity: 0.8; display: none; }
     </style>
 </head>
 <body class="p-6">
@@ -26,7 +27,7 @@
 
     <div id="scanner-section">
         <div id="scanner-container" class="relative w-full aspect-[4/3] border border-[#d4af37]/40 rounded-lg overflow-hidden mb-6">
-            <video id="camera" class="w-full h-full object-cover grayscale" autoplay playsinline></video>
+            <video id="camera" class="w-full h-full object-cover" autoplay playsinline></video>
             <div class="scan-line"></div>
         </div>
         <button id="scan-btn" onclick="runAIScan()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg">Initialize Scan</button>
@@ -34,8 +35,7 @@
 
     <div id="results-area" class="hidden">
         <div class="grid grid-cols-1 gap-3 mb-8">
-            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold">Internet Options</button>
-            <button onclick="location.reload()" class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10">Scan New Ticket</button>
+            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">Scan New Ticket</button>
         </div>
 
         <div id="card1" class="card">
@@ -45,30 +45,16 @@
             <p id="counter-info" class="text-white/90 text-xs mt-2 font-bold italic uppercase"></p>
         </div>
 
-        <div id="card2" class="card">
-            <div class="blue-label mb-1">02. SECURITY & COMMS</div>
-            <p class="text-white text-[11px] mb-3 uppercase">Check-in at <span id="gate-info" class="text-[#d4af37]">Gate ...</span>. Secure data link:</p>
-            <div class="flex gap-6">
-                <a href="https://breezesim.com" class="text-blue-400 text-[10px] underline">BREEZE eSIM</a>
-                <a href="https://gigsky.com" class="text-blue-400 text-[10px] underline">GIGSKY eSIM</a>
-            </div>
-        </div>
-
-        <div id="card3" class="card">
-            <div class="blue-label mb-1">03. HUD REWARDS</div>
-            <p class="text-white text-xs uppercase">15% OFF Starbucks coffee active at this terminal with Velocis™ ID.</p>
-        </div>
-
-        <div id="card4" class="card">
-            <div class="blue-label mb-1">04. LOCAL LOGISTICS</div>
-            <p class="text-white text-[11px] uppercase">Baggage belt and transport data decrypted upon arrival at destination.</p>
+        <div id="debug-log">
+            <p style="color: #d4af37; margin-bottom: 5px;">[DEBUG NEURAL LINK RESPONSE]</p>
+            <div id="debug-text">Awaiting data...</div>
         </div>
     </div>
 
     <div id="error-overlay" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-10 text-center z-[100]">
         <div>
             <p id="error-title" class="text-red-500 font-bold mb-2">NEURAL LINK FAILED</p>
-            <p id="error-msg" class="text-white text-[10px] opacity-60 uppercase mb-6">API Connection Interrupted</p>
+            <p id="error-msg" class="text-white text-[10px] opacity-60 uppercase mb-6"></p>
             <button onclick="location.reload()" class="px-6 py-2 border border-red-500 text-red-500 text-[10px] uppercase">Retry Handshake</button>
         </div>
     </div>
@@ -78,66 +64,58 @@
         
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(s => video.srcObject = s)
-                .catch(err => {
-                    document.getElementById('status-pill').innerText = "Camera Denied";
-                    document.getElementById('status-pill').classList.replace('text-green-500', 'text-red-500');
-                });
+                .then(s => video.srcObject = s);
         }
 
         async function runAIScan() {
             const btn = document.getElementById('scan-btn');
+            const debugWindow = document.getElementById('debug-log');
+            const debugText = document.getElementById('debug-text');
+            
             btn.innerText = "LINKING...";
             btn.disabled = true;
             
             try {
-                // SAFE VISION OPTIMIZATION: 600px width ensures fast Vercel processing
                 const canvas = document.createElement('canvas');
                 const targetWidth = 600; 
                 const scale = targetWidth / video.videoWidth;
                 canvas.width = targetWidth;
                 canvas.height = video.videoHeight * scale;
-                
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // STABLE QUALITY: 0.5 prevents payload errors while keeping text readable
                 const image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-
-                const prompt = "Extract: passenger name, airline, gate, origin city, destination city. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
 
                 const res = await fetch('/api/scan.js', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image, prompt })
+                    body: JSON.stringify({ image })
                 });
                 
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.error || 'Connection Lost');
-                }
-
                 const data = await res.json();
                 
-                // UI Mapping
-                document.getElementById('user-name').innerText = data.name || "Commander";
-                document.getElementById('dep-city').innerText = data.origin || "Unknown";
-                document.getElementById('arr-city').innerText = data.destination || "Unknown";
-                document.getElementById('gate-info').innerText = data.gate || "TBD";
-                document.getElementById('counter-info').innerText = `Proceed to ${data.airline || 'Airline'} Counters`;
-                document.getElementById('origin-pill').innerText = (data.origin || "Ready").substring(0,3).toUpperCase();
-
-                // Sequence Animation
+                // Always show debug window on result area
                 document.getElementById('scanner-section').style.display = 'none';
                 document.getElementById('results-area').classList.remove('hidden');
+                debugWindow.style.display = 'block';
+
+                if (!res.ok) {
+                    debugText.innerText = "ERROR FROM SERVER: " + (data.raw || data.error || "Unknown Error");
+                    throw new Error("Extraction Failed");
+                }
+
+                debugText.innerText = "SUCCESS: " + JSON.stringify(data);
+
+                document.getElementById('user-name').innerText = data.name || "Commander";
+                document.getElementById('dep-city').innerText = data.origin || "---";
+                document.getElementById('arr-city').innerText = data.destination || "---";
+                document.getElementById('counter-info').innerText = data.airline || "Airline Detected";
+
                 document.querySelectorAll('.card').forEach((c, i) => {
                     setTimeout(() => c.style.display = 'block', i * 200);
                 });
 
             } catch (e) {
-                console.error("Scan Error:", e);
-                document.getElementById('error-msg').innerText = e.message || "Interrupted";
-                document.getElementById('error-overlay').classList.remove('hidden');
+                console.error(e);
             }
         }
     </script>
