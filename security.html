@@ -76,7 +76,6 @@
     <script>
         const video = document.getElementById('camera');
         
-        // Safari Compatibility Check
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                 .then(s => video.srcObject = s)
@@ -92,7 +91,6 @@
             btn.disabled = true;
             
             try {
-                // Tactical Compression (400px width is the "Sweet Spot" for Vercel speed)
                 const canvas = document.createElement('canvas');
                 const targetWidth = 400;
                 const scale = targetWidth / video.videoWidth;
@@ -101,11 +99,10 @@
                 
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // 0.3 Quality prevents "Payload Too Large" 413 errors
                 const image = canvas.toDataURL('image/jpeg', 0.3).split(',')[1];
 
-                const prompt = "Extract: passenger name, airline, gate, origin city, destination city. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
+                // NEW SOFT PROMPT: Encourages AI to guess if blurry to avoid "Rejected" status
+                const prompt = "Act as a travel assistant. Scan this ticket and extract: passenger name, airline, gate, origin city, destination city. If blurry, make a best guess. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
 
                 const res = await fetch('/api/scan.js', {
                     method: 'POST',
@@ -120,7 +117,6 @@
 
                 const data = await res.json();
                 
-                // UI Mapping
                 document.getElementById('user-name').innerText = data.name || "Commander";
                 document.getElementById('dep-city').innerText = data.origin || "Unknown";
                 document.getElementById('arr-city').innerText = data.destination || "Unknown";
@@ -128,7 +124,6 @@
                 document.getElementById('counter-info').innerText = `Proceed to ${data.airline || 'Airline'} Counters`;
                 document.getElementById('origin-pill').innerText = (data.origin || "Ready").substring(0,3).toUpperCase();
 
-                // Sequence Animation
                 document.getElementById('scanner-section').style.display = 'none';
                 document.getElementById('results-area').classList.remove('hidden');
                 document.querySelectorAll('.card').forEach((c, i) => {
