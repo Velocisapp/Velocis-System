@@ -62,13 +62,21 @@
         const originPill = document.getElementById('origin-pill');
         let isProcessing = false;
 
-        const config = { fps: 10, qrbox: { width: 280, height: 280 }, aspectRatio: 1.333334 };
+        // FIXED CONFIG: Removed strict aspectRatio to fix the "zoomed" camera view
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 280, height: 280 },
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
 
         html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
             if (!isProcessing) processData(null, decodedText);
         }).catch(err => console.error("Camera Init Error", err));
 
-        // STABILIZED AI LOOP: Fires every 4 seconds to allow camera focus
         const aiLoop = setInterval(() => {
             if (!isProcessing && html5QrCode.isScanning) {
                 captureForAI();
@@ -82,9 +90,11 @@
 
             try {
                 const videoElement = document.querySelector('#reader video');
+                if (!videoElement) throw new Error("Video element not found");
+
                 const canvas = document.createElement('canvas');
-                canvas.width = 800; // Increased resolution for better OCR
-                canvas.height = videoElement.videoHeight * (800 / videoElement.videoWidth);
+                canvas.width = 1024; // High resolution for OCR
+                canvas.height = videoElement.videoHeight * (1024 / videoElement.videoWidth);
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
                 const image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
@@ -106,6 +116,7 @@
                     originPill.classList.remove('animate-pulse');
                 }
             } catch (e) {
+                console.error("AI Capture Error:", e);
                 isProcessing = false;
             }
         }
