@@ -4,8 +4,8 @@ export default async function handler(req, res) {
     const { image } = body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // FIX: Using the absolute stable production path for Gemini Flash
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // FIX: Using gemini-1.5-flash-8b on v1beta. This is the "high-availability" model path.
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     
-    // Catch Google's internal errors before they crash the app
+    // Check for Google API errors (like the 404 we've been seeing)
     if (data.error) {
         return res.status(200).json({ error: "Google API Error", raw: data.error.message });
     }
