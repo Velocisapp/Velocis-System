@@ -3,20 +3,15 @@ export default async function handler(req, res) {
     const { image, rawBarcode } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    let prompt = "Extract name, airline, gate, origin, destination from this boarding pass. Return ONLY raw JSON.";
-    if (rawBarcode) {
-        prompt = `Translate this raw boarding pass barcode data into JSON: "${rawBarcode}"`;
-    }
+    let prompt = "Extract passenger name, airline, flight, gate, origin, destination from this boarding pass. Return ONLY raw JSON.";
+    if (rawBarcode) { prompt = `Translate this raw boarding pass data into JSON: "${rawBarcode}"`; }
 
-    // 2026 STABLE PATH
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    // PRODUCTION STABLE ENDPOINT (Required for 2026 Verified Accounts)
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [
-          { text: prompt },
-          ...(image ? [{ inline_data: { mime_type: "image/jpeg", data: image } }] : [])
-        ]}]
+        contents: [{ parts: [{ text: prompt }, ...(image ? [{ inline_data: { mime_type: "image/jpeg", data: image } }] : [])] }]
       })
     });
 
@@ -30,7 +25,7 @@ export default async function handler(req, res) {
     if (start !== -1 && end !== -1) {
       res.status(200).json(JSON.parse(aiText.substring(start, end + 1)));
     } else {
-      res.status(200).json({ name: "---", error: "FORMAT_ERR" });
+      res.status(200).json({ name: "SCAN ERROR", error: "BAD_FORMAT" });
     }
   } catch (error) { res.status(200).json({ error: "CRASH" }); }
 }
