@@ -5,152 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ | MISSION CONTROL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { background: #000; color: #d4af37; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
+        body { background: #000; color: #d4af37; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         .pill { background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; border-radius: 50px; padding: 4px 12px; font-size: 10px; font-weight: bold; }
-        .velocis-btn { border: 2px solid #d4af37; background: transparent; color: #d4af37; transition: all 0.3s; }
-        .velocis-btn:active { background: #d4af37; color: #000; }
-        .card { background: rgba(20, 20, 20, 0.95); border-left: 3px solid #d4af37; padding: 15px; margin-bottom: 12px; display: none; animation: slideUp 0.5s ease-out forwards; }
-        .blue-label { color: #3b82f6; font-size: 10px; font-weight: bold; letter-spacing: 1px; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .scan-line { position: absolute; width: 100%; height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; z-index: 10; pointer-events: none; }
+        .card { background: rgba(20, 20, 20, 0.95); border-left: 3px solid #d4af37; padding: 15px; display: none; margin-top: 10px; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; pointer-events: none; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-        #debug-log { background: #111; border: 1px dashed #d4af37; color: #fff; font-size: 9px; padding: 10px; margin-top: 20px; word-break: break-all; opacity: 0.8; display: none; }
-        #reader { width: 100% !important; border: none !important; }
-        #reader video { object-fit: cover !important; }
     </style>
 </head>
 <body class="p-6">
-
-    <div class="flex justify-between items-center mb-8">
-        <div id="origin-pill" class="pill uppercase">Ready</div>
-        <div id="status-pill" class="pill text-green-500 uppercase">System Active</div>
+    <div class="flex justify-between mb-8">
+        <div id="status-pill" class="pill uppercase">Ready</div>
+        <div class="pill text-green-500 uppercase">Secure Link</div>
     </div>
 
     <div id="scanner-section">
-        <div id="scanner-container" class="relative w-full aspect-[4/3] border border-[#d4af37]/40 rounded-lg overflow-hidden mb-6">
-            <div id="reader"></div>
+        <div class="relative w-full aspect-[4/3] border border-[#d4af37]/40 rounded-lg overflow-hidden mb-6">
+            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
             <div class="scan-line"></div>
         </div>
-        
-        <button id="scan-btn" onclick="captureForAI()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-transform">
-            Initialize AI Scan
-        </button>
-        
-        <p class="text-[9px] text-center mt-2 opacity-50 uppercase italic">Hold steady and tap button when text is sharp</p>
+        <button id="scan-btn" onclick="manualCapture()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg">Initialize Tactical Scan</button>
     </div>
 
     <div id="results-area" class="hidden">
-        <div class="grid grid-cols-1 gap-3 mb-8">
-            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">New Mission</button>
-        </div>
-
         <div id="card1" class="card">
-            <div class="blue-label mb-1">01. DEPLOYMENT</div>
-            <h3 class="text-white text-sm font-bold uppercase">Welcome, <span id="user-name">...</span></h3>
-            <p class="text-white/70 text-[11px] mt-2">Route: <span id="dep-city" class="text-[#d4af37]">...</span> to <span id="arr-city" class="text-[#d4af37]">...</span></p>
-            <p id="counter-info" class="text-white/90 text-xs mt-2 font-bold italic uppercase"></p>
+            <p class="text-[10px] text-blue-400 font-bold">INTEL EXTRACTED</p>
+            <h3 class="text-white text-lg" id="user-name">...</h3>
+            <p class="text-[#d4af37] text-xs" id="flight-path">...</p>
         </div>
-
-        <div id="debug-log">
-            <p style="color: #d4af37; margin-bottom: 5px;">[DEBUG NEURAL LINK RESPONSE]</p>
-            <div id="debug-text">Awaiting manual trigger...</div>
+        <div id="debug-log" class="mt-6 p-2 border border-dashed border-[#d4af37] text-[9px] text-white bg-black/50">
+            [DATA]: <span id="debug-text">...</span>
         </div>
+        <button onclick="location.reload()" class="w-full mt-4 py-2 border border-[#d4af37] text-[#d4af37] text-xs uppercase">Reset</button>
     </div>
 
     <script>
-        const html5QrCode = new Html5Qrcode("reader");
-        const btn = document.getElementById('scan-btn');
-        const originPill = document.getElementById('origin-pill');
+        const video = document.getElementById('video');
         let isProcessing = false;
 
-        // WIDE-ANGLE CONFIG: No forced aspect ratio or zoom-cropping
-        const config = { 
-            fps: 10, 
-            videoConstraints: {
-                facingMode: "environment",
-                focusMode: "continuous"
-            }
-        };
+        // Start standard camera (No Barcode Library auto-firing)
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => { video.srcObject = stream; });
 
-        // Start Barcode Engine (Fast-Track) - Only fires if it sees an Aztec/QR code
-        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-            if (!isProcessing) processData(null, decodedText);
-        }).catch(err => console.error("Camera Init Error", err));
-
-        // THE ONLY TRIGGER: Manual Button Tap
-        async function captureForAI() {
+        async function manualCapture() {
             if (isProcessing) return;
             isProcessing = true;
-
-            btn.innerText = "LINKING...";
-            btn.classList.add('opacity-50');
-            originPill.innerText = "ANALYZING...";
-            originPill.classList.add('animate-pulse');
-
-            try {
-                const videoElement = document.querySelector('#reader video');
-                const canvas = document.createElement('canvas');
-                
-                // High-resolution snapshot for AI
-                canvas.width = 1024; 
-                canvas.height = videoElement.videoHeight * (1024 / videoElement.videoWidth);
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                const image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-
-                const res = await fetch('/api/scan.js', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image })
-                });
-                
-                const data = await res.json();
-                handleResponse(data);
-
-            } catch (e) {
-                console.error("Manual Capture Error:", e);
-                resetUI();
-            }
-        }
-
-        async function processData(image, rawBarcode) {
-            isProcessing = true;
-            originPill.innerText = "INTEL DETECTED...";
             
+            document.getElementById('scan-btn').innerText = "LINKING...";
+            document.getElementById('status-pill').innerText = "PROCESSING...";
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            const image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+
             const res = await fetch('/api/scan.js', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image, rawBarcode })
+                body: JSON.stringify({ image })
             });
-            handleResponse(await res.json());
-        }
-
-        function handleResponse(data) {
-            if (html5QrCode.isScanning) html5QrCode.stop();
             
-            document.getElementById('scanner-section').style.display = 'none';
-            document.getElementById('results-area').classList.remove('hidden');
-            document.getElementById('debug-log').style.display = 'block';
-            document.getElementById('debug-text').innerText = JSON.stringify(data);
-
-            document.getElementById('user-name').innerText = data.name || "Commander";
-            document.getElementById('dep-city').innerText = data.origin || "---";
-            document.getElementById('arr-city').innerText = data.destination || "---";
-            document.getElementById('counter-info').innerText = data.airline || "---";
-
-            document.querySelectorAll('.card').forEach((c, i) => {
-                setTimeout(() => c.style.display = 'block', i * 200);
-            });
+            const data = await res.json();
+            showResults(data);
         }
 
-        function resetUI() {
-            isProcessing = false;
-            btn.innerText = "Initialize AI Scan";
-            btn.classList.remove('opacity-50');
-            originPill.innerText = "READY";
-            originPill.classList.remove('animate-pulse');
+        function showResults(data) {
+            document.getElementById('scanner-section').classList.add('hidden');
+            document.getElementById('results-area').classList.remove('hidden');
+            document.getElementById('debug-text').innerText = JSON.stringify(data);
+            
+            document.getElementById('user-name').innerText = data.name || "Commander";
+            document.getElementById('flight-path').innerText = `${data.origin || '---'} TO ${data.destination || '---'}`;
+            document.getElementById('card1').style.display = 'block';
         }
     </script>
 </body>
