@@ -11,6 +11,7 @@
         .card { background: rgba(20, 20, 20, 0.95); border-left: 3px solid #d4af37; padding: 15px; display: none; margin-top: 10px; }
         .scan-line { position: absolute; width: 100%; height: 2px; background: #d4af37; box-shadow: 0 0 15px #d4af37; animation: scan 3s infinite linear; pointer-events: none; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        #debug-preview { width: 100px; height: 75px; border: 1px solid #d4af37; margin-top: 10px; object-fit: cover; display: none; }
     </style>
 </head>
 <body class="p-6">
@@ -25,6 +26,11 @@
             <div class="scan-line"></div>
         </div>
         <button id="scan-btn" onclick="manualCapture()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg">Initialize Tactical Scan</button>
+        
+        <div class="flex flex-col items-center">
+            <img id="debug-preview" src="" alt="Last Frame">
+            <p id="preview-label" class="text-[8px] mt-1 hidden text-white/50 uppercase">Last Captured Frame</p>
+        </div>
     </div>
 
     <div id="results-area" class="hidden">
@@ -33,17 +39,18 @@
             <h3 class="text-white text-lg" id="user-name">...</h3>
             <p class="text-[#d4af37] text-xs" id="flight-path">...</p>
         </div>
-        <div id="debug-log" class="mt-6 p-2 border border-dashed border-[#d4af37] text-[9px] text-white bg-black/50">
+        <div id="debug-log" class="mt-6 p-2 border border-dashed border-[#d4af37] text-[9px] text-white bg-black/50 overflow-auto max-h-40">
             [DATA]: <span id="debug-text">...</span>
         </div>
-        <button onclick="location.reload()" class="w-full mt-4 py-2 border border-[#d4af37] text-[#d4af37] text-xs uppercase">Reset</button>
+        <button onclick="location.reload()" class="w-full mt-4 py-2 border border-[#d4af37] text-[#d4af37] text-xs uppercase">Reset Mission</button>
     </div>
 
     <script>
         const video = document.getElementById('video');
+        const preview = document.getElementById('debug-preview');
+        const previewLabel = document.getElementById('preview-label');
         let isProcessing = false;
 
-        // Start standard camera (No Barcode Library auto-firing)
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => { video.srcObject = stream; });
 
@@ -59,16 +66,27 @@
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0);
-            const image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-
-            const res = await fetch('/api/scan.js', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image })
-            });
             
-            const data = await res.json();
-            showResults(data);
+            // Show the preview to the user
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            preview.src = dataUrl;
+            preview.style.display = 'block';
+            previewLabel.style.display = 'block';
+
+            const base64Image = dataUrl.split(',')[1];
+
+            try {
+                const res = await fetch('/api/scan.js', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Image })
+                });
+                const data = await res.json();
+                showResults(data);
+            } catch (e) {
+                document.getElementById('debug-text').innerText = "CRITICAL ERROR: " + e.message;
+                isProcessing = false;
+            }
         }
 
         function showResults(data) {
