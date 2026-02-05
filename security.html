@@ -33,13 +33,14 @@
             <div id="reader"></div>
             <div class="scan-line"></div>
         </div>
-        <button id="scan-btn" onclick="captureForAI()" class="w-full py-4 bg-[#d4af37] text-black font-bold uppercase rounded-lg">Initialize AI Scan</button>
-        <p class="text-[9px] text-center mt-2 opacity-50 uppercase italic">Barcode auto-detection active...</p>
+        <div id="status-display" class="w-full py-4 border border-[#d4af37] text-[#d4af37] text-center font-bold uppercase rounded-lg opacity-80">
+            Scanning for Intel...
+        </div>
     </div>
 
     <div id="results-area" class="hidden">
         <div class="grid grid-cols-1 gap-3 mb-8">
-            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">Scan New Ticket</button>
+            <button class="velocis-btn py-3 rounded-md text-xs uppercase tracking-widest font-bold bg-[#d4af37]/10" onclick="location.reload()">Reset Scanner</button>
         </div>
 
         <div id="card1" class="card">
@@ -57,49 +58,37 @@
 
     <script>
         const html5QrCode = new Html5Qrcode("reader");
-        const btn = document.getElementById('scan-btn');
+        const statusDisplay = document.getElementById('status-display');
+        const originPill = document.getElementById('origin-pill');
+        let isProcessing = false;
 
-        // Start Barcode Scanner immediately
-        const config = { 
-            fps: 15, 
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.333334
-        };
+        const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.333334 };
 
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            config,
-            (decodedText) => {
-                // BARCODE SUCCESS: Skip AI, process data directly
-                processBarcode(decodedText);
-                html5QrCode.stop();
+        // Start the engine
+        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+            if (!isProcessing) processData(null, decodedText);
+        }).catch(err => console.error("Camera Init Error", err));
+
+        // Auto-Pilot AI Loop: Attempt AI scan every 2 seconds if no barcode found
+        const aiLoop = setInterval(() => {
+            if (!isProcessing && html5QrCode.isScanning) {
+                captureForAI();
             }
-        ).catch(err => console.error("Camera access failed", err));
-
-        async function processBarcode(raw) {
-            btn.innerText = "BARCODE DETECTED...";
-            // We send raw barcode to AI to "translate" it into readable JSON
-            const res = await fetch('/api/scan.js', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: null, rawBarcode: raw })
-            });
-            handleResponse(await res.json());
-        }
+        }, 2500);
 
         async function captureForAI() {
-            btn.innerText = "CAPTURING...";
-            btn.disabled = true;
-            
+            isProcessing = true;
+            originPill.innerText = "ANALYZING...";
+            originPill.classList.add('animate-pulse');
+
             try {
-                // Capture current frame as image
-                const canvas = document.querySelector('#reader video');
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvas.videoWidth;
-                tempCanvas.height = canvas.videoHeight;
-                const ctx = tempCanvas.getContext('2d');
-                ctx.drawImage(canvas, 0, 0);
-                const image = tempCanvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                const videoElement = document.querySelector('#reader video');
+                const canvas = document.createElement('canvas');
+                canvas.width = 640;
+                canvas.height = videoElement.videoHeight * (640 / videoElement.videoWidth);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                const image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
                 const res = await fetch('/api/scan.js', {
                     method: 'POST',
@@ -107,15 +96,38 @@
                     body: JSON.stringify({ image })
                 });
                 
-                handleResponse(await res.json());
+                const data = await res.json();
+
+                // If AI finds valid name data, stop loop and show results
+                if (data.name && data.name !== "---" && data.name !== "DATA FORMAT ERROR" && !data.error) {
+                    clearInterval(aiLoop);
+                    handleResponse(data);
+                } else {
+                    // Fail silently and retry
+                    isProcessing = false;
+                    originPill.innerText = "READY";
+                    originPill.classList.remove('animate-pulse');
+                }
             } catch (e) {
-                console.error(e);
-                btn.innerText = "SCAN FAILED";
-                btn.disabled = false;
+                isProcessing = false;
             }
         }
 
+        async function processData(image, rawBarcode) {
+            isProcessing = true;
+            statusDisplay.innerText = "INTEL DETECTED...";
+            
+            const res = await fetch('/api/scan.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image, rawBarcode })
+            });
+            handleResponse(await res.json());
+        }
+
         function handleResponse(data) {
+            if (html5QrCode.isScanning) html5QrCode.stop();
+            
             document.getElementById('scanner-section').style.display = 'none';
             document.getElementById('results-area').classList.remove('hidden');
             document.getElementById('debug-log').style.display = 'block';
@@ -129,7 +141,6 @@
             document.querySelectorAll('.card').forEach((c, i) => {
                 setTimeout(() => c.style.display = 'block', i * 200);
             });
-            if(html5QrCode.isScanning) html5QrCode.stop();
         }
     </script>
 </body>
