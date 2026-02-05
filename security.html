@@ -91,9 +91,9 @@
             btn.disabled = true;
             
             try {
-                // VISION FIX: 800px width provides much clearer text for the AI
+                // HD VISION UPGRADE: 1024px for maximum readable detail
                 const canvas = document.createElement('canvas');
-                const targetWidth = 800; 
+                const targetWidth = 1024; 
                 const scale = targetWidth / video.videoWidth;
                 canvas.width = targetWidth;
                 canvas.height = video.videoHeight * scale;
@@ -101,10 +101,10 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                // QUALITY BOOST: 0.6 ensures text is readable without being too heavy
-                const image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                // HIGH QUALITY: 0.7 to ensure sharp text edges
+                const image = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
 
-                const prompt = "Act as a travel assistant. Look at this boarding pass and extract: passenger name, airline, gate, origin city, destination city. If blurry, make a best guess based on patterns. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
+                const prompt = "Act as a travel assistant. Scan this ticket and extract: passenger name, airline, gate, origin city, destination city. If blurry, make a best guess. Return ONLY raw JSON: {name, airline, gate, origin, destination}";
 
                 const res = await fetch('/api/scan.js', {
                     method: 'POST',
