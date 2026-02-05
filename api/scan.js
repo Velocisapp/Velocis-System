@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: "Read every word on this ticket carefully. Find the passenger name, flight number, airline, gate, and destination. Even if it's blurry, provide your absolute best guess. Respond ONLY with raw JSON: { \"name\": \"\", \"airline\": \"\", \"gate\": \"\", \"origin\": \"\", \"destination\": \"\" }" }, 
+          { text: prompt + " Respond ONLY with a raw JSON object. No markdown, no backticks." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
         safetySettings: [
@@ -24,14 +24,14 @@ export default async function handler(req, res) {
     const data = await response.json();
     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
+    // THIS IS THE MAGIC: It finds the { and } and ignores everything else
     const start = aiText.indexOf('{');
     const end = aiText.lastIndexOf('}');
     
     if (start !== -1 && end !== -1) {
-      res.status(200).json(JSON.parse(aiText.substring(start, end + 1)));
+      const jsonString = aiText.substring(start, end + 1);
+      res.status(200).json(JSON.parse(jsonString));
     } else {
-      // THIS LOGS THE ERROR SO YOU CAN SEE IT ON YOUR IMAC
-      console.log("AI COULD NOT READ IMAGE. RAW RESPONSE:", aiText);
       res.status(500).json({ error: "Mission Data Obscured", raw: aiText });
     }
   } catch (error) {
