@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
-          { text: prompt + " Respond ONLY with a raw JSON object. No markdown, no backticks, no conversational text." }, 
+          { text: prompt + " Respond with a JSON object. If you cannot find a piece of data, put 'TBD'." }, 
           { inline_data: { mime_type: "image/jpeg", data: image } }
         ]}],
         safetySettings: [
@@ -24,18 +24,19 @@ export default async function handler(req, res) {
     const data = await response.json();
     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Safety Net: This regex finds the { } block even if the AI adds "Here is your JSON:"
-    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    // NEW LOGIC: This finds the FIRST { and the LAST } and extracts everything between them
+    const start = aiText.indexOf('{');
+    const end = aiText.lastIndexOf('}');
     
-    if (jsonMatch) {
-      // Parse the cleaned JSON and send it to the phone
-      const cleanData = JSON.parse(jsonMatch[0]);
-      res.status(200).json(cleanData);
+    if (start !== -1 && end !== -1) {
+      const jsonString = aiText.substring(start, end + 1);
+      res.status(200).json(JSON.parse(jsonString));
     } else {
-      res.status(500).json({ error: "Data Extraction Failed", raw: aiText });
+      // Fallback: If AI fails to give JSON, we send the raw text so we can see what it saw
+      res.status(500).json({ error: "Mission Data Obscured", raw: aiText });
     }
 
   } catch (error) {
-    res.status(500).json({ error: "System Desync", details: error.message });
+    res.status(500).json({ error: "Neural Desync", details: error.message });
   }
 }
