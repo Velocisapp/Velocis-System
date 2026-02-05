@@ -3,9 +3,9 @@ export default async function handler(req, res) {
     const { image } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // TIER 1 PRODUCTION PATH: Using v1 for the Pro model
-    // This resolves the 'not found' error on v1beta.
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+    // THE 2026 STABLE ID: gemini-2.0-flash-001
+    // This is the model currently leading production traffic as of today.
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-001:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -19,7 +19,11 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (data.error) {
-        return res.status(200).json({ error: "STABLE_LINK_FAIL", raw: data.error.message });
+        return res.status(200).json({ 
+            error: "2026_LINK_FAIL", 
+            raw: data.error.message,
+            tip: "If this fails, we will try gemini-2.5-flash which was released recently." 
+        });
     }
 
     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
