@@ -4,29 +4,29 @@ export default async function handler(req, res) {
     const { image, rawBarcode } = body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // Direct instructions for the AI
     let prompt = "OCR this boarding pass. Extract: name, airline, gate, origin, destination. Return ONLY raw JSON.";
     
-    // If the barcode engine caught something, prioritize translating that
     if (rawBarcode) {
-      prompt = `A barcode was detected with this raw data: "${rawBarcode}". Translate this into a clean JSON object with name, airline, gate, origin, and destination.`;
+      prompt = `Translate this raw boarding pass barcode data into JSON: "${rawBarcode}". Format: { "name": "", "airline": "", "gate": "", "origin": "", "destination": "" }`;
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // UPDATED: Using v1beta and gemini-1.5-flash-latest for maximum compatibility
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [
           { text: prompt },
           ...(image ? [{ inline_data: { mime_type: "image/jpeg", data: image } }] : [])
-        ]}]
+        ]}],
+        generationConfig: { temperature: 0.1 }
       })
     });
 
     const data = await response.json();
     
     if (data.error) {
-        return res.status(200).json({ error: "Google API Error", raw: data.error.message });
+        return res.status(200).json({ error: "API_ERROR", raw: data.error.message });
     }
 
     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -36,10 +36,10 @@ export default async function handler(req, res) {
     if (start !== -1 && end !== -1) {
       res.status(200).json(JSON.parse(aiText.substring(start, end + 1)));
     } else {
-      res.status(200).json({ name: "SCANNING...", error: "Retrying" });
+      res.status(200).json({ name: "---", error: "FORMAT_ERR" });
     }
 
   } catch (error) {
-    res.status(200).json({ error: "System Error", raw: error.message });
+    res.status(200).json({ error: "CRASH", raw: error.message });
   }
 }
