@@ -65,7 +65,7 @@
         const originPill = document.getElementById('origin-pill');
         let isProcessing = false;
 
-        // FIXED CONFIG: Wide-angle sensor access without cropping
+        // FIXED CONFIG: Wide-angle view. No forced aspect ratio zoom.
         const config = { 
             fps: 10, 
             videoConstraints: {
@@ -74,12 +74,12 @@
             }
         };
 
-        // Initialize Barcode Engine (Fast-Track)
+        // Initialize Barcode Engine (Silent Background)
         html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
             if (!isProcessing) processData(null, decodedText);
         }).catch(err => console.error("Camera Init Error", err));
 
-        // MANUAL AI TRIGGER
+        // MANUAL AI TRIGGER: Only fires when YOU tap
         async function captureForAI() {
             if (isProcessing) return;
             isProcessing = true;
@@ -93,7 +93,7 @@
                 const videoElement = document.querySelector('#reader video');
                 const canvas = document.createElement('canvas');
                 
-                // High-resolution capture for OCR
+                // Higher resolution for OCR accuracy
                 canvas.width = 1024; 
                 canvas.height = videoElement.videoHeight * (1024 / videoElement.videoWidth);
                 const ctx = canvas.getContext('2d');
