@@ -2,8 +2,5 @@
   "name": "velocis-system",
   "version": "1.0.0",
   "type": "module",
-  "dependencies": {
-    "jimp": "latest",
-    "@zxing/library": "latest"
-  }
+  "dependencies": {}
 }
