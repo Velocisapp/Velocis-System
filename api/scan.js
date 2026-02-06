@@ -5,7 +5,8 @@ export default async function handler(req, res) {
     const { image } = req.body;
     const base64Data = image.split(",")[1];
 
-    // This is a direct pixel-decoder. It has NO filters and NO privacy shields.
+    // This engine translates pixels directly to text. 
+    // It is immune to Google's "Privacy Blocks."
     const response = await fetch(`https://api.qrserver.com/v1/read-qr-code/`, {
       method: 'POST',
       body: new URLSearchParams({ 'fileencoded': base64Data })
@@ -13,27 +14,28 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     
+    // Check if the decoder found the data in the Aztec code
     if (data && data[0] && data[0].symbol[0] && data[0].symbol[0].data) {
       const rawString = data[0].symbol[0].data;
 
-      // MISSION SUCCESS: We send the raw flight data back to the app.
+      // SUCCESS: Returning the raw airline string (e.g., M1USER/NAME...)
       res.status(200).json({ 
         name: "INTEL_FOUND", 
-        origin: rawString.substring(0, 25), 
+        origin: rawString.substring(0, 30), 
         destination: "DECODED_OK" 
       });
     } else {
       res.status(200).json({ 
         name: "SCAN_RETRY", 
         origin: "Center_the_Code", 
-        destination: "Adjust_Lighting" 
+        destination: "Check_Lighting" 
       });
     }
 
   } catch (error) {
     res.status(200).json({ 
-      name: "CONNECTION_ERROR", 
-      origin: "Server_Busy", 
+      name: "SYSTEM_ERROR", 
+      origin: "External_Link_Fail", 
       destination: "Try_Again" 
     });
   }
