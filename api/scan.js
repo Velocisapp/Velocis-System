@@ -7,19 +7,16 @@ export default async function handler(req, res) {
   try {
     const { image } = req.body;
     
-    // THE REPAIR: Cleans up that large private key block
-    const rawKey = process.env.GOOGLE_PRIVATE_KEY || "";
-    const formattedKey = rawKey.replace(/\\n/g, '\n');
+    // THE REPAIR: Cleans up the large private key block
+    const formattedKey = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, '\n');
 
-    // Setup the Vertex connection by EXPLICITLY passing the credentials
+    // Setup Vertex using the most compatible Vercel structure
     const vertex = createVertex({
       project: 'gen-lang-client-0363261183',
-      location: 'us-central1', 
-      googleAuthOptions: {
-        credentials: {
-          client_email: process.env.GOOGLE_CLIENT_EMAIL,
-          private_key: formattedKey,
-        },
+      location: 'us-central1',
+      googleCredentials: {
+        clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
+        privateKey: formattedKey,
       },
     });
 
@@ -41,11 +38,11 @@ export default async function handler(req, res) {
     res.status(200).json(JSON.parse(text.substring(start, end + 1)));
 
   } catch (error) {
-    // This will now tell us if the problem is specifically the EMAIL or the KEY
+    // This tells us exactly which specific field is failing the handshake
     res.status(200).json({ 
       error: "AUTH_VERIFY_FAIL", 
-      email_status: process.env.GOOGLE_CLIENT_EMAIL ? "Present" : "MISSING",
-      raw_message: error.message 
+      details: error.message,
+      check: "Ensure GOOGLE_CLIENT_EMAIL is set in Vercel" 
     });
   }
 }
