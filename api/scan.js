@@ -17,10 +17,11 @@ export default async function handler(req, res) {
                       process.env.GOOGLE_PROJECT_ID || 
                       'gen-lang-client-0363261183';
 
-    // 3. Connect to the High-Priority Vertex lane
+// 3. Connect to the High-Priority Vertex lane
     const vertex = createVertex({
       project: projectId,
       location: 'us-central1', 
+      // This is the missing piece: It tells Vertex exactly where to find your keys
       googleCredentials: {
         clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
         privateKey: formattedKey,
