@@ -12,21 +12,18 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "ACT AS A FLIGHT BARCODE SCANNER. I am providing an Aztec/QR code from a boarding pass. 1. Decode the digital data. 2. Extract Passenger Name, Origin Airport, and Destination Airport. Return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}. If you are absolutely unable to read it, return: {\"name\": \"SCAN_ERROR\", \"origin\": \"BLURRY\", \"destination\": \"RETRY\"}" },
+            { text: "DO NOT DECODE BARCODES. Instead, look at the HUMAN-READABLE TEXT printed on this boarding pass. Extract: 1. Passenger Name, 2. Origin City, 3. Destination City. Return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}. If no text is visible, say: {\"name\": \"TEXT_NOT_FOUND\", \"origin\": \"USE_PAPER_TICKET\", \"destination\": \"N/A\"}" },
             { inlineData: { mimeType: "image/jpeg", data: base64Data } }
           ]
         }],
-        // This stops Google from blocking the "Scannable" data
+        // We keep these to ensure the highest possible success rate
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
         ],
-        generationConfig: { 
-          responseMimeType: "application/json",
-          temperature: 0.1 
-        }
+        generationConfig: { responseMimeType: "application/json" }
       })
     });
 
@@ -37,9 +34,9 @@ export default async function handler(req, res) {
       res.status(200).json(JSON.parse(text));
     } else {
       res.status(200).json({ 
-        name: "BLOCK_BY_GOOGLE", 
-        origin: "Try_New_Angle", 
-        destination: "Hold_Steady" 
+        name: "PRIVACY_BLOCK", 
+        origin: "Try_Paper_Ticket", 
+        destination: "Google_Restricted" 
       });
     }
 
