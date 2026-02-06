@@ -12,29 +12,27 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "Extract Name, Origin, and Destination. Return ONLY JSON: { \"name\": \"\", \"origin\": \"\", \"destination\": \"\" }" },
+            { text: "EXTRACT BOARDING PASS DATA. You MUST return valid JSON. Fields: name, origin, destination. If you cannot find a field, put 'UNKNOWN'. Format: { \"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\" }" },
             { inlineData: { mimeType: "image/jpeg", data: base64Data } }
           ]
-        }]
+        }],
+        generationConfig: { responseMimeType: "application/json" }
       })
     });
 
     const data = await response.json();
 
-    // NEW LOGIC: This safely finds the text even if Google changes the format
-    let extractedText = "";
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-      extractedText = data.candidates[0].content.parts[0].text;
+      const extractedText = data.candidates[0].content.parts[0].text;
+      res.status(200).json(JSON.parse(extractedText));
     } else {
-      throw new Error("Google sent an empty response. Check if the image is clear.");
+      // If Google filters the image for some reason, we catch it here
+      res.status(200).json({ 
+        name: "SCAN ERROR", 
+        origin: "Check Image Clarity", 
+        destination: "Try Again" 
+      });
     }
-    
-    // Clean up the text
-    const cleanJSON = extractedText.replace(/```json|```/g, "").trim();
-    const start = cleanJSON.indexOf('{');
-    const end = cleanJSON.lastIndexOf('}');
-    
-    res.status(200).json(JSON.parse(cleanJSON.substring(start, end + 1)));
 
   } catch (error) {
     res.status(200).json({ error: "SCAN_FAIL", details: error.message });
