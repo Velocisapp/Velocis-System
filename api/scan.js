@@ -12,18 +12,21 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "DO NOT DECODE BARCODES. Instead, look at the HUMAN-READABLE TEXT printed on this boarding pass. Extract: 1. Passenger Name, 2. Origin City, 3. Destination City. Return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}. If no text is visible, say: {\"name\": \"TEXT_NOT_FOUND\", \"origin\": \"USE_PAPER_TICKET\", \"destination\": \"N/A\"}" },
+            { text: "TECHNICAL TASK: You are a secure IATA BCBP parser. Decode the raw data encoded within the Aztec/QR code pixels in this image. DO NOT read surrounding text. Extract ONLY the following fields from the code's data: 1. Passenger Name, 2. Origin IATA Code, 3. Destination IATA Code. Return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}. If the code is unreadable, return: {\"name\": \"DECODE_ERROR\", \"origin\": \"Check_Blur\", \"destination\": \"N/A\"}" },
             { inlineData: { mimeType: "image/jpeg", data: base64Data } }
           ]
         }],
-        // We keep these to ensure the highest possible success rate
+        // We set these to the absolute minimum to stop the "Privacy Blocks"
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
         ],
-        generationConfig: { responseMimeType: "application/json" }
+        generationConfig: { 
+          responseMimeType: "application/json",
+          temperature: 0.0 // 0.0 makes the AI act like a machine, not a writer
+        }
       })
     });
 
@@ -33,10 +36,11 @@ export default async function handler(req, res) {
       const text = data.candidates[0].content.parts[0].text;
       res.status(200).json(JSON.parse(text));
     } else {
+      // This catches the "Privacy Block" and gives you a hint
       res.status(200).json({ 
-        name: "PRIVACY_BLOCK", 
-        origin: "Try_Paper_Ticket", 
-        destination: "Google_Restricted" 
+        name: "GOOGLE_PII_SHIELD", 
+        origin: "Try_Closer_Crop", 
+        destination: "Restricted" 
       });
     }
 
