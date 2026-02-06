@@ -12,11 +12,11 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "DECODE CHALLENGE: Look at the Aztec/QR code in this image. Decode the raw data and extract: 1. Passenger Name, 2. Origin, 3. Destination. Return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}. If you cannot decode it, return: {\"name\": \"RETRY\", \"origin\": \"BLURRY\", \"destination\": \"SCAN\"}" },
+            { text: "ACT AS A FLIGHT BARCODE SCANNER. I am providing an Aztec/QR code from a boarding pass. 1. Decode the digital data. 2. Extract Passenger Name, Origin Airport, and Destination Airport. Return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}. If you are absolutely unable to read it, return: {\"name\": \"SCAN_ERROR\", \"origin\": \"BLURRY\", \"destination\": \"RETRY\"}" },
             { inlineData: { mimeType: "image/jpeg", data: base64Data } }
           ]
         }],
-        // THIS IS THE KEY: It stops Google from blocking the response
+        // This stops Google from blocking the "Scannable" data
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -25,22 +25,20 @@ export default async function handler(req, res) {
         ],
         generationConfig: { 
           responseMimeType: "application/json",
-          temperature: 0.1 // Low temperature makes it more accurate for decoding
+          temperature: 0.1 
         }
       })
     });
 
     const data = await response.json();
 
-    // Safety check: Does the answer actually exist?
     if (data && data.candidates && data.candidates[0] && data.candidates[0].content) {
       const text = data.candidates[0].content.parts[0].text;
       res.status(200).json(JSON.parse(text));
     } else {
-      // If Google blocks it or fails, we send a friendly error instead of crashing
       res.status(200).json({ 
-        name: "SCAN_RETRY", 
-        origin: "Check_Lighting", 
+        name: "BLOCK_BY_GOOGLE", 
+        origin: "Try_New_Angle", 
         destination: "Hold_Steady" 
       });
     }
