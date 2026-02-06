@@ -7,19 +7,18 @@ export default async function handler(req, res) {
   try {
     const { image } = req.body;
     
-    // 1. THE REPAIR: Fixes the line breaks in the large private key block
-    const formattedKey = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, '\n');
+    // 1. THE REPAIR: Cleans up the large private key block
+    const rawKey = process.env.GOOGLE_PRIVATE_KEY || "";
+    const formattedKey = rawKey.replace(/\\n/g, '\n');
 
-    // 2. Setup Vertex using the "Enterprise Handshake" structure
+    // 2. Setup Vertex using the Vercel-Standard structure
     const vertex = createVertex({
       project: 'gen-lang-client-0363261183',
       location: 'us-central1',
-      // We use googleAuthOptions here to force Vercel to use your specific keys
-      googleAuthOptions: {
-        credentials: {
-          client_email: process.env.GOOGLE_CLIENT_EMAIL,
-          private_key: formattedKey,
-        },
+      // Switching to googleCredentials, which is often more reliable on Vercel
+      googleCredentials: {
+        clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
+        privateKey: formattedKey,
       },
     });
 
@@ -43,10 +42,11 @@ export default async function handler(req, res) {
     res.status(200).json(JSON.parse(text.substring(start, end + 1)));
 
   } catch (error) {
-    // This will tell us if there is a typo in the Environment Variables
+    // This will tell us if the library is seeing the email or not
     res.status(200).json({ 
       error: "AUTH_VERIFY_FAIL", 
-      details: error.message 
+      details: error.message,
+      email_exists: !!process.env.GOOGLE_CLIENT_EMAIL 
     });
   }
 }
