@@ -2,19 +2,27 @@ import { createVertex } from '@ai-sdk/google-vertex';
 import { generateText } from 'ai';
 
 export default async function handler(req, res) {
+  // 1. Check if we actually got an image
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  
   try {
     const { image } = req.body;
+    
+    // 2. THE REPAIR: Fixes the 'private_key' formatting for Vercel
+    const rawKey = process.env.GOOGLE_PRIVATE_KEY || "";
+    const formattedKey = rawKey.replace(/\\n/g, '\n');
 
-    // This bypasses the API key and uses your secure Service Account
+    // 3. Connect to the High-Priority Vertex lane
     const vertex = createVertex({
       project: process.env.GOOGLE_PROJECT_ID,
       location: 'us-central1', 
       googleCredentials: {
         clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
-        privateKey: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Fixes formatting
+        privateKey: formattedKey,
       },
     });
 
+    // 4. Run the scan
     const { text } = await generateText({
       model: vertex('gemini-1.5-pro'),
       messages: [
@@ -28,13 +36,15 @@ export default async function handler(req, res) {
       ],
     });
 
-    // Clean up the extraction for Yourden
+    // 5. Send data back to stop the "LINKING..." spinner
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
-    res.status(200).json(JSON.parse(text.substring(start, end + 1)));
+    const result = JSON.parse(text.substring(start, end + 1));
+    
+    res.status(200).json(result);
 
   } catch (error) {
-    // If this fails, it's likely because the Vertex AI API isn't enabled yet
-    res.status(200).json({ error: "VERTEX_FAIL", raw: error.message });
+    // This tells us EXACTLY why it stayed on "LINKING..."
+    res.status(200).json({ error: "LINK_ERROR", raw: error.message });
   }
 }
