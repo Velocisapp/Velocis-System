@@ -1,45 +1,33 @@
+import Jimp from 'jimp';
+import jsQR from 'jsqr';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const { image } = req.body;
-    const apiKey = process.env.GOOGLE_AI_STUDIO_KEY;
     const base64Data = image.split(",")[1];
+    const buffer = Buffer.from(base64Data, 'base64');
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: "OCR TASK: Ignore all QR codes and barcodes. Extract the passenger NAME, the ORIGIN city, and the DESTINATION city from the text printed on this boarding pass. Return ONLY a JSON object. If you cannot find a value, use 'N/A'. Format: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}" },
-            { inlineData: { mimeType: "image/jpeg", data: base64Data } }
-          ]
-        }],
-        // THIS IS THE FIX: It tells Google not to block the response
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-        ],
-        generationConfig: { responseMimeType: "application/json" }
-      })
-    });
+    // 1. Read the image pixels
+    const img = await Jimp.read(buffer);
+    const { data, width, height } = img.bitmap;
 
-    const data = await response.json();
+    // 2. Scan the pixels for a QR code
+    const code = jsQR(data, width, height);
 
-    // Check if Google sent back a valid answer
-    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-      const extractedText = data.candidates[0].content.parts[0].text;
-      res.status(200).json(JSON.parse(extractedText));
+    if (code) {
+      // Boarding pass QR codes usually look like: M1USER/NAME...
+      // We send THIS string to the AI to "translate" it into a name/city
+      res.status(200).json({ 
+        raw_data: code.data,
+        message: "Code Decoded Successfully" 
+      });
     } else {
-      // If it still fails, we show what Google actually said (Safety Block or Error)
-      const reason = data.promptFeedback ? data.promptFeedback.blockReason : "Unknown Block";
-      res.status(200).json({ name: "BLOCK_ERROR", origin: reason, destination: "Try different angle" });
+      res.status(200).json({ error: "NO_CODE_FOUND", details: "No QR code detected in image" });
     }
 
   } catch (error) {
-    res.status(200).json({ error: "SCAN_FAIL", details: error.message });
+    res.status(200).json({ error: "DECODE_FAIL", details: error.message });
   }
 }
