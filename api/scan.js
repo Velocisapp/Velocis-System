@@ -11,40 +11,34 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
+          role: "user",
           parts: [
-            { text: "TECHNICAL TASK: You are a secure IATA BCBP parser. Decode the raw data encoded within the Aztec/QR code pixels in this image. DO NOT read surrounding text. Extract ONLY the following fields from the code's data: 1. Passenger Name, 2. Origin IATA Code, 3. Destination IATA Code. Return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}. If the code is unreadable, return: {\"name\": \"DECODE_ERROR\", \"origin\": \"Check_Blur\", \"destination\": \"N/A\"}" },
-            { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+            { inlineData: { mimeType: "image/jpeg", data: base64Data } },
+            { text: "This is a technical IATA BCBP test. Decode the Aztec code. Provide ONLY the JSON string for the passenger name, origin, and destination. No conversation." }
           ]
         }],
-        // We set these to the absolute minimum to stop the "Privacy Blocks"
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-        ],
         generationConfig: { 
           responseMimeType: "application/json",
-          temperature: 0.0 // 0.0 makes the AI act like a machine, not a writer
+          temperature: 0.0
         }
       })
     });
 
     const data = await response.json();
 
-    if (data && data.candidates && data.candidates[0] && data.candidates[0].content) {
+    if (data.candidates && data.candidates[0].content) {
       const text = data.candidates[0].content.parts[0].text;
       res.status(200).json(JSON.parse(text));
     } else {
-      // This catches the "Privacy Block" and gives you a hint
+      // THE LAST RESORT: If Google blocks the response, we tell the user why
       res.status(200).json({ 
-        name: "GOOGLE_PII_SHIELD", 
-        origin: "Try_Closer_Crop", 
-        destination: "Restricted" 
+        name: "GOOGLE_BLOCKED_DATA", 
+        origin: "Privacy_Restriction", 
+        destination: "Try_Paper_Ticket" 
       });
     }
 
   } catch (error) {
-    res.status(200).json({ error: "AI_SCAN_FAIL", details: error.message });
+    res.status(200).json({ error: "SCAN_FAIL", details: error.message });
   }
 }
