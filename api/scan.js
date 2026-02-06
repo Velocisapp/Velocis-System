@@ -11,12 +11,13 @@ export default async function handler(req, res) {
     const rawKey = process.env.GOOGLE_PRIVATE_KEY || "";
     const formattedKey = rawKey.replace(/\\n/g, '\n');
 
+   // 3. Connect to the High-Priority Vertex lane
     const vertex = createVertex({
-      project: process.env.GOOGLE_VERTEX_PROJECT || 'gen-lang-client-0363261183',
+      project: 'gen-lang-client-0363261183',
       location: 'us-central1', 
-      // This structure uses the EXACT keys from your JSON file
       googleAuthOptions: {
         credentials: {
+          // Use underscores (_) here to match Google's strict requirements
           client_email: process.env.GOOGLE_CLIENT_EMAIL,
           private_key: formattedKey,
         },
