@@ -12,26 +12,31 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "EXTRACT BOARDING PASS DATA. You MUST return valid JSON. Fields: name, origin, destination. If you cannot find a field, put 'UNKNOWN'. Format: { \"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\" }" },
+            { text: "OCR TASK: Ignore all QR codes and barcodes. Extract the passenger NAME, the ORIGIN city, and the DESTINATION city from the text printed on this boarding pass. Return ONLY a JSON object. If you cannot find a value, use 'N/A'. Format: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}" },
             { inlineData: { mimeType: "image/jpeg", data: base64Data } }
           ]
         }],
+        // THIS IS THE FIX: It tells Google not to block the response
+        safetySettings: [
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+        ],
         generationConfig: { responseMimeType: "application/json" }
       })
     });
 
     const data = await response.json();
 
+    // Check if Google sent back a valid answer
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
       const extractedText = data.candidates[0].content.parts[0].text;
       res.status(200).json(JSON.parse(extractedText));
     } else {
-      // If Google filters the image for some reason, we catch it here
-      res.status(200).json({ 
-        name: "SCAN ERROR", 
-        origin: "Check Image Clarity", 
-        destination: "Try Again" 
-      });
+      // If it still fails, we show what Google actually said (Safety Block or Error)
+      const reason = data.promptFeedback ? data.promptFeedback.blockReason : "Unknown Block";
+      res.status(200).json({ name: "BLOCK_ERROR", origin: reason, destination: "Try different angle" });
     }
 
   } catch (error) {
