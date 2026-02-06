@@ -7,17 +7,16 @@ export default async function handler(req, res) {
   try {
     const { image } = req.body;
     
-    // THE REPAIR: Fixes the key formatting for Vercel
+    // THE REPAIR: Cleans up that large private key block
     const rawKey = process.env.GOOGLE_PRIVATE_KEY || "";
     const formattedKey = rawKey.replace(/\\n/g, '\n');
 
-   // 3. Connect to the High-Priority Vertex lane
+    // Setup the Vertex connection by EXPLICITLY passing the credentials
     const vertex = createVertex({
       project: 'gen-lang-client-0363261183',
       location: 'us-central1', 
       googleAuthOptions: {
         credentials: {
-          // Use underscores (_) here to match Google's strict requirements
           client_email: process.env.GOOGLE_CLIENT_EMAIL,
           private_key: formattedKey,
         },
@@ -42,7 +41,11 @@ export default async function handler(req, res) {
     res.status(200).json(JSON.parse(text.substring(start, end + 1)));
 
   } catch (error) {
-    // This will help us catch any final typos
-    res.status(200).json({ error: "FINAL_SYNC_FAIL", raw: error.message });
+    // This will now tell us if the problem is specifically the EMAIL or the KEY
+    res.status(200).json({ 
+      error: "AUTH_VERIFY_FAIL", 
+      email_status: process.env.GOOGLE_CLIENT_EMAIL ? "Present" : "MISSING",
+      raw_message: error.message 
+    });
   }
 }
