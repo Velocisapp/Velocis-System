@@ -21,10 +21,12 @@ export default async function handler(req, res) {
     const vertex = createVertex({
       project: projectId,
       location: 'us-central1', 
-      // This is the missing piece: It tells Vertex exactly where to find your keys
-      googleCredentials: {
-        clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
-        privateKey: formattedKey,
+      // Changed from 'googleCredentials' to 'googleAuthOptions' for full Vercel compatibility
+      googleAuthOptions: {
+        credentials: {
+          client_email: process.env.GOOGLE_CLIENT_EMAIL,
+          private_key: formattedKey,
+        },
       },
     });
 
