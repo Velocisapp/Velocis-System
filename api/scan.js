@@ -5,38 +5,39 @@ export default async function handler(req, res) {
     const { image } = req.body;
     const base64Data = image.split(",")[1];
 
-    // This engine translates pixels directly to text. 
-    // It is immune to Google's "Privacy Blocks."
-    const response = await fetch(`https://api.qrserver.com/v1/read-qr-code/`, {
+    // 1. TRY THE AI FIRST (The "Brain")
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${process.env.GOOGLE_AI_STUDIO_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "Decode this barcode pattern and return ONLY JSON: {\"name\": \"...\", \"origin\": \"...\", \"destination\": \"...\"}" }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
+        generationConfig: { responseMimeType: "application/json" }
+      })
+    });
+
+    const aiData = await aiResponse.json();
+
+    if (aiData.candidates && aiData.candidates[0].content) {
+      // If AI works, return the clean JSON
+      return res.status(200).json(JSON.parse(aiData.candidates[0].content.parts[0].text));
+    }
+
+    // 2. FALLBACK: If AI is blocked, use the Mechanical Decoder
+    const decodeRes = await fetch(`https://api.qrserver.com/v1/read-qr-code/`, {
       method: 'POST',
       body: new URLSearchParams({ 'fileencoded': base64Data })
     });
-
-    const data = await response.json();
+    const decodeData = await decodeRes.json();
     
-    // Check if the decoder found the data in the Aztec code
-    if (data && data[0] && data[0].symbol[0] && data[0].symbol[0].data) {
-      const rawString = data[0].symbol[0].data;
-
-      // SUCCESS: Returning the raw airline string (e.g., M1USER/NAME...)
-      res.status(200).json({ 
-        name: "INTEL_FOUND", 
-        origin: rawString.substring(0, 30), 
-        destination: "DECODED_OK" 
-      });
-    } else {
-      res.status(200).json({ 
-        name: "SCAN_RETRY", 
-        origin: "Center_the_Code", 
-        destination: "Check_Lighting" 
+    if (decodeData[0].symbol[0].data) {
+      return res.status(200).json({ 
+        name: "RAW_INTEL", 
+        origin: decodeData[0].symbol[0].data.substring(0, 20), 
+        destination: "DECODED_BY_MECHANIC" 
       });
     }
 
   } catch (error) {
-    res.status(200).json({ 
-      name: "SYSTEM_ERROR", 
-      origin: "External_Link_Fail", 
-      destination: "Try_Again" 
-    });
+    res.status(200).json({ name: "SYSTEM_COOLDOWN", origin: "Wait_4_Hours", destination: "Vercel_Limit" });
   }
 }
