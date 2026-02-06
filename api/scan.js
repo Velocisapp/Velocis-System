@@ -1,5 +1,5 @@
 import Jimp from 'jimp';
-import { MultiFormatReader, BarcodeFormat, DecodeHintType, RGBLuminanceSource, BinaryBitmap, HybridBinarizer } from '@zxing/library';
+import * as ZXing from '@zxing/library';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -8,22 +8,22 @@ export default async function handler(req, res) {
     const { image } = req.body;
     const buffer = Buffer.from(image.split(",")[1], 'base64');
 
-    // 1. Process image for "Airline Grade" clarity
+    // 1. Process image for clarity
     const img = await Jimp.read(buffer);
     const { data, width, height } = img.bitmap;
 
-    // 2. Set up the Universal Reader
+    // 2. Set up the Universal Reader using the ZXing bundle
     const hints = new Map();
     const formats = [
-      BarcodeFormat.AZTEC, 
-      BarcodeFormat.QR_CODE, 
-      BarcodeFormat.PDF_417, 
-      BarcodeFormat.DATA_MATRIX
+      ZXing.BarcodeFormat.AZTEC, 
+      ZXing.BarcodeFormat.QR_CODE, 
+      ZXing.BarcodeFormat.PDF_417, 
+      ZXing.BarcodeFormat.DATA_MATRIX
     ];
-    hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
-    hints.set(DecodeHintType.TRY_HARDER, true);
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
 
-    const reader = new MultiFormatReader();
+    const reader = new ZXing.MultiFormatReader();
     reader.setHints(hints);
 
     // 3. Convert image to a format the decoder understands
@@ -33,26 +33,25 @@ export default async function handler(req, res) {
       luminances[i] = ((data[i * 4] + data[i * 4 + 1] + data[i * 4 + 2]) / 3) & 0xFF;
     }
     
-    const source = new RGBLuminanceSource(luminances, width, height);
-    const bitmap = new BinaryBitmap(new HybridBinarizer(source));
+    const source = new ZXing.RGBLuminanceSource(luminances, width, height);
+    const bitmap = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(source));
 
-    // 4. Decode any barcode found
+    // 4. Decode the code
     const result = reader.decode(bitmap);
 
     if (result) {
-      // Return the raw airline string (M1NAME/FIRST...)
       res.status(200).json({ 
         name: "DECODED", 
         origin: result.getText(), 
-        destination: "FORMAT: " + result.getBarcodeFormat() 
+        destination: "TYPE: " + result.getBarcodeFormat() 
       });
     }
 
   } catch (error) {
+    // This catches both "No Code Found" and server errors
     res.status(200).json({ 
-      name: "NO CODE FOUND", 
-      origin: "Ensure code is centered", 
-      destination: "Try Again" 
+      error: "SCAN_FAIL", 
+      details: error.message 
     });
   }
 }
