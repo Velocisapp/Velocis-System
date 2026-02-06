@@ -7,19 +7,23 @@ export default async function handler(req, res) {
   try {
     const { image } = req.body;
     
-    // THE REPAIR: Cleans up the large private key block
+    // 1. THE REPAIR: Fixes the line breaks in the large private key block
     const formattedKey = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, '\n');
 
-    // Setup Vertex using the most compatible Vercel structure
+    // 2. Setup Vertex using the "Enterprise Handshake" structure
     const vertex = createVertex({
       project: 'gen-lang-client-0363261183',
       location: 'us-central1',
-      googleCredentials: {
-        clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
-        privateKey: formattedKey,
+      // We use googleAuthOptions here to force Vercel to use your specific keys
+      googleAuthOptions: {
+        credentials: {
+          client_email: process.env.GOOGLE_CLIENT_EMAIL,
+          private_key: formattedKey,
+        },
       },
     });
 
+    // 3. Run the AI Scan
     const { text } = await generateText({
       model: vertex('gemini-1.5-pro'),
       messages: [
@@ -33,16 +37,16 @@ export default async function handler(req, res) {
       ],
     });
 
+    // 4. Success! Clean the JSON and send it back to the scanner
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     res.status(200).json(JSON.parse(text.substring(start, end + 1)));
 
   } catch (error) {
-    // This tells us exactly which specific field is failing the handshake
+    // This will tell us if there is a typo in the Environment Variables
     res.status(200).json({ 
       error: "AUTH_VERIFY_FAIL", 
-      details: error.message,
-      check: "Ensure GOOGLE_CLIENT_EMAIL is set in Vercel" 
+      details: error.message 
     });
   }
 }
