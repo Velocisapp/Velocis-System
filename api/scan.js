@@ -7,22 +7,24 @@ export default async function handler(req, res) {
   try {
     const { image } = req.body;
     
-    // 1. THE REPAIR: Cleans up the large private key block
+    // 1. REPAIR: Cleans up the private key
     const rawKey = process.env.GOOGLE_PRIVATE_KEY || "";
     const formattedKey = rawKey.replace(/\\n/g, '\n');
 
-    // 2. Setup Vertex using the Vercel-Standard structure
+    // 2. SAFETY FALLBACK: Use the variable OR the hardcoded email
+    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL || 'velocis-scanner@gen-lang-client-0363261183.iam.gserviceaccount.com';
+
+    // 3. Setup Vertex with the guaranteed email
     const vertex = createVertex({
       project: 'gen-lang-client-0363261183',
       location: 'us-central1',
-      // Switching to googleCredentials, which is often more reliable on Vercel
       googleCredentials: {
-        clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
+        clientEmail: clientEmail,
         privateKey: formattedKey,
       },
     });
 
-    // 3. Run the AI Scan
+    // 4. Run the Scan
     const { text } = await generateText({
       model: vertex('gemini-1.5-pro'),
       messages: [
@@ -36,17 +38,16 @@ export default async function handler(req, res) {
       ],
     });
 
-    // 4. Success! Clean the JSON and send it back to the scanner
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     res.status(200).json(JSON.parse(text.substring(start, end + 1)));
 
   } catch (error) {
-    // This will tell us if the library is seeing the email or not
+    // This will now tell us if the KEY is the last remaining problem
     res.status(200).json({ 
       error: "AUTH_VERIFY_FAIL", 
       details: error.message,
-      email_exists: !!process.env.GOOGLE_CLIENT_EMAIL 
+      email_used: process.env.GOOGLE_CLIENT_EMAIL ? "Vercel_Var" : "Hardcoded_Backup"
     });
   }
 }
