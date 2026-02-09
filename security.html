@@ -109,54 +109,40 @@
     </div>
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
-
 <script>
-    // 2. INITIALIZE ENGINE WITH FULL FORMAT SUPPORT
+    // 1. Restore the high-intensity engine from yesterday
     const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
-    let isMissionActive = false;
+    let missionLocked = false;
 
-    // 3. Julian Date Decoder (Master File Standard)
-    function decodeAirHubDate(julianStr) {
-        try {
-            const day = parseInt(julianStr);
-            const date = new Date(2026, 0); 
-            date.setDate(day);
-            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        } catch (e) { return `Day ${julianStr}`; }
-    }
+    // 2. High-speed Camera Constraints
+    const constraints = {
+        video: { 
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    };
 
-    // 4. THE ENGINE START (FORCED)
-    function activateScanner() {
-        const constraints = {
-            video: { 
-                facingMode: "environment", 
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 } 
-            }
-        };
-
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(stream => { 
-                video.srcObject = stream; 
-                video.setAttribute('playsinline', true);
-                video.play();
-                
-                // Aggressive Listening Mode
-                codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-                    if (result && !isMissionActive) {
-                        isMissionActive = true;
-                        handleMasterExtraction(result.text);
-                    }
-                });
-            })
-            .catch(err => {
-                alert("Camera initialization failed. Please check permissions.");
+    // 3. Direct Activation
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => { 
+            video.srcObject = stream; 
+            video.setAttribute('playsinline', true);
+            video.play();
+            
+            // AGGRESSIVE LISTENING (No delay, no narrowed search)
+            codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                if (result && !missionLocked) {
+                    missionLocked = true;
+                    if (window.navigator.vibrate) window.navigator.vibrate(100);
+                    handleExtraction(result.text);
+                }
             });
-    }
+        });
 
-    function handleMasterExtraction(rawText) {
-        // SURGICAL SLICING (Exactly from your Master File)
+    function handleExtraction(rawText) {
+        // Use your exact Master Slicing
         const data = {
             passenger: rawText.substring(2, 22).trim(),
             pnr: rawText.substring(23, 30).trim(),
@@ -164,36 +150,30 @@
             destination: rawText.substring(33, 36),
             airline: rawText.substring(36, 38),
             flight: rawText.substring(38, 43).trim(),
-            readable_date: decodeAirHubDate(rawText.substring(44, 47)),
-            seat: rawText.substring(48, 52).trim(),
-            sequence: rawText.substring(52, 57).trim()
+            seat: rawText.substring(48, 52).trim()
         };
 
-        // Full UI Display with Warm Welcome
+        // UI RESTORATION: Plain English & No iMac references
         document.body.innerHTML = `
             <div style="background:#000; color:#fff; height:100vh; padding:30px; font-family:sans-serif;">
                 <h1 style="color:#00ff00;">IDENTITY VERIFIED</h1>
-                <p style="font-size:20px;">Hello, ${data.passenger}</p>
-                <div style="background:#111; padding:15px; border-left:4px solid #00ff00;">
+                <p style="font-size:22px;">Hello, ${data.passenger}</p>
+                <div style="background:#111; padding:15px; border-left:4px solid #00ff00; margin:20px 0;">
                     <p>✈️ ${data.airline}${data.flight} | ${data.origin} ➔ ${data.destination}</p>
-                    <p>💺 SEAT: ${data.seat} | DATE: ${data.readable_date}</p>
-                    <p>🆔 PNR: ${data.pnr} | SEQ: ${data.sequence}</p>
+                    <p>💺 SEAT: ${data.seat} | PNR: ${data.pnr}</p>
                 </div>
-                <p style="margin-top:20px;">Welcome back. Your personal briefing is ready.</p>
-                <button onclick="location.reload()" style="width:100%; padding:20px; background:#222; color:#fff; border:1px solid #fff;">RESET SCANNER</button>
+                <p>Welcome back. Your personal briefing is ready.</p>
+                <button onclick="location.reload()" style="width:100%; padding:20px; background:#333; color:#fff; border:none; border-radius:10px; margin-top:20px;">RESCAN DOCUMENT</button>
             </div>
         `;
 
-        // SYNC TO NETLIFY
+        // Background Sync (Only after the UI is updated to save speed)
         fetch('/api/mission_bridge', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
     }
-
-    // AUTO-START ON LOAD
-    window.addEventListener('load', activateScanner);
 </script>
 </body>
 </html>
