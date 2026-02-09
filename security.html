@@ -109,65 +109,72 @@
     </div>
 
 <script>
-    // Initialize the engine
     const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
-    let isProcessing = false;
+    let isMissionActive = false;
 
-    // Start Camera immediately
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    // 1. Initialize Camera with High-Focus Constraints
+    const constraints = {
+        video: { 
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => { 
             video.srcObject = stream; 
             video.setAttribute('playsinline', true);
             video.play();
+            // Start the engine immediately
+            startScanningEngine();
+        })
+        .catch(err => {
+            document.getElementById('status-pill').innerText = "CAMERA ERROR";
         });
 
-    async function manualCapture() {
-        if (isProcessing) return;
-        isProcessing = true;
+    // 2. The Engine: Continuous Background Scanning
+    function startScanningEngine() {
+        document.getElementById('status-pill').innerText = "RADAR ACTIVE";
         
-        // UI Feedback
-        const btn = document.getElementById('scan-btn');
-        btn.innerText = "DECODING...";
-        document.getElementById('status-pill').innerText = "LOCAL ENGINE ACTIVE";
-
-        try {
-            // THE FIX: We use decodeOnce instead of a continuous loop
-            // This forces the engine to look at the frame RIGHT NOW
-            const result = await codeReader.decodeOnceFromVideoElement(video);
-            
-            if (result && result.text) {
-                const rawText = result.text;
-                
-                // 1. EXTRACT DATA IMMEDIATELY
-                const missionData = {
-                    passenger: rawText.substring(2, 22).trim() || "TRAVELER",
-                    pnr: rawText.substring(23, 30).trim(),
-                    origin: rawText.substring(30, 33),
-                    destination: rawText.substring(33, 36),
-                    airline: rawText.substring(36, 38),
-                    flight: rawText.substring(38, 43).trim(),
-                    seat: rawText.substring(48, 52).trim() || "N/A",
-                    status: "Active"
-                };
-
-                // 2. FORCE UI CHANGE (NO WAITING)
-                showResults(missionData);
-
-                // 3. BACKGROUND NOTIFICATION (Butler)
-                fetch('/api/mission_bridge', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(missionData)
-                }).catch(() => console.log("Bridge Update Deferred"));
-
+        // This watches the video feed and "fires" the moment it sees a code
+        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+            if (result && !isMissionActive) {
+                isMissionActive = true; // Prevents double-scanning
+                handleExtractedData(result.text);
             }
+        });
+    }
+
+    // 3. The Logic: Processing the IATA Boarding Pass
+    async function handleExtractedData(rawText) {
+        document.getElementById('status-pill').innerText = "MISSION DECODED";
+        
+        const missionData = {
+            passenger: rawText.substring(2, 22).trim(),
+            pnr: rawText.substring(23, 30).trim(),
+            origin: rawText.substring(30, 33),
+            destination: rawText.substring(33, 36),
+            airline: rawText.substring(36, 38),
+            flight: rawText.substring(38, 43).trim(),
+            seat: rawText.substring(48, 52).trim(),
+            status: "Active",
+            timestamp: new Date().toISOString()
+        };
+
+        // UI TRANSITION (Instant)
+        showResults(missionData);
+
+        // SYNC TO NETLIFY BRIDGE (Background)
+        try {
+            await fetch('/api/mission_bridge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(missionData)
+            });
         } catch (e) {
-            // If nothing is found in that specific frame, reset so user can tap again
-            console.log("No code found in this frame");
-            isProcessing = false;
-            btn.innerText = "SCAN DOCUMENT";
-            document.getElementById('status-pill').innerText = "RETRYING...";
+            console.log("Bridge Sync Deferred");
         }
     }
 
@@ -178,6 +185,12 @@
         document.getElementById('flight-path').innerText = `${data.origin} ➔ ${data.destination} | SEAT ${data.seat}`;
         document.getElementById('card1').style.display = 'block';
         if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+    }
+
+    // Manual Backup Button (In case auto-scan is slow)
+    function manualCapture() {
+        document.getElementById('scan-btn').innerText = "SCANNING...";
+        // The engine is already running, so this button just provides UI feedback
     }
 </script>
 </body>
