@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VELOCIS™ | GLOBAL HUB</title>
+    <title>VELOCIS™ | SECURITY PORTAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        /* ELITE MINIMALIST THEME */
+        /* ELITE MINIMALIST THEME PRESERVED */
         body { 
             background: #fdfdfd; 
             color: #334155; 
@@ -15,7 +16,6 @@
             min-height: 100vh;
         }
 
-        /* The Blurred Atmosphere Layer */
         body::before {
             content: "";
             position: fixed;
@@ -50,11 +50,10 @@
             animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* SOFT SCANNER BOX */
         .scanner-viewport {
             border: 2px solid rgba(100, 116, 139, 0.1);
             position: relative;
-            background: #fff;
+            background: #000;
         }
 
         .pulse-frame {
@@ -73,7 +72,7 @@
 <body class="p-8">
     <div class="flex justify-between mb-12">
         <div id="status-pill" class="glass-pill text-slate-500 uppercase">System Ready</div>
-        <div class="glass-pill text-blue-500 uppercase">Live Bridge</div>
+        <div class="glass-pill text-blue-500 uppercase">Live Scanner</div>
     </div>
 
     <div id="scanner-section">
@@ -109,67 +108,56 @@
         </button>
     </div>
 
-   <script>
+<script>
+    const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
     let isProcessing = false;
 
     // 1. Initialize Field Camera
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => { video.srcObject = stream; });
+        .then(stream => { 
+            video.srcObject = stream; 
+            video.setAttribute('playsinline', true); // Required for iOS Safari
+            video.play();
+        });
 
     async function manualCapture() {
         if (isProcessing) return;
         isProcessing = true;
         
-        document.getElementById('scan-btn').innerText = "LINKING...";
-        document.getElementById('status-pill').innerText = "EXTRACTING...";
-
-        // Capture Current Frame
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        
-        // Convert to Base64 (0.3 quality to ensure it passes through the bridge quickly)
-        const imageData = canvas.toDataURL('image/jpeg', 0.3);
+        document.getElementById('scan-btn').innerText = "EXTRACTING...";
+        document.getElementById('status-pill').innerText = "SCANNING...";
 
         try {
-            // THE DYNAMIC HANDSHAKE: Send image to the bridge
+            // THE STANDALONE FIX: Decode directly on iPhone using Zxing
+            const result = await codeReader.decodeFromVideoElement(video);
+            const rawText = result.text;
+            
+            // APPLYING THE 29-DAY DATA SLICING LOGIC
+            const missionData = {
+                passenger: rawText.substring(2, 22).trim(),
+                pnr: rawText.substring(23, 30).trim(),
+                airport: rawText.substring(30, 33),
+                destination: rawText.substring(33, 36),
+                airline: rawText.substring(36, 38),
+                flight: rawText.substring(38, 43).trim(),
+                seat: rawText.substring(48, 52).trim(),
+                status: "Active",
+                timestamp: new Date().toISOString()
+            };
+
+            // Display Results on iPhone Welcome Card Instantly
+            showResults(missionData);
+
+            // Sync with Bridge so Ollama can speak on the iMac
             await fetch('/api/mission_bridge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    image: imageData,
-                    timestamp: new Date().toISOString(),
-                    status: "Processing"
-                })
+                body: JSON.stringify(missionData)
             });
 
-            // POLLING LOOP: Give the iMac 5 seconds to decode
-            let attempts = 0;
-            const pollInterval = setInterval(async () => {
-                attempts++;
-                
-                try {
-                    const res = await fetch('/api/mission_bridge');
-                    const data = await res.json();
-
-                    // If iMac has decoded it and set status to Active
-                    if (data.status === "Active") {
-                        clearInterval(pollInterval);
-                        showResults(data);
-                    } else if (attempts >= 6) { // 6 seconds timeout
-                        clearInterval(pollInterval);
-                        resetScanner("RETRY SCAN");
-                    }
-                } catch (err) {
-                    console.error("Polling error", err);
-                }
-            }, 1000);
-
         } catch (e) {
-            console.error("Bridge Error", e);
+            console.error("Scan Error:", e);
             resetScanner("RETRY SCAN");
         }
     }
@@ -179,7 +167,7 @@
         document.getElementById('results-area').classList.remove('hidden');
         
         document.getElementById('user-name').innerText = data.passenger || "Velocis Traveler";
-        document.getElementById('flight-path').innerText = `${data.airport} ➔ ${data.destination}`;
+        document.getElementById('flight-path').innerText = `${data.airport} ➔ ${data.destination} | SEAT ${data.seat}`;
         document.getElementById('card1').style.display = 'block';
         
         if (window.navigator.vibrate) window.navigator.vibrate([50, 30, 50]);
