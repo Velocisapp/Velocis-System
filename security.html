@@ -109,69 +109,92 @@
     </div>
 
 <script>
-    // 1. ELIMINATE ALL OVERHEAD
-    const codeReader = new ZXing.BrowserMultiFormatReader();
+    // 1. RESTORING FULL ENGINE POWER
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Mimics your iMac Triple-Buffer
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+        ZXing.BarcodeFormat.PDF417, 
+        ZXing.BarcodeFormat.QR_CODE, 
+        ZXing.BarcodeFormat.CODE_128
+    ]);
+
+    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
-    let missionLocked = false;
+    let isMissionActive = false;
 
-    // 2. FORCE RAW HARDWARE ACCESS
-    // We use a lower resolution to SAVE memory and SPEED up the math engine
-    const constraints = {
+    // 2. Julian Date Decoder (Exactly from your Master File)
+    function decodeAirHubDate(julianStr) {
+        try {
+            const day = parseInt(julianStr);
+            const date = new Date(2026, 0); 
+            date.setDate(day);
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        } catch (e) { return `Day ${julianStr}`; }
+    }
+
+    // 3. Focal-Boost Initialization
+    navigator.mediaDevices.getUserMedia({ 
         video: { 
-            facingMode: "environment",
-            width: 640, 
-            height: 480,
-            frameRate: { ideal: 60 } // Double the frames to catch the code faster
-        }
-    };
+            facingMode: "environment", 
+            width: { ideal: 1280 }, // Balanced resolution for focus + speed
+            height: { ideal: 720 }
+        } 
+    }).then(stream => { 
+        video.srcObject = stream; 
+        video.setAttribute('playsinline', true);
+        video.play();
+        startMasterRadar();
+    });
 
-    navigator.mediaDevices.getUserMedia(constraints)
-        .then(stream => { 
-            video.srcObject = stream; 
-            video.setAttribute('playsinline', true);
-            video.play();
-            
-            // THE MACHINE GUN ENGINE
-            codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-                if (result && !missionLocked) {
-                    missionLocked = true;
-                    executeMasterExtraction(result.text);
+    function startMasterRadar() {
+        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+            if (result && !isMissionActive) {
+                if (result.text.length > 25) { // Ensure it's not a random small QR
+                    isMissionActive = true;
+                    if (window.navigator.vibrate) window.navigator.vibrate(200);
+                    processFullTelemetry(result.text);
                 }
-            });
+            }
         });
+    }
 
-    function executeMasterExtraction(rawText) {
-        // Vibrate immediately so you know it worked
-        if (window.navigator.vibrate) window.navigator.vibrate(200);
-
-        // SURGICAL SLICING (Your Protected Master Logic)
+    function processFullTelemetry(rawText) {
+        // SURGICAL SLICING: Exactly from your Master File
         const data = {
             passenger: rawText.substring(2, 22).trim(),
             pnr: rawText.substring(23, 30).trim(),
+            origin: rawText.substring(30, 33),
+            destination: rawText.substring(33, 36),
             airline: rawText.substring(36, 38),
             flight: rawText.substring(38, 43).trim(),
-            seat: rawText.substring(48, 52).trim()
+            readable_date: decodeAirHubDate(rawText.substring(44, 47)),
+            seat: rawText.substring(48, 52).trim(),
+            sequence: rawText.substring(52, 57).trim()
         };
 
-        // FORCE UI OVERRIDE
+        // FULL DATA DISPLAY
         document.body.innerHTML = `
-            <div style="background:#000; color:#fff; height:100vh; padding:40px; font-family:sans-serif;">
-                <h1 style="color:#00ff00;">IDENTITY VERIFIED</h1>
-                <p style="font-size:24px;">Hello, ${data.passenger}</p>
-                <hr>
-                <p>FLIGHT: ${data.airline}${data.flight}</p>
-                <p>SEAT: ${data.seat}</p>
-                <p>PNR: ${data.pnr}</p>
-                <button onclick="location.reload()" style="padding:20px; background:#222; color:#fff; border:1px solid #fff;">RESET SCANNER</button>
+            <div style="background:#000; color:#fff; height:100vh; padding:30px; font-family:monospace; line-height:1.6;">
+                <h2 style="color:#00ff00; border-bottom:1px solid #333; padding-bottom:10px;">IDENTITY VERIFIED</h2>
+                <div style="font-size:18px; margin-bottom:20px;">Hello, ${data.passenger}</div>
+                <div style="background:#111; padding:15px; border-radius:5px;">
+                    <p>✈️ FLIGHT: ${data.airline}${data.flight}</p>
+                    <p>📍 ROUTE: ${data.origin} ➔ ${data.destination}</p>
+                    <p>💺 SEAT: ${data.seat}</p>
+                    <p>🗓️ DATE: ${data.readable_date}</p>
+                    <p>🆔 PNR: ${data.pnr}</p>
+                    <p>🔢 SEQ: ${data.sequence}</p>
+                </div>
+                <button onclick="location.reload()" style="margin-top:30px; width:100%; padding:20px; background:#00ff00; color:#000; font-weight:bold; border:none; border-radius:5px;">RESET SCANNER</button>
             </div>
         `;
 
-        // SYNC DATA IN BACKGROUND
+        // SYNC TO NETLIFY BRIDGE
         fetch('/api/mission_bridge', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+            body: JSON.stringify({ ...data, rawText: rawText })
+        }).catch(() => {});
     }
 </script>
 </body>
