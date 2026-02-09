@@ -113,44 +113,37 @@
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 1. Initialize Camera with High-Focus Constraints
-    const constraints = {
-        video: { 
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-        }
-    };
-
-    navigator.mediaDevices.getUserMedia(constraints)
+    // 1. Initialize Camera
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then(stream => { 
             video.srcObject = stream; 
             video.setAttribute('playsinline', true);
             video.play();
-            // Start the engine immediately
             startScanningEngine();
-        })
-        .catch(err => {
-            document.getElementById('status-pill').innerText = "CAMERA ERROR";
         });
 
-    // 2. The Engine: Continuous Background Scanning
+    // 2. The Engine with Tactical Delay (Slower, deliberate feel)
     function startScanningEngine() {
-        document.getElementById('status-pill').innerText = "RADAR ACTIVE";
+        document.getElementById('status-pill').innerText = "SYSTEM READY";
         
-        // This watches the video feed and "fires" the moment it sees a code
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                isMissionActive = true; // Prevents double-scanning
-                handleExtractedData(result.text);
+                isMissionActive = true; 
+                
+                // Immediate feedback that the document was seen
+                document.getElementById('status-pill').innerText = "DOCUMENT DETECTED";
+                document.getElementById('scan-btn').innerText = "VERIFYING...";
+
+                // Tactical Delay: 1.8 seconds to make the scan feel secure and thorough
+                setTimeout(() => {
+                    handleExtractedData(result.text);
+                }, 1800);
             }
         });
     }
 
-    // 3. The Logic: Processing the IATA Boarding Pass
+    // 3. Comprehensive Data Extraction
     async function handleExtractedData(rawText) {
-        document.getElementById('status-pill').innerText = "MISSION DECODED";
-        
         const missionData = {
             passenger: rawText.substring(2, 22).trim(),
             pnr: rawText.substring(23, 30).trim(),
@@ -158,39 +151,45 @@
             destination: rawText.substring(33, 36),
             airline: rawText.substring(36, 38),
             flight: rawText.substring(38, 43).trim(),
+            julianDate: rawText.substring(44, 47),
+            cabin: rawText.substring(47, 48),
             seat: rawText.substring(48, 52).trim(),
-            status: "Active",
-            timestamp: new Date().toISOString()
+            sequence: rawText.substring(52, 57).trim(),
+            status: "Active"
         };
 
-        // UI TRANSITION (Instant)
         showResults(missionData);
 
-        // SYNC TO NETLIFY BRIDGE (Background)
-        try {
-            await fetch('/api/mission_bridge', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(missionData)
-            });
-        } catch (e) {
-            console.log("Bridge Sync Deferred");
-        }
+        // Sync with Netlify Bridge in the background
+        fetch('/api/mission_bridge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(missionData)
+        }).catch(e => console.log("Sync Backgrounded"));
     }
 
+    // 4. Warm, Plain English Welcome
     function showResults(data) {
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('results-area').classList.remove('hidden');
-        document.getElementById('user-name').innerText = data.passenger;
-        document.getElementById('flight-path').innerText = `${data.origin} ➔ ${data.destination} | SEAT ${data.seat}`;
+        
+        // Greeting
+        document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
+        
+        // Mission Details in Plain English
+        document.getElementById('flight-path').innerHTML = `
+            Your flight ${data.airline}${data.flight} to ${data.destination} is confirmed.<br>
+            <span style="font-size: 11px; color: #64748b; margin-top: 8px; display: block;">
+                Seat ${data.seat}  •  Sequence ${data.sequence}  •  PNR ${data.pnr}
+            </span>
+        `;
+
+        // The Clean Instruction (No iMac reference)
+        document.getElementById('ai-instruction').innerText = 
+            "Welcome back. We have successfully verified your documents and everything is ready for your journey. Your personal briefing is now available.";
+
         document.getElementById('card1').style.display = 'block';
         if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
-    }
-
-    // Manual Backup Button (In case auto-scan is slow)
-    function manualCapture() {
-        document.getElementById('scan-btn').innerText = "SCANNING...";
-        // The engine is already running, so this button just provides UI feedback
     }
 </script>
 </body>
