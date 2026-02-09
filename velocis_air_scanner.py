@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import zxingcpp
 import os
+import json  # Added for the Handshake
 from datetime import datetime
 
 def decode_air_hub_date(julian_day_str):
@@ -15,19 +16,21 @@ def decode_air_hub_date(julian_day_str):
         return f"Day {julian_day_str}"
 
 def process_velocis_telemetry(raw_text):
-    """Organizes IATA data for the Global Mobility Command center."""
+    """Organizes IATA data and TRANSMITS it to the AI Interpreter."""
     try:
         # Standard Slicing (Protected by Try/Except)
         name = raw_text[2:22].strip()
         pnr = raw_text[23:30].strip()
-        route = f"{raw_text[30:33]} ➔ {raw_text[33:36]}"
+        origin = raw_text[30:33]
+        dest = raw_text[33:36]
+        route = f"{origin} ➔ {dest}"
         airline = raw_text[36:38]
         flight = raw_text[38:43].strip()
         seat = raw_text[48:52].strip()
         
-        # New: Human-Readable Date
         readable_date = decode_air_hub_date(raw_text[44:47])
 
+        # --- THE COMMAND CENTER VIEW ---
         print("\n" + "═"*55)
         print(f"🛰️  VELOCIS™ GLOBAL MOBILITY COMMAND | AIR HUB ACTIVE")
         print("═"*55)
@@ -38,8 +41,24 @@ def process_velocis_telemetry(raw_text):
         print(f"║ 🗓️  DATE:      {readable_date:<35} ║")
         print(f"║ 🆔 RECORD:    PNR {pnr:<31} ║")
         print("═"*55 + "\n")
-    except:
-        print(f"\n📡 [AIR HUB] RAW TELEMETRY: {raw_text}")
+
+        # --- THE AI HANDSHAKE ---
+        # We package the scan into a clean format for the AI Butler
+        mission_payload = {
+            "passenger": name,
+            "airport": origin,
+            "destination": dest,
+            "flight_number": f"{airline}{flight}",
+            "departure": "Live Data",
+            "status": "Scanned"
+        }
+
+        with open("mission_data.json", "w") as f:
+            json.dump(mission_payload, f, indent=4)
+        print("📡 [SYSTEM] Mission data transmitted to AI Interpreter.")
+
+    except Exception as e:
+        print(f"\n📡 [AIR HUB] RAW TELEMETRY: {raw_text} | Error: {e}")
 
 def activate_velocis_engine():
     # --- SCANNER CORE: UNTOUCHED GOLD STANDARDS ---
