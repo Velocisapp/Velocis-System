@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velocis™ High-Authority Terminal</title>
+    <title>Velocis™ Global Mobility System</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
     <style>
         body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
@@ -139,7 +139,7 @@
         <button onclick="closeArrival()" style="margin-top: 10px; background: none; color: white; border: none; padding: 10px; cursor: pointer; text-decoration: underline; text-transform: uppercase; font-weight: bold;">Dismiss</button>
     </div>
 
-    <div id="brand"><h1>VELOCIS™</h1><p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY COMMAND</p></div>
+    <div id="brand"><h1>VELOCIS™</h1><p style="color: #00ffff; font-size: 0.6rem; letter-spacing: 5px; margin: 0;">GLOBAL MOBILITY SYSTEM</p></div>
 
     <div id="beta-invite" style="position: absolute; top: 15%; width: 100%; text-align: center; z-index: 1001; pointer-events: auto;">
         <h2 style="margin: 0; color: white; font-family: sans-serif; font-size: 1.2rem; letter-spacing: 2px;">VELOCIS™ BETA</h2>
@@ -221,7 +221,7 @@
             <div style="text-align: center; margin: 20px 0 50px 0; padding-bottom: 20px;">
                 <button onclick="document.getElementById('travel-guides').scrollTo({top: 0, behavior: 'smooth'})" 
                         style="background: rgba(255, 215, 0, 0.1); color: #FFD700; border: 2px solid #FFD700; padding: 18px 0; border-radius: 40px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase; font-family: 'Courier New', monospace; letter-spacing: 2px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.5); width: 100%;">
-                    ↑ RETURN TO GLOBE COMMAND ↑
+                    ↑ RETURN TO GLOBE SYSTEM ↑
                 </button>
             </div>
         </div> 
@@ -242,9 +242,9 @@
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
         function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
         function windowResized() { resizeCanvas(windowWidth, windowHeight); }
-        function updateTicker() { const now = new Date(); const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const options = { hour: '2-digit', minute: '2-digit', timeZone: arrivalCityTime || 'Europe/Paris' }; const missionTime = now.toLocaleTimeString([], options); const cityLabel = arrivalCityTime ? "DESTINATION" : "PARIS"; document.getElementById('status-ticker').innerText = `LOCAL: ${localTime} | ${cityLabel}: ${missionTime} | COMMAND ACTIVE`; }
+        function updateTicker() { const now = new Date(); const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const options = { hour: '2-digit', minute: '2-digit', timeZone: arrivalCityTime || 'Europe/Paris' }; const missionTime = now.toLocaleTimeString([], options); const cityLabel = arrivalCityTime ? "DESTINATION" : "PARIS"; document.getElementById('status-ticker').innerText = `LOCAL: ${localTime} | ${cityLabel}: ${missionTime} | SYSTEM ACTIVE`; }
         setInterval(updateTicker, 1000);
-        async function fetchFlightData() { const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; const inputVal = document.getElementById('flight-query')?.value; const FLIGHT_IATA = inputVal ? inputVal.trim().toUpperCase() : 'UA54'; try { const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`); const result = await response.json(); if (result.data && result.data.length > 0) { const flight = result.data[0]; const carousel = flight.arrival.baggage || "WAITING..."; const airline = flight.airline.name.toUpperCase(); const terminal = flight.arrival.terminal || "1"; document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`; document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carousel}`; document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`; const arrivalCode = flight.arrival.iata; if (HUB_DATABASE[arrivalCode]) { const info = HUB_DATABASE[arrivalCode]; const intelParagraphs = document.querySelectorAll("#travel-guides p"); if (intelParagraphs.length > 0) { intelParagraphs[0].innerHTML = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}):</span> ${info.tip}`; } } } } catch (error) { console.log("Mission Data Error:", error); } }
+        async function fetchFlightData() { const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; const inputVal = document.getElementById('flight-query')?.value; const FLIGHT_IATA = inputVal ? inputVal.trim().toUpperCase() : 'UA54'; try { const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`); const result = await response.json(); if (result.data && result.data.length > 0) { const flight = result.data[0]; const carousel = flight.arrival.baggage || "WAITING..."; const airline = flight.airline.name.toUpperCase(); const terminal = flight.arrival.terminal || "1"; document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`; document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carousel}`; document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`; const arrivalCode = flight.arrival.iata; if (HUB_DATABASE[arrivalCode]) { const info = HUB_DATABASE[arrivalCode]; const intelParagraphs = document.querySelectorAll("#travel-guides p"); if (intelParagraphs.length > 0) { intelParagraphs[0].innerHTML = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}):</span> ${info.tip}`; } } } } catch (error) { console.log("System Data Error:", error); } }
         function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
         function openTransportMarket() { closeArrival(); document.getElementById('ground-transport-market').scrollIntoView({behavior: 'smooth'}); }
         function toggleInstallGuide(show) { document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none'; }
