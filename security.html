@@ -12,6 +12,19 @@
             color: #334155; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             overflow: hidden; 
+            min-height: 100vh;
+        }
+
+        /* The Blurred Atmosphere Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            filter: blur(60px) brightness(1.1);
+            z-index: -1;
+            opacity: 0.4;
         }
         
         .glass-pill { 
@@ -118,29 +131,43 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0);
         
-        // Convert to Base64 for processing
-        const imageData = canvas.toDataURL('image/jpeg');
+        // Convert to Base64 (0.3 quality to ensure it passes through the bridge quickly)
+        const imageData = canvas.toDataURL('image/jpeg', 0.3);
 
         try {
-            // THE DYNAMIC HANDSHAKE
-            // This sends the REAL image data to your scanner engine
-            const response = await fetch('/api/mission_bridge', {
+            // THE DYNAMIC HANDSHAKE: Send image to the bridge
+            await fetch('/api/mission_bridge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     image: imageData,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    status: "Processing"
                 })
             });
 
-            const result = await response.json();
-            
-            // Only transition if data was actually found
-            if (result.status === "Active") {
-                showResults(result);
-            } else {
-                resetScanner("NO DATA FOUND");
-            }
+            // POLLING LOOP: Give the iMac 5 seconds to decode
+            let attempts = 0;
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                
+                try {
+                    const res = await fetch('/api/mission_bridge');
+                    const data = await res.json();
+
+                    // If iMac has decoded it and set status to Active
+                    if (data.status === "Active") {
+                        clearInterval(pollInterval);
+                        showResults(data);
+                    } else if (attempts >= 6) { // 6 seconds timeout
+                        clearInterval(pollInterval);
+                        resetScanner("RETRY SCAN");
+                    }
+                } catch (err) {
+                    console.error("Polling error", err);
+                }
+            }, 1000);
+
         } catch (e) {
             console.error("Bridge Error", e);
             resetScanner("RETRY SCAN");
@@ -151,7 +178,6 @@
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('results-area').classList.remove('hidden');
         
-        // Dynamic Mapping: Using the data returned from the Bridge
         document.getElementById('user-name').innerText = data.passenger || "Velocis Traveler";
         document.getElementById('flight-path').innerText = `${data.airport} ➔ ${data.destination}`;
         document.getElementById('card1').style.display = 'block';
