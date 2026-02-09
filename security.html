@@ -108,21 +108,15 @@
         </button>
     </div>
 
-<script>
-    // 1. RESTORING FULL ENGINE POWER
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Mimics your iMac Triple-Buffer
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-        ZXing.BarcodeFormat.PDF417, 
-        ZXing.BarcodeFormat.QR_CODE, 
-        ZXing.BarcodeFormat.CODE_128
-    ]);
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+<script>
+    // 2. INITIALIZE ENGINE WITH FULL FORMAT SUPPORT
+    const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 2. Julian Date Decoder (Exactly from your Master File)
+    // 3. Julian Date Decoder (Master File Standard)
     function decodeAirHubDate(julianStr) {
         try {
             const day = parseInt(julianStr);
@@ -132,34 +126,37 @@
         } catch (e) { return `Day ${julianStr}`; }
     }
 
-    // 3. Focal-Boost Initialization
-    navigator.mediaDevices.getUserMedia({ 
-        video: { 
-            facingMode: "environment", 
-            width: { ideal: 1280 }, // Balanced resolution for focus + speed
-            height: { ideal: 720 }
-        } 
-    }).then(stream => { 
-        video.srcObject = stream; 
-        video.setAttribute('playsinline', true);
-        video.play();
-        startMasterRadar();
-    });
-
-    function startMasterRadar() {
-        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-            if (result && !isMissionActive) {
-                if (result.text.length > 25) { // Ensure it's not a random small QR
-                    isMissionActive = true;
-                    if (window.navigator.vibrate) window.navigator.vibrate(200);
-                    processFullTelemetry(result.text);
-                }
+    // 4. THE ENGINE START (FORCED)
+    function activateScanner() {
+        const constraints = {
+            video: { 
+                facingMode: "environment", 
+                width: { ideal: 1280 }, 
+                height: { ideal: 720 } 
             }
-        });
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => { 
+                video.srcObject = stream; 
+                video.setAttribute('playsinline', true);
+                video.play();
+                
+                // Aggressive Listening Mode
+                codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                    if (result && !isMissionActive) {
+                        isMissionActive = true;
+                        handleMasterExtraction(result.text);
+                    }
+                });
+            })
+            .catch(err => {
+                alert("Camera initialization failed. Please check permissions.");
+            });
     }
 
-    function processFullTelemetry(rawText) {
-        // SURGICAL SLICING: Exactly from your Master File
+    function handleMasterExtraction(rawText) {
+        // SURGICAL SLICING (Exactly from your Master File)
         const data = {
             passenger: rawText.substring(2, 22).trim(),
             pnr: rawText.substring(23, 30).trim(),
@@ -172,30 +169,31 @@
             sequence: rawText.substring(52, 57).trim()
         };
 
-        // FULL DATA DISPLAY
+        // Full UI Display with Warm Welcome
         document.body.innerHTML = `
-            <div style="background:#000; color:#fff; height:100vh; padding:30px; font-family:monospace; line-height:1.6;">
-                <h2 style="color:#00ff00; border-bottom:1px solid #333; padding-bottom:10px;">IDENTITY VERIFIED</h2>
-                <div style="font-size:18px; margin-bottom:20px;">Hello, ${data.passenger}</div>
-                <div style="background:#111; padding:15px; border-radius:5px;">
-                    <p>✈️ FLIGHT: ${data.airline}${data.flight}</p>
-                    <p>📍 ROUTE: ${data.origin} ➔ ${data.destination}</p>
-                    <p>💺 SEAT: ${data.seat}</p>
-                    <p>🗓️ DATE: ${data.readable_date}</p>
-                    <p>🆔 PNR: ${data.pnr}</p>
-                    <p>🔢 SEQ: ${data.sequence}</p>
+            <div style="background:#000; color:#fff; height:100vh; padding:30px; font-family:sans-serif;">
+                <h1 style="color:#00ff00;">IDENTITY VERIFIED</h1>
+                <p style="font-size:20px;">Hello, ${data.passenger}</p>
+                <div style="background:#111; padding:15px; border-left:4px solid #00ff00;">
+                    <p>✈️ ${data.airline}${data.flight} | ${data.origin} ➔ ${data.destination}</p>
+                    <p>💺 SEAT: ${data.seat} | DATE: ${data.readable_date}</p>
+                    <p>🆔 PNR: ${data.pnr} | SEQ: ${data.sequence}</p>
                 </div>
-                <button onclick="location.reload()" style="margin-top:30px; width:100%; padding:20px; background:#00ff00; color:#000; font-weight:bold; border:none; border-radius:5px;">RESET SCANNER</button>
+                <p style="margin-top:20px;">Welcome back. Your personal briefing is ready.</p>
+                <button onclick="location.reload()" style="width:100%; padding:20px; background:#222; color:#fff; border:1px solid #fff;">RESET SCANNER</button>
             </div>
         `;
 
-        // SYNC TO NETLIFY BRIDGE
+        // SYNC TO NETLIFY
         fetch('/api/mission_bridge', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...data, rawText: rawText })
-        }).catch(() => {});
+            body: JSON.stringify(data)
+        });
     }
+
+    // AUTO-START ON LOAD
+    window.addEventListener('load', activateScanner);
 </script>
 </body>
 </html>
