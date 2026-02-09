@@ -109,51 +109,58 @@
     </div>
 
 <script>
-    const codeReader = new ZXing.BrowserMultiFormatReader();
+    // 1. Initialize with specific format support to speed up detection
+    const hints = new Map();
+    const formats = [
+        ZXing.BarcodeFormat.PDF417, 
+        ZXing.BarcodeFormat.QR_CODE, 
+        ZXing.BarcodeFormat.CODE_128
+    ];
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Extra processing power for blurry codes
+
+    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 1. Restore high-performance camera constraints
-    const constraints = {
+    // 2. Camera Setup
+    navigator.mediaDevices.getUserMedia({ 
         video: { 
             facingMode: "environment",
             width: { ideal: 1280 },
             height: { ideal: 720 }
-        }
-    };
+        } 
+    })
+    .then(stream => { 
+        video.srcObject = stream; 
+        video.setAttribute('playsinline', true);
+        video.play();
+        startAggressiveEngine();
+    });
 
-    navigator.mediaDevices.getUserMedia(constraints)
-        .then(stream => { 
-            video.srcObject = stream; 
-            video.setAttribute('playsinline', true);
-            video.play();
-            // START THE AGGRESSIVE ENGINE
-            startYesterdayEngine();
-        });
-
-    function startYesterdayEngine() {
+    // 3. The "Yesterday" Engine: Continuous Listener
+    function startAggressiveEngine() {
         document.getElementById('status-pill').innerText = "RADAR ACTIVE";
         
-        // This method is the one that worked yesterday.
-        // It listens to the stream and decodes constantly.
+        // This scans the stream constantly without needing a button press
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                // Ensure the string actually contains IATA data before stopping
-                if (result.text.length > 30) { 
+                // Ensure it's a valid boarding pass string (usually long)
+                if (result.text.length > 25) {
                     isMissionActive = true;
-                    handleExtractedData(result.text);
+                    processDocument(result.text);
                 }
             }
         });
     }
 
-    async function handleExtractedData(rawText) {
-        // TACTICAL DELAY FOR WARM WELCOME
+    // 4. Tactical Processing & Warm Welcome
+    function processDocument(rawText) {
         document.getElementById('status-pill').innerText = "DOCUMENT DETECTED";
         document.getElementById('scan-btn').innerText = "VERIFYING...";
 
+        // Tactical Delay for professional feel
         setTimeout(() => {
-            // RELIABLE DATA SLICING
             const missionData = {
                 passenger: rawText.substring(2, 22).trim(),
                 pnr: rawText.substring(23, 30).trim(),
@@ -162,30 +169,29 @@
                 airline: rawText.substring(36, 38),
                 flight: rawText.substring(38, 43).trim(),
                 seat: rawText.substring(48, 52).trim(),
+                sequence: rawText.substring(52, 57).trim(),
                 status: "Active"
             };
 
-            showResults(missionData);
+            displayResults(missionData);
 
-            // SYNC TO UPGRADED NETLIFY
+            // Sync with Netlify
             fetch('/api/mission_bridge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(missionData)
-            }).catch(e => console.log("Sync Backgrounded"));
-            
-        }, 1800); // 1.8 second delay as requested
+            }).catch(() => {});
+        }, 1800);
     }
 
-    function showResults(data) {
+    function displayResults(data) {
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('results-area').classList.remove('hidden');
         
         document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
         document.getElementById('flight-path').innerHTML = `Your flight ${data.airline}${data.flight} to ${data.destination} is confirmed.`;
-        
         document.getElementById('ai-instruction').innerText = "Welcome back. We have successfully verified your documents. Your personal briefing is now available.";
-
+        
         document.getElementById('card1').style.display = 'block';
         if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
     }
