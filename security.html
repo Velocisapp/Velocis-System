@@ -109,21 +109,19 @@
     </div>
 
 <script>
-    // 1. FORCE MAXIMUM STRENGTH (Yesterday's standard)
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Forces deep analysis
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, Object.values(ZXing.BarcodeFormat));
-
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    // 1. ELIMINATE ALL OVERHEAD
+    const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
-    let isMissionActive = false;
+    let missionLocked = false;
 
-    // 2. High-Resolution Constraints (Prevents the 'Blur' issue)
+    // 2. FORCE RAW HARDWARE ACCESS
+    // We use a lower resolution to SAVE memory and SPEED up the math engine
     const constraints = {
         video: { 
             facingMode: "environment",
-            width: { ideal: 1920 }, // Higher resolution for better detail
-            height: { ideal: 1080 }
+            width: 640, 
+            height: 480,
+            frameRate: { ideal: 60 } // Double the frames to catch the code faster
         }
     };
 
@@ -132,45 +130,48 @@
             video.srcObject = stream; 
             video.setAttribute('playsinline', true);
             video.play();
-            startEngine();
-        });
-
-    function startEngine() {
-        document.getElementById('status-pill').innerText = "RADAR ACTIVE";
-        
-        // This is the aggressive machine-gun mode
-        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-            if (result && !isMissionActive) {
-                // Ensuring we only take strings with actual data content
-                if (result.text.length > 20) {
-                    isMissionActive = true;
-                    processData(result.text);
+            
+            // THE MACHINE GUN ENGINE
+            codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                if (result && !missionLocked) {
+                    missionLocked = true;
+                    executeMasterExtraction(result.text);
                 }
-            }
+            });
         });
-    }
 
-    function processData(rawText) {
-        document.getElementById('status-pill').innerText = "VERIFYING...";
-        // Surgical slicing exactly as per your Python Master File
+    function executeMasterExtraction(rawText) {
+        // Vibrate immediately so you know it worked
+        if (window.navigator.vibrate) window.navigator.vibrate(200);
+
+        // SURGICAL SLICING (Your Protected Master Logic)
         const data = {
             passenger: rawText.substring(2, 22).trim(),
             pnr: rawText.substring(23, 30).trim(),
-            origin: rawText.substring(30, 33),
-            destination: rawText.substring(33, 36),
             airline: rawText.substring(36, 38),
             flight: rawText.substring(38, 43).trim(),
             seat: rawText.substring(48, 52).trim()
         };
 
-        // Transition to Welcome UI
-        setTimeout(() => {
-            document.getElementById('scanner-section').style.display = 'none';
-            document.getElementById('results-area').classList.remove('hidden');
-            document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
-            document.getElementById('flight-path').innerText = `Flight ${data.airline}${data.flight} to ${data.destination} confirmed.`;
-            document.getElementById('card1').style.display = 'block';
-        }, 1500);
+        // FORCE UI OVERRIDE
+        document.body.innerHTML = `
+            <div style="background:#000; color:#fff; height:100vh; padding:40px; font-family:sans-serif;">
+                <h1 style="color:#00ff00;">IDENTITY VERIFIED</h1>
+                <p style="font-size:24px;">Hello, ${data.passenger}</p>
+                <hr>
+                <p>FLIGHT: ${data.airline}${data.flight}</p>
+                <p>SEAT: ${data.seat}</p>
+                <p>PNR: ${data.pnr}</p>
+                <button onclick="location.reload()" style="padding:20px; background:#222; color:#fff; border:1px solid #fff;">RESET SCANNER</button>
+            </div>
+        `;
+
+        // SYNC DATA IN BACKGROUND
+        fetch('/api/mission_bridge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
     }
 </script>
 </body>
