@@ -110,55 +110,47 @@
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 <script>
-    // 1. THE PRECISION ENGINE
-    const hints = new Map();
-    // We keep TRY_HARDER on for the 'bad' codes, but remove PURE_BARCODE 
-    // to allow the engine to handle the 'perfect' high-res ones correctly.
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-        ZXing.BarcodeFormat.PDF417, 
-        ZXing.BarcodeFormat.QR_CODE
-    ]);
-
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    // 1. BACK TO BASICS: The exact engine from your successful tests
+    const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 2. Exact Julian Date Decoder from your Master File
+    // 2. Simple Julian Date Decoder
     function decodeAirHubDate(julianStr) {
         try {
             const day = parseInt(julianStr);
             const date = new Date(2026, 0); 
             date.setDate(day);
             return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        } catch (e) { return "Invalid Date"; }
+        } catch (e) { return "Date Pending"; }
     }
 
-    // 3. Balanced Camera constraints (Ideal for both high and low res)
+    // 3. Standard Camera (Yesterday's standard)
     navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
+        video: { facingMode: "environment" } 
     }).then(stream => { 
         video.srcObject = stream; 
         video.setAttribute('playsinline', true);
         video.play();
-        startPrecisionRadar();
+        startYesterdayEngine();
     });
 
-    function startPrecisionRadar() {
-        // Continuous decoding - Yesterday's standard
+    function startYesterdayEngine() {
+        // Continuous decoding without "Try Harder" overhead
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                // Ensure we have a valid IATA length (prevents 'noise' reads)
-                if (result.text.length > 30) {
+                // Validate string length before processing
+                if (result.text.length > 25) {
                     isMissionActive = true;
-                    handleFinalExtraction(result.text);
+                    if (window.navigator.vibrate) window.navigator.vibrate(150);
+                    handleExtraction(result.text);
                 }
             }
         });
     }
 
-    function handleFinalExtraction(rawText) {
-        // THE PROTECTED SLICING (Your Master Standard)
+    function handleExtraction(rawText) {
+        // SURGICAL SLICING (Exactly from your Master File)
         const data = {
             passenger: rawText.substring(2, 22).trim(),
             pnr: rawText.substring(23, 30).trim(),
@@ -170,29 +162,27 @@
             seat: rawText.substring(48, 52).trim()
         };
 
-        // UI RESPONSE - Warm Plain English
+        // UI RESPONSE - Plain English
         document.body.innerHTML = `
             <div style="background:#000; color:#fff; height:100vh; padding:35px; font-family:sans-serif;">
-                <h1 style="color:#00ff00; letter-spacing:-1px;">IDENTITY VERIFIED</h1>
-                <p style="font-size:24px; margin-bottom:20px;">Hello, ${data.passenger}</p>
-                <div style="background:#111; padding:20px; border-left:4px solid #00ff00; border-radius:0 10px 10px 0;">
-                    <p style="margin:5px 0;">✈️ <b>${data.airline}${data.flight}</b> | ${data.origin} ➔ ${data.destination}</p>
-                    <p style="margin:5px 0;">💺 SEAT: ${data.seat} | DATE: ${data.readable_date}</p>
-                    <p style="margin:5px 0; color:#64748b;">PNR: ${data.pnr}</p>
+                <h1 style="color:#00ff00;">IDENTITY VERIFIED</h1>
+                <p style="font-size:22px;">Hello, ${data.passenger}</p>
+                <div style="background:#111; padding:20px; border-radius:12px; border:1px solid #333;">
+                    <p>✈️ ${data.airline}${data.flight} | ${data.origin} ➔ ${data.destination}</p>
+                    <p>💺 SEAT: ${data.seat} | DATE: ${data.readable_date}</p>
+                    <p style="color:#64748b; font-size:12px;">PNR: ${data.pnr}</p>
                 </div>
-                <p style="margin-top:30px; opacity:0.8;">Welcome back. Everything is ready for your trip.</p>
-                <button onclick="location.reload()" style="width:100%; padding:20px; background:#222; color:#fff; border:1px solid #444; border-radius:12px; margin-top:40px; font-weight:bold;">RESCAN DOCUMENT</button>
+                <p style="margin-top:20px;">Welcome back. Everything is ready.</p>
+                <button onclick="location.reload()" style="width:100%; padding:20px; background:#222; color:#fff; border:1px solid #444; border-radius:12px; margin-top:30px;">RESCAN</button>
             </div>
         `;
 
-        if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
-
-        // Background Sync
+        // Sync Data
         fetch('/api/mission_bridge', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...data, raw: rawText })
-        }).catch(() => {});
+            body: JSON.stringify(data)
+        });
     }
 </script>
 </body>
