@@ -96,62 +96,74 @@
         </button>
     </div>
 
-    <script>
-        const video = document.getElementById('video');
-        let isProcessing = false;
+   <script>
+    const video = document.getElementById('video');
+    let isProcessing = false;
 
-        // Start Camera
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(stream => { video.srcObject = stream; });
+    // 1. Initialize Field Camera
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => { video.srcObject = stream; });
 
-        async function manualCapture() {
-            if (isProcessing) return;
-            isProcessing = true;
+    async function manualCapture() {
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        document.getElementById('scan-btn').innerText = "LINKING...";
+        document.getElementById('status-pill').innerText = "EXTRACTING...";
+
+        // Capture Current Frame
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        
+        // Convert to Base64 for processing
+        const imageData = canvas.toDataURL('image/jpeg');
+
+        try {
+            // THE DYNAMIC HANDSHAKE
+            // This sends the REAL image data to your scanner engine
+            const response = await fetch('/api/mission_bridge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    image: imageData,
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+            const result = await response.json();
             
-            document.getElementById('scan-btn').innerText = "LINKING...";
-            document.getElementById('status-pill').innerText = "SYNCHRONIZING...";
-
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
-            
-            // For this test, we simulate extracting data. 
-            // In your production scan.js, this would be real IATA data.
-            const simulatedData = {
-                name: "Velocis Traveler",
-                origin: "JFK",
-                destination: "MAD",
-                flight_number: "UX098"
-            };
-
-            try {
-                // THE HANDSHAKE: Send to your Netlify Cloud Bridge
-                await fetch('/api/mission_bridge', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(simulatedData)
-                });
-
-                showResults(simulatedData);
-            } catch (e) {
-                console.error("Bridge Error", e);
-                isProcessing = false;
+            // Only transition if data was actually found
+            if (result.status === "Active") {
+                showResults(result);
+            } else {
+                resetScanner("NO DATA FOUND");
             }
+        } catch (e) {
+            console.error("Bridge Error", e);
+            resetScanner("RETRY SCAN");
         }
+    }
 
-        function showResults(data) {
-            document.getElementById('scanner-section').style.display = 'none';
-            document.getElementById('results-area').classList.remove('hidden');
-            
-            document.getElementById('user-name').innerText = data.name;
-            document.getElementById('flight-path').innerText = `${data.origin} ➔ ${data.destination}`;
-            document.getElementById('card1').style.display = 'block';
-            
-            // Haptic Feedback (Vibration)
-            if (window.navigator.vibrate) window.navigator.vibrate(50);
-        }
-    </script>
+    function showResults(data) {
+        document.getElementById('scanner-section').style.display = 'none';
+        document.getElementById('results-area').classList.remove('hidden');
+        
+        // Dynamic Mapping: Using the data returned from the Bridge
+        document.getElementById('user-name').innerText = data.passenger || "Velocis Traveler";
+        document.getElementById('flight-path').innerText = `${data.airport} ➔ ${data.destination}`;
+        document.getElementById('card1').style.display = 'block';
+        
+        if (window.navigator.vibrate) window.navigator.vibrate([50, 30, 50]);
+    }
+
+    function resetScanner(msg) {
+        isProcessing = false;
+        document.getElementById('scan-btn').innerText = msg;
+        document.getElementById('status-pill').innerText = "READY";
+    }
+</script>
 </body>
 </html>
