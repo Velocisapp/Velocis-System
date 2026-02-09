@@ -109,58 +109,52 @@
     </div>
 
 <script>
-    // 1. Initialize with specific format support to speed up detection
+    // 1. THE GOLD STANDARD ENGINE (Matches your iMac logic)
     const hints = new Map();
-    const formats = [
-        ZXing.BarcodeFormat.PDF417, 
-        ZXing.BarcodeFormat.QR_CODE, 
-        ZXing.BarcodeFormat.CODE_128
-    ];
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Extra processing power for blurry codes
-
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.PDF417, ZXing.BarcodeFormat.QR_CODE]);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Mimics your Triple-Buffer attempts
+    
     const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 2. Camera Setup
+    // 2. Julian Date Decoder (Translated from your Python Master)
+    function decodeAirHubDate(julianStr) {
+        try {
+            const day = parseInt(julianStr);
+            const date = new Date(new Date().getFullYear(), 0); 
+            date.setDate(day);
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        } catch (e) { return `Day ${julianStr}`; }
+    }
+
     navigator.mediaDevices.getUserMedia({ 
-        video: { 
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-        } 
-    })
-    .then(stream => { 
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
+    }).then(stream => { 
         video.srcObject = stream; 
         video.setAttribute('playsinline', true);
         video.play();
         startAggressiveEngine();
     });
 
-    // 3. The "Yesterday" Engine: Continuous Listener
     function startAggressiveEngine() {
         document.getElementById('status-pill').innerText = "RADAR ACTIVE";
-        
-        // This scans the stream constantly without needing a button press
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                // Ensure it's a valid boarding pass string (usually long)
-                if (result.text.length > 25) {
-                    isMissionActive = true;
-                    processDocument(result.text);
-                }
+                isMissionActive = true;
+                handleMasterTelemetry(result.text);
             }
         });
     }
 
-    // 4. Tactical Processing & Warm Welcome
-    function processDocument(rawText) {
+    function handleMasterTelemetry(rawText) {
+        // Immediate Feedback
         document.getElementById('status-pill').innerText = "DOCUMENT DETECTED";
-        document.getElementById('scan-btn').innerText = "VERIFYING...";
+        document.getElementById('scan-btn').innerText = "VERIFYING IDENTITY...";
 
-        // Tactical Delay for professional feel
+        // Tactical Delay for Professional Feel
         setTimeout(() => {
+            // THE PROTECTED SLICING (Exactly from your Python Master)
             const missionData = {
                 passenger: rawText.substring(2, 22).trim(),
                 pnr: rawText.substring(23, 30).trim(),
@@ -168,12 +162,12 @@
                 destination: rawText.substring(33, 36),
                 airline: rawText.substring(36, 38),
                 flight: rawText.substring(38, 43).trim(),
+                readable_date: decodeAirHubDate(rawText.substring(44, 47)),
                 seat: rawText.substring(48, 52).trim(),
-                sequence: rawText.substring(52, 57).trim(),
                 status: "Active"
             };
 
-            displayResults(missionData);
+            showResults(missionData);
 
             // Sync with Netlify
             fetch('/api/mission_bridge', {
@@ -184,14 +178,21 @@
         }, 1800);
     }
 
-    function displayResults(data) {
+    function showResults(data) {
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('results-area').classList.remove('hidden');
         
+        // Warm Plain English Welcome
         document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
-        document.getElementById('flight-path').innerHTML = `Your flight ${data.airline}${data.flight} to ${data.destination} is confirmed.`;
-        document.getElementById('ai-instruction').innerText = "Welcome back. We have successfully verified your documents. Your personal briefing is now available.";
-        
+        document.getElementById('flight-path').innerHTML = `
+            Flight ${data.airline}${data.flight} to ${data.destination} is confirmed.<br>
+            <span style="font-size: 11px; color: #64748b;">
+                Seat ${data.seat}  •  Date: ${data.readable_date}  •  PNR: ${data.pnr}
+            </span>
+        `;
+        document.getElementById('ai-instruction').innerText = 
+            "Welcome back. We have successfully verified your documents. Your personal briefing is now available.";
+
         document.getElementById('card1').style.display = 'block';
         if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
     }
