@@ -109,16 +109,19 @@
     </div>
 
 <script>
-    // 1. THE GOLD STANDARD ENGINE (Matches your iMac logic)
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.PDF417, ZXing.BarcodeFormat.QR_CODE]);
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Mimics your Triple-Buffer attempts
-    
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    // 1. Initialize the Engine with Error Catching
+    let codeReader;
+    try {
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        console.log("ZXing Engine Loaded");
+    } catch (err) {
+        document.getElementById('status-pill').innerText = "ENGINE LOAD ERROR";
+    }
+
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 2. Julian Date Decoder (Translated from your Python Master)
+    // 2. Julian Date Logic (From your Master File)
     function decodeAirHubDate(julianStr) {
         try {
             const day = parseInt(julianStr);
@@ -128,33 +131,45 @@
         } catch (e) { return `Day ${julianStr}`; }
     }
 
-    navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
-    }).then(stream => { 
-        video.srcObject = stream; 
-        video.setAttribute('playsinline', true);
-        video.play();
-        startAggressiveEngine();
-    });
+    // 3. Camera Activation with Explicit Playsinline
+    async function initCamera() {
+        const constraints = {
+            video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+        };
 
-    function startAggressiveEngine() {
-        document.getElementById('status-pill').innerText = "RADAR ACTIVE";
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = stream;
+            video.setAttribute('playsinline', true); // Critical for iOS
+            await video.play();
+            document.getElementById('status-pill').innerText = "RADAR ACTIVE";
+            startScanning();
+        } catch (err) {
+            document.getElementById('status-pill').innerText = "CAMERA DENIED";
+        }
+    }
+
+    // 4. The "Machine Gun" Listener (Yesterday's Working Method)
+    function startScanning() {
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                isMissionActive = true;
-                handleMasterTelemetry(result.text);
+                // Ensure it's a valid IATA string
+                if (result.text.length > 20) {
+                    isMissionActive = true;
+                    handleData(result.text);
+                }
+            }
+            if (err && !(err instanceof ZXing.NotFoundException)) {
+                console.error(err);
             }
         });
     }
 
-    function handleMasterTelemetry(rawText) {
-        // Immediate Feedback
-        document.getElementById('status-pill').innerText = "DOCUMENT DETECTED";
-        document.getElementById('scan-btn').innerText = "VERIFYING IDENTITY...";
-
-        // Tactical Delay for Professional Feel
+    function handleData(rawText) {
+        document.getElementById('status-pill').innerText = "VERIFYING...";
+        
+        // Applying your Master Slicing exactly
         setTimeout(() => {
-            // THE PROTECTED SLICING (Exactly from your Python Master)
             const missionData = {
                 passenger: rawText.substring(2, 22).trim(),
                 pnr: rawText.substring(23, 30).trim(),
@@ -163,13 +178,12 @@
                 airline: rawText.substring(36, 38),
                 flight: rawText.substring(38, 43).trim(),
                 readable_date: decodeAirHubDate(rawText.substring(44, 47)),
-                seat: rawText.substring(48, 52).trim(),
-                status: "Active"
+                seat: rawText.substring(48, 52).trim()
             };
 
             showResults(missionData);
-
-            // Sync with Netlify
+            
+            // Sync to Netlify
             fetch('/api/mission_bridge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -181,21 +195,14 @@
     function showResults(data) {
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('results-area').classList.remove('hidden');
-        
-        // Warm Plain English Welcome
         document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
-        document.getElementById('flight-path').innerHTML = `
-            Flight ${data.airline}${data.flight} to ${data.destination} is confirmed.<br>
-            <span style="font-size: 11px; color: #64748b;">
-                Seat ${data.seat}  •  Date: ${data.readable_date}  •  PNR: ${data.pnr}
-            </span>
-        `;
-        document.getElementById('ai-instruction').innerText = 
-            "Welcome back. We have successfully verified your documents. Your personal briefing is now available.";
-
+        document.getElementById('flight-path').innerHTML = `Flight ${data.airline}${data.flight} to ${data.destination} confirmed.`;
+        document.getElementById('ai-instruction').innerText = "Welcome back. We have successfully verified your documents. Your personal briefing is now available.";
         document.getElementById('card1').style.display = 'block';
-        if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
     }
+
+    // Initialize on load
+    initCamera();
 </script>
 </body>
 </html>
