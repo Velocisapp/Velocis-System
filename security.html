@@ -113,7 +113,7 @@
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 1. Restore the aggressive camera constraints from yesterday
+    // 1. Restore high-performance camera constraints
     const constraints = {
         video: { 
             facingMode: "environment",
@@ -127,59 +127,67 @@
             video.srcObject = stream; 
             video.setAttribute('playsinline', true);
             video.play();
-            // GO BACK TO CONTINUOUS SCANNING (Yesterday's Method)
+            // START THE AGGRESSIVE ENGINE
             startYesterdayEngine();
         });
 
     function startYesterdayEngine() {
-        document.getElementById('status-pill').innerText = "SYSTEM READY";
+        document.getElementById('status-pill').innerText = "RADAR ACTIVE";
         
-        // This is the "Machine Gun" method that worked yesterday
+        // This method is the one that worked yesterday.
+        // It listens to the stream and decodes constantly.
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                isMissionActive = true; // Stop it from firing 100 times
-                
-                // TACTICAL DELAY (Your Request)
-                document.getElementById('status-pill').innerText = "DOCUMENT DETECTED";
-                document.getElementById('scan-btn').innerText = "VERIFYING...";
-
-                setTimeout(() => {
+                // Ensure the string actually contains IATA data before stopping
+                if (result.text.length > 30) { 
+                    isMissionActive = true;
                     handleExtractedData(result.text);
-                }, 1800);
+                }
             }
         });
     }
 
     async function handleExtractedData(rawText) {
-        const missionData = {
-            passenger: rawText.substring(2, 22).trim(),
-            pnr: rawText.substring(23, 30).trim(),
-            origin: rawText.substring(30, 33),
-            destination: rawText.substring(33, 36),
-            airline: rawText.substring(36, 38),
-            flight: rawText.substring(38, 43).trim(),
-            seat: rawText.substring(48, 52).trim(),
-            sequence: rawText.substring(52, 57).trim(),
-            status: "Active"
-        };
+        // TACTICAL DELAY FOR WARM WELCOME
+        document.getElementById('status-pill').innerText = "DOCUMENT DETECTED";
+        document.getElementById('scan-btn').innerText = "VERIFYING...";
 
-        showResults(missionData);
+        setTimeout(() => {
+            // RELIABLE DATA SLICING
+            const missionData = {
+                passenger: rawText.substring(2, 22).trim(),
+                pnr: rawText.substring(23, 30).trim(),
+                origin: rawText.substring(30, 33),
+                destination: rawText.substring(33, 36),
+                airline: rawText.substring(36, 38),
+                flight: rawText.substring(38, 43).trim(),
+                seat: rawText.substring(48, 52).trim(),
+                status: "Active"
+            };
 
-        // SILENT SYNC
-        fetch('/api/mission_bridge', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(missionData)
-        }).catch(e => console.log("Sync Backgrounded"));
+            showResults(missionData);
+
+            // SYNC TO UPGRADED NETLIFY
+            fetch('/api/mission_bridge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(missionData)
+            }).catch(e => console.log("Sync Backgrounded"));
+            
+        }, 1800); // 1.8 second delay as requested
     }
 
     function showResults(data) {
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('results-area').classList.remove('hidden');
+        
         document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
         document.getElementById('flight-path').innerHTML = `Your flight ${data.airline}${data.flight} to ${data.destination} is confirmed.`;
+        
         document.getElementById('ai-instruction').innerText = "Welcome back. We have successfully verified your documents. Your personal briefing is now available.";
+
         document.getElementById('card1').style.display = 'block';
+        if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
     }
 </script>
 </body>
