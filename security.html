@@ -109,15 +109,16 @@
     </div>
 
 <script>
+    // Use the MultiFormatReader for maximum compatibility
     const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
     let isProcessing = false;
 
-    // 1. Initialize Field Camera
+    // Initialize Camera immediately
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then(stream => { 
             video.srcObject = stream; 
-            video.setAttribute('playsinline', true); // Required for iOS Safari
+            video.setAttribute('playsinline', true);
             video.play();
         });
 
@@ -125,58 +126,59 @@
         if (isProcessing) return;
         isProcessing = true;
         
-        document.getElementById('scan-btn').innerText = "EXTRACTING...";
-        document.getElementById('status-pill').innerText = "SCANNING...";
+        document.getElementById('scan-btn').innerText = "DECODING...";
+        document.getElementById('status-pill').innerText = "LOCAL ENGINE ACTIVE";
 
         try {
-            // THE STANDALONE FIX: Decode directly on iPhone using Zxing
+            // 1. ATTEMPT DECODE
             const result = await codeReader.decodeFromVideoElement(video);
-            const rawText = result.text;
             
-            // APPLYING THE 29-DAY DATA SLICING LOGIC
-            const missionData = {
-                passenger: rawText.substring(2, 22).trim(),
-                pnr: rawText.substring(23, 30).trim(),
-                airport: rawText.substring(30, 33),
-                destination: rawText.substring(33, 36),
-                airline: rawText.substring(36, 38),
-                flight: rawText.substring(38, 43).trim(),
-                seat: rawText.substring(48, 52).trim(),
-                status: "Active",
-                timestamp: new Date().toISOString()
-            };
+            if (result) {
+                const rawText = result.text;
+                
+                // 2. IMMEDIATE EXTRACTION (Your 29-Day Standard)
+                const missionData = {
+                    passenger: rawText.substring(2, 22).trim() || "TRAVELER",
+                    pnr: rawText.substring(23, 30).trim(),
+                    origin: rawText.substring(30, 33),
+                    destination: rawText.substring(33, 36),
+                    airline: rawText.substring(36, 38),
+                    flight: rawText.substring(38, 43).trim(),
+                    seat: rawText.substring(48, 52).trim() || "N/A",
+                    status: "Active",
+                    timestamp: new Date().toISOString()
+                };
 
-            // Display Results on iPhone Welcome Card Instantly
-            showResults(missionData);
+                // 3. SHOW RESULTS IMMEDIATELY (Do not wait for server)
+                showResults(missionData);
 
-            // Sync with Bridge so Ollama can speak on the iMac
-            await fetch('/api/mission_bridge', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(missionData)
-            });
+                // 4. SILENT BACKGROUND SYNC (The Butler)
+                // We don't use 'await' here so it doesn't block the UI
+                fetch('/api/mission_bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(missionData)
+                }).catch(err => console.log("Bridge Sync Deferred"));
 
+            }
         } catch (e) {
-            console.error("Scan Error:", e);
-            resetScanner("RETRY SCAN");
+            console.error("Decode Error", e);
+            // If it fails, we reset so you can try again immediately
+            isProcessing = false;
+            document.getElementById('scan-btn').innerText = "RETRY SCAN";
         }
     }
 
     function showResults(data) {
+        // Force the UI change
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('results-area').classList.remove('hidden');
         
-        document.getElementById('user-name').innerText = data.passenger || "Velocis Traveler";
-        document.getElementById('flight-path').innerText = `${data.airport} ➔ ${data.destination} | SEAT ${data.seat}`;
+        document.getElementById('user-name').innerText = data.passenger;
+        document.getElementById('flight-path').innerText = `${data.origin} ➔ ${data.destination} | SEAT ${data.seat}`;
         document.getElementById('card1').style.display = 'block';
         
-        if (window.navigator.vibrate) window.navigator.vibrate([50, 30, 50]);
-    }
-
-    function resetScanner(msg) {
-        isProcessing = false;
-        document.getElementById('scan-btn').innerText = msg;
-        document.getElementById('status-pill').innerText = "READY";
+        if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
     }
 </script>
 </body>
