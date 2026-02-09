@@ -1,5 +1,6 @@
 import ollama
 import json
+import os
 
 def generate_system_briefing(data_json):
     """
@@ -24,21 +25,27 @@ def generate_system_briefing(data_json):
         return response['message']['content']
     
     except Exception as e:
-        return f"Interpreter Error: Ensure Ollama is active on the local engine. Flight: {data_json.get('flight_number')}"
+        # Dynamic error handling: uses whatever flight number is currently in the data
+        return f"Interpreter Error: Ensure Ollama is active on the local engine. Flight: {data_json.get('flight_number', 'Unknown')}"
 
-# --- SIMULATED DATA HAND-OFF ---
+# --- DYNAMIC DATA HAND-OFF ---
 if __name__ == "__main__":
-    # This matches the clean JSON format your scanner produces
-    current_data = {
-        "passenger": "Velocis Traveler",
-        "airport": "MIA",
-        "terminal": "D",
-        "destination": "Madrid",
-        "flight_number": "UX098",
-        "departure": "7:45 AM",
-        "status": "Check-in"
-    }
-
     print("\n--- VELOCIS SYSTEM INTERPRETER ---")
-    briefing = generate_system_briefing(current_data)
-    print(f"\n{briefing}\n")
+    
+    # The system now looks for this file instead of using a hardcoded list
+    data_file = "mission_data.json"
+
+    if os.path.exists(data_file):
+        try:
+            with open(data_file, 'r') as f:
+                current_data = json.load(f)
+            
+            # Run the AI briefing with the real data found in the file
+            briefing = generate_system_briefing(current_data)
+            print(f"\n{briefing}\n")
+            
+        except Exception as e:
+            print(f"Status: Error reading mission data file. {e}")
+    else:
+        # If the scanner hasn't run yet, the Butler stays in professional standby
+        print("Status: Standby. Waiting for scanner to transmit mission data...")
