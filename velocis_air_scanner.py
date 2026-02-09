@@ -58,7 +58,7 @@ def process_velocis_telemetry(raw_text):
             "timestamp": datetime.now().isoformat()
         }
 
-        # Beaming to Cloud Bridge (for iPhone and AI Interpreter)
+        # Beaming to Cloud Bridge (triggers iPhone UI Success)
         requests.post(NETLIFY_URL, json=mission_payload)
         
         # Keeping local file for redundancy
@@ -98,58 +98,37 @@ def decode_cloud_image(base64_string):
         return None
 
 def activate_velocis_engine():
-    # --- SCANNER CORE: UNTOUCHED GOLD STANDARDS ---
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    
-    print("🚀 VELOCIS GLOBAL ENGINE: ONLINE (WEBCAM + CLOUD)")
-    last_data = None
+    # --- SILENT COMMAND MODE: NO WEBCAM ACTIVATION ---
+    print("🚀 VELOCIS GLOBAL HUB: LISTENING FOR IPHONE TELEMETRY...")
     last_cloud_timestamp = None
 
-    try:
-        while True:
-            # --- CHANNEL 1: LOCAL WEBCAM ---
-            ret, frame = cap.read()
-            if ret:
-                y1, y2, x1, x2 = 210, 510, 440, 840
-                crop = frame[y1:y2, x1:x2]
-                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-                results = zxingcpp.read_barcodes(gray) # Fast check for local
-
-                if results:
-                    for result in results:
-                        if result.text != last_data:
-                            last_data = result.text
-                            os.system('printf "\a"') 
-                            process_velocis_telemetry(last_data)
+    while True:
+        try:
+            # Poll the Bridge for iPhone Data
+            response = requests.get(NETLIFY_URL, timeout=1)
+            cloud_data = response.json()
+            
+            # Detect new Mission from iPhone
+            if cloud_data.get("image") and cloud_data.get("timestamp") != last_cloud_timestamp:
+                print("📸 [CLOUD] Image received from iPhone. Processing...")
                 
-                cv2.imshow("Velocis Air Hub - Command View", frame)
-
-            # --- CHANNEL 2: CLOUD BRIDGE (IPHONE) ---
-            try:
-                response = requests.get(NETLIFY_URL, timeout=1)
-                cloud_data = response.json()
+                decoded_text = decode_cloud_image(cloud_data["image"])
                 
-                if cloud_data.get("image") and cloud_data.get("timestamp") != last_cloud_timestamp:
-                    print("📸 [CLOUD] Image received from iPhone. Decoding...")
-                    decoded_text = decode_cloud_image(cloud_data["image"])
+                if decoded_text:
+                    os.system('printf "\a"') # Alert beep on iMac
+                    process_velocis_telemetry(decoded_text)
+                    last_cloud_timestamp = cloud_data.get("timestamp")
+                else:
+                    print("⚠️  [CLOUD] Decoding failed. Awaiting higher resolution...")
+                    # Update status to tell iPhone to try again
+                    requests.post(NETLIFY_URL, json={"status": "Retry"})
                     
-                    if decoded_text:
-                        os.system('printf "\a"')
-                        process_velocis_telemetry(decoded_text)
-                        last_cloud_timestamp = cloud_data.get("timestamp")
-                    else:
-                        print("⚠️ [CLOUD] Could not decode image. Adjusting focus...")
-                        # Reset bridge so iPhone can retry
-                        requests.post(NETLIFY_URL, json={"status": "Retry"})
-            except:
-                pass
-
-            if cv2.waitKey(1) & 0xFF == ord('q'): break
-    finally:
-        cap.release()
-        cv2.destroyAllWindows()
+        except Exception:
+            # Silent catch for connection flickers
+            pass
+        
+        # 1-second interval to avoid spamming the Netlify Function
+        time.sleep(1)
 
 if __name__ == "__main__":
     activate_velocis_engine()
