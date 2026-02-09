@@ -2,23 +2,28 @@ import cv2
 import numpy as np
 import zxingcpp
 import os
-import json  # Added for the Handshake
+import json
+import requests
+import base64
+import time
 from datetime import datetime
+
+# --- GLOBAL CONFIGURATION ---
+NETLIFY_URL = "https://velocis-global-mobility-system.netlify.app/api/mission_bridge"
 
 def decode_air_hub_date(julian_day_str):
     """Converts IATA Julian day (e.g. 178) to a readable date (e.g. June 27)."""
     try:
         day_num = int(julian_day_str)
-        # Assuming current year 2026 as per Command Active status
         date_obj = datetime.strptime(f"2026-{day_num}", "%Y-%j")
         return date_obj.strftime("%B %d")
     except:
         return f"Day {julian_day_str}"
 
 def process_velocis_telemetry(raw_text):
-    """Organizes IATA data and TRANSMITS it to the AI Interpreter."""
+    """Organizes IATA data and BEAMS it to the Global Cloud Bridge."""
     try:
-        # Standard Slicing (Protected by Try/Except)
+        # Standard Slicing (Untouched Gold Standards)
         name = raw_text[2:22].strip()
         pnr = raw_text[23:30].strip()
         origin = raw_text[30:33]
@@ -42,23 +47,55 @@ def process_velocis_telemetry(raw_text):
         print(f"║ 🆔 RECORD:    PNR {pnr:<31} ║")
         print("═"*55 + "\n")
 
-        # --- THE AI HANDSHAKE ---
-        # We package the scan into a clean format for the AI Butler
+        # --- THE GLOBAL HANDSHAKE ---
         mission_payload = {
             "passenger": name,
             "airport": origin,
             "destination": dest,
             "flight_number": f"{airline}{flight}",
-            "departure": "Live Data",
-            "status": "Scanned"
+            "raw_data": raw_text,
+            "status": "Active",
+            "timestamp": datetime.now().isoformat()
         }
 
+        # Beaming to Cloud Bridge (for iPhone and AI Interpreter)
+        requests.post(NETLIFY_URL, json=mission_payload)
+        
+        # Keeping local file for redundancy
         with open("mission_data.json", "w") as f:
             json.dump(mission_payload, f, indent=4)
-        print("📡 [SYSTEM] Mission data transmitted to AI Interpreter.")
+            
+        print("📡 [SYSTEM] Telemetry beamed to Global Cloud Bridge.")
+        return True
 
     except Exception as e:
-        print(f"\n📡 [AIR HUB] RAW TELEMETRY: {raw_text} | Error: {e}")
+        print(f"\n📡 [AIR HUB] RAW TELEMETRY ERROR: {e}")
+        return False
+
+def decode_cloud_image(base64_string):
+    """Processes image from iPhone using the Triple-Buffer Zxing Engine."""
+    try:
+        # 1. Convert Base64 from iPhone to OpenCV frame
+        img_data = base64.b64decode(base64_string.split(',')[1])
+        nparr = np.frombuffer(img_data, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # 2. TRIPLE-BUFFER ENGINE (Applied to Cloud Image)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        super_res = cv2.resize(gray, (0,0), fx=2.5, fy=2.5, interpolation=cv2.INTER_LANCZOS4)
+        _, high_contrast = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        results = None
+        for attempt in [gray, super_res, high_contrast]:
+            results = zxingcpp.read_barcodes(attempt)
+            if results: break
+        
+        if results:
+            for result in results:
+                return result.text
+        return None
+    except:
+        return None
 
 def activate_velocis_engine():
     # --- SCANNER CORE: UNTOUCHED GOLD STANDARDS ---
@@ -66,40 +103,49 @@ def activate_velocis_engine():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
-    print("🚀 VELOCIS AIR HUB ENGINE: ONLINE")
+    print("🚀 VELOCIS GLOBAL ENGINE: ONLINE (WEBCAM + CLOUD)")
     last_data = None
+    last_cloud_timestamp = None
 
     try:
         while True:
+            # --- CHANNEL 1: LOCAL WEBCAM ---
             ret, frame = cap.read()
-            if not ret: break
+            if ret:
+                y1, y2, x1, x2 = 210, 510, 440, 840
+                crop = frame[y1:y2, x1:x2]
+                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+                results = zxingcpp.read_barcodes(gray) # Fast check for local
 
-            # Working Coordinates for M4 iMac Camera
-            y1, y2, x1, x2 = 210, 510, 440, 840
-            crop = frame[y1:y2, x1:x2]
-            
-            # TRIPLE-BUFFER ENGINE (DO NOT TOUCH)
-            gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-            super_res = cv2.resize(gray, (0,0), fx=2.5, fy=2.5, interpolation=cv2.INTER_LANCZOS4)
-            _, high_contrast = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            
-            results = None
-            for attempt in [gray, super_res, high_contrast]:
-                results = zxingcpp.read_barcodes(attempt)
-                if results: break
+                if results:
+                    for result in results:
+                        if result.text != last_data:
+                            last_data = result.text
+                            os.system('printf "\a"') 
+                            process_velocis_telemetry(last_data)
+                
+                cv2.imshow("Velocis Air Hub - Command View", frame)
 
-            if results:
-                for result in results:
-                    if result.text != last_data:
-                        last_data = result.text
-                        os.system('printf "\a"') 
-                        process_velocis_telemetry(last_data)
+            # --- CHANNEL 2: CLOUD BRIDGE (IPHONE) ---
+            try:
+                response = requests.get(NETLIFY_URL, timeout=1)
+                cloud_data = response.json()
+                
+                if cloud_data.get("image") and cloud_data.get("timestamp") != last_cloud_timestamp:
+                    print("📸 [CLOUD] Image received from iPhone. Decoding...")
+                    decoded_text = decode_cloud_image(cloud_data["image"])
                     
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 4)
-            else:
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), 2)
+                    if decoded_text:
+                        os.system('printf "\a"')
+                        process_velocis_telemetry(decoded_text)
+                        last_cloud_timestamp = cloud_data.get("timestamp")
+                    else:
+                        print("⚠️ [CLOUD] Could not decode image. Adjusting focus...")
+                        # Reset bridge so iPhone can retry
+                        requests.post(NETLIFY_URL, json={"status": "Retry"})
+            except:
+                pass
 
-            cv2.imshow("Velocis Air Hub - Command View", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'): break
     finally:
         cap.release()
