@@ -109,48 +109,68 @@
     </div>
 
 <script>
-    // FORCE GLOBAL STRENGTH
+    // 1. FORCE MAXIMUM STRENGTH (Yesterday's standard)
     const hints = new Map();
-    // This 'TRY_HARDER' is the equivalent of your Python Triple-Buffer
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); // Forces deep analysis
     hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, Object.values(ZXing.BarcodeFormat));
 
     const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // Start Camera with NO restrictions on resolution
-    navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
-    }).then(stream => { 
-        video.srcObject = stream; 
-        video.setAttribute('playsinline', true);
-        video.play();
+    // 2. High-Resolution Constraints (Prevents the 'Blur' issue)
+    const constraints = {
+        video: { 
+            facingMode: "environment",
+            width: { ideal: 1920 }, // Higher resolution for better detail
+            height: { ideal: 1080 }
+        }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => { 
+            video.srcObject = stream; 
+            video.setAttribute('playsinline', true);
+            video.play();
+            startEngine();
+        });
+
+    function startEngine() {
+        document.getElementById('status-pill').innerText = "RADAR ACTIVE";
         
-        // THE ENGINE: Restoring the exact 'decodeFromVideoDevice' that worked yesterday
+        // This is the aggressive machine-gun mode
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                isMissionActive = true;
-                
-                // Surgical Extraction from your Master File
-                const rawText = result.text;
-                const data = {
-                    passenger: rawText.substring(2, 22).trim(),
-                    flight: rawText.substring(36, 43).trim(),
-                    seat: rawText.substring(48, 52).trim()
-                };
-
-                // Show Results Immediately
-                displayFinal(data);
+                // Ensuring we only take strings with actual data content
+                if (result.text.length > 20) {
+                    isMissionActive = true;
+                    processData(result.text);
+                }
             }
         });
-    });
+    }
 
-    function displayFinal(data) {
-        document.getElementById('scanner-section').style.display = 'none';
-        document.getElementById('results-area').classList.remove('hidden');
-        document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
-        document.getElementById('card1').style.display = 'block';
+    function processData(rawText) {
+        document.getElementById('status-pill').innerText = "VERIFYING...";
+        // Surgical slicing exactly as per your Python Master File
+        const data = {
+            passenger: rawText.substring(2, 22).trim(),
+            pnr: rawText.substring(23, 30).trim(),
+            origin: rawText.substring(30, 33),
+            destination: rawText.substring(33, 36),
+            airline: rawText.substring(36, 38),
+            flight: rawText.substring(38, 43).trim(),
+            seat: rawText.substring(48, 52).trim()
+        };
+
+        // Transition to Welcome UI
+        setTimeout(() => {
+            document.getElementById('scanner-section').style.display = 'none';
+            document.getElementById('results-area').classList.remove('hidden');
+            document.getElementById('user-name').innerText = `Hello, ${data.passenger}`;
+            document.getElementById('flight-path').innerText = `Flight ${data.airline}${data.flight} to ${data.destination} confirmed.`;
+            document.getElementById('card1').style.display = 'block';
+        }, 1500);
     }
 </script>
 </body>
