@@ -11,8 +11,8 @@
     <title>Velocis™ Global Mobility System</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
     <style>
-        /* [STYLES PRESERVED EXACTLY AS PROVIDED] */
         body { margin: 0; background: #000 !important; overflow: hidden; font-family: sans-serif; }
+        
         #status-ticker {
             position: fixed; top: 0; width: 100%; background: rgba(0, 255, 255, 0.15);
             color: #00ffff; font-size: 10px; font-weight: 900; padding: 6px 0;
@@ -20,8 +20,10 @@
             text-align: center; letter-spacing: 2px; text-transform: uppercase;
             backdrop-filter: blur(5px);
         }
+
         #brand { position: fixed; top: 45px; width: 100%; text-align: center; letter-spacing: 12px; z-index: 9999 !important; pointer-events: none; }
         #brand h1 { color: #FFD700 !important; font-weight: 900 !important; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 5px #000; margin: 0; } 
+        
         #arrival-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; background: rgba(255, 91, 0, 0.98); backdrop-filter: blur(20px);
@@ -29,12 +31,14 @@
             z-index: 20000; text-align: center; box-shadow: 0 0 50px rgba(255, 91, 0, 0.5);
             pointer-events: auto !important;
         }
+
         .transport-btn {
             display: block; background: #00ffff; color: #000; font-weight: 900;
             padding: 15px; border-radius: 8px; text-decoration: none; margin: 20px 0 10px 0;
             font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
             box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4); border: none; cursor: pointer; width: 100%;
         }
+
         .icon-anchor { position: relative; display: inline-block; }
         .guidance-label {
             position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%);
@@ -43,14 +47,19 @@
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.4); animation: label-pulse 2s infinite;
             pointer-events: none; z-index: 10001; text-transform: uppercase;
         }
+        
         .logistics-label { background: #FFD700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important; }
+
         @keyframes label-pulse { 0%, 100% { opacity: 1; transform: translate(-50%, 0); } 50% { opacity: 0.7; transform: translate(-50%, -2px); } }
+
         .scroll-cta-container { display: flex; justify-content: center; align-items: center; gap: 15px; color: #FFA500; font-weight: 900; font-size: 11px; margin: 8px 0; letter-spacing: 1px; }
         .side-arrow { font-size: 18px; animation: bounce-jump 1.2s infinite ease-in-out; }
         @keyframes bounce-jump { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(8px); opacity: 0.6; } }
+
         #transport-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 10px; width: 98%; z-index: 10000 !important; }
         .icon-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 50%; background: rgba(0, 255, 255, 0.1); font-size: 1.4rem; cursor: pointer; }
         .icon-btn.active { border-color: #00ffff; background: rgba(0,255,255,0.25); transform: scale(1.1) translateY(-3px); }
+
         #travel-guides { 
             position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); 
             width: 92%; height: 210px; max-height: 210px; overflow-y: scroll; 
@@ -60,6 +69,7 @@
         }
         #travel-guides::-webkit-scrollbar { width: 6px; display: block !important; }
         #travel-guides::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
+
         #install-guide-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.97); z-index: 50000; color: white;
@@ -73,6 +83,7 @@
             animation: bounce-arrow 1s infinite;
         }
         @keyframes bounce-arrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(20px); } }
+
         .merchant-ticker-wrap {
             background: rgba(0, 0, 0, 0.2);
             border-top: 1px solid rgba(255, 255, 255, 0.15);
@@ -226,36 +237,44 @@
         let earthImg; let arrivalCityTime = "";
         const HUB_DATABASE = { "CDG": { currency: "EUR", tip: "Take RER B." }, "LHR": { currency: "GBP", tip: "Heathrow Express." }, "JFK": { currency: "USD", tip: "AirTrain." }, "DXB": { currency: "AED", tip: "Metro." }, "HKG": { currency: "HKD", tip: "Airport Express." } };
         
-        // --- 1. CORE SYNC ENGINE: Listen for Scanner Data ---
-        async function syncMissionData() {
-            try {
-                const response = await fetch('/api/mission_bridge');
-                const data = await response.json();
-                
-                if (data.status === "Active" && data.flight_number) {
-                    // Automatically populate UI if a scan happened on security.html
-                    document.getElementById('hub-mission-status').innerText = `MISSION: ${data.passenger}`;
-                    document.getElementById('mission-status').innerText = "MISSION CONFIRMED";
-                    document.getElementById('flight-query').value = data.flight_number;
-                    
-                    // Trigger the logistics fetch using the scanned data
-                    fetchFlightData(data.flight_number);
-                }
-            } catch (e) { console.log("Bridge Sync Idle"); }
-        }
-
-        // Poll the bridge every 5 seconds to keep the Globe in sync
-        setInterval(syncMissionData, 5000);
-
-        // --- PRESERVED P5.JS EARTH LOGIC ---
         function preload() { earthImg = loadImage('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', img => { img.crossOrigin = 'anonymous'; }); }
         function setup() { let canvas = createCanvas(windowWidth, windowHeight, WEBGL); canvas.style('position', 'fixed'); canvas.style('top', '0'); canvas.style('z-index', '1'); perspective(PI/3.0, width/height, 0.1, 5000); }
         function draw() { background(0); if (!earthImg) return; ambientLight(210); pointLight(255, 255, 255, 600, 200, 1000); push(); translate(0, -100, 0); rotateY(frameCount * 0.005); noStroke(); texture(earthImg); sphere(100); pop(); }
         function windowResized() { resizeCanvas(windowWidth, windowHeight); }
         
-        // --- PRESERVED TICKER & LOGISTICS LOGIC ---
         function updateTicker() { const now = new Date(); const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const options = { hour: '2-digit', minute: '2-digit', timeZone: arrivalCityTime || 'Europe/Paris' }; const missionTime = now.toLocaleTimeString([], options); const cityLabel = arrivalCityTime ? "DESTINATION" : "PARIS"; document.getElementById('status-ticker').innerText = `LOCAL: ${localTime} | ${cityLabel}: ${missionTime} | SYSTEM ACTIVE`; }
         setInterval(updateTicker, 1000);
 
-        async function fetchFlightData(scannedFlight = null) { 
-            const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8
+        async function fetchFlightData() { 
+            const ACCESS_KEY = 'b872fb58a154f90cc42b93589772a8e4'; 
+            const inputVal = document.getElementById('flight-query')?.value; 
+            const FLIGHT_IATA = inputVal ? inputVal.trim().toUpperCase() : 'UA54'; 
+            try { 
+                const response = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${ACCESS_KEY}&flight_iata=${FLIGHT_IATA}`); 
+                const result = await response.json(); 
+                if (result.data && result.data.length > 0) { 
+                    const flight = result.data[0]; 
+                    const carousel = flight.arrival.baggage || "WAITING..."; 
+                    const airline = flight.airline.name.toUpperCase(); 
+                    const terminal = flight.arrival.terminal || "1"; 
+                    document.getElementById('hub-mission-status').innerText = `${airline} DETECTED`; 
+                    document.getElementById('hub-carousel').innerText = `CAROUSEL: ${carousel}`; 
+                    document.getElementById('hub-terminal').innerText = `TERM: ${terminal}`; 
+                    const arrivalCode = flight.arrival.iata; 
+                    if (HUB_DATABASE[arrivalCode]) { 
+                        const info = HUB_DATABASE[arrivalCode]; 
+                        const intelParagraphs = document.querySelectorAll("#travel-guides p"); 
+                        if (intelParagraphs.length > 0) { 
+                            intelParagraphs[0].innerHTML = `<span style="color: #00ffff;">${arrivalCode} (${info.currency}):</span> ${info.tip}`; 
+                        } 
+                    } 
+                } 
+            } catch (error) { console.log("System Data Error:", error); } 
+        }
+        function closeArrival() { document.getElementById('arrival-modal').style.display = 'none'; }
+        function openTransportMarket() { closeArrival(); document.getElementById('ground-transport-market').scrollIntoView({behavior: 'smooth'}); }
+        function toggleInstallGuide(show) { document.getElementById('install-guide-overlay').style.display = show ? 'flex' : 'none'; }
+        window.addEventListener('load', () => { setTimeout(fetchFlightData, 3000); });
+    </script>
+</body>
+</html>
