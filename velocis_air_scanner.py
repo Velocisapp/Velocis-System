@@ -11,10 +11,11 @@ from datetime import datetime
 NETLIFY_URL = "https://velocis-global-mobility-system.netlify.app/.netlify/functions/mission_bridge"
 
 def decode_air_hub_date(julian_day_str):
-    """Core Function: Preserved."""
+    """Core Function: Preserved with f-string fix."""
     try:
         day_num = int(julian_day_str)
-        date_obj = datetime.strptime(f: "2026-{day_num}", "%Y-%j")
+        # Fix: Removed the colon after 'f' to ensure proper string formatting
+        date_obj = datetime.strptime(f"2026-{day_num}", "%Y-%j")
         return date_obj.strftime("%B %d")
     except:
         return f"Day {julian_day_str}"
@@ -66,11 +67,10 @@ def process_velocis_telemetry(raw_text):
 def decode_cloud_image(base64_string):
     """Engine: Processes iPhone photo without touching iMac Hardware."""
     try:
-        # Decode base64 to bytes, then to a numpy array for zxingcpp
         img_bytes = base64.b64decode(base64_string.split(',')[1])
         nparr = np.frombuffer(img_bytes, np.uint8)
         
-        # We use cv2 only as a decoder for the byte-stream, NOT as a camera driver
+        # Hardware Protection: cv2 is imported here only as a decoder
         import cv2
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
@@ -97,7 +97,7 @@ def run_field_ops_listener():
                 decoded_text = decode_cloud_image(cloud_data["image"])
                 
                 if decoded_text:
-                    os.system('printf "\a"') # System beep on success
+                    os.system('printf "\a"') # Alert beep on success
                     process_velocis_telemetry(decoded_text)
                     last_cloud_timestamp = cloud_data.get("timestamp")
         except:
@@ -106,4 +106,3 @@ def run_field_ops_listener():
 
 if __name__ == "__main__":
     run_field_ops_listener()
-    
