@@ -80,12 +80,14 @@
     </div>
 
 <script>
+    // 1. ENGINE CONFIGURATION
     const hints = new Map();
     hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
     hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
         ZXing.BarcodeFormat.QR_CODE, 
         ZXing.BarcodeFormat.PDF417, 
-        ZXing.BarcodeFormat.CODE_128
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.DATA_MATRIX
     ]);
 
     const codeReader = new ZXing.BrowserMultiFormatReader(hints);
@@ -93,18 +95,20 @@
     const statusPill = document.getElementById('status-pill');
     let isMissionActive = false;
 
+    // 2. AVIATION DATE DECODER
     function decodeJulianDate(julianStr) {
         try {
             const dayNum = parseInt(julianStr);
             const now = new Date();
             const start = new Date(now.getFullYear(), 0, 0);
-            const diff = (dayNum * 24 * 60 * 60 * 1000);
-            const targetDate = new Date(start.getTime() + diff);
+            const targetDate = new Date(start.getTime() + (dayNum * 86400000));
             return targetDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
         } catch (e) { return `Day ${julianStr}`; }
     }
 
+    // 3. START SCANNER ENGINE
     codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+        // Visual confirmation that camera is feeding the brain
         if (video.srcObject && statusPill.innerText !== "SYSTEM ACTIVE") {
             statusPill.innerText = "SYSTEM ACTIVE";
             statusPill.style.color = "#22c55e";
@@ -113,9 +117,9 @@
         if (result && !isMissionActive) {
             isMissionActive = true;
             if (window.navigator.vibrate) window.navigator.vibrate(200);
-
-            // LOWERED THRESHOLD: If it's 20+ chars, treat as Aviation Telemetry
-            if (result.text.length > 20) {
+            
+            // Check for Aviation M1 trigger or long string
+            if (result.text.startsWith('M1') || result.text.length > 50) {
                 handleMasterExtraction(result.text);
             } else {
                 handleGeneralScan(result.text);
@@ -123,40 +127,42 @@
         }
     });
 
+    // 4. THE MISSION PROCESSOR (The code you just asked about)
     function handleMasterExtraction(rawText) {
-        // EXACT PYTHON MIRROR SLICING
-        const name = rawText.substring(2, 22).trim() || "PASSENGER";
-        const pnr = rawText.substring(23, 30).trim() || "------";
-        const origin = rawText.substring(30, 33) || "---";
-        const dest = rawText.substring(33, 36) || "---";
-        const airline = rawText.substring(36, 38) || "--";
-        const flight = rawText.substring(38, 43).trim() || "000";
-        const seat = rawText.substring(48, 52).trim() || "---";
-        const date = decodeJulianDate(rawText.substring(44, 47));
+        if(rawText.startsWith('M1')) {
+            const name = rawText.substring(2, 22).trim();
+            const pnr = rawText.substring(23, 30).trim();
+            const origin = rawText.substring(30, 33);
+            const dest = rawText.substring(33, 36);
+            const airline = rawText.substring(36, 38);
+            const flight = rawText.substring(38, 43).trim();
+            const seat = rawText.substring(48, 52).trim();
+            const date = decodeJulianDate(rawText.substring(44, 47));
 
-        document.body.innerHTML = `
-            <div class="p-8" style="background:#fdfdfd; height:100vh;">
-                <div class="glass-pill text-blue-600 mb-6 w-fit text-xs font-bold uppercase tracking-widest">Mission Confirmed</div>
-                <h1 class="text-3xl font-bold text-slate-900 mb-2">${name}</h1>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Flight Logistics</p>
-                        <p class="text-blue-500 font-bold">${airline}${flight}</p>
+            document.body.innerHTML = `
+                <div class="p-8" style="background:#fdfdfd; height:100vh;">
+                    <div class="glass-pill text-blue-600 mb-6 w-fit text-xs font-bold uppercase">Mission Confirmed</div>
+                    <h1 class="text-3xl font-bold text-slate-900 mb-2">${name}</h1>
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-6">
+                        <div class="text-xl font-bold text-slate-800 mb-2">${origin} ➔ ${dest}</div>
+                        <div class="flex justify-between text-sm text-slate-500">
+                            <span>FLIGHT: ${airline}${flight}</span>
+                            <span>SEAT: ${seat}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-300 mt-4 font-mono">DATE: ${date} | PNR: ${pnr}</p>
                     </div>
-                    <div class="text-xl font-bold text-slate-800 mb-2">${origin} ➔ ${dest}</div>
-                    <div class="flex justify-between text-sm text-slate-500">
-                        <span>SEAT: ${seat}</span>
-                        <span>DATE: ${date}</span>
-                    </div>
-                </div>
-                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl shadow-xl">NEW SCAN</button>
-            </div>`;
+                    <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl shadow-xl">NEW MISSION</button>
+                </div>`;
+        } else {
+            handleGeneralScan(rawText);
+        }
     }
 
+    // 5. THE GENERAL DATA PROCESSOR
     function handleGeneralScan(rawText) {
         document.body.innerHTML = `
             <div class="p-8" style="background:#fdfdfd; height:100vh;">
-                <div class="glass-pill text-amber-600 mb-6 w-fit text-xs font-bold uppercase tracking-widest">General Data</div>
+                <div class="glass-pill text-amber-600 mb-6 w-fit text-xs font-bold uppercase tracking-widest">Field Data Captured</div>
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
                     <p class="text-slate-800 break-words font-mono text-sm">${rawText}</p>
                 </div>
