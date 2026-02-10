@@ -91,39 +91,41 @@
     const fileInput = document.getElementById('file-input');
 const IMAC_HUB_URL = 'https://shiny-cities-dance.loca.lt/scan';
 
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-        // UI Transition
-        document.getElementById('capture-ui').classList.add('hidden');
-        document.getElementById('loading-ui').classList.remove('hidden');
-        document.getElementById('status-pill').innerText = "Transmitting...";
+    // Show loading UI
+    document.getElementById('capture-ui').classList.add('hidden');
+    document.getElementById('loading-ui').classList.remove('hidden');
 
-        const formData = new FormData();
-        formData.append('image', file);
+    // NEW: Check file size. If it's too small, the brain will struggle.
+    console.log("Original File Size: ", file.size);
 
-        try {
-            // 1. SEND PHOTO TO THE IMAC BRAIN
-            const response = await fetch(IMAC_HUB_URL, {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.name) {
-                // 2. PROCESS RESULT FROM THE GOLDEN LOGIC
-                handleMissionExtraction(data);
-            } else {
-                throw new Error(data.error || "Brain could not resolve barcode.");
-            }
-        } catch (err) {
-            alert("HUB ANALYSIS FAILED: " + err.message + "\n\nVerify iMac Terminal is running and on same Wi-Fi.");
+    const formData = new FormData();
+    // We send the raw file directly to the iMac
+    formData.append('image', file);
+
+    try {
+        const response = await fetch(IMAC_HUB_URL, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.name) {
+            handleMissionExtraction(data);
+        } else {
+            // IF BRAIN FAILS, SHOW THE ERROR
+            alert("IMAC BRAIN FEEDBACK: " + data.error);
             location.reload();
         }
-    });
-
+    } catch (err) {
+        alert("CONNECTION LOST: Restart the 'lt' tunnel on your iMac.");
+        location.reload();
+    }
+});
     function handleMissionExtraction(data) {
         // USING DATA RETURNED FROM THE IMAC'S SURGICAL SLICING
         document.body.innerHTML = `
