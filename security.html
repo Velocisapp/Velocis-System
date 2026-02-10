@@ -80,29 +80,34 @@
     </div>
 
 <script>
-    // 1. ENGINE START
-    const codeReader = new ZXing.BrowserMultiFormatReader();
+    // 1. THE UNIVERSAL ENGINE
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    // Adding Aztec and Data Matrix to cover all airline possibilities
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+        ZXing.BarcodeFormat.QR_CODE, 
+        ZXing.BarcodeFormat.PDF417, 
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.DATA_MATRIX,
+        ZXing.BarcodeFormat.AZTEC
+    ]);
+
+    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
     const statusPill = document.getElementById('status-pill');
     let isMissionActive = false;
 
-    console.log("Scanner Engine Initialized");
-
-    // 2. ACTIVATE CONTINUOUS SCANNING
     codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-        // Force the pill to green the moment the camera is live
         if (video.srcObject && statusPill.innerText !== "SYSTEM ACTIVE") {
             statusPill.innerText = "SYSTEM ACTIVE";
-            statusPill.style.color = "#22c55e";
+            statusPill.style.color = "#22c55e"; 
         }
 
         if (result && !isMissionActive) {
             isMissionActive = true;
-            console.log("Raw Data Captured:", result.text);
-            
             if (window.navigator.vibrate) window.navigator.vibrate(200);
             
-            // AUTOMATIC ROUTING
+            // Check for M1 Aviation Prefix
             if (result.text.startsWith('M1')) {
                 handleMasterExtraction(result.text);
             } else {
@@ -112,30 +117,30 @@
     });
 
     function handleMasterExtraction(rawText) {
-        // Surgical Slicing Mirror from Python
+        // Your working Python logic from velocis_air_scanner.py
         const name = rawText.substring(2, 22).trim();
         const pnr = rawText.substring(23, 30).trim();
         const origin = rawText.substring(30, 33);
         const dest = rawText.substring(33, 36);
 
         document.body.innerHTML = `
-            <div class="p-8">
-                <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
-                <h1 class="text-3xl font-bold mb-4">${name}</h1>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                    <p class="text-xl font-bold">${origin} ➔ ${dest}</p>
+            <div class="p-8" style="background:#fdfdfd; height:100vh;">
+                <div class="glass-pill text-blue-600 mb-6 w-fit text-xs font-bold uppercase">MISSION CONFIRMED</div>
+                <h1 class="text-3xl font-bold text-slate-900 mb-2">${name}</h1>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-6">
+                    <div class="text-xl font-bold text-slate-800 mb-2">${origin} ➔ ${dest}</div>
                     <p class="text-sm text-slate-400">PNR: ${pnr}</p>
                 </div>
-                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl mt-8">NEW SCAN</button>
+                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">NEW SCAN</button>
             </div>`;
     }
 
     function handleGeneralScan(rawText) {
         document.body.innerHTML = `
-            <div class="p-8">
-                <div class="glass-pill text-amber-600 mb-6 w-fit">DATA DETECTED</div>
+            <div class="p-8" style="background:#fdfdfd; height:100vh;">
+                <div class="glass-pill text-amber-600 mb-6 w-fit text-xs font-bold">DATA CAPTURED</div>
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
-                    <p class="text-slate-800 break-words font-mono text-sm">${rawText}</p>
+                    <p class="text-slate-800 break-words font-mono text-xs">${rawText}</p>
                 </div>
                 <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">NEW SCAN</button>
             </div>`;
