@@ -80,77 +80,40 @@
     </div>
 
 <script>
-    // 1. FORCE MAX RESOLUTION (The "Python" Strength)
-    const constraints = {
-        video: {
-            facingMode: "environment",
-            width: { ideal: 4096 }, // Force 4K if available
-            height: { ideal: 2160 },
-            frameRate: { ideal: 30 }
-        }
-    };
-
+    // 1. SIMPLEST ENGINE: No extra instructions to crash the browser
     const codeReader = new ZXing.BrowserMultiFormatReader();
-    const video = document.getElementById('video');
     const statusPill = document.getElementById('status-pill');
-    let isMissionActive = false;
 
-    // 2. START THE FEED
-    navigator.mediaDevices.getUserMedia(constraints).then(stream => {
-        video.srcObject = stream;
-        video.setAttribute('playsinline', true);
-        video.play();
-        
-        // 3. START THE BRAIN
-        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-            if (video.srcObject) {
-                statusPill.innerText = "SYSTEM ACTIVE";
-                statusPill.style.color = "#22c55e";
-            }
+    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+        if (result) {
+            if (window.navigator.vibrate) window.navigator.vibrate(200);
+            const raw = result.text;
 
-            if (result && !isMissionActive) {
-                isMissionActive = true;
-                if (window.navigator.vibrate) window.navigator.vibrate(200);
-                
-                // If it captured the full long string, use the Mission UI
-                if (result.text.length > 25) {
-                    processAviationMission(result.text);
-                } else {
-                    // If it only saw numbers (like in IMG_5908.PNG), show it here
-                    processGeneralCapture(result.text);
-                }
+            // 2. THE PYTHON BLUEPRINT (Slicing based on your .py file)
+            if (raw.length > 20) {
+                const name = raw.substring(2, 22).trim();
+                const pnr = raw.substring(23, 30).trim();
+                const origin = raw.substring(30, 33);
+                const dest = raw.substring(33, 36);
+                const airline = raw.substring(36, 38);
+                const flight = raw.substring(38, 43).trim();
+
+                document.body.innerHTML = `
+                    <div class="p-8">
+                        <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
+                        <h1 class="text-3xl font-bold">${name}</h1>
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border mt-6">
+                            <p class="text-xl font-bold">${origin} ➔ ${dest}</p>
+                            <p class="text-sm text-slate-500">${airline}${flight} | PNR: ${pnr}</p>
+                        </div>
+                        <button onclick="location.reload()" class="w-full py-5 bg-black text-white rounded-2xl mt-8">NEXT SCAN</button>
+                    </div>`;
+            } else {
+                // If it's not a boarding pass, just show the data
+                document.body.innerHTML = `<div class="p-8"><h1>DATA:</h1><p>${raw}</p><button onclick="location.reload()">BACK</button></div>`;
             }
-        });
+        }
     });
-
-    function processAviationMission(rawText) {
-        const name = rawText.substring(2, 22).trim();
-        const pnr = rawText.substring(23, 30).trim();
-        const origin = rawText.substring(30, 33);
-        const dest = rawText.substring(33, 36);
-
-        document.body.innerHTML = `
-            <div class="p-8">
-                <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
-                <h1 class="text-3xl font-bold mb-4">${name}</h1>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                    <p class="text-xl font-bold">${origin} ➔ ${dest}</p>
-                    <p class="text-xs text-slate-400">RECORD: ${pnr}</p>
-                </div>
-                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl mt-8">NEW SCAN</button>
-            </div>`;
-    }
-
-    function processGeneralCapture(rawText) {
-        document.body.innerHTML = `
-            <div class="p-8">
-                <div class="glass-pill text-amber-600 mb-6 w-fit">GENERAL DATA</div>
-                <div class="bg-white p-6 rounded-3xl border border-slate-100 mb-8">
-                    <p class="text-slate-800 break-all font-mono text-sm">${rawText}</p>
-                </div>
-                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">NEW SCAN</button>
-            </div>`;
-    }
 </script>
 </body>
 </html>
