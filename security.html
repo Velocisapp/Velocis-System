@@ -7,127 +7,127 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        body { 
-            background: #fdfdfd; 
-            color: #334155; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            overflow: hidden; 
-            min-height: 100vh;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80');
-            background-size: cover;
-            filter: blur(60px) brightness(1.1);
-            z-index: -1;
-            opacity: 0.4;
-        }
-        
-        .glass-pill { 
-            background: rgba(255, 255, 255, 0.7); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(0,0,0,0.05); 
-            border-radius: 50px; 
-            padding: 6px 16px; 
-            font-size: 11px; 
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .scanner-container {
-            border: 2px solid rgba(100, 116, 139, 0.1);
-            position: relative;
-            background: rgba(15, 23, 42, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
+        body { background: #fdfdfd; color: #334155; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; min-height: 100vh; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'); background-size: cover; filter: blur(60px) brightness(1.1); z-index: -1; opacity: 0.4; }
+        .glass-pill { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); border-radius: 50px; padding: 6px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 40px; border-radius: 20px; pointer-events: none; }
     </style>
 </head>
 <body class="p-8">
     <div class="flex justify-between mb-12">
-        <div id="status-pill" class="glass-pill text-slate-500 uppercase">Hub Connection: Ready</div>
-        <div class="glass-pill text-blue-500 uppercase">High-Res Capture</div>
+        <div id="status-pill" class="glass-pill text-slate-500 uppercase transition-all">Hub Connection: Ready</div>
+        <div class="glass-pill text-blue-500 uppercase">Live Auto-Scan</div>
     </div>
 
     <div id="main-interface">
         <h1 class="text-2xl font-light tracking-tight text-slate-800 mb-2">Security Portal</h1>
         <p class="text-xs text-slate-400 mb-8 uppercase tracking-widest">Verify Mission Document</p>
 
-        <input type="file" accept="image/*" capture="environment" id="file-input" class="hidden">
-
-        <div class="scanner-container w-full aspect-[1/1] rounded-[40px] overflow-hidden mb-10 shadow-2xl p-6">
-            <div id="capture-ui">
-                <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </div>
-                <p class="text-white font-medium mb-1">iMac Brain Active</p>
-                <p class="text-slate-500 text-[10px] uppercase tracking-tighter">Universal Hub (PDF417/AZTEC)</p>
-            </div>
+        <div class="scanner-container w-full aspect-[1/1] rounded-[40px] shadow-2xl mb-10">
+            <video id="video" playsinline></video>
+            <div class="scan-overlay"></div>
             
-            <div id="loading-ui" class="hidden">
+            <div id="loading-ui" class="hidden absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center backdrop-blur-sm">
                 <div class="animate-spin text-blue-400 text-3xl mb-4">🌀</div>
-                <p class="text-white font-bold uppercase tracking-widest">Consulting iMac...</p>
+                <p class="text-white font-bold uppercase tracking-widest">Decoding...</p>
             </div>
         </div>
 
-        <button onclick="document.getElementById('file-input').click()" class="w-full py-5 bg-slate-900 text-white font-bold tracking-wide rounded-2xl shadow-xl active:scale-95 transition-all">
-            CAPTURE DOCUMENT
-        </button>
+        <div id="hint-text" class="text-center text-slate-400 text-[10px] uppercase tracking-widest animate-pulse">
+            Point camera at barcode
+        </div>
         
-        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Local Infrastructure Enabled</p>
+        <p class="text-[9px] text-slate-400 text-center mt-12 uppercase tracking-widest opacity-50">Industrial Infrastructure Enabled</p>
     </div>
 
 <script>
-    const fileInput = document.getElementById('file-input');
-const IMAC_HUB_URL = 'https://shiny-cities-dance.loca.lt/scan';
+    const video = document.getElementById('video');
+    const statusPill = document.getElementById('status-pill');
+    const IMAC_HUB_URL = 'https://shiny-cities-dance.loca.lt/scan';
+    
+    let isProcessing = false;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
 
-  fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Show loading UI
-    document.getElementById('capture-ui').classList.add('hidden');
-    document.getElementById('loading-ui').classList.remove('hidden');
-
-    // NEW: Check file size. If it's too small, the brain will struggle.
-    console.log("Original File Size: ", file.size);
-
-    const formData = new FormData();
-    // We send the raw file directly to the iMac
-    formData.append('image', file);
-
-    try {
-        const response = await fetch(IMAC_HUB_URL, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.name) {
-            handleMissionExtraction(data);
-        } else {
-            // IF BRAIN FAILS, SHOW THE ERROR
-            alert("IMAC BRAIN FEEDBACK: " + data.error);
-            location.reload();
+    // Start Video Stream
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
+            video.srcObject = stream;
+            video.setAttribute("playsinline", true);
+            video.play();
+            requestAnimationFrame(scanFrame);
+        } catch (err) {
+            statusPill.innerText = "Camera Error";
+            alert("Please allow camera access.");
         }
-    } catch (err) {
-        alert("CONNECTION LOST: Restart the 'lt' tunnel on your iMac.");
-        location.reload();
     }
-});
+
+    async function scanFrame() {
+        if (isProcessing) {
+            requestAnimationFrame(scanFrame);
+            return;
+        }
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            // Setup canvas for snapshot
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Send to iMac for "Brain Processing"
+            isProcessing = true;
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'capture.jpg');
+
+                try {
+                    const response = await fetch(IMAC_HUB_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.status === 200) {
+                        const data = await response.json();
+                        if (data.name) {
+                            handleMissionExtraction(data);
+                            return; // Stop scanning
+                        }
+                    } else {
+                        // Feedback loop
+                        statusPill.innerText = "Adjusting Focus...";
+                        statusPill.classList.add('text-amber-500');
+                    }
+                } catch (err) {
+                    statusPill.innerText = "Bridge Lost";
+                }
+                
+                // Allow next frame after a short delay to prevent spam
+                setTimeout(() => {
+                    isProcessing = false;
+                    requestAnimationFrame(scanFrame);
+                }, 600); 
+
+            }, 'image/jpeg', 0.85);
+        } else {
+            requestAnimationFrame(scanFrame);
+        }
+    }
+
     function handleMissionExtraction(data) {
-        // USING DATA RETURNED FROM THE IMAC'S SURGICAL SLICING
+        // Stop camera tracks
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+
         document.body.innerHTML = `
             <div class="p-8 min-h-screen">
                 <div class="glass-pill text-blue-600 mb-8 w-fit uppercase">Mission Confirmed</div>
@@ -150,7 +150,7 @@ const IMAC_HUB_URL = 'https://shiny-cities-dance.loca.lt/scan';
                     </div>
                     <div class="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
                         <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Flight Data</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Status</p>
                             <p class="text-lg font-bold text-slate-800">SCAN OK</p>
                         </div>
                         <div>
@@ -159,11 +159,14 @@ const IMAC_HUB_URL = 'https://shiny-cities-dance.loca.lt/scan';
                         </div>
                     </div>
                 </div>
-                <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl active:scale-95 transition-all">
+                <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl">
                     VERIFY NEW MISSION
                 </button>
             </div>`;
     }
+
+    // Launch on start
+    startCamera();
 </script>
 </body>
 </html>
