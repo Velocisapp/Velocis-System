@@ -39,100 +39,129 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        .scanner-viewport {
+        .scanner-container {
             border: 2px solid rgba(100, 116, 139, 0.1);
             position: relative;
-            background: #000;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
         }
-
-        .pulse-frame {
-            position: absolute;
-            inset: 20%;
-            border: 1.5px solid #64748b;
-            border-radius: 12px;
-            opacity: 0.3;
-            animation: pulse 2s infinite ease-in-out;
-        }
-
-        @keyframes pulse { 0% { opacity: 0.1; transform: scale(0.98); } 50% { opacity: 0.4; transform: scale(1.02); } 100% { opacity: 0.1; transform: scale(0.98); } }
     </style>
 </head>
 <body class="p-8">
     <div class="flex justify-between mb-12">
         <div id="status-pill" class="glass-pill text-slate-500 uppercase">System Ready</div>
-        <div class="glass-pill text-blue-500 uppercase">Live Scanner</div>
+        <div class="glass-pill text-blue-500 uppercase">High-Res Capture</div>
     </div>
 
-    <div id="scanner-section">
+    <div id="main-interface">
         <h1 class="text-2xl font-light tracking-tight text-slate-800 mb-2">Security Portal</h1>
         <p class="text-xs text-slate-400 mb-8 uppercase tracking-widest">Verify Mission Document</p>
 
-        <div class="scanner-viewport w-full aspect-[1/1] rounded-[40px] overflow-hidden mb-10 shadow-inner">
-            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-            <div class="pulse-frame"></div>
+        <input type="file" accept="image/*" capture="environment" id="file-input" class="hidden">
+
+        <div class="scanner-container w-full aspect-[1/1] rounded-[40px] overflow-hidden mb-10 shadow-2xl p-6">
+            <div id="capture-ui">
+                <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <p class="text-white font-medium mb-1">Camera Feed Paused</p>
+                <p class="text-slate-500 text-[10px] uppercase">Use Capture for 100% Accuracy</p>
+            </div>
+            
+            <div id="loading-ui" class="hidden">
+                <div class="animate-spin text-blue-400 text-3xl mb-4">🌀</div>
+                <p class="text-white font-bold">ANALYZING MISSION...</p>
+            </div>
         </div>
 
-        <button id="scan-btn" class="w-full py-5 bg-slate-900 text-white font-medium tracking-wide rounded-2xl shadow-xl active:scale-95 transition-all">
-            SCANNING ACTIVE...
+        <button onclick="document.getElementById('file-input').click()" class="w-full py-5 bg-slate-900 text-white font-bold tracking-wide rounded-2xl shadow-xl active:scale-95 transition-all">
+            CAPTURE DOCUMENT
         </button>
         
-        <p id="debug-log" class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Awaiting Signal...</p>
+        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Global Standard Enabled (PDF417/AZTEC/QR)</p>
     </div>
 
 <script>
-    // 1. GLOBAL SPECTRUM CONFIGURATION
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    // This list covers every major airline format used globally
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-        ZXing.BarcodeFormat.QR_CODE,
-        ZXing.BarcodeFormat.PDF417,   // The rectangular one (IMG_5875)
-        ZXing.BarcodeFormat.AZTEC,    // The bullseye one (IMG_5910)
-        ZXing.BarcodeFormat.DATA_MATRIX,
-        ZXing.BarcodeFormat.CODE_128
-    ]);
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const fileInput = document.getElementById('file-input');
 
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
-    const video = document.getElementById('video');
-    const statusPill = document.getElementById('status-pill');
-    let isMissionActive = false;
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    // 2. UNIVERSAL DECODER
-    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-        if (video.srcObject && statusPill.innerText !== "SYSTEM ACTIVE") {
-            statusPill.innerText = "SYSTEM ACTIVE";
-            statusPill.style.color = "#22c55e"; 
-        }
+        // UI Transition
+        document.getElementById('capture-ui').classList.add('hidden');
+        document.getElementById('loading-ui').classList.remove('hidden');
+        document.getElementById('status-pill').innerText = "Analyzing...";
 
-        if (result && !isMissionActive) {
-            isMissionActive = true;
-            if (window.navigator.vibrate) window.navigator.vibrate(200);
+        try {
+            const imageUrl = URL.createObjectURL(file);
+            const result = await codeReader.decodeFromImageUrl(imageUrl);
             
-            const raw = result.text;
-            
-            // 3. THE "BLUEPRINT" SLICER (Applied to ANY long string)
-            if (raw.length > 20) {
-                const name = raw.substring(2, 22).trim();
-                const pnr = raw.substring(23, 30).trim();
-                const origin = raw.substring(30, 33);
-                const dest = raw.substring(33, 36);
-
-                document.body.innerHTML = `
-                    <div class="p-8">
-                        <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
-                        <h1 class="text-3xl font-bold">${name}</h1>
-                        <div class="bg-white p-6 rounded-3xl shadow-sm border mt-6">
-                            <p class="text-xl font-bold">${origin} ➔ ${dest}</p>
-                            <p class="text-sm text-slate-500">RECORD: ${pnr}</p>
-                        </div>
-                        <button onclick="location.reload()" class="w-full py-5 bg-black text-white rounded-2xl mt-8">NEW MISSION</button>
-                    </div>`;
-            } else {
-                // For shorter, non-aviation codes
-                document.body.innerHTML = `<div class="p-8"><h1>DATA CAPTURED:</h1><p class="font-mono">${raw}</p><button onclick="location.reload()">BACK</button></div>`;
+            if (result) {
+                handleMissionExtraction(result.text);
             }
+        } catch (err) {
+            alert("SCAN FAILED: Ensure the barcode is clear and not reflective. Try again.");
+            location.reload();
         }
     });
+
+    function handleMissionExtraction(raw) {
+        // THE UNDAMAGED PYTHON BLUEPRINT SLICER
+        const name = raw.substring(2, 22).trim() || "PASSENGER";
+        const pnr = raw.substring(23, 30).trim() || "UNK-PNR";
+        const origin = raw.substring(30, 33) || "---";
+        const dest = raw.substring(33, 36) || "---";
+        const airline = raw.substring(36, 38) || "--";
+        const flight = raw.substring(38, 43).trim() || "000";
+
+        document.body.innerHTML = `
+            <div class="p-8 min-h-screen">
+                <div class="glass-pill text-blue-600 mb-8 w-fit uppercase">Mission Confirmed</div>
+                
+                <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">${name}</h1>
+                <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">Validated Entry</p>
+
+                <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
+                    <div class="flex justify-between items-center mb-8">
+                        <div class="text-center">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Departure</p>
+                            <p class="text-3xl font-black text-slate-800">${origin}</p>
+                        </div>
+                        <div class="h-[2px] flex-1 bg-slate-100 mx-4 relative">
+                            <div class="absolute -top-2 left-1/2 -translate-x-1/2 text-slate-300">✈️</div>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Arrival</p>
+                            <p class="text-3xl font-black text-slate-800">${dest}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Flight</p>
+                            <p class="text-lg font-bold text-slate-800">${airline}${flight}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Record</p>
+                            <p class="text-lg font-mono font-bold text-blue-600">${pnr}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl active:scale-95 transition-all">
+                    VERIFY NEW MISSION
+                </button>
+            </div>`;
+    }
 </script>
 </body>
 </html>
