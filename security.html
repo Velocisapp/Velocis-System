@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ | SECURITY PORTAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-<script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     
     <style>
         body { 
@@ -76,22 +75,29 @@
         <button id="scan-btn" class="w-full py-5 bg-slate-900 text-white font-medium tracking-wide rounded-2xl shadow-xl active:scale-95 transition-all">
             SCANNING ACTIVE...
         </button>
+        
+        <p id="debug-log" class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Awaiting Signal...</p>
     </div>
 
 <script>
+    const debugLog = document.getElementById('debug-log');
+    const statusPill = document.getElementById('status-pill');
+
+    // 1. ENGINE CONFIG (Mirroring iMac Hardware Logic)
     const hints = new Map();
     hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
     hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
         ZXing.BarcodeFormat.QR_CODE, 
         ZXing.BarcodeFormat.PDF417, 
-        ZXing.BarcodeFormat.CODE_128
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.DATA_MATRIX
     ]);
 
     const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // --- MIRROR OF PYTHON DATE DECODER ---
+    // 2. JULIAN DATE CONVERTER (From Python Script)
     function decodeJulianDate(julianStr) {
         try {
             const dayNum = parseInt(julianStr);
@@ -103,29 +109,37 @@
         } catch (e) { return `Day ${julianStr}`; }
     }
 
+    // 3. CAMERA ACTIVATION
     navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
     }).then(stream => { 
         video.srcObject = stream; 
         video.play();
+        statusPill.innerText = "System Active";
+        statusPill.classList.replace('text-slate-500', 'text-green-500');
         
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
                 isMissionActive = true;
                 if (window.navigator.vibrate) window.navigator.vibrate(200);
                 
-                // If length is > 30, it's a Boarding Pass (Python Mirror Logic)
+                // If it's a long boarding pass string, slice it like the Python script
                 if (result.text.length > 30) {
                     handleMasterExtraction(result.text);
                 } else {
                     handleGeneralScan(result.text);
                 }
             }
+            if (err && !(err instanceof ZXing.NotFoundException)) {
+                debugLog.innerText = "Searching for Signal...";
+            }
         });
+    }).catch(err => {
+        debugLog.innerText = "Camera Access Denied";
     });
 
     function handleMasterExtraction(rawText) {
-        // EXACT PYTHON SLICING REPLICATED
+        // EXACT PYTHON SLICING REPLICATED [2:22], [23:30], etc.
         const name = rawText.substring(2, 22).trim();
         const pnr = rawText.substring(23, 30).trim();
         const origin = rawText.substring(30, 33);
@@ -139,7 +153,6 @@
             <div class="p-8" style="background:#fdfdfd; height:100vh;">
                 <div class="glass-pill text-blue-600 mb-6 w-fit text-xs font-bold">🛰️ VELOCIS™ TELEMETRY RECEIVED</div>
                 <h1 class="text-3xl font-bold text-slate-900 mb-2">${name}</h1>
-                
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-6">
                     <div class="flex justify-between items-center mb-4">
                         <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Flight Logistics</p>
@@ -152,10 +165,8 @@
                     </div>
                     <p class="text-[10px] text-slate-300 mt-4 font-mono">PNR: ${pnr}</p>
                 </div>
-
                 <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl shadow-xl">NEW MISSION SCAN</button>
-            </div>
-        `;
+            </div>`;
     }
 
     function handleGeneralScan(rawText) {
@@ -166,8 +177,7 @@
                     <p class="text-slate-800 break-words font-mono text-sm">${rawText}</p>
                 </div>
                 <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">NEW SCAN</button>
-            </div>
-        `;
+            </div>`;
     }
 </script>
 </body>
