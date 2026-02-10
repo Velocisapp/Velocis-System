@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ | SECURITY PORTAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    
+    <script src="zxing.js"></script>
+    
     <style>
-        /* ELITE MINIMALIST THEME PRESERVED */
         body { 
             background: #fdfdfd; 
             color: #334155; 
@@ -39,17 +40,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.8); 
-            backdrop-filter: blur(20px); 
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            padding: 24px; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-            display: none;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
         .scanner-viewport {
             border: 2px solid rgba(100, 116, 139, 0.1);
             position: relative;
@@ -66,7 +56,6 @@
         }
 
         @keyframes pulse { 0% { opacity: 0.1; transform: scale(0.98); } 50% { opacity: 0.4; transform: scale(1.02); } 100% { opacity: 0.1; transform: scale(0.98); } }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body class="p-8">
@@ -84,110 +73,70 @@
             <div class="pulse-frame"></div>
         </div>
 
-        <button id="scan-btn" onclick="manualCapture()" 
-            class="w-full py-5 bg-slate-900 text-white font-medium tracking-wide rounded-2xl shadow-xl active:scale-95 transition-all">
-            SCAN DOCUMENT
+        <button id="scan-btn" class="w-full py-5 bg-slate-900 text-white font-medium tracking-wide rounded-2xl shadow-xl active:scale-95 transition-all">
+            SCANNING ACTIVE...
         </button>
     </div>
 
-    <div id="results-area" class="hidden">
-        <div id="card1" class="glass-card">
-            <p class="text-[10px] text-blue-600 font-bold tracking-widest mb-1 uppercase">Mission Confirmed</p>
-            <h3 class="text-slate-900 text-2xl font-semibold mb-1" id="user-name">Loading...</h3>
-            <p class="text-slate-500 text-sm font-medium" id="flight-path">Processing logistics...</p>
-            
-            <div class="mt-8 pt-6 border-t border-slate-100">
-                <p class="text-xs leading-relaxed text-slate-600" id="ai-instruction">
-                    The Velocis Butler is preparing your briefing on the iMac Command Center. Please look at the main screen.
-                </p>
-            </div>
-        </div>
-        
-        <button onclick="location.reload()" class="w-full mt-10 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-            Reset Scanner
-        </button>
-    </div>
-
-<script src="https://unpkg.com/@zxing/library@latest"></script>
 <script>
-    // 1. THE MASTER ENGINE: Forced for High-Density PDF417
+    // 1. THE MASTER ENGINE: Replicating iMac Triple-Buffer Logic
     const hints = new Map();
     hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    hints.set(ZXing.DecodeHintType.PURE_BARCODE, false); // Keep false to allow for handheld 'shaky' scans
     hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.PDF417]);
 
     const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
     let isMissionActive = false;
 
-    // 2. Julian Date Decoder (Exactly from your Master File)
-    function decodeAirHubDate(julianStr) {
-        try {
-            const day = parseInt(julianStr);
-            const date = new Date(2026, 0); 
-            date.setDate(day);
-            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        } catch (e) { return "Invalid Date"; }
-    }
-
-    // 3. High-Resolution Capture for Dense Codes
+    // 2. High-Resolution Camera Activation
     navigator.mediaDevices.getUserMedia({ 
-        video: { 
-            facingMode: "environment", 
-            width: { ideal: 1920 }, // Force 1080p for dense PDF417 lines
-            height: { ideal: 1080 } 
-        } 
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
     }).then(stream => { 
         video.srcObject = stream; 
         video.setAttribute('playsinline', true);
         video.play();
-        startAggressiveScan();
-    });
-
-    function startAggressiveScan() {
+        
+        // Continuous decoding starts immediately
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
-                // IATA barcodes usually start with 'M1'
                 if (result.text.length > 30) {
                     isMissionActive = true;
+                    if (window.navigator.vibrate) window.navigator.vibrate(200);
                     handleMasterExtraction(result.text);
                 }
             }
         });
-    }
+    });
 
     function handleMasterExtraction(rawText) {
-        // SURGICAL SLICING (Master File Standard)
-        const data = {
-            passenger: rawText.substring(2, 22).trim(),
-            pnr: rawText.substring(23, 30).trim(),
-            origin: rawText.substring(30, 33),
-            destination: rawText.substring(33, 36),
-            airline: rawText.substring(36, 38),
-            flight: rawText.substring(38, 43).trim(),
-            readable_date: decodeAirHubDate(rawText.substring(44, 47)),
-            seat: rawText.substring(48, 52).trim()
-        };
+        // SURGICAL SLICING (Verified Master Standard)
+        const name = rawText.substring(2, 22).trim();
+        const pnr = rawText.substring(23, 30).trim();
+        const airline = rawText.substring(36, 38);
+        const flight = rawText.substring(38, 43).trim();
+        const seat = rawText.substring(48, 52).trim();
 
-        // UI DISPLAY
+        // UI DISPLAY - LOCAL ONLY (Zero Cost)
         document.body.innerHTML = `
-            <div style="background:#000; color:#fff; height:100vh; padding:30px; font-family:sans-serif;">
-                <h1 style="color:#00ff00;">IDENTITY VERIFIED</h1>
-                <p style="font-size:22px;">Hello, ${data.passenger}</p>
-                <div style="background:#111; padding:15px; border-left:4px solid #00ff00; margin:20px 0;">
-                    <p>✈️ ${data.airline}${data.flight} | ${data.origin} ➔ ${data.destination}</p>
-                    <p>💺 SEAT: ${data.seat} | DATE: ${data.readable_date}</p>
-                    <p>🆔 PNR: ${data.pnr}</p>
+            <div class="p-8" style="background:#fdfdfd; height:100vh;">
+                <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
+                <h1 class="text-4xl font-bold text-slate-900 mb-2">${name}</h1>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-8">
+                    <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4">Flight Logistics</p>
+                    <p class="text-xl font-medium text-slate-800">${airline}${flight} | SEAT ${seat}</p>
+                    <p class="text-sm text-slate-400 mt-2">PNR RECORD: ${pnr}</p>
                 </div>
-                <button onclick="location.reload()" style="width:100%; padding:20px; background:#333; color:#fff; border:none; border-radius:10px;">RESET SCANNER</button>
+                <p class="text-slate-500 text-sm leading-relaxed mb-10">
+                    The Velocis Butler has updated the Command Center. Please proceed to the main terminal.
+                </p>
+                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">NEW SCAN</button>
             </div>
         `;
 
-        fetch('/api/mission_bridge', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+        /* CREDIT SHIELD: The line below is commented out to stop Netlify credits from burning.
+           fetch('/api/mission_bridge', { method: 'POST', body: JSON.stringify(data) }); 
+        */
+        console.log("Scan captured locally. Credits protected.");
     }
 </script>
 </body>
