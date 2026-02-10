@@ -80,83 +80,73 @@
     </div>
 
 <script>
-    // 1. WIDE-BUT-LIGHT ENGINE
-    const hints = new Map();
-    // Tells the scanner to look deeper into the image for blurry or small codes
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); 
-    
-    // This initializes the reader with the "Try Harder" instruction but "Auto-Detect" formats
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
-    
+    // 1. FORCE MAX RESOLUTION (The "Python" Strength)
+    const constraints = {
+        video: {
+            facingMode: "environment",
+            width: { ideal: 4096 }, // Force 4K if available
+            height: { ideal: 2160 },
+            frameRate: { ideal: 30 }
+        }
+    };
+
+    const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
     const statusPill = document.getElementById('status-pill');
     let isMissionActive = false;
 
-    // JULIAN DATE CONVERTER
-    function decodeJulianDate(julianStr) {
-        try {
-            const dayNum = parseInt(julianStr);
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            const targetDate = new Date(start.getTime() + (dayNum * 86400000));
-            return targetDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        } catch (e) { return `Day ${julianStr}`; }
-    }
-
-    // 2. LIVE CAPTURE LOOP
-    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-        if (video.srcObject && statusPill.innerText !== "SYSTEM ACTIVE") {
-            statusPill.innerText = "SYSTEM ACTIVE";
-            statusPill.style.color = "#22c55e"; 
-        }
-
-        if (result && !isMissionActive) {
-            isMissionActive = true;
-            if (window.navigator.vibrate) window.navigator.vibrate(200);
-            
-            // WIDE LOGIC: If it has the 'M' marker, use the Aviation UI. 
-            // Otherwise, show the General UI. Nothing is blocked.
-            if (result.text.startsWith('M') && result.text.length > 30) {
-                handleAviationMission(result.text);
-            } else {
-                handleGeneralCapture(result.text);
+    // 2. START THE FEED
+    navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+        video.srcObject = stream;
+        video.setAttribute('playsinline', true);
+        video.play();
+        
+        // 3. START THE BRAIN
+        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+            if (video.srcObject) {
+                statusPill.innerText = "SYSTEM ACTIVE";
+                statusPill.style.color = "#22c55e";
             }
-        }
+
+            if (result && !isMissionActive) {
+                isMissionActive = true;
+                if (window.navigator.vibrate) window.navigator.vibrate(200);
+                
+                // If it captured the full long string, use the Mission UI
+                if (result.text.length > 25) {
+                    processAviationMission(result.text);
+                } else {
+                    // If it only saw numbers (like in IMG_5908.PNG), show it here
+                    processGeneralCapture(result.text);
+                }
+            }
+        });
     });
 
-    function handleAviationMission(rawText) {
-        // Precise Slicing for Boarding Passes
-        const name = rawText.substring(2, 22).trim() || "PASSENGER";
-        const pnr = rawText.substring(23, 30).trim() || "UNKNOWN";
+    function processAviationMission(rawText) {
+        const name = rawText.substring(2, 22).trim();
+        const pnr = rawText.substring(23, 30).trim();
         const origin = rawText.substring(30, 33);
         const dest = rawText.substring(33, 36);
-        const airline = rawText.substring(36, 38);
-        const flight = rawText.substring(38, 43).trim();
-        const seat = rawText.substring(48, 52).trim();
-        const date = decodeJulianDate(rawText.substring(44, 47));
 
         document.body.innerHTML = `
-            <div class="p-8" style="background:#fdfdfd; height:100vh;">
-                <div class="glass-pill text-blue-600 mb-6 w-fit text-xs font-bold uppercase tracking-widest">Mission Confirmed</div>
-                <h1 class="text-3xl font-bold text-slate-900 mb-2">${name}</h1>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Flight ${airline}${flight}</p>
-                        <p class="text-blue-500 font-bold">SEAT ${seat}</p>
-                    </div>
-                    <div class="text-xl font-bold text-slate-800 mb-2">${origin} ➔ ${dest}</div>
-                    <p class="text-[10px] text-slate-300 mt-2 font-mono">PNR: ${pnr} | ${date}</p>
+            <div class="p-8">
+                <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
+                <h1 class="text-3xl font-bold mb-4">${name}</h1>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <p class="text-xl font-bold">${origin} ➔ ${dest}</p>
+                    <p class="text-xs text-slate-400">RECORD: ${pnr}</p>
                 </div>
-                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">SCAN NEXT</button>
+                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl mt-8">NEW SCAN</button>
             </div>`;
     }
 
-    function handleGeneralCapture(rawText) {
+    function processGeneralCapture(rawText) {
         document.body.innerHTML = `
-            <div class="p-8" style="background:#fdfdfd; height:100vh;">
-                <div class="glass-pill text-amber-600 mb-6 w-fit text-xs font-bold uppercase tracking-widest">General Data</div>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
-                    <p class="text-slate-800 break-words font-mono text-sm">${rawText}</p>
+            <div class="p-8">
+                <div class="glass-pill text-amber-600 mb-6 w-fit">GENERAL DATA</div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 mb-8">
+                    <p class="text-slate-800 break-all font-mono text-sm">${rawText}</p>
                 </div>
                 <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">NEW SCAN</button>
             </div>`;
