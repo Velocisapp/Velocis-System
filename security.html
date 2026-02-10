@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ | SECURITY PORTAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.11/dist/dbr.js"></script>
     
     <style>
         body { 
@@ -53,7 +53,7 @@
 </head>
 <body class="p-8">
     <div class="flex justify-between mb-12">
-        <div id="status-pill" class="glass-pill text-slate-500 uppercase">System Ready</div>
+        <div id="status-pill" class="glass-pill text-slate-500 uppercase">Industrial Core: Loading...</div>
         <div class="glass-pill text-blue-500 uppercase">High-Res Capture</div>
     </div>
 
@@ -71,13 +71,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                 </div>
-                <p class="text-white font-medium mb-1">Static Decoder Ready</p>
-                <p class="text-slate-500 text-[10px] uppercase tracking-tighter">Native Camera for Global Standards</p>
+                <p class="text-white font-medium mb-1">Industrial Core Ready</p>
+                <p class="text-slate-500 text-[10px] uppercase tracking-tighter">Universal Decoder (PDF417/AZTEC)</p>
             </div>
             
             <div id="loading-ui" class="hidden">
                 <div class="animate-spin text-blue-400 text-3xl mb-4">🌀</div>
-                <p class="text-white font-bold">ANALYZING MISSION...</p>
+                <p class="text-white font-bold uppercase tracking-widest">Applying Logic...</p>
             </div>
         </div>
 
@@ -85,46 +85,52 @@
             CAPTURE DOCUMENT
         </button>
         
-        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Industrial Decoder Active</p>
+        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Precision Scanner v9.6</p>
     </div>
 
 <script>
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-        ZXing.BarcodeFormat.QR_CODE,
-        ZXing.BarcodeFormat.PDF417,
-        ZXing.BarcodeFormat.AZTEC,
-        ZXing.BarcodeFormat.DATA_MATRIX,
-        ZXing.BarcodeFormat.CODE_128
-    ]);
+    let reader = null;
 
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    // 1. INITIALIZING THE INDUSTRIAL BRAIN
+    (async () => {
+        try {
+            // Using a trial key or public instance for testing
+            Dynamsoft.DBR.BarcodeReader.license = 'DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk3Mjk1OTI0MzkiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJndS1mY2UifQ=='; 
+            reader = await Dynamsoft.DBR.BarcodeReader.createInstance();
+            document.getElementById('status-pill').innerText = "System Ready";
+            document.getElementById('status-pill').style.color = "#22c55e";
+        } catch (e) {
+            console.error(e);
+            document.getElementById('status-pill').innerText = "Core Error";
+        }
+    })();
+
     const fileInput = document.getElementById('file-input');
 
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
-        if (!file) return;
+        if (!file || !reader) return;
 
         document.getElementById('capture-ui').classList.add('hidden');
         document.getElementById('loading-ui').classList.remove('hidden');
-        document.getElementById('status-pill').innerText = "Analyzing...";
 
         try {
-            const imageUrl = URL.createObjectURL(file);
-            const result = await codeReader.decodeFromImageUrl(imageUrl);
+            // 2. INDUSTRIAL DECODING (Works like your iMac)
+            const results = await reader.decode(file);
             
-            if (result) {
-                handleMissionExtraction(result.text);
+            if (results.length > 0) {
+                handleMissionExtraction(results[0].barcodeText);
+            } else {
+                throw new Error("Industrial Brain could not resolve barcode. Try closer.");
             }
         } catch (err) {
-            alert("DECODE FAILED: Please ensure the photo is clear and centered. \n\nError: " + err);
+            alert("ANALYSIS FAILED: " + err.message);
             location.reload();
         }
     });
 
     function handleMissionExtraction(raw) {
-        // PRESERVING SURGICAL SLICING FROM VELOCIS_AIR_SCANNER.PY
+        // PRESERVING SURGICAL SLICING FROM VELOCIS_AIR_SCANNER.PY (THE CORE)
         const name = raw.substring(2, 22).trim() || "PASSENGER";
         const pnr = raw.substring(23, 30).trim() || "UNK-PNR";
         const origin = raw.substring(30, 33) || "---";
@@ -136,7 +142,8 @@
             <div class="p-8 min-h-screen">
                 <div class="glass-pill text-blue-600 mb-8 w-fit uppercase">Mission Confirmed</div>
                 <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">${name}</h1>
-                <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">Validated Entry</p>
+                <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">Industrial Validation</p>
+
                 <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
                     <div class="flex justify-between items-center mb-8">
                         <div class="text-center">
