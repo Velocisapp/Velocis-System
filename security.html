@@ -80,20 +80,14 @@
     </div>
 
 <script>
-    // 1. WIDE-SPECTRUM ENGINE
+    // 1. WIDE-BUT-LIGHT ENGINE
     const hints = new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-        ZXing.BarcodeFormat.QR_CODE, 
-        ZXing.BarcodeFormat.PDF417, 
-        ZXing.BarcodeFormat.AZTEC,
-        ZXing.BarcodeFormat.DATA_MATRIX,
-        ZXing.BarcodeFormat.CODE_128,
-        ZXing.BarcodeFormat.CODE_39,
-        ZXing.BarcodeFormat.EAN_13
-    ]);
-
+    // Tells the scanner to look deeper into the image for blurry or small codes
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true); 
+    
+    // This initializes the reader with the "Try Harder" instruction but "Auto-Detect" formats
     const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    
     const video = document.getElementById('video');
     const statusPill = document.getElementById('status-pill');
     let isMissionActive = false;
