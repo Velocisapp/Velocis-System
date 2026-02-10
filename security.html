@@ -71,8 +71,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                 </div>
-                <p class="text-white font-medium mb-1">Camera Feed Paused</p>
-                <p class="text-slate-500 text-[10px] uppercase">Use Capture for 100% Accuracy</p>
+                <p class="text-white font-medium mb-1">Static Decoder Ready</p>
+                <p class="text-slate-500 text-[10px] uppercase tracking-tighter">Native Camera for Global Standards</p>
             </div>
             
             <div id="loading-ui" class="hidden">
@@ -85,18 +85,27 @@
             CAPTURE DOCUMENT
         </button>
         
-        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Global Standard Enabled (PDF417/AZTEC/QR)</p>
+        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Industrial Decoder Active</p>
     </div>
 
 <script>
-    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+        ZXing.BarcodeFormat.QR_CODE,
+        ZXing.BarcodeFormat.PDF417,
+        ZXing.BarcodeFormat.AZTEC,
+        ZXing.BarcodeFormat.DATA_MATRIX,
+        ZXing.BarcodeFormat.CODE_128
+    ]);
+
+    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const fileInput = document.getElementById('file-input');
 
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // UI Transition
         document.getElementById('capture-ui').classList.add('hidden');
         document.getElementById('loading-ui').classList.remove('hidden');
         document.getElementById('status-pill').innerText = "Analyzing...";
@@ -109,13 +118,13 @@
                 handleMissionExtraction(result.text);
             }
         } catch (err) {
-            alert("SCAN FAILED: Ensure the barcode is clear and not reflective. Try again.");
+            alert("DECODE FAILED: Please ensure the photo is clear and centered. \n\nError: " + err);
             location.reload();
         }
     });
 
     function handleMissionExtraction(raw) {
-        // THE UNDAMAGED PYTHON BLUEPRINT SLICER
+        // PRESERVING SURGICAL SLICING FROM VELOCIS_AIR_SCANNER.PY
         const name = raw.substring(2, 22).trim() || "PASSENGER";
         const pnr = raw.substring(23, 30).trim() || "UNK-PNR";
         const origin = raw.substring(30, 33) || "---";
@@ -126,10 +135,8 @@
         document.body.innerHTML = `
             <div class="p-8 min-h-screen">
                 <div class="glass-pill text-blue-600 mb-8 w-fit uppercase">Mission Confirmed</div>
-                
                 <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">${name}</h1>
                 <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">Validated Entry</p>
-
                 <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
                     <div class="flex justify-between items-center mb-8">
                         <div class="text-center">
@@ -144,7 +151,6 @@
                             <p class="text-3xl font-black text-slate-800">${dest}</p>
                         </div>
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
                         <div>
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Flight</p>
@@ -156,7 +162,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl active:scale-95 transition-all">
                     VERIFY NEW MISSION
                 </button>
