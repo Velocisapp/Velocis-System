@@ -79,10 +79,15 @@
     </div>
 
 <script>
-    // 1. THE MASTER ENGINE: Replicating iMac Triple-Buffer Logic
+    // 1. THE UNIVERSAL ENGINE: Updated for Multi-Format Support
     const hints = new Map();
     hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.PDF417]);
+    // This line now allows QR codes, Boarding Passes (PDF417), and standard barcodes
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+        ZXing.BarcodeFormat.QR_CODE, 
+        ZXing.BarcodeFormat.PDF417, 
+        ZXing.BarcodeFormat.CODE_128
+    ]);
 
     const codeReader = new ZXing.BrowserMultiFormatReader(hints);
     const video = document.getElementById('video');
@@ -96,47 +101,56 @@
         video.setAttribute('playsinline', true);
         video.play();
         
-        // Continuous decoding starts immediately
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result && !isMissionActive) {
+                isMissionActive = true;
+                if (window.navigator.vibrate) window.navigator.vibrate(200);
+                
+                // Logic: If it's a long boarding pass string, use Surgical Slicing. 
+                // If it's a standard QR, just display the content.
                 if (result.text.length > 30) {
-                    isMissionActive = true;
-                    if (window.navigator.vibrate) window.navigator.vibrate(200);
                     handleMasterExtraction(result.text);
+                } else {
+                    handleGeneralScan(result.text);
                 }
             }
         });
     });
 
     function handleMasterExtraction(rawText) {
-        // SURGICAL SLICING (Verified Master Standard)
         const name = rawText.substring(2, 22).trim();
         const pnr = rawText.substring(23, 30).trim();
         const airline = rawText.substring(36, 38);
         const flight = rawText.substring(38, 43).trim();
         const seat = rawText.substring(48, 52).trim();
 
-        // UI DISPLAY - LOCAL ONLY (Zero Cost)
         document.body.innerHTML = `
             <div class="p-8" style="background:#fdfdfd; height:100vh;">
-                <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
+                <div class="glass-pill text-blue-600 mb-6 w-fit text-xs uppercase tracking-widest">MISSION CONFIRMED</div>
                 <h1 class="text-4xl font-bold text-slate-900 mb-2">${name}</h1>
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-8">
                     <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4">Flight Logistics</p>
                     <p class="text-xl font-medium text-slate-800">${airline}${flight} | SEAT ${seat}</p>
                     <p class="text-sm text-slate-400 mt-2">PNR RECORD: ${pnr}</p>
                 </div>
-                <p class="text-slate-500 text-sm leading-relaxed mb-10">
-                    The Velocis Butler has updated the Command Center. Please proceed to the main terminal.
-                </p>
-                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl">NEW SCAN</button>
+                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl shadow-lg">NEW SCAN</button>
             </div>
         `;
+        console.log("Aviation data captured locally.");
+    }
 
-        /* CREDIT SHIELD: The line below is commented out to stop Netlify credits from burning.
-           fetch('/api/mission_bridge', { method: 'POST', body: JSON.stringify(data) }); 
-        */
-        console.log("Scan captured locally. Credits protected.");
+    function handleGeneralScan(rawText) {
+        document.body.innerHTML = `
+            <div class="p-8" style="background:#fdfdfd; height:100vh;">
+                <div class="glass-pill text-amber-600 mb-6 w-fit text-xs uppercase tracking-widest">GENERAL CODE DETECTED</div>
+                <h1 class="text-2xl font-bold text-slate-900 mb-4">Scan Content</h1>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
+                    <p class="text-slate-800 break-words font-mono text-sm">${rawText}</p>
+                </div>
+                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl shadow-lg">NEW SCAN</button>
+            </div>
+        `;
+        console.log("General QR/Barcode captured locally.");
     }
 </script>
 </body>
