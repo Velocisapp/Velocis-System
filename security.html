@@ -13,6 +13,7 @@
         .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         video { width: 100%; height: 100%; object-fit: cover; }
         .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 40px; border-radius: 20px; pointer-events: none; }
+        #start-prompt { position: absolute; z-index: 50; background: rgba(15, 23, 42, 0.95); inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
     </style>
 </head>
 <body class="p-8">
@@ -26,17 +27,19 @@
         <p class="text-xs text-slate-400 mb-8 uppercase tracking-widest">Verify Mission Document</p>
 
         <div class="scanner-container w-full aspect-[1/1] rounded-[40px] shadow-2xl mb-10">
-            <video id="video" playsinline></video>
-            <div class="scan-overlay"></div>
-            
-            <div id="loading-ui" class="hidden absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center backdrop-blur-sm">
-                <div class="animate-spin text-blue-400 text-3xl mb-4">🌀</div>
-                <p class="text-white font-bold uppercase tracking-widest">Decoding...</p>
+            <div id="start-prompt">
+                <button onclick="startCamera()" class="px-8 py-4 bg-blue-500 text-white font-bold rounded-2xl shadow-xl active:scale-95 transition-all mb-4">
+                    INITIALIZE SCANNER
+                </button>
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Tap to start secure feed</p>
             </div>
+            
+            <video id="video" playsinline muted></video>
+            <div class="scan-overlay"></div>
         </div>
 
         <div id="hint-text" class="text-center text-slate-400 text-[10px] uppercase tracking-widest animate-pulse">
-            Point camera at barcode
+            Scanner Standby
         </div>
         
         <p class="text-[9px] text-slate-400 text-center mt-12 uppercase tracking-widest opacity-50">Industrial Infrastructure Enabled</p>
@@ -46,24 +49,21 @@
     const video = document.getElementById('video');
     const statusPill = document.getElementById('status-pill');
     const hintText = document.getElementById('hint-text');
+    const startPrompt = document.getElementById('start-prompt');
     const IMAC_HUB_URL = 'https://shiny-cities-dance.loca.lt/scan';
     
     let isProcessing = false;
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
 
-    // Start Video Stream
     async function startCamera() {
+        startPrompt.style.display = 'none';
+        hintText.innerText = "Point camera at barcode";
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: "environment",
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                } 
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
             video.srcObject = stream;
-            video.setAttribute("playsinline", true);
             video.play();
             requestAnimationFrame(scanFrame);
         } catch (err) {
@@ -73,10 +73,7 @@
     }
 
     async function scanFrame() {
-        if (isProcessing) {
-            requestAnimationFrame(scanFrame);
-            return;
-        }
+        if (isProcessing) { requestAnimationFrame(scanFrame); return; }
 
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
             canvas.width = video.videoWidth;
@@ -89,19 +86,15 @@
                 formData.append('image', blob, 'capture.jpg');
 
                 try {
-                    const response = await fetch(IMAC_HUB_URL, {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const response = await fetch(IMAC_HUB_URL, { method: 'POST', body: formData });
                     
                     if (response.status === 200) {
                         const data = await response.json();
                         if (data.name) {
                             handleMissionExtraction(data);
-                            return; // Stop scanning sequence
+                            return;
                         }
                     } else {
-                        // Feedback loop for user distance/clarity
                         hintText.innerText = "Adjust Distance / Hold Steady";
                         statusPill.innerText = "Scanning...";
                     }
@@ -109,7 +102,6 @@
                     statusPill.innerText = "Bridge Lost";
                 }
                 
-                // Frequency control: Try next frame in 600ms
                 setTimeout(() => {
                     isProcessing = false;
                     requestAnimationFrame(scanFrame);
@@ -122,29 +114,26 @@
     }
 
     function handleMissionExtraction(data) {
-        // Kill camera immediately on success
-        if (video.srcObject) {
-            video.srcObject.getTracks().forEach(track => track.stop());
-        }
+        if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
         document.body.innerHTML = `
             <div class="p-8 min-h-screen">
                 <div class="glass-pill text-blue-600 mb-8 w-fit uppercase">Mission Confirmed</div>
-                <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">\${data.name}</h1>
+                <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">${data.name}</h1>
                 <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">iMac Verified Entry</p>
 
                 <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
                     <div class="flex justify-between items-center mb-8">
                         <div class="text-center">
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Departure</p>
-                            <p class="text-3xl font-black text-slate-800">\${data.origin}</p>
+                            <p class="text-3xl font-black text-slate-800">${data.origin}</p>
                         </div>
                         <div class="h-[2px] flex-1 bg-slate-100 mx-4 relative">
                             <div class="absolute -top-2 left-1/2 -translate-x-1/2 text-slate-300">✈️</div>
                         </div>
                         <div class="text-center">
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Arrival</p>
-                            <p class="text-3xl font-black text-slate-800">\${data.dest}</p>
+                            <p class="text-3xl font-black text-slate-800">${data.dest}</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
@@ -154,7 +143,7 @@
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Record</p>
-                            <p class="text-lg font-mono font-bold text-blue-600">\${data.pnr}</p>
+                            <p class="text-lg font-mono font-bold text-blue-600">${data.pnr}</p>
                         </div>
                     </div>
                 </div>
@@ -163,9 +152,6 @@
                 </button>
             </div>`;
     }
-
-    // Launch on start
-    startCamera();
 </script>
 </body>
 </html>
