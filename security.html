@@ -80,35 +80,17 @@
     </div>
 
 <script>
-    // 1. ENGINE CONFIGURATION
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-        ZXing.BarcodeFormat.QR_CODE, 
-        ZXing.BarcodeFormat.PDF417, 
-        ZXing.BarcodeFormat.CODE_128,
-        ZXing.BarcodeFormat.DATA_MATRIX
-    ]);
-
-    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    // 1. ENGINE START
+    const codeReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('video');
     const statusPill = document.getElementById('status-pill');
     let isMissionActive = false;
 
-    // 2. AVIATION DATE DECODER
-    function decodeJulianDate(julianStr) {
-        try {
-            const dayNum = parseInt(julianStr);
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            const targetDate = new Date(start.getTime() + (dayNum * 86400000));
-            return targetDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        } catch (e) { return `Day ${julianStr}`; }
-    }
+    console.log("Scanner Engine Initialized");
 
-    // 3. START SCANNER ENGINE
+    // 2. ACTIVATE CONTINUOUS SCANNING
     codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-        // Visual confirmation that camera is feeding the brain
+        // Force the pill to green the moment the camera is live
         if (video.srcObject && statusPill.innerText !== "SYSTEM ACTIVE") {
             statusPill.innerText = "SYSTEM ACTIVE";
             statusPill.style.color = "#22c55e";
@@ -116,10 +98,12 @@
 
         if (result && !isMissionActive) {
             isMissionActive = true;
+            console.log("Raw Data Captured:", result.text);
+            
             if (window.navigator.vibrate) window.navigator.vibrate(200);
             
-            // Check for Aviation M1 trigger or long string
-            if (result.text.startsWith('M1') || result.text.length > 50) {
+            // AUTOMATIC ROUTING
+            if (result.text.startsWith('M1')) {
                 handleMasterExtraction(result.text);
             } else {
                 handleGeneralScan(result.text);
@@ -127,42 +111,29 @@
         }
     });
 
-    // 4. THE MISSION PROCESSOR (The code you just asked about)
     function handleMasterExtraction(rawText) {
-        if(rawText.startsWith('M1')) {
-            const name = rawText.substring(2, 22).trim();
-            const pnr = rawText.substring(23, 30).trim();
-            const origin = rawText.substring(30, 33);
-            const dest = rawText.substring(33, 36);
-            const airline = rawText.substring(36, 38);
-            const flight = rawText.substring(38, 43).trim();
-            const seat = rawText.substring(48, 52).trim();
-            const date = decodeJulianDate(rawText.substring(44, 47));
+        // Surgical Slicing Mirror from Python
+        const name = rawText.substring(2, 22).trim();
+        const pnr = rawText.substring(23, 30).trim();
+        const origin = rawText.substring(30, 33);
+        const dest = rawText.substring(33, 36);
 
-            document.body.innerHTML = `
-                <div class="p-8" style="background:#fdfdfd; height:100vh;">
-                    <div class="glass-pill text-blue-600 mb-6 w-fit text-xs font-bold uppercase">Mission Confirmed</div>
-                    <h1 class="text-3xl font-bold text-slate-900 mb-2">${name}</h1>
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 my-6">
-                        <div class="text-xl font-bold text-slate-800 mb-2">${origin} ➔ ${dest}</div>
-                        <div class="flex justify-between text-sm text-slate-500">
-                            <span>FLIGHT: ${airline}${flight}</span>
-                            <span>SEAT: ${seat}</span>
-                        </div>
-                        <p class="text-[10px] text-slate-300 mt-4 font-mono">DATE: ${date} | PNR: ${pnr}</p>
-                    </div>
-                    <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl shadow-xl">NEW MISSION</button>
-                </div>`;
-        } else {
-            handleGeneralScan(rawText);
-        }
+        document.body.innerHTML = `
+            <div class="p-8">
+                <div class="glass-pill text-blue-600 mb-6 w-fit">MISSION CONFIRMED</div>
+                <h1 class="text-3xl font-bold mb-4">${name}</h1>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <p class="text-xl font-bold">${origin} ➔ ${dest}</p>
+                    <p class="text-sm text-slate-400">PNR: ${pnr}</p>
+                </div>
+                <button onclick="location.reload()" class="w-full py-5 bg-slate-900 text-white rounded-2xl mt-8">NEW SCAN</button>
+            </div>`;
     }
 
-    // 5. THE GENERAL DATA PROCESSOR
     function handleGeneralScan(rawText) {
         document.body.innerHTML = `
-            <div class="p-8" style="background:#fdfdfd; height:100vh;">
-                <div class="glass-pill text-amber-600 mb-6 w-fit text-xs font-bold uppercase tracking-widest">Field Data Captured</div>
+            <div class="p-8">
+                <div class="glass-pill text-amber-600 mb-6 w-fit">DATA DETECTED</div>
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
                     <p class="text-slate-800 break-words font-mono text-sm">${rawText}</p>
                 </div>
