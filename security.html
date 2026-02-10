@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VELOCIS™ | SECURITY PORTAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.11/dist/dbr.js"></script>
     
     <style>
         body { 
@@ -53,7 +52,7 @@
 </head>
 <body class="p-8">
     <div class="flex justify-between mb-12">
-        <div id="status-pill" class="glass-pill text-slate-500 uppercase">Industrial Core: Loading...</div>
+        <div id="status-pill" class="glass-pill text-slate-500 uppercase">Hub Connection: Ready</div>
         <div class="glass-pill text-blue-500 uppercase">High-Res Capture</div>
     </div>
 
@@ -71,13 +70,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                 </div>
-                <p class="text-white font-medium mb-1">Industrial Core Ready</p>
-                <p class="text-slate-500 text-[10px] uppercase tracking-tighter">Universal Decoder (PDF417/AZTEC)</p>
+                <p class="text-white font-medium mb-1">iMac Brain Active</p>
+                <p class="text-slate-500 text-[10px] uppercase tracking-tighter">Universal Hub (PDF417/AZTEC)</p>
             </div>
             
             <div id="loading-ui" class="hidden">
                 <div class="animate-spin text-blue-400 text-3xl mb-4">🌀</div>
-                <p class="text-white font-bold uppercase tracking-widest">Applying Logic...</p>
+                <p class="text-white font-bold uppercase tracking-widest">Consulting iMac...</p>
             </div>
         </div>
 
@@ -85,87 +84,76 @@
             CAPTURE DOCUMENT
         </button>
         
-        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Precision Scanner v9.6</p>
+        <p class="text-[9px] text-slate-400 text-center mt-6 uppercase tracking-widest opacity-50">Local Infrastructure Enabled</p>
     </div>
 
 <script>
-    let reader = null;
-
-    // 1. INITIALIZING THE INDUSTRIAL BRAIN
-    (async () => {
-        try {
-            // Using a trial key or public instance for testing
-            Dynamsoft.DBR.BarcodeReader.license = 'DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk3Mjk1OTI0MzkiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJndS1mY2UifQ=='; 
-            reader = await Dynamsoft.DBR.BarcodeReader.createInstance();
-            document.getElementById('status-pill').innerText = "System Ready";
-            document.getElementById('status-pill').style.color = "#22c55e";
-        } catch (e) {
-            console.error(e);
-            document.getElementById('status-pill').innerText = "Core Error";
-        }
-    })();
-
     const fileInput = document.getElementById('file-input');
+    const IMAC_HUB_URL = 'http://192.168.0.208:5001/scan';
 
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
-        if (!file || !reader) return;
+        if (!file) return;
 
+        // UI Transition
         document.getElementById('capture-ui').classList.add('hidden');
         document.getElementById('loading-ui').classList.remove('hidden');
+        document.getElementById('status-pill').innerText = "Transmitting...";
+
+        const formData = new FormData();
+        formData.append('image', file);
 
         try {
-            // 2. INDUSTRIAL DECODING (Works like your iMac)
-            const results = await reader.decode(file);
+            // 1. SEND PHOTO TO THE IMAC BRAIN
+            const response = await fetch(IMAC_HUB_URL, {
+                method: 'POST',
+                body: formData
+            });
             
-            if (results.length > 0) {
-                handleMissionExtraction(results[0].barcodeText);
+            const data = await response.json();
+            
+            if (data.name) {
+                // 2. PROCESS RESULT FROM THE GOLDEN LOGIC
+                handleMissionExtraction(data);
             } else {
-                throw new Error("Industrial Brain could not resolve barcode. Try closer.");
+                throw new Error(data.error || "Brain could not resolve barcode.");
             }
         } catch (err) {
-            alert("ANALYSIS FAILED: " + err.message);
+            alert("HUB ANALYSIS FAILED: " + err.message + "\n\nVerify iMac Terminal is running and on same Wi-Fi.");
             location.reload();
         }
     });
 
-    function handleMissionExtraction(raw) {
-        // PRESERVING SURGICAL SLICING FROM VELOCIS_AIR_SCANNER.PY (THE CORE)
-        const name = raw.substring(2, 22).trim() || "PASSENGER";
-        const pnr = raw.substring(23, 30).trim() || "UNK-PNR";
-        const origin = raw.substring(30, 33) || "---";
-        const dest = raw.substring(33, 36) || "---";
-        const airline = raw.substring(36, 38) || "--";
-        const flight = raw.substring(38, 43).trim() || "000";
-
+    function handleMissionExtraction(data) {
+        // USING DATA RETURNED FROM THE IMAC'S SURGICAL SLICING
         document.body.innerHTML = `
             <div class="p-8 min-h-screen">
                 <div class="glass-pill text-blue-600 mb-8 w-fit uppercase">Mission Confirmed</div>
-                <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">${name}</h1>
-                <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">Industrial Validation</p>
+                <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">${data.name}</h1>
+                <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">iMac Verified Entry</p>
 
                 <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
                     <div class="flex justify-between items-center mb-8">
                         <div class="text-center">
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Departure</p>
-                            <p class="text-3xl font-black text-slate-800">${origin}</p>
+                            <p class="text-3xl font-black text-slate-800">${data.origin}</p>
                         </div>
                         <div class="h-[2px] flex-1 bg-slate-100 mx-4 relative">
                             <div class="absolute -top-2 left-1/2 -translate-x-1/2 text-slate-300">✈️</div>
                         </div>
                         <div class="text-center">
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Arrival</p>
-                            <p class="text-3xl font-black text-slate-800">${dest}</p>
+                            <p class="text-3xl font-black text-slate-800">${data.dest}</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
                         <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Flight</p>
-                            <p class="text-lg font-bold text-slate-800">${airline}${flight}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Flight Data</p>
+                            <p class="text-lg font-bold text-slate-800">SCAN OK</p>
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Record</p>
-                            <p class="text-lg font-mono font-bold text-blue-600">${pnr}</p>
+                            <p class="text-lg font-mono font-bold text-blue-600">${data.pnr}</p>
                         </div>
                     </div>
                 </div>
