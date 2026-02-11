@@ -113,7 +113,7 @@
         }
     }
 
-    function handleMissionExtraction(data) {
+   function handleMissionExtraction(data) {
         if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
         document.body.innerHTML = `
@@ -136,25 +136,27 @@
                             <p class="text-3xl font-black text-slate-800">${data.dest}</p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
-    <div>
-        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Status</p>
-        <p class="text-lg font-bold text-slate-800">SCAN OK</p>
-    </div>
-    <div>
-        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Record</p>
-        <p class="text-lg font-mono font-bold text-blue-600">${data.pnr}</p>
-    </div>
-    <div>
-        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Seat</p>
-        <p class="text-lg font-bold text-slate-800">${data.seat || 'TBD'}</p>
-    </div>
-    <div>
-        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Gate / Term</p>
-        <p class="text-lg font-bold text-slate-800">${data.gate} / ${data.terminal}</p>
-    </div>
-</div>
-                </div>
+
+                    <div class="grid grid-cols-2 gap-y-8 gap-x-4 pt-6 border-t border-slate-50">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Status</p>
+                            <p class="text-lg font-bold text-green-600">VERIFIED</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Record</p>
+                            <p class="text-lg font-mono font-bold text-blue-600">${data.pnr}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Seat</p>
+                            <p class="text-lg font-bold text-slate-800">${data.seat || 'TBD'}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Gate / Term</p>
+                            <p class="text-lg font-bold text-slate-800">${data.gate} / ${data.terminal}</p>
+                        </div>
+                    </div>
+                    </div>
+
                 <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl active:scale-95 transition-all">
                     VERIFY NEW MISSION
                 </button>
