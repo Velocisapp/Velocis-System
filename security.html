@@ -116,8 +116,10 @@
 function handleMissionExtraction(data) {
     if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
+    // 🚀 SCROLL FIX: Added 'overflow-y-auto' and bottom padding 'pb-20'
     document.body.innerHTML = `
-        <div class="p-8 min-h-screen bg-slate-50">
+        <div class="p-8 min-h-screen bg-slate-50 overflow-y-auto pb-20">
+            
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <div class="glass-pill text-blue-600 mb-2 w-fit uppercase font-bold text-[10px]">Entry Verified</div>
@@ -139,8 +141,8 @@ function handleMissionExtraction(data) {
             <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-8">
                 <div class="flex justify-between items-center mb-8 pb-6 border-b border-slate-50">
                     <div class="text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Departure</p>
-                        <p class="text-3xl font-black text-slate-800">${data.origin}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Origin</p>
+                        <p class="text-2xl font-black text-slate-800">${data.origin}</p>
                     </div>
                     <div class="flex-1 px-4 text-center">
                         <div class="text-[10px] font-mono text-blue-400 font-bold mb-1">${data.flight}</div>
@@ -149,8 +151,8 @@ function handleMissionExtraction(data) {
                         </div>
                     </div>
                     <div class="text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Arrival</p>
-                        <p class="text-3xl font-black text-slate-800">${data.dest}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Destination</p>
+                        <p class="text-2xl font-black text-slate-800">${data.dest}</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-y-6">
@@ -168,11 +170,11 @@ function handleMissionExtraction(data) {
             <div class="bg-slate-900 rounded-[30px] p-6 text-white shadow-lg mb-10">
                 <p class="text-[10px] text-blue-400 font-bold uppercase mb-4 tracking-widest">Partner Missions</p>
                 <div class="flex gap-4">
-                    <a href="https://plans.gigsky.com/K31267/2CTPL/" class="flex-1 bg-white/10 p-4 rounded-2xl text-center active:scale-95 transition-all border border-white/5">
+                    <a href="https://plans.gigsky.com/K31267/2CTPL/" target="_blank" class="flex-1 bg-white/10 p-4 rounded-2xl text-center active:scale-95 transition-all border border-white/5">
                         <p class="text-[10px] font-bold italic">GIGSKY</p>
                         <p class="text-[8px] opacity-60 uppercase">In-Flight</p>
                     </a>
-                    <a href="https://www.breeze.com" class="flex-1 bg-white/10 p-4 rounded-2xl text-center active:scale-95 transition-all border border-white/5">
+                    <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" target="_blank" class="flex-1 bg-white/10 p-4 rounded-2xl text-center active:scale-95 transition-all border border-white/5">
                         <p class="text-[10px] font-bold italic">BREEZE</p>
                         <p class="text-[8px] opacity-60 uppercase">On-Ground</p>
                     </a>
