@@ -114,66 +114,89 @@
     }
 
 function handleMissionExtraction(data) {
-        // ✅ CAMERA SAFETY: Stop the tracks immediately (Preserved)
-        if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+    // ✅ CAMERA SAFETY: Stop the tracks immediately (Preserved)
+    if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
-        document.body.innerHTML = `
-            <div class="p-8 min-h-screen bg-slate-50">
-                <div class="glass-pill text-blue-600 mb-6 w-fit uppercase">Mission Confirmed</div>
-                <h1 class="text-4xl font-black text-slate-900 mb-1 leading-tight">${data.name}</h1>
-                <p class="text-xs text-slate-400 mb-8 uppercase tracking-widest">Entry Verified</p>
+    document.body.innerHTML = `
+        <div class="p-8 min-h-screen bg-slate-50">
+            <div class="glass-pill text-blue-600 mb-6 w-fit uppercase">Mission Confirmed</div>
+            <h1 class="text-4xl font-black text-slate-900 mb-1 leading-tight">${data.name}</h1>
+            <p class="text-xs text-slate-400 mb-8 uppercase tracking-widest">Entry Verified</p>
 
-                <div class="bg-blue-600 rounded-[30px] p-6 text-white shadow-lg mb-8 animate-in zoom-in duration-500">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-lg">✨</span>
-                        <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">Concierge Guidance</p>
-                    </div>
-                    <p class="text-lg font-medium leading-tight italic">
-                        "${data.ai_greeting || 'Welcome aboard! Your journey is verified.'}"
-                    </p>
+            <div class="bg-blue-600 rounded-[30px] p-6 text-white shadow-lg mb-8 animate-in zoom-in duration-500">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-lg">✨</span>
+                    <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">Concierge Guidance</p>
                 </div>
+                <p class="text-lg font-medium leading-tight italic">
+                    "${data.ai_greeting || 'Welcome aboard! Your journey is verified.'}"
+                </p>
+            </div>
 
-                <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
-                    <div class="flex justify-between items-center mb-8">
-                        <div class="text-center">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Departure</p>
-                            <p class="text-3xl font-black text-slate-800">${data.origin}</p>
-                        </div>
-                        <div class="h-[2px] flex-1 bg-slate-100 mx-4 relative">
-                            <div class="absolute -top-2 left-1/2 -translate-x-1/2 text-slate-300">✈️</div>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Arrival</p>
-                            <p class="text-3xl font-black text-slate-800">${data.dest}</p>
+            <div class="bg-white rounded-[30px] p-6 shadow-lg mb-8 border border-blue-50 animate-in slide-in-from-bottom duration-700">
+                <p class="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-4">International Connectivity</p>
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-blue-50 rounded-2xl text-xl">✈️</div>
+                        <div>
+                            <p class="text-sm font-black text-slate-800">In-Flight Data by GigSky</p>
+                            <p class="text-xs text-slate-500 mb-2">Stay connected at 30,000 feet.</p>
+                            <a href="https://www.gigsky.com" class="text-xs font-bold text-blue-600 underline">Get In-Flight eSIM →</a>
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-y-8 gap-x-4 pt-6 border-t border-slate-50">
+                    <div class="h-[1px] bg-slate-100 w-full"></div>
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-green-50 rounded-2xl text-xl">🌍</div>
                         <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Status</p>
-                            <p class="text-lg font-bold text-green-600 tracking-tight">VERIFIED</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Airline & Flight</p>
-                            <p class="text-sm font-bold text-slate-800">${data.airline_name || 'Airline'}</p>
-                            <p class="text-lg font-mono font-bold text-blue-600">${data.flight}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Seat</p>
-                            <p class="text-lg font-bold text-slate-800">${data.seat || 'TBD'}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Gate / Term</p>
-                            <p class="text-lg font-bold text-slate-800">${data.gate} / ${data.terminal}</p>
+                            <p class="text-sm font-black text-slate-800">Ground Data by Breeze</p>
+                            <p class="text-xs text-slate-500 mb-2">Touchdown ready with local rates.</p>
+                            <a href="https://www.breeze.com" class="text-xs font-bold text-blue-600 underline">Get Ground eSIM →</a>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl active:scale-95 transition-all">
-                    NEXT PASSENGER
-                </button>
-            </div>`;
-    }
+            <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="text-center">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Departure</p>
+                        <p class="text-3xl font-black text-slate-800">${data.origin}</p>
+                    </div>
+                    <div class="h-[2px] flex-1 bg-slate-100 mx-4 relative">
+                        <div class="absolute -top-2 left-1/2 -translate-x-1/2 text-slate-300">✈️</div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Arrival</p>
+                        <p class="text-3xl font-black text-slate-800">${data.dest}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-y-8 gap-x-4 pt-6 border-t border-slate-50">
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Status</p>
+                        <p class="text-lg font-bold text-green-600 tracking-tight">VERIFIED</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Airline & Flight</p>
+                        <p class="text-sm font-bold text-slate-800">${data.airline_name || 'Airline'}</p>
+                        <p class="text-lg font-mono font-bold text-blue-600">${data.flight}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Seat</p>
+                        <p class="text-lg font-bold text-slate-800">${data.seat || 'TBD'}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Gate / Term</p>
+                        <p class="text-lg font-bold text-slate-800">${data.gate} / ${data.terminal}</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl active:scale-95 transition-all">
+                NEXT PASSENGER
+            </button>
+        </div>`;
+}
 </script>
 </body>
 </html>
