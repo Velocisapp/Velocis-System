@@ -113,14 +113,14 @@
         }
     }
 
-   function handleMissionExtraction(data) {
+  function handleMissionExtraction(data) {
         if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
         document.body.innerHTML = `
             <div class="p-8 min-h-screen">
                 <div class="glass-pill text-blue-600 mb-8 w-fit uppercase">Mission Confirmed</div>
                 <h1 class="text-4xl font-black text-slate-900 mb-2 leading-tight">${data.name}</h1>
-                <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">iMac Verified Entry</p>
+                <p class="text-xs text-slate-400 mb-10 uppercase tracking-widest">Entry Verified</p>
 
                 <div class="bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 mb-10">
                     <div class="flex justify-between items-center mb-8">
@@ -143,8 +143,8 @@
                             <p class="text-lg font-bold text-green-600">VERIFIED</p>
                         </div>
                         <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Record</p>
-                            <p class="text-lg font-mono font-bold text-blue-600">${data.pnr}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Flight</p>
+                            <p class="text-lg font-mono font-bold text-blue-600">${data.flight}</p>
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Seat</p>
@@ -155,7 +155,7 @@
                             <p class="text-lg font-bold text-slate-800">${data.gate} / ${data.terminal}</p>
                         </div>
                     </div>
-                    </div>
+                </div>
 
                 <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-bold shadow-2xl active:scale-95 transition-all">
                     VERIFY NEW MISSION
