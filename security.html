@@ -52,7 +52,6 @@
     const startPrompt = document.getElementById('start-prompt');
     const IMAC_HUB_URL = 'https://velocis-gate-one.loca.lt/scan';
     
-    // 🔊 AUDIO SETUP
     const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
     let isProcessing = false;
@@ -95,7 +94,7 @@
                         const data = await response.json();
                         if (data.name) {
                             handleMissionExtraction(data);
-                            return;
+                            return; // Stop scanning once extraction starts
                         }
                     } else {
                         hintText.innerText = "Hold Steady for Verification";
@@ -116,166 +115,154 @@
         }
     }
 
-function handleMissionExtraction(data) {
-    if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+    function handleMissionExtraction(data) {
+        if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
-    // 📳 HAPTICS & 🔊 AUDIO (Preserved)
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    successSound.play().catch(err => console.log("Audio feedback ready."));
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        successSound.play().catch(err => console.log("Audio feedback ready."));
 
-    const stages = data.ai_stages;
+        const stages = data.ai_stages;
 
-    // 🟢 DYNAMIC STATUS LOGIC (Preserved)
-    const statusColor = data.status === "Delayed" ? "text-amber-500" : 
-                        data.status === "Cancelled" ? "text-red-500" : "text-emerald-500";
-    const statusBg = data.status === "Delayed" ? "bg-amber-500" : 
-                     data.status === "Cancelled" ? "bg-red-500" : "bg-emerald-500";
+        const statusColor = data.status === "Delayed" ? "text-amber-500" : 
+                            data.status === "Cancelled" ? "text-red-500" : "text-emerald-500";
+        const statusBg = data.status === "Delayed" ? "bg-amber-500" : 
+                         data.status === "Cancelled" ? "bg-red-500" : "bg-emerald-500";
 
-    document.body.innerHTML = `
-        <div class="flex flex-col h-screen bg-slate-50 overflow-y-auto pb-32">
-            
-            <div class="p-6 pb-2">
-                <div class="glass-pill text-blue-600 mb-2 w-fit uppercase font-bold text-[10px]">Traveler Verified</div>
-                <h1 class="text-4xl font-black text-slate-900 leading-tight uppercase mb-4">${data.name}</h1>
-                
-                <div class="grid grid-cols-4 gap-2 mb-6">
-                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Seat</p>
-                        <p class="text-lg font-black text-blue-600">${data.seat || 'TBD'}</p>
-                    </div>
-                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Counter</p>
-                        <p class="text-lg font-black text-slate-800">${data.counter === 'CONSOLIDATED HUB' ? 'Main' : data.counter}</p>
-                    </div>
-                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Gate</p>
-                        <p class="text-lg font-black text-slate-800">${data.gate || 'TBD'}</p>
-                    </div>
-                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center flex flex-col justify-center items-center">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Status</p>
-                        <div class="flex items-center gap-1">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${statusBg} opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 ${statusBg}"></span>
-                            </span>
-                            <p class="text-[10px] font-black ${statusColor} uppercase">${data.status || 'Confirmed'}</p>
+        document.body.innerHTML = `
+            <div class="flex flex-col h-screen bg-slate-50 overflow-y-auto pb-32">
+                <div class="p-6 pb-2">
+                    <div class="glass-pill text-blue-600 mb-2 w-fit uppercase font-bold text-[10px]">Traveler Verified</div>
+                    <h1 class="text-4xl font-black text-slate-900 leading-tight uppercase mb-4">${data.name}</h1>
+                    <div class="grid grid-cols-4 gap-2 mb-6">
+                        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Seat</p>
+                            <p class="text-lg font-black text-blue-600">${data.seat || 'TBD'}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Counter</p>
+                            <p class="text-lg font-black text-slate-800">${data.counter === 'CONSOLIDATED HUB' ? 'Main' : data.counter}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Gate</p>
+                            <p class="text-lg font-black text-slate-800">${data.gate || 'TBD'}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center flex flex-col justify-center items-center">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Status</p>
+                            <div class="flex items-center gap-1">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${statusBg} opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 ${statusBg}"></span>
+                                </span>
+                                <p class="text-[10px] font-black ${statusColor} uppercase">${data.status || 'Confirmed'}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="px-6 space-y-4 mb-8">
-                
-                <div class="flex gap-4">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-200">01</div>
-                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
-                    </div>
-                    <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
-                        <p class="text-[10px] text-blue-600 font-black uppercase tracking-widest mb-2">Check-In Hub</p>
-                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3">"${stages.stage1}"</p>
-                        
-                        <div class="flex justify-between items-end border-t border-slate-50 pt-3">
-                            <div class="flex gap-4">
-                                <div>
-                                    <p class="text-[9px] text-slate-400 uppercase font-bold">Terminal</p>
-                                    <p class="text-sm font-black text-slate-900">${data.terminal}</p>
+                <div class="px-6 space-y-4 mb-8">
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-200">01</div>
+                            <div class="w-0.5 h-full bg-slate-200 my-1"></div>
+                        </div>
+                        <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
+                            <p class="text-[10px] text-blue-600 font-black uppercase tracking-widest mb-2">Check-In Hub</p>
+                            <p class="text-sm font-bold text-slate-800 leading-snug mb-3">"${stages.stage1}"</p>
+                            <div class="flex justify-between items-end border-t border-slate-50 pt-3">
+                                <div class="flex gap-4">
+                                    <div>
+                                        <p class="text-[9px] text-slate-400 uppercase font-bold">Terminal</p>
+                                        <p class="text-sm font-black text-slate-900">${data.terminal}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] text-slate-400 uppercase font-bold">Zone</p>
+                                        <p class="text-sm font-black text-slate-900">${data.counter === 'CONSOLIDATED HUB' ? 'Main Hall' : data.counter}</p>
+                                    </div>
                                 </div>
+                                <a href="https://www.google.com/maps/search/${data.airline_name}+check+in+${data.origin}+airport+terminal+map" target="_blank" class="bg-blue-50 px-3 py-2 rounded-xl text-[9px] font-black text-blue-600 uppercase border border-blue-100 active:scale-95 transition-all">📍 View Map</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">02</div>
+                            <div class="w-0.5 h-full bg-slate-200 my-1"></div>
+                        </div>
+                        <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
+                            <p class="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-2">Security Guidance</p>
+                            <p class="text-sm font-bold text-slate-800 leading-snug mb-2">"${stages.stage2}"</p>
+                            <div class="p-3 bg-orange-50 rounded-xl border border-orange-100 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-lg">🛡️</span>
+                                    <div>
+                                        <p class="text-[9px] text-orange-900 font-bold uppercase tracking-tighter">Est. Wait</p>
+                                        <p class="text-xs text-orange-800 font-black">${data.security_wait} MINS</p>
+                                    </div>
+                                </div>
+                                <span class="text-xl">☕</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">03</div>
+                            <div class="w-0.5 h-full bg-slate-200 my-1"></div>
+                        </div>
+                        <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
+                            <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-2">Boarding Gate</p>
+                            <p class="text-sm font-bold text-slate-800 leading-snug mb-3">"${stages.stage3}"</p>
+                            <div class="flex gap-4 items-center">
                                 <div>
-                                    <p class="text-[9px] text-slate-400 uppercase font-bold">Zone</p>
-                                    <p class="text-sm font-black text-slate-900">${data.counter === 'CONSOLIDATED HUB' ? 'Main Hall' : data.counter}</p>
+                                    <p class="text-[9px] text-slate-400 uppercase font-bold">Gate</p>
+                                    <p class="text-sm font-black text-slate-900">${data.gate}</p>
                                 </div>
                             </div>
-                            <a href="https://www.google.com/maps/search/${data.airline_name}+check+in+${data.origin}+airport+terminal+map" 
-                               target="_blank" 
-                               class="bg-blue-50 px-3 py-2 rounded-xl text-[9px] font-black text-blue-600 uppercase border border-blue-100 active:scale-95 transition-all">
-                               📍 View Map
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 pb-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">04</div>
+                        </div>
+                        <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
+                            <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">Arrival: ${data.dest}</p>
+                            <p class="text-sm font-bold text-slate-400 italic mb-4">"${stages.stage4}"</p>
+                            <div class="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center mb-4">
+                                <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">Bag Belt Number Pending</p>
+                            </div>
+                            <button onclick="window.location.href='index.html#otas'" class="w-full py-4 bg-blue-50 text-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-100 active:scale-95 transition-all">
+                                Ground Transportation Options
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-8">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[30px] p-6 text-white shadow-2xl border border-white/5">
+                        <p class="text-[10px] text-blue-400 font-bold uppercase mb-4 tracking-[0.2em]">Traveler Connectivity</p>
+                        <div class="flex gap-4">
+                            <a href="https://plans.gigsky.com/K31267/2CTPL/" target="_blank" class="flex-1 bg-white/5 backdrop-blur-md p-4 rounded-2xl text-center border border-white/10 active:scale-95 transition-all">
+                                <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">GIGSKY</p>
+                                <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">In-Flight</p>
+                            </a>
+                            <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" target="_blank" class="flex-1 bg-white/5 backdrop-blur-md p-4 rounded-2xl text-center border border-white/10 active:scale-95 transition-all">
+                                <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">BREEZE</p>
+                                <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">Ground</p>
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex gap-4">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">02</div>
-                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
-                    </div>
-                    <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
-                        <p class="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-2">Security Guidance</p>
-                        <p class="text-sm font-bold text-slate-800 leading-snug mb-2">"${stages.stage2}"</p>
-                        
-                        <div class="p-3 bg-orange-50 rounded-xl border border-orange-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-lg">🛡️</span>
-                                <div>
-                                    <p class="text-[9px] text-orange-900 font-bold uppercase tracking-tighter">Est. Wait</p>
-                                    <p class="text-xs text-orange-800 font-black">${data.security_wait} MINS</p>
-                                </div>
-                            </div>
-                            <span class="text-xl">☕</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-4">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">03</div>
-                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
-                    </div>
-                    <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
-                        <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-2">Boarding Gate</p>
-                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3">"${stages.stage3}"</p>
-                        <div class="flex gap-4 items-center">
-                            <div>
-                                <p class="text-[9px] text-slate-400 uppercase font-bold">Gate</p>
-                                <p class="text-sm font-black text-slate-900">${data.gate}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-4 pb-4">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">04</div>
-                    </div>
-                    <div class="flex-1 bg-white p-5 rounded-[24px] shadow-sm border border-slate-100">
-                        <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">Arrival: ${data.dest}</p>
-                        <p class="text-sm font-bold text-slate-400 italic mb-4">"${stages.stage4}"</p>
-                        
-                        <div class="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center mb-4">
-                            <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">Bag Belt Number Pending</p>
-                        </div>
-
-                        <button onclick="window.location.href='index.html#otas'" class="w-full py-4 bg-blue-50 text-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-100 active:scale-95 transition-all">
-                            Ground Transportation Options
-                        </button>
-                    </div>
+                <div class="px-6 pb-20 text-center">
+                    <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl active:scale-95 transition-all">
+                        COMPLETE MISSION / SCAN NEXT
+                    </button>
                 </div>
             </div>
-
-            <div class="px-6 mb-8">
-                <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[30px] p-6 text-white shadow-2xl border border-white/5">
-                    <p class="text-[10px] text-blue-400 font-bold uppercase mb-4 tracking-[0.2em]">Traveler Connectivity</p>
-                    <div class="flex gap-4">
-                        <a href="https://plans.gigsky.com/K31267/2CTPL/" target="_blank" class="flex-1 bg-white/5 backdrop-blur-md p-4 rounded-2xl text-center border border-white/10 active:scale-95 transition-all">
-                            <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">GIGSKY</p>
-                            <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">In-Flight</p>
-                        </a>
-                        <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" target="_blank" class="flex-1 bg-white/5 backdrop-blur-md p-4 rounded-2xl text-center border border-white/10 active:scale-95 transition-all">
-                            <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">BREEZE</p>
-                            <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">Ground</p>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="px-6 pb-20 text-center">
-                <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl active:scale-95 transition-all">
-                    COMPLETE MISSION / SCAN NEXT
-                </button>
-            </div>
-        </div>
-    `;
-}
+        `;
+    }
+</script>
 </body>
 </html>
