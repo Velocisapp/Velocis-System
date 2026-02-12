@@ -127,7 +127,7 @@ function handleMissionExtraction(data) {
     // 🔊 PLAY SUCCESS BEEP
     successSound.play().catch(err => console.log("Audio feedback ready."));
 
-    // 🟢 DYNAMIC STATUS LOGIC (Added for Live Status)
+    // 🟢 DYNAMIC STATUS LOGIC (Preserved)
     const statusColor = data.status === "Delayed" ? "text-amber-500" : 
                         data.status === "Cancelled" ? "text-red-500" : "text-emerald-500";
     const statusBg = data.status === "Delayed" ? "bg-amber-500" : 
@@ -208,9 +208,19 @@ function handleMissionExtraction(data) {
                             <p class="text-xl font-black text-slate-800">${data.origin} ✈️ ${data.dest}</p>
                         </div>
                     </div>
-                    <div class="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-center gap-3">
-                        <span class="text-xl">☕</span>
-                        <p class="text-xs text-orange-900 font-medium">Time for a coffee? Visit a nearby café before boarding.</p>
+
+                    <div class="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">🛡️</span>
+                            <div>
+                                <p class="text-[9px] text-orange-900 font-bold uppercase">Security Wait</p>
+                                <p class="text-sm text-orange-800 font-black">${data.security_wait} MINS</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xl">☕</span>
+                            <p class="text-[8px] text-orange-900 font-medium uppercase">Time for Coffee</p>
+                        </div>
                     </div>
                 </div>
             </div>
