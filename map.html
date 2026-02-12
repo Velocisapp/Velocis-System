@@ -7,40 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; height: 100vh; }
-        
-        /* Tactical Grid Background */
         .map-grid {
             background-image: 
                 linear-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-            height: 100%; width: 100%; position: absolute;
+            background-size: 40px 40px; height: 100%; width: 100%; position: absolute;
         }
-
-        /* Animated Navigation Path */
         #nav-path {
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-            animation: draw-route 3s ease-out forwards;
+            stroke-dasharray: 1000; stroke-dashoffset: 1000;
+            transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             filter: drop-shadow(0 0 8px #10b981);
         }
-
-        @keyframes draw-route {
-            to { stroke-dashoffset: 0; }
-        }
-
-        /* Pulse for Current Location and Gate */
-        .pulse-node {
-            animation: pulse-ring 2s infinite;
-        }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        /* AR Video Fade */
-        #ar-video { transition: opacity 1s ease; }
+        .pulse-node { animation: pulse-ring 2s infinite; }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+        .amenity-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; fill: #94a3b8; }
     </style>
 </head>
 <body class="relative flex flex-col">
@@ -48,19 +28,17 @@
     <div class="z-50 p-6 flex justify-between items-center bg-slate-900/90 backdrop-blur-xl border-b border-emerald-500/20">
         <div>
             <div class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Indoor Positioning Active</p>
+                <span id="pos-indicator" class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <p id="nav-status" class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Indoor Positioning Active</p>
             </div>
             <h1 class="text-xl font-black">NAVIGATING TO GATE <span id="gate-label">--</span></h1>
         </div>
-        <button onclick="window.close()" class="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider active:scale-95">
-            Exit Map
-        </button>
+        <button onclick="window.close()" class="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider">Exit Map</button>
     </div>
 
     <div class="relative flex-1 bg-slate-950 overflow-hidden">
         <div id="ar-container" class="absolute inset-0 z-0 hidden">
-            <video id="ar-video" class="w-full h-full object-cover opacity-60" playsinline muted></video>
+            <video id="ar-video" class="w-full h-full object-cover opacity-50" playsinline muted></video>
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                 <div class="text-emerald-400 text-6xl animate-bounce">⬆️</div>
             </div>
@@ -68,17 +46,28 @@
 
         <div class="map-grid"></div>
 
-        <svg class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
+        <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
             <circle cx="200" cy="500" r="6" fill="#10b981" />
-            <circle cx="200" cy="500" r="12" fill="none" stroke="#10b981" stroke-width="2" class="pulse-node" />
             
-            <path id="nav-path" d="M 200 500 L 200 350 L 300 350 L 300 150" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="round" />
+            <path id="nav-path" d="M 200 500 L 200 350 L 300 350 L 300 150" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
+
+            <g transform="translate(160, 420)">
+                <circle r="12" fill="#1e293b" stroke="#334155" />
+                <text x="0" y="4" text-anchor="middle" font-size="10">☕</text>
+                <text x="18" y="2" class="amenity-label">Starbucks</text>
+            </g>
+
+            <g transform="translate(340, 250)">
+                <circle r="12" fill="#1e293b" stroke="#334155" />
+                <text x="0" y="4" text-anchor="middle" font-size="10">🛋️</text>
+                <text x="-55" y="2" class="amenity-label text-right">VIP Lounge</text>
+            </g>
 
             <g transform="translate(300, 150)">
                 <rect x="-20" y="-45" width="40" height="40" rx="10" fill="#020617" stroke="#10b981" stroke-width="1" />
                 <text x="0" y="-18" text-anchor="middle" fill="#10b981" font-size="12" font-weight="900" id="gate-marker">--</text>
-                <circle cx="0" cy="0" r="8" fill="#10b981" />
-                <circle cx="0" cy="0" r="16" fill="none" stroke="#10b981" stroke-width="2" class="pulse-node" />
+                <circle cx="0" cy="0" r="8" fill="#FFD700" />
+                <circle cx="0" cy="0" r="16" fill="none" stroke="#FFD700" stroke-width="2" class="pulse-node" />
             </g>
         </svg>
 
@@ -86,60 +75,61 @@
             <div class="bg-slate-900/95 border border-white/10 p-5 rounded-[28px] shadow-2xl backdrop-blur-md">
                 <div class="flex justify-between items-center mb-4">
                     <div>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Estimated Transit</p>
-                        <p class="text-xl font-black text-white">4 MIN WALK</p>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Remaining</p>
+                        <p id="time-left" class="text-xl font-black text-white">4 MIN WALK</p>
                     </div>
                     <div class="text-right">
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Distance</p>
-                        <p class="text-xl font-black text-emerald-400">280m</p>
+                        <p id="dist-left" class="text-xl font-black text-emerald-400">280m</p>
                     </div>
                 </div>
-                <button id="ar-init-btn" onclick="toggleARGuidance()" class="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
-                    Initialize AR Guidance
+                <button id="ar-init-btn" onclick="toggleAdvancedNav()" class="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                    Initialize Smart Guidance
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        let arActive = false;
+        let navActive = false;
+        let stepCount = 0;
+        let totalDistance = 280;
 
-        async function toggleARGuidance() {
-            const container = document.getElementById('ar-container');
+        async function toggleAdvancedNav() {
             const video = document.getElementById('ar-video');
             const btn = document.getElementById('ar-init-btn');
-
-            if (!arActive) {
+            if (!navActive) {
                 try {
-                    // Initialize Camera
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: "environment" } 
-                    });
-                    video.srcObject = stream;
-                    video.play();
-
-                    // Initialize Motion Sensors (Essential for Dead Reckoning)
-                    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                        await DeviceOrientationEvent.requestPermission();
-                    }
-
-                    container.classList.remove('hidden');
-                    btn.innerText = "Disable AR View";
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    video.srcObject = stream; video.play();
+                    document.getElementById('ar-container').classList.remove('hidden');
+                    if (typeof DeviceMotionEvent.requestPermission === 'function') { await DeviceMotionEvent.requestPermission(); }
+                    window.addEventListener('devicemotion', processMotion, true);
+                    btn.innerText = "Disable Smart Guidance";
                     btn.classList.replace('bg-emerald-500', 'bg-slate-700');
-                    arActive = true;
-                } catch (err) {
-                    console.error(err);
-                    alert("VELOCIS™ requires Camera and Motion access for Indoor Navigation.");
-                }
-            } else {
-                // Shut down feed
-                const stream = video.srcObject;
-                if (stream) stream.getTracks().forEach(track => track.stop());
-                container.classList.add('hidden');
-                btn.innerText = "Initialize AR Guidance";
-                btn.classList.replace('bg-slate-700', 'bg-emerald-500');
-                arActive = false;
+                    navActive = true;
+                } catch (err) { alert("Sensors required."); }
+            } else { location.reload(); }
+        }
+
+        function processMotion(event) {
+            const acc = event.accelerationIncludingGravity;
+            const magnitude = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+            if (magnitude > 12.5) { 
+                stepCount++;
+                updateNavigationUI();
             }
+        }
+
+        function updateNavigationUI() {
+            const metersPerStep = 0.75;
+            const currentTravelled = stepCount * metersPerStep;
+            const remainingDist = Math.max(0, totalDistance - currentTravelled);
+            document.getElementById('dist-left').innerText = Math.round(remainingDist) + "m";
+            document.getElementById('time-left').innerText = Math.ceil(remainingDist / 75) + " MIN";
+            const newOffset = (currentTravelled / totalDistance) * 1000;
+            document.getElementById('nav-path').style.strokeDashoffset = newOffset;
+            if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
         function loadGateData() {
@@ -147,8 +137,8 @@
             const gate = params.get('gate') || 'TBD';
             document.getElementById('gate-label').innerText = gate;
             document.getElementById('gate-marker').innerText = gate;
+            document.getElementById('nav-path').style.strokeDashoffset = "1000";
         }
-
         window.onload = loadGateData;
     </script>
 </body>
