@@ -38,6 +38,9 @@
             0% { transform: scale(0.8); opacity: 1; }
             100% { transform: scale(2.5); opacity: 0; }
         }
+
+        /* AR Video Fade */
+        #ar-video { transition: opacity 1s ease; }
     </style>
 </head>
 <body class="relative flex flex-col">
@@ -56,9 +59,16 @@
     </div>
 
     <div class="relative flex-1 bg-slate-950 overflow-hidden">
+        <div id="ar-container" class="absolute inset-0 z-0 hidden">
+            <video id="ar-video" class="w-full h-full object-cover opacity-60" playsinline muted></video>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                <div class="text-emerald-400 text-6xl animate-bounce">⬆️</div>
+            </div>
+        </div>
+
         <div class="map-grid"></div>
 
-        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 400 600">
+        <svg class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
             <circle cx="200" cy="500" r="6" fill="#10b981" />
             <circle cx="200" cy="500" r="12" fill="none" stroke="#10b981" stroke-width="2" class="pulse-node" />
             
@@ -72,7 +82,7 @@
             </g>
         </svg>
 
-        <div class="absolute bottom-10 left-6 right-6">
+        <div class="absolute bottom-10 left-6 right-6 z-50">
             <div class="bg-slate-900/95 border border-white/10 p-5 rounded-[28px] shadow-2xl backdrop-blur-md">
                 <div class="flex justify-between items-center mb-4">
                     <div>
@@ -84,7 +94,7 @@
                         <p class="text-xl font-black text-emerald-400">280m</p>
                     </div>
                 </div>
-                <button class="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+                <button id="ar-init-btn" onclick="toggleARGuidance()" class="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
                     Initialize AR Guidance
                 </button>
             </div>
@@ -92,6 +102,46 @@
     </div>
 
     <script>
+        let arActive = false;
+
+        async function toggleARGuidance() {
+            const container = document.getElementById('ar-container');
+            const video = document.getElementById('ar-video');
+            const btn = document.getElementById('ar-init-btn');
+
+            if (!arActive) {
+                try {
+                    // Initialize Camera
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: "environment" } 
+                    });
+                    video.srcObject = stream;
+                    video.play();
+
+                    // Initialize Motion Sensors (Essential for Dead Reckoning)
+                    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        await DeviceOrientationEvent.requestPermission();
+                    }
+
+                    container.classList.remove('hidden');
+                    btn.innerText = "Disable AR View";
+                    btn.classList.replace('bg-emerald-500', 'bg-slate-700');
+                    arActive = true;
+                } catch (err) {
+                    console.error(err);
+                    alert("VELOCIS™ requires Camera and Motion access for Indoor Navigation.");
+                }
+            } else {
+                // Shut down feed
+                const stream = video.srcObject;
+                if (stream) stream.getTracks().forEach(track => track.stop());
+                container.classList.add('hidden');
+                btn.innerText = "Initialize AR Guidance";
+                btn.classList.replace('bg-slate-700', 'bg-emerald-500');
+                arActive = false;
+            }
+        }
+
         function loadGateData() {
             const params = new URLSearchParams(window.location.search);
             const gate = params.get('gate') || 'TBD';
