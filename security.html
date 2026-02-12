@@ -123,18 +123,22 @@ function handleMissionExtraction(data) {
                 <div class="glass-pill text-blue-600 mb-2 w-fit uppercase font-bold text-[10px]">Traveler Verified</div>
                 <h1 class="text-4xl font-black text-slate-900 leading-tight uppercase mb-4">${data.name}</h1>
                 
-                <div class="grid grid-cols-3 gap-3 mb-6">
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Seat</p>
-                        <p class="text-xl font-black text-blue-600">${data.seat || 'TBD'}</p>
+                <div class="grid grid-cols-4 gap-2 mb-6">
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
+                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Seat</p>
+                        <p class="text-lg font-black text-blue-600">${data.seat || 'TBD'}</p>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Gate</p>
-                        <p class="text-xl font-black text-slate-800">${data.gate || 'TBD'}</p>
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
+                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Counter</p>
+                        <p class="text-lg font-black text-slate-800">${data.counter || 'TBD'}</p>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Flight</p>
-                        <p class="text-sm font-black text-blue-400">${data.flight}</p>
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
+                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Gate</p>
+                        <p class="text-lg font-black text-slate-800">${data.gate || 'TBD'}</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 text-center">
+                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Flight</p>
+                        <p class="text-[10px] font-black text-blue-400 leading-tight mt-1">${data.flight}</p>
                     </div>
                 </div>
 
