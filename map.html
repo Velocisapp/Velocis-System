@@ -71,7 +71,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Arrival</p>
-                        <p id="time-left" class="text-xl font-black text-white">-- MIN WALK</p>
+                        <p id="time-left" class="text-xl font-black text-white">-- MIN</p>
                     </div>
                     <div class="text-right">
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Distance</p>
@@ -88,11 +88,10 @@
     <script>
         let navActive = false;
         let stepCount = 0;
-        let totalDistance = 280; 
+        let totalDistance = 0; 
         let routeNodes = [];
-        let videoStream = null; // Track the stream to kill it properly
+        let videoStream = null;
 
-        // SURGICAL FIX: Centralized Exit Logic to kill camera tracks
         function exitNavigation(targetUrl = null) {
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
@@ -121,7 +120,7 @@
                     navActive = true;
                 } catch (err) { alert("Sensors required for travel guidance."); }
             } else { 
-                exitNavigation('map.html'); // Refreshes to clean state
+                exitNavigation('map.html'); 
             }
         }
 
