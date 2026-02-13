@@ -146,27 +146,30 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: PERSPECTIVE SWEET SPOT (Y=200)
+        // SURGICAL FIX: UI CLEARANCE LOCK (START AT 380)
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // Start node stays at the base of your feet
-            startNode.setAttribute('cx', nodes[0].x);
-            startNode.setAttribute('cy', nodes[0].y);
+            // UI CLEARANCE: Vertical center (200) and Y-Start (380) to clear bottom card
+            const startX = 200;
+            const endX = 200;
+            const startY = 380;     // Moved UP from 500
+            const sweetSpotY = 200; // Destination at the Sweet Spot
+
+            // Lock indicators to the visible zone
+            startNode.setAttribute('cx', startX);
+            startNode.setAttribute('cy', startY);
             startNode.setAttribute('opacity', '1');
 
-            // THE SWEET SPOT: Position the Gate at Y=200
             const destination = nodes[nodes.length - 1];
-            const sweetSpotY = 200; 
-            
-            gateGroup.setAttribute('transform', `translate(${destination.x}, ${sweetSpotY})`);
+            gateGroup.setAttribute('transform', `translate(${endX}, ${sweetSpotY})`);
             gateGroup.setAttribute('opacity', '1');
 
-            // Connect the green line directly from start to the Gate's new Sweet Spot
-            let d = `M ${nodes[0].x} ${nodes[0].y} L ${destination.x} ${sweetSpotY}`;
+            // Draw clean tactical vector from feet to gate
+            const d = `M ${startX} ${startY} L ${endX} ${sweetSpotY}`;
             
             pathElement.setAttribute('d', d);
             const pathLen = pathElement.getTotalLength();
