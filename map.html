@@ -55,7 +55,6 @@
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
             <circle id="start-node" cx="200" cy="500" r="6" fill="#10b981" opacity="0" />
-            
             <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
 
             <g transform="translate(160, 420)">
@@ -101,7 +100,7 @@
     <script>
         let navActive = false;
         let stepCount = 0;
-        let totalDistance = 280; // Default fallback distance
+        let totalDistance = 280; 
         let routeNodes = [];
 
         async function toggleAdvancedNav() {
@@ -145,21 +144,17 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // DYNAMIC PATH GENERATOR
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
-            
             if (nodes.length < 2) return;
 
-            // Generate Path String: M x y L x y L x y...
             let d = `M ${nodes[0].x} ${nodes[0].y}`;
             for (let i = 1; i < nodes.length; i++) {
                 d += ` L ${nodes[i].x} ${nodes[i].y}`;
             }
 
-            // Update Start and End markers to match Data
             startNode.setAttribute('cx', nodes[0].x);
             startNode.setAttribute('cy', nodes[0].y);
             startNode.setAttribute('opacity', '1');
@@ -167,36 +162,41 @@
             gateGroup.setAttribute('transform', `translate(${nodes[nodes.length-1].x}, ${nodes[nodes.length-1].y})`);
             gateGroup.setAttribute('opacity', '1');
 
-            // Apply Path and reset dash settings
             pathElement.setAttribute('d', d);
             const pathLen = pathElement.getTotalLength();
             pathElement.style.strokeDasharray = pathLen;
             pathElement.style.strokeDashoffset = pathLen;
-
-            // Trigger the "Draw In" effect
             setTimeout(() => { pathElement.style.strokeDashoffset = "0"; }, 500);
         }
 
+        // UPDATED: Now receives and parses live node data from URL
         function loadGateData() {
             const params = new URLSearchParams(window.location.search);
             const gate = params.get('gate') || 'TBD';
+            const nodesParam = params.get('nodes');
+            
             document.getElementById('gate-label').innerText = gate;
             document.getElementById('gate-marker').innerText = gate;
 
-            // LOGIC: Fetch coordinate nodes based on Gate ID
-            // Currently using a dynamic mock-up that represents a MIA-style turn
-            const mockRoute = [
-                {x: 200, y: 500},
-                {x: 200, y: 350},
-                {x: 300, y: 350},
-                {x: 300, y: 150}
-            ];
-            
-            totalDistance = 280; // This should also come from your Brain's calc
-            document.getElementById('dist-left').innerText = totalDistance + "m";
-            document.getElementById('time-left').innerText = Math.ceil(totalDistance / 75) + " MIN";
-            
-            drawDynamicRoute(mockRoute);
+            if (nodesParam) {
+                try {
+                    routeNodes = JSON.parse(decodeURIComponent(nodesParam));
+                    
+                    // Simple logic to estimate distance from nodes if not provided
+                    let calculatedDist = 0;
+                    for (let i = 0; i < routeNodes.length - 1; i++) {
+                        calculatedDist += Math.sqrt(Math.pow(routeNodes[i+1].x - routeNodes[i].x, 2) + Math.pow(routeNodes[i+1].y - routeNodes[i].y, 2));
+                    }
+                    totalDistance = Math.round(calculatedDist * 0.8); // Calibration factor
+                    
+                    document.getElementById('dist-left').innerText = totalDistance + "m";
+                    document.getElementById('time-left').innerText = Math.ceil(totalDistance / 75) + " MIN";
+                    
+                    drawDynamicRoute(routeNodes);
+                } catch (e) {
+                    console.error("Node Parsing Failed:", e);
+                }
+            }
         }
         window.onload = loadGateData;
     </script>
