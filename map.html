@@ -34,10 +34,10 @@
             <h1 class="text-xl font-black uppercase">Walking to Gate <span id="gate-label">--</span></h1>
         </div>
         <div class="flex gap-2">
-            <button onclick="window.location.href='security.html'" class="bg-blue-600 border border-blue-400 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider active:scale-95 transition-all">
+            <button onclick="exitNavigation('security.html')" class="bg-blue-600 border border-blue-400 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider active:scale-95 transition-all">
                 Your Journey
             </button>
-            <button onclick="window.close()" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+            <button onclick="exitNavigation()" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider">
                 Exit
             </button>
         </div>
@@ -56,18 +56,6 @@
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
             <circle id="start-node" cx="200" cy="500" r="6" fill="#10b981" opacity="0" />
             <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
-
-            <g transform="translate(160, 420)">
-                <circle r="12" fill="#1e293b" stroke="#334155" />
-                <text x="0" y="4" text-anchor="middle" font-size="10">☕</text>
-                <text x="18" y="2" class="amenity-label">Starbucks</text>
-            </g>
-
-            <g transform="translate(340, 250)">
-                <circle r="12" fill="#1e293b" stroke="#334155" />
-                <text x="0" y="4" text-anchor="middle" font-size="10">🛋️</text>
-                <text x="-55" y="2" class="amenity-label text-right">VIP Lounge</text>
-            </g>
 
             <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
                 <rect x="-35" y="-45" width="70" height="40" rx="10" fill="#020617" stroke="#FFD700" stroke-width="1" />
@@ -102,14 +90,29 @@
         let stepCount = 0;
         let totalDistance = 280; 
         let routeNodes = [];
+        let videoStream = null; // Track the stream to kill it properly
+
+        // SURGICAL FIX: Centralized Exit Logic to kill camera tracks
+        function exitNavigation(targetUrl = null) {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                console.log("VELOCIS™ | Camera Hardware Released");
+            }
+            if (targetUrl) {
+                window.location.href = targetUrl;
+            } else {
+                window.close();
+            }
+        }
 
         async function toggleAdvancedNav() {
             const video = document.getElementById('ar-video');
             const btn = document.getElementById('ar-init-btn');
             if (!navActive) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    video.srcObject = stream; video.play();
+                    videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    video.srcObject = videoStream; 
+                    video.play();
                     document.getElementById('ar-container').classList.remove('hidden');
                     if (typeof DeviceOrientationEvent.requestPermission === 'function') { await DeviceOrientationEvent.requestPermission(); }
                     window.addEventListener('devicemotion', processMotion, true);
@@ -117,7 +120,9 @@
                     btn.classList.replace('bg-emerald-500', 'bg-slate-700');
                     navActive = true;
                 } catch (err) { alert("Sensors required for travel guidance."); }
-            } else { location.reload(); }
+            } else { 
+                exitNavigation('map.html'); // Refreshes to clean state
+            }
         }
 
         function processMotion(event) {
@@ -138,7 +143,7 @@
             
             const pathElement = document.getElementById('nav-path');
             const totalLen = pathElement.getTotalLength();
-            const newOffset = (currentTravelled / totalDistance) * totalLen;
+            const newOffset = Math.max(0, totalLen - (currentTravelled / totalDistance) * totalLen);
             pathElement.style.strokeDashoffset = newOffset;
             
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
@@ -169,7 +174,6 @@
             setTimeout(() => { pathElement.style.strokeDashoffset = "0"; }, 500);
         }
 
-        // UPDATED: Now receives and parses live node data from URL
         function loadGateData() {
             const params = new URLSearchParams(window.location.search);
             const gate = params.get('gate') || 'TBD';
@@ -181,13 +185,11 @@
             if (nodesParam) {
                 try {
                     routeNodes = JSON.parse(decodeURIComponent(nodesParam));
-                    
-                    // Simple logic to estimate distance from nodes if not provided
                     let calculatedDist = 0;
                     for (let i = 0; i < routeNodes.length - 1; i++) {
                         calculatedDist += Math.sqrt(Math.pow(routeNodes[i+1].x - routeNodes[i].x, 2) + Math.pow(routeNodes[i+1].y - routeNodes[i].y, 2));
                     }
-                    totalDistance = Math.round(calculatedDist * 0.8); // Calibration factor
+                    totalDistance = Math.round(calculatedDist * 0.8);
                     
                     document.getElementById('dist-left').innerText = totalDistance + "m";
                     document.getElementById('time-left').innerText = Math.ceil(totalDistance / 75) + " MIN";
