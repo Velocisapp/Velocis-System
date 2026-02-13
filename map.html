@@ -140,35 +140,34 @@
             
             const pathElement = document.getElementById('nav-path');
             const totalLen = pathElement.getTotalLength();
-            // Path correctly "shortens" behind the user as they progress
             const newOffset = (currentTravelled / totalDistance) * totalLen;
             pathElement.style.strokeDashoffset = newOffset;
             
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: Final Perspective and Depth Lock
+        // SURGICAL FIX: PERSPECTIVE SWEET SPOT (Y=200)
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            let d = `M ${nodes[0].x} ${nodes[0].y}`;
-            for (let i = 1; i < nodes.length; i++) {
-                d += ` L ${nodes[i].x} ${nodes[i].y}`;
-            }
-
+            // Start node stays at the base of your feet
             startNode.setAttribute('cx', nodes[0].x);
             startNode.setAttribute('cy', nodes[0].y);
             startNode.setAttribute('opacity', '1');
 
-            // DEPTH LOCK: The Gate Marker is pushed to the top (Y=80) for a long terminal look
+            // THE SWEET SPOT: Position the Gate at Y=200
             const destination = nodes[nodes.length - 1];
-            const finalY = Math.min(destination.y, 80); 
-            gateGroup.setAttribute('transform', `translate(${destination.x}, ${finalY})`);
+            const sweetSpotY = 200; 
+            
+            gateGroup.setAttribute('transform', `translate(${destination.x}, ${sweetSpotY})`);
             gateGroup.setAttribute('opacity', '1');
 
+            // Connect the green line directly from start to the Gate's new Sweet Spot
+            let d = `M ${nodes[0].x} ${nodes[0].y} L ${destination.x} ${sweetSpotY}`;
+            
             pathElement.setAttribute('d', d);
             const pathLen = pathElement.getTotalLength();
             pathElement.style.strokeDasharray = pathLen;
