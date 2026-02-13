@@ -53,7 +53,7 @@
         <div class="map-grid"></div>
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
-            <circle id="start-node" cx="200" cy="500" r="6" fill="#10b981" opacity="0" />
+            <circle id="start-node" cx="200" cy="340" r="6" fill="#10b981" opacity="0" />
             <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
 
             <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
@@ -146,20 +146,19 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: UI CLEARANCE LOCK (START AT 380)
+        // SURGICAL FIX: HIGH-CLEARANCE START POINT (340)
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // UI CLEARANCE: Vertical center (200) and Y-Start (380) to clear bottom card
+            // HIGH-CLEARANCE LOCK: LIFTED to 340 to clear the bottom UI card completely
             const startX = 200;
             const endX = 200;
-            const startY = 380;     // Moved UP from 500
-            const sweetSpotY = 200; // Destination at the Sweet Spot
+            const startY = 340;     
+            const sweetSpotY = 180; 
 
-            // Lock indicators to the visible zone
             startNode.setAttribute('cx', startX);
             startNode.setAttribute('cy', startY);
             startNode.setAttribute('opacity', '1');
@@ -168,7 +167,7 @@
             gateGroup.setAttribute('transform', `translate(${endX}, ${sweetSpotY})`);
             gateGroup.setAttribute('opacity', '1');
 
-            // Draw clean tactical vector from feet to gate
+            // Draw solid Tactical Path in the visible clearance area
             const d = `M ${startX} ${startY} L ${endX} ${sweetSpotY}`;
             
             pathElement.setAttribute('d', d);
