@@ -45,7 +45,7 @@
     <div class="relative flex-1 bg-slate-950 overflow-hidden">
         <div id="ar-container" class="absolute inset-0 z-0 hidden">
             <video id="ar-video" class="w-full h-full object-cover opacity-50" playsinline muted></video>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div class="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                 <div class="text-emerald-400 text-6xl animate-bounce">⬆️</div>
             </div>
         </div>
@@ -146,24 +146,30 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
+        // SURGICAL FIX: Optimized Node Mapping and Destination Priority
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
-            if (nodes.length < 2) return;
+            if (!nodes || nodes.length < 2) return;
 
+            // 1. Build the path string from the Brain's nodes
             let d = `M ${nodes[0].x} ${nodes[0].y}`;
             for (let i = 1; i < nodes.length; i++) {
                 d += ` L ${nodes[i].x} ${nodes[i].y}`;
             }
 
+            // 2. Lock the start indicator to the first node
             startNode.setAttribute('cx', nodes[0].x);
             startNode.setAttribute('cy', nodes[0].y);
             startNode.setAttribute('opacity', '1');
 
-            gateGroup.setAttribute('transform', `translate(${nodes[nodes.length-1].x}, ${nodes[nodes.length-1].y})`);
+            // 3. Lock the "Your Gate" marker group to the VERY LAST node
+            const destination = nodes[nodes.length - 1];
+            gateGroup.setAttribute('transform', `translate(${destination.x}, ${destination.y})`);
             gateGroup.setAttribute('opacity', '1');
 
+            // 4. Draw path with dash-array animation
             pathElement.setAttribute('d', d);
             const pathLen = pathElement.getTotalLength();
             pathElement.style.strokeDasharray = pathLen;
@@ -172,7 +178,6 @@
         }
 
         function loadGateData() {
-            // FORCE CLEANUP: Ensure UI starts at zero/dash to overwrite any cached data
             document.getElementById('dist-left').innerText = "--m";
             document.getElementById('time-left').innerText = "-- MIN";
 
@@ -190,7 +195,6 @@
                     for (let i = 0; i < routeNodes.length - 1; i++) {
                         calculatedDist += Math.sqrt(Math.pow(routeNodes[i+1].x - routeNodes[i].x, 2) + Math.pow(routeNodes[i+1].y - routeNodes[i].y, 2));
                     }
-                    // Use calculated distance, if somehow 0, use a generic industrial fallback
                     totalDistance = Math.round(calculatedDist * 0.8) || 150;
                     
                     document.getElementById('dist-left').innerText = totalDistance + "m";
