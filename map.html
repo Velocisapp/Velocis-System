@@ -95,7 +95,6 @@
         function exitNavigation(targetUrl = null) {
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
-                console.log("VELOCIS™ | Camera Hardware Released");
             }
             if (targetUrl) {
                 window.location.href = targetUrl;
