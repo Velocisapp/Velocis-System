@@ -233,13 +233,15 @@ function handleMissionExtraction(data, isResuming = false) {
                     </div>
                     <div class="flex-1 bg-orange-50 p-5 rounded-[24px] shadow-sm border border-orange-100">
                         <p class="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-2">Security Checkpoint</p>
-                        <p class="text-sm font-bold text-slate-800 leading-snug mb-2">"${getMsg(stages.stage2)}"</p>
+                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3">
+                            "Security is the next step. Please have your digital boarding pass and ID ready for the terminal inspectors."
+                        </p>
                         <div class="p-3 bg-white rounded-xl border border-orange-100 flex items-center justify-between">
                             <div class="flex items-center gap-3 w-full">
                                 <span class="text-lg">🛡️</span>
                                 <div>
-                                    <p class="text-[9px] text-orange-900 font-bold uppercase tracking-tighter">Terminal Load</p>
-                                    <p class="text-[11px] text-orange-800 font-black uppercase leading-none">${data.security_wait}</p>
+                                    <p class="text-[9px] text-orange-900 font-bold uppercase tracking-tighter">Traveler Advisory</p>
+                                    <p class="text-[11px] text-orange-800 font-black uppercase leading-none">Prepare Documents</p>
                                 </div>
                             </div>
                         </div>
