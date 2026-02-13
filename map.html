@@ -45,8 +45,8 @@
     <div class="relative flex-1 bg-slate-950 overflow-hidden">
         <div id="ar-container" class="absolute inset-0 z-0 hidden">
             <video id="ar-video" class="w-full h-full object-cover opacity-50" playsinline muted></video>
-            <div class="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                <div class="text-emerald-400 text-6xl animate-bounce">⬆️</div>
+            <div class="absolute top-[75%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                <div class="text-emerald-400 text-6xl animate-bounce drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">⬆️</div>
             </div>
         </div>
 
@@ -140,41 +140,37 @@
             
             const pathElement = document.getElementById('nav-path');
             const totalLen = pathElement.getTotalLength();
-            const newOffset = Math.max(0, totalLen - (currentTravelled / totalDistance) * totalLen);
+            // SURGICAL FIX: Path correctly "shortens" behind the user as they progress
+            const newOffset = (currentTravelled / totalDistance) * totalLen;
             pathElement.style.strokeDashoffset = newOffset;
             
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: Optimized Node Mapping and Destination Priority
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // 1. Build the path string from the Brain's nodes
             let d = `M ${nodes[0].x} ${nodes[0].y}`;
             for (let i = 1; i < nodes.length; i++) {
                 d += ` L ${nodes[i].x} ${nodes[i].y}`;
             }
 
-            // 2. Lock the start indicator to the first node
             startNode.setAttribute('cx', nodes[0].x);
             startNode.setAttribute('cy', nodes[0].y);
             startNode.setAttribute('opacity', '1');
 
-            // 3. Lock the "Your Gate" marker group to the VERY LAST node
+            // LOCK: Gate marker is placed exactly on the final destination coordinate
             const destination = nodes[nodes.length - 1];
             gateGroup.setAttribute('transform', `translate(${destination.x}, ${destination.y})`);
             gateGroup.setAttribute('opacity', '1');
 
-            // 4. Draw path with dash-array animation
             pathElement.setAttribute('d', d);
             const pathLen = pathElement.getTotalLength();
             pathElement.style.strokeDasharray = pathLen;
-            pathElement.style.strokeDashoffset = pathLen;
-            setTimeout(() => { pathElement.style.strokeDashoffset = "0"; }, 500);
+            pathElement.style.strokeDashoffset = "0"; 
         }
 
         function loadGateData() {
