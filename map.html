@@ -54,9 +54,9 @@
         <div class="map-grid"></div>
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
-            <circle cx="200" cy="500" r="6" fill="#10b981" />
+            <circle id="start-node" cx="200" cy="500" r="6" fill="#10b981" opacity="0" />
             
-            <path id="nav-path" d="M 200 500 L 200 350 L 300 350 L 300 150" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
+            <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
 
             <g transform="translate(160, 420)">
                 <circle r="12" fill="#1e293b" stroke="#334155" />
@@ -70,7 +70,7 @@
                 <text x="-55" y="2" class="amenity-label text-right">VIP Lounge</text>
             </g>
 
-            <g transform="translate(300, 150)">
+            <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
                 <rect x="-35" y="-45" width="70" height="40" rx="10" fill="#020617" stroke="#FFD700" stroke-width="1" />
                 <text x="0" y="-30" text-anchor="middle" fill="#FFD700" font-size="8" font-weight="900" class="uppercase">Your Gate</text>
                 <text x="0" y="-12" text-anchor="middle" fill="#FFD700" font-size="14" font-weight="900" id="gate-marker">--</text>
@@ -84,11 +84,11 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Arrival</p>
-                        <p id="time-left" class="text-xl font-black text-white">4 MIN WALK</p>
+                        <p id="time-left" class="text-xl font-black text-white">-- MIN WALK</p>
                     </div>
                     <div class="text-right">
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Distance</p>
-                        <p id="dist-left" class="text-xl font-black text-emerald-400">280m</p>
+                        <p id="dist-left" class="text-xl font-black text-emerald-400">--m</p>
                     </div>
                 </div>
                 <button id="ar-init-btn" onclick="toggleAdvancedNav()" class="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
@@ -101,7 +101,8 @@
     <script>
         let navActive = false;
         let stepCount = 0;
-        let totalDistance = 280;
+        let totalDistance = 280; // Default fallback distance
+        let routeNodes = [];
 
         async function toggleAdvancedNav() {
             const video = document.getElementById('ar-video');
@@ -135,9 +136,45 @@
             const remainingDist = Math.max(0, totalDistance - currentTravelled);
             document.getElementById('dist-left').innerText = Math.round(remainingDist) + "m";
             document.getElementById('time-left').innerText = Math.ceil(remainingDist / 75) + " MIN";
-            const newOffset = (currentTravelled / totalDistance) * 1000;
-            document.getElementById('nav-path').style.strokeDashoffset = newOffset;
+            
+            const pathElement = document.getElementById('nav-path');
+            const totalLen = pathElement.getTotalLength();
+            const newOffset = (currentTravelled / totalDistance) * totalLen;
+            pathElement.style.strokeDashoffset = newOffset;
+            
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
+        }
+
+        // DYNAMIC PATH GENERATOR
+        function drawDynamicRoute(nodes) {
+            const pathElement = document.getElementById('nav-path');
+            const startNode = document.getElementById('start-node');
+            const gateGroup = document.getElementById('gate-node-group');
+            
+            if (nodes.length < 2) return;
+
+            // Generate Path String: M x y L x y L x y...
+            let d = `M ${nodes[0].x} ${nodes[0].y}`;
+            for (let i = 1; i < nodes.length; i++) {
+                d += ` L ${nodes[i].x} ${nodes[i].y}`;
+            }
+
+            // Update Start and End markers to match Data
+            startNode.setAttribute('cx', nodes[0].x);
+            startNode.setAttribute('cy', nodes[0].y);
+            startNode.setAttribute('opacity', '1');
+
+            gateGroup.setAttribute('transform', `translate(${nodes[nodes.length-1].x}, ${nodes[nodes.length-1].y})`);
+            gateGroup.setAttribute('opacity', '1');
+
+            // Apply Path and reset dash settings
+            pathElement.setAttribute('d', d);
+            const pathLen = pathElement.getTotalLength();
+            pathElement.style.strokeDasharray = pathLen;
+            pathElement.style.strokeDashoffset = pathLen;
+
+            // Trigger the "Draw In" effect
+            setTimeout(() => { pathElement.style.strokeDashoffset = "0"; }, 500);
         }
 
         function loadGateData() {
@@ -145,7 +182,21 @@
             const gate = params.get('gate') || 'TBD';
             document.getElementById('gate-label').innerText = gate;
             document.getElementById('gate-marker').innerText = gate;
-            document.getElementById('nav-path').style.strokeDashoffset = "1000";
+
+            // LOGIC: Fetch coordinate nodes based on Gate ID
+            // Currently using a dynamic mock-up that represents a MIA-style turn
+            const mockRoute = [
+                {x: 200, y: 500},
+                {x: 200, y: 350},
+                {x: 300, y: 350},
+                {x: 300, y: 150}
+            ];
+            
+            totalDistance = 280; // This should also come from your Brain's calc
+            document.getElementById('dist-left').innerText = totalDistance + "m";
+            document.getElementById('time-left').innerText = Math.ceil(totalDistance / 75) + " MIN";
+            
+            drawDynamicRoute(mockRoute);
         }
         window.onload = loadGateData;
     </script>
