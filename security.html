@@ -58,6 +58,14 @@
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
 
+    // --- SESSION RESUME ENGINE ---
+    window.onload = () => {
+        const savedSession = localStorage.getItem('velocis_active_session');
+        if (savedSession) {
+            handleMissionExtraction(JSON.parse(savedSession), true);
+        }
+    };
+
     async function startCamera() {
         startPrompt.style.display = 'none';
         hintText.innerText = "Align document barcode";
@@ -115,11 +123,15 @@
         }
     }
 
-function handleMissionExtraction(data) {
-    if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+function handleMissionExtraction(data, isResuming = false) {
+    // Save session to persist through navigation and refreshes
+    if (!isResuming) {
+        localStorage.setItem('velocis_active_session', JSON.stringify(data));
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+        successSound.play().catch(err => console.log("Audio feedback ready."));
+    }
 
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-    successSound.play().catch(err => console.log("Audio feedback ready."));
+    if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
     const statusColor = data.status === "Delayed" ? "text-amber-500" : 
                         data.status === "Cancelled" ? "text-red-500" : "text-emerald-500";
@@ -129,7 +141,6 @@ function handleMissionExtraction(data) {
     const stages = data.ai_stages;
     const getMsg = (stage) => typeof stage === 'string' ? stage : (stage.text || stage.message || "Welcome!");
 
-    // Helper to pass nodes to map safely
     const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
 
     document.body.innerHTML = `
@@ -271,12 +282,17 @@ function handleMissionExtraction(data) {
             </div>
 
             <div class="px-6 pb-20">
-                <button onclick="location.reload()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl active:scale-95 transition-all">
-                    READY FOR NEXT TRAVELER
+                <button onclick="resetPortal()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
+                    Scan New Ticket
                 </button>
             </div>
         </div>
     `;
+}
+
+function resetPortal() {
+    localStorage.removeItem('velocis_active_session');
+    location.reload();
 }
 </script>
 </body>
