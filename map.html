@@ -20,7 +20,6 @@
         }
         .pulse-node { animation: pulse-ring 2s infinite; }
         @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-        .amenity-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; fill: #94a3b8; }
     </style>
 </head>
 <body class="relative flex flex-col">
@@ -173,6 +172,10 @@
         }
 
         function loadGateData() {
+            // FORCE CLEANUP: Ensure UI starts at zero/dash to overwrite any cached data
+            document.getElementById('dist-left').innerText = "--m";
+            document.getElementById('time-left').innerText = "-- MIN";
+
             const params = new URLSearchParams(window.location.search);
             const gate = params.get('gate') || 'TBD';
             const nodesParam = params.get('nodes');
@@ -187,7 +190,8 @@
                     for (let i = 0; i < routeNodes.length - 1; i++) {
                         calculatedDist += Math.sqrt(Math.pow(routeNodes[i+1].x - routeNodes[i].x, 2) + Math.pow(routeNodes[i+1].y - routeNodes[i].y, 2));
                     }
-                    totalDistance = Math.round(calculatedDist * 0.8);
+                    // Use calculated distance, if somehow 0, use a generic industrial fallback
+                    totalDistance = Math.round(calculatedDist * 0.8) || 150;
                     
                     document.getElementById('dist-left').innerText = totalDistance + "m";
                     document.getElementById('time-left').innerText = Math.ceil(totalDistance / 75) + " MIN";
