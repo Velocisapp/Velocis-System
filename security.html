@@ -14,6 +14,23 @@
         video { width: 100%; height: 100%; object-fit: cover; }
         .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 40px; border-radius: 20px; pointer-events: none; }
         #start-prompt { position: absolute; z-index: 50; background: rgba(15, 23, 42, 0.95); inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
+
+        /* SURGICAL PILL REFINEMENT: Industrial Proportions */
+        .industrial-pill {
+            background: #eff6ff; /* blue-50 */
+            border: 1px solid #dbeafe; /* blue-100 */
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px 4px;
+            min-height: 64px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .pill-label { font-size: 8px; font-weight: 800; color: #60a5fa; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.05em; }
+        .pill-value { font-size: 11px; font-weight: 900; color: #1e293b; line-height: 1; word-break: break-word; text-align: center; }
+        .status-pill-text { font-size: 9px; font-weight: 900; }
     </style>
 </head>
 <body class="p-8">
@@ -124,7 +141,6 @@
     }
 
 function handleMissionExtraction(data, isResuming = false) {
-    // Save session to persist through navigation and refreshes
     if (!isResuming) {
         localStorage.setItem('velocis_active_session', JSON.stringify(data));
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
@@ -142,6 +158,9 @@ function handleMissionExtraction(data, isResuming = false) {
     const getMsg = (stage) => typeof stage === 'string' ? stage : (stage.text || stage.message || "Welcome!");
 
     const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
+
+    // Industrial text cleaning for long counter names
+    const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
 
     document.body.innerHTML = `
         <div class="flex flex-col h-screen bg-slate-50 overflow-y-auto pb-32">
@@ -165,27 +184,27 @@ function handleMissionExtraction(data, isResuming = false) {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-4 gap-2 mb-6">
-                    <div class="bg-blue-50 p-3 rounded-2xl shadow-sm border border-blue-100 text-center">
-                        <p class="text-[9px] text-blue-400 font-bold uppercase mb-1">Seat</p>
-                        <p class="text-lg font-black text-blue-600">${data.seat || 'TBD'}</p>
+                <div class="flex gap-1.5 mb-6">
+                    <div class="industrial-pill flex-1">
+                        <p class="pill-label">Seat</p>
+                        <p class="pill-value text-blue-600">${data.seat || 'TBD'}</p>
                     </div>
-                    <div class="bg-blue-50 p-3 rounded-2xl shadow-sm border border-blue-100 text-center">
-                        <p class="text-[9px] text-blue-400 font-bold uppercase mb-1">Counter</p>
-                        <p class="text-lg font-black text-slate-800">${data.counter === 'CONSOLIDATED HUB' ? 'Main' : data.counter}</p>
+                    <div class="industrial-pill flex-[1.4]">
+                        <p class="pill-label">Counter</p>
+                        <p class="pill-value">${displayCounter}</p>
                     </div>
-                    <div class="bg-blue-50 p-3 rounded-2xl shadow-sm border border-blue-100 text-center">
-                        <p class="text-[9px] text-blue-400 font-bold uppercase mb-1">Gate</p>
-                        <p class="text-lg font-black text-slate-800">${data.gate || 'TBD'}</p>
+                    <div class="industrial-pill flex-1">
+                        <p class="pill-label">Gate</p>
+                        <p class="pill-value">${data.gate || 'TBD'}</p>
                     </div>
-                    <div class="bg-blue-50 p-3 rounded-2xl shadow-sm border border-blue-100 text-center flex flex-col justify-center items-center">
-                        <p class="text-[9px] text-blue-400 font-bold uppercase mb-1">Status</p>
-                        <div class="flex items-center gap-1">
-                            <span class="relative flex h-2 w-2">
+                    <div class="industrial-pill flex-[1.2]">
+                        <p class="pill-label text-center">Status</p>
+                        <div class="flex items-center gap-1 justify-center">
+                            <span class="relative flex h-1.5 w-1.5">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${statusBg} opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 ${statusBg}"></span>
+                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 ${statusBg}"></span>
                             </span>
-                            <p class="text-[10px] font-black ${statusColor} uppercase">${data.status || 'Confirmed'}</p>
+                            <p class="status-pill-text font-black ${statusColor} uppercase">${data.status || 'Active'}</p>
                         </div>
                     </div>
                 </div>
@@ -202,7 +221,7 @@ function handleMissionExtraction(data, isResuming = false) {
                         <p class="text-sm font-bold text-slate-800 leading-snug mb-3 italic">"${getMsg(stages.stage1)}"</p>
                         <div class="flex gap-4 border-t border-blue-100 pt-3">
                             <div><p class="text-[9px] text-blue-400 uppercase font-bold">Terminal</p><p class="text-sm font-black text-slate-900">${data.terminal}</p></div>
-                            <div><p class="text-[9px] text-blue-400 uppercase font-bold">Zone</p><p class="text-sm font-black text-slate-900">${data.counter === 'CONSOLIDATED HUB' ? 'Main Hall' : data.counter}</p></div>
+                            <div><p class="text-[9px] text-blue-400 uppercase font-bold">Zone</p><p class="text-sm font-black text-slate-900">${displayCounter}</p></div>
                         </div>
                     </div>
                 </div>
