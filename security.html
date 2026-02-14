@@ -41,17 +41,17 @@
 
     <div id="main-interface">
         <h1 class="text-2xl font-light tracking-tight text-slate-800 mb-2 text-center">Security Portal</h1>
-        <p class="text-xs text-slate-400 mb-8 uppercase tracking-widest text-center">Traveler Verification Feed</p>
+        <p class="text-xs text-slate-400 mb-12 uppercase tracking-widest text-center">Passenger Verification Hub</p>
 
         <div class="scanner-container w-full aspect-[1/1] rounded-[40px] shadow-2xl mb-10">
             <div id="start-prompt">
-                <button onclick="startCamera()" class="px-8 py-4 bg-blue-500 text-white font-bold rounded-2xl shadow-xl active:scale-95 transition-all mb-4">
-                    INITIALIZE SCANNER
+                <button onclick="startCamera()" class="w-64 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all mb-4 uppercase tracking-widest text-xs">
+                    Scan Your Ticket
                 </button>
                 
                 <input type="file" id="screenshot-input" accept="image/*" class="hidden" onchange="handleScreenshot(this)">
-                <button onclick="document.getElementById('screenshot-input').click()" class="text-[10px] text-slate-400 uppercase tracking-widest hover:text-blue-400 transition-colors">
-                    OR IMPORT DIGITAL PASS
+                <button onclick="document.getElementById('screenshot-input').click()" class="w-64 py-3 bg-slate-700/50 border border-white/10 text-white font-bold rounded-2xl active:scale-95 transition-all uppercase tracking-widest text-[10px]">
+                    Import Digital Pass
                 </button>
             </div>
             
@@ -62,8 +62,6 @@
         <div id="hint-text" class="text-center text-slate-400 text-[10px] uppercase tracking-widest animate-pulse">
             Scanner Standby
         </div>
-        
-        <p class="text-[9px] text-slate-400 text-center mt-12 uppercase tracking-widest opacity-50">Industrial Infrastructure Enabled</p>
     </div>
 
 <script>
@@ -107,8 +105,8 @@
     async function handleScreenshot(input) {
         if (!input.files || !input.files[0]) return;
         
-        hintText.innerText = "Decoding your digital pass...";
-        statusPill.innerText = "Processing...";
+        hintText.innerText = "Reading your digital pass...";
+        statusPill.innerText = "Checking...";
         
         const formData = new FormData();
         formData.append('image', input.files[0], 'screenshot.jpg');
@@ -122,9 +120,9 @@
                     return;
                 }
             }
-            alert("We couldn't read that pass. Please make sure the QR code is clear.");
+            alert("We couldn't read the pass. Please make sure the QR code is clear and try again.");
         } catch (err) {
-            statusPill.innerText = "Bridge Lost";
+            statusPill.innerText = "Connection Lost";
         } finally {
             input.value = ""; 
         }
@@ -188,11 +186,9 @@ function handleMissionExtraction(data, isResuming = false) {
     const stages = data.ai_stages;
     const getMsg = (stage) => typeof stage === 'string' ? stage : (stage.text || stage.message || "Welcome!");
 
-    /* --- STABILITY FIX: Pre-process data strings --- */
     const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
     const gateVal = data.gate || 'TBD';
 
-    // Industrial text cleaning for long counter names
     const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
 
     document.body.innerHTML = `
