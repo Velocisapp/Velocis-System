@@ -85,12 +85,9 @@
         function exitNavigation(targetUrl = null) {
             localStorage.removeItem('velocis_nav_active');
             
-            // FULL SYSTEM SHUTDOWN
+            // FULL SYSTEM SHUTDOWN: Kills red camera icon
             if (videoStream) {
-                videoStream.getTracks().forEach(track => {
-                    track.stop();
-                    console.log("Camera track terminated.");
-                });
+                videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
             }
             const video = document.getElementById('ar-video');
@@ -119,10 +116,8 @@
                     video.classList.remove('hidden');
                     arrowContainer.classList.remove('hidden');
                     
-                    // PROPER SENSOR REQUEST
                     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                        const permission = await DeviceOrientationEvent.requestPermission();
-                        if (permission !== 'granted') throw new Error("Permission denied");
+                        await DeviceOrientationEvent.requestPermission();
                     }
                     window.addEventListener('devicemotion', processMotion, true);
                     
@@ -130,10 +125,7 @@
                     btn.classList.replace('bg-emerald-500', 'bg-slate-700');
                     navActive = true;
                     localStorage.setItem('velocis_nav_active', 'true');
-                } catch (err) { 
-                    alert("Motion sensors required for AR path tracking."); 
-                    exitNavigation('map.html');
-                }
+                } catch (err) { alert("Motion sensors required."); exitNavigation('map.html'); }
             } else { exitNavigation('map.html'); }
         }
 
@@ -183,9 +175,6 @@
                     routeNodes = JSON.parse(decodeURIComponent(params.get('nodes')));
                     totalDistance = 150; 
                     drawDynamicRoute(routeNodes);
-                    
-                    // SAFETY: We removed the auto-trigger to fix the sensor error.
-                    // The user will tap once to start, but the "Resume" button will work.
                 } catch (e) { console.error(e); }
             }
         };
