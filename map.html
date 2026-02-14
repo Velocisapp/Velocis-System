@@ -13,10 +13,11 @@
                 linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
             background-size: 40px 40px; height: 100%; width: 100%; position: absolute;
         }
+        /* RESTORED: High-intensity emerald glow */
         #nav-path {
             stroke-dasharray: 1000; stroke-dashoffset: 1000;
             transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            filter: drop-shadow(0 0 8px #10b981);
+            filter: drop-shadow(0 0 12px #10b981); /* Increased glow intensity */
         }
         .pulse-node { animation: pulse-ring 2s infinite; }
         @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
@@ -46,7 +47,7 @@
         <div id="ar-container" class="absolute inset-0 z-20 hidden">
             <video id="ar-video" class="w-full h-full object-cover opacity-50" playsinline muted></video>
             <div class="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                <div class="text-emerald-400 text-6xl animate-bounce drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]">⬆️</div>
+                <div class="text-emerald-400 text-6xl animate-bounce drop-shadow-[0_0_20px_rgba(16,185,129,0.9)]">⬆️</div>
             </div>
         </div>
 
@@ -54,14 +55,14 @@
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
             <circle id="start-node" cx="200" cy="270" r="6" fill="#10b981" opacity="0" />
-            <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
+            <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round" />
 
             <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
-                <rect x="-35" y="-45" width="70" height="40" rx="10" fill="#020617" stroke="#FFD700" stroke-width="1" />
+                <rect x="-35" y="-45" width="70" height="40" rx="10" fill="#020617" stroke="#FFD700" stroke-width="2" />
                 <text x="0" y="-30" text-anchor="middle" fill="#FFD700" font-size="8" font-weight="900" class="uppercase">Your Gate</text>
-                <text x="0" y="-12" text-anchor="middle" fill="#FFD700" font-size="14" font-weight="900" id="gate-marker">--</text>
+                <text x="0" y="-12" text-anchor="middle" fill="#FFD700" font-size="16" font-weight="900" id="gate-marker">--</text>
                 <circle cx="0" cy="0" r="8" fill="#FFD700" />
-                <circle cx="0" cy="0" r="16" fill="none" stroke="#FFD700" stroke-width="2" class="pulse-node" />
+                <circle cx="0" cy="0" r="18" fill="none" stroke="#FFD700" stroke-width="2" class="pulse-node" />
             </g>
         </svg>
 
@@ -146,17 +147,16 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: PHYSICAL SEPARATION LOCK
+        // SURGICAL FIX: PHYSICAL SEPARATION WITH RESTORED VIBRANCY
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // COORDINATE LOCK
             const startX = 200;
             const endX = 200;
-            const startY = 270;     // SEPARATION: Path starts 60px higher than arrow base
+            const startY = 270;     
             const sweetSpotY = 120; 
 
             startNode.setAttribute('cx', startX);
