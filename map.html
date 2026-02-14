@@ -54,7 +54,7 @@
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 800">
             <circle id="start-node" cx="200" cy="270" r="8" fill="#10b981" style="filter: drop-shadow(0 0 10px #10b981);" />
-            <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="16" stroke-linecap="round" style="filter: drop-shadow(0 0 15px #10b981); stroke-opacity: 1 !important;" />
+            <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="18" stroke-linecap="round" style="filter: drop-shadow(0 0 15px #10b981); stroke-opacity: 1 !important;" />
 
             <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
                 <rect x="-45" y="-60" width="90" height="60" rx="14" fill="#020617" stroke="#FFD700" stroke-width="5" />
@@ -152,6 +152,7 @@
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
+            // Updated coordinates to provide clearance for the Arrow and ViewBox scaling
             const startX = 200, endX = 200, startY = 320, sweetSpotY = 160; 
 
             startNode.setAttribute('cx', startX);
