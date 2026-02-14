@@ -140,21 +140,31 @@
         }
     }
 
-/* --- ADDED NAVIGATION HANDLER --- */
+/* --- HIGH-RELIABILITY NAVIGATION LAUNCHER --- */
 function launchNavigation(gate, nodes) {
-    if (!gate || gate === 'TBD') return;
-    localStorage.setItem('velocis_nav_active', 'true');
-    
-    // UI Feedback: Button turns blue to signal session is active
-    const btn = document.getElementById('nav-action-btn');
-    if(btn) {
-        btn.innerHTML = '<span>🔄</span> RESUME NAVIGATION';
-        btn.classList.replace('bg-emerald-500', 'bg-blue-600');
-        btn.classList.replace('shadow-emerald-200', 'shadow-blue-200');
+    if (!gate || gate === 'TBD' || gate === 'Pnd') {
+        console.warn("VELOCIS: Navigation blocked - No valid gate data.");
+        return;
     }
     
-    // Target a specific window name to prevent duplicate tabs
-    window.open(`map.html?gate=${gate}&nodes=${nodes}`, 'velocis_map_window');
+    try {
+        localStorage.setItem('velocis_nav_active', 'true');
+        
+        const btn = document.getElementById('nav-action-btn');
+        if(btn) {
+            btn.innerHTML = '<span>🔄</span> RESUME NAVIGATION';
+            btn.classList.remove('bg-emerald-500', 'shadow-emerald-200');
+            btn.classList.add('bg-blue-600', 'shadow-blue-200');
+        }
+        
+        // Named window target and explicit user-tap handling for mobile compatibility
+        const mapUrl = `map.html?gate=${encodeURIComponent(gate)}&nodes=${nodes}`;
+        window.open(mapUrl, 'velocis_map_window');
+        
+    } catch (error) {
+        console.error("VELOCIS: Navigation Launch Failed", error);
+        window.location.href = `map.html?gate=${gate}&nodes=${nodes}`;
+    }
 }
 
 function handleMissionExtraction(data, isResuming = false) {
@@ -176,7 +186,6 @@ function handleMissionExtraction(data, isResuming = false) {
     const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
     const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
 
-    // Check if navigation is currently active to set the initial button state
     const isNavActive = localStorage.getItem('velocis_nav_active') === 'true';
 
     document.body.innerHTML = `
@@ -278,7 +287,8 @@ function handleMissionExtraction(data, isResuming = false) {
                                 <p class="text-[9px] text-emerald-700 uppercase font-bold">Current Gate</p>
                                 <p class="text-sm font-black text-slate-900">${data.gate || 'Pnd'}</p>
                             </div>
-                            <button id="nav-action-btn" onclick="launchNavigation('${data.gate || 'TBD'}', '${nodesString}')" 
+                            <button id="nav-action-btn" 
+                                    onclick="launchNavigation('${data.gate || 'TBD'}', '${nodesString}')" 
                                     class="${data.gate ? (isNavActive ? 'bg-blue-600 shadow-blue-200' : 'bg-emerald-500 shadow-emerald-200') : 'bg-slate-400 shadow-slate-200'} text-white px-5 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2">
                                 <span>${isNavActive ? '🔄' : '📍'}</span> ${isNavActive ? 'RESUME NAVIGATION' : 'OPEN NAVIGATION'}
                             </button>
@@ -330,7 +340,7 @@ function handleMissionExtraction(data, isResuming = false) {
 
 function resetPortal() {
     localStorage.removeItem('velocis_active_session');
-    localStorage.removeItem('velocis_nav_active'); // Clear heartbeat
+    localStorage.removeItem('velocis_nav_active');
     location.reload();
 }
 </script>
