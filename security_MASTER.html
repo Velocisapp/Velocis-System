@@ -48,7 +48,11 @@
                 <button onclick="startCamera()" class="px-8 py-4 bg-blue-500 text-white font-bold rounded-2xl shadow-xl active:scale-95 transition-all mb-4">
                     INITIALIZE SCANNER
                 </button>
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Tap to start secure feed</p>
+                
+                <input type="file" id="screenshot-input" accept="image/*" class="hidden" onchange="handleScreenshot(this)">
+                <button onclick="document.getElementById('screenshot-input').click()" class="text-[10px] text-slate-400 uppercase tracking-widest hover:text-blue-400 transition-colors">
+                    OR IMPORT DIGITAL PASS
+                </button>
             </div>
             
             <video id="video" playsinline muted></video>
@@ -96,6 +100,33 @@
         } catch (err) {
             statusPill.innerText = "Camera Error";
             alert("Please allow camera access.");
+        }
+    }
+
+    /* --- DIGITAL INTAKE: Handles screenshots for same-phone users --- */
+    async function handleScreenshot(input) {
+        if (!input.files || !input.files[0]) return;
+        
+        hintText.innerText = "Decoding your digital pass...";
+        statusPill.innerText = "Processing...";
+        
+        const formData = new FormData();
+        formData.append('image', input.files[0], 'screenshot.jpg');
+
+        try {
+            const response = await fetch(IMAC_HUB_URL, { method: 'POST', body: formData });
+            if (response.status === 200) {
+                const data = await response.json();
+                if (data.name) {
+                    handleMissionExtraction(data);
+                    return;
+                }
+            }
+            alert("We couldn't read that pass. Please make sure the QR code is clear.");
+        } catch (err) {
+            statusPill.innerText = "Bridge Lost";
+        } finally {
+            input.value = ""; 
         }
     }
 
