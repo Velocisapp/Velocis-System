@@ -53,7 +53,7 @@
         <div class="map-grid"></div>
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
-            <circle id="start-node" cx="200" cy="330" r="6" fill="#10b981" opacity="0" />
+            <circle id="start-node" cx="200" cy="270" r="6" fill="#10b981" opacity="0" />
             <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
 
             <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
@@ -146,17 +146,17 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: HIGH-HORIZON SYNC
+        // SURGICAL FIX: PHYSICAL SEPARATION LOCK
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // COORDINATE SYNC: startY set to 330 to match the arrow's new 55% height
+            // COORDINATE LOCK
             const startX = 200;
             const endX = 200;
-            const startY = 330;     
+            const startY = 270;     // SEPARATION: Path starts 60px higher than arrow base
             const sweetSpotY = 120; 
 
             startNode.setAttribute('cx', startX);
@@ -167,7 +167,6 @@
             gateGroup.setAttribute('transform', `translate(${endX}, ${sweetSpotY})`);
             gateGroup.setAttribute('opacity', '1');
 
-            // Draw solid Tactical Path
             const d = `M ${startX} ${startY} L ${endX} ${sweetSpotY}`;
             
             pathElement.setAttribute('d', d);
