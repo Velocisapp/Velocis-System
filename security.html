@@ -140,33 +140,6 @@
         }
     }
 
-/* --- HIGH-RELIABILITY NAVIGATION LAUNCHER --- */
-function launchNavigation(gate, nodes) {
-    if (!gate || gate === 'TBD' || gate === 'Pnd') {
-        console.warn("VELOCIS: Navigation blocked - No valid gate data.");
-        return;
-    }
-    
-    try {
-        localStorage.setItem('velocis_nav_active', 'true');
-        
-        const btn = document.getElementById('nav-action-btn');
-        if(btn) {
-            btn.innerHTML = '<span>🔄</span> RESUME NAVIGATION';
-            btn.classList.remove('bg-emerald-500', 'shadow-emerald-200');
-            btn.classList.add('bg-blue-600', 'shadow-blue-200');
-        }
-        
-        // Named window target and explicit user-tap handling for mobile compatibility
-        const mapUrl = `map.html?gate=${encodeURIComponent(gate)}&nodes=${nodes}`;
-        window.open(mapUrl, 'velocis_map_window');
-        
-    } catch (error) {
-        console.error("VELOCIS: Navigation Launch Failed", error);
-        window.location.href = `map.html?gate=${gate}&nodes=${nodes}`;
-    }
-}
-
 function handleMissionExtraction(data, isResuming = false) {
     if (!isResuming) {
         localStorage.setItem('velocis_active_session', JSON.stringify(data));
@@ -183,10 +156,11 @@ function handleMissionExtraction(data, isResuming = false) {
 
     const stages = data.ai_stages;
     const getMsg = (stage) => typeof stage === 'string' ? stage : (stage.text || stage.message || "Welcome!");
-    const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
-    const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
 
-    const isNavActive = localStorage.getItem('velocis_nav_active') === 'true';
+    const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
+
+    // Industrial text cleaning for long counter names
+    const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
 
     document.body.innerHTML = `
         <div class="flex flex-col h-screen bg-slate-50 overflow-y-auto pb-32">
@@ -287,10 +261,9 @@ function handleMissionExtraction(data, isResuming = false) {
                                 <p class="text-[9px] text-emerald-700 uppercase font-bold">Current Gate</p>
                                 <p class="text-sm font-black text-slate-900">${data.gate || 'Pnd'}</p>
                             </div>
-                            <button id="nav-action-btn" 
-                                    onclick="launchNavigation('${data.gate || 'TBD'}', '${nodesString}')" 
-                                    class="${data.gate ? (isNavActive ? 'bg-blue-600 shadow-blue-200' : 'bg-emerald-500 shadow-emerald-200') : 'bg-slate-400 shadow-slate-200'} text-white px-5 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2">
-                                <span>${isNavActive ? '🔄' : '📍'}</span> ${isNavActive ? 'RESUME NAVIGATION' : 'OPEN NAVIGATION'}
+                            <button onclick="window.open('map.html?gate=${data.gate || 'TBD'}&nodes=${nodesString}', '_blank')" 
+                                    class="${data.gate ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-400 shadow-slate-200'} text-white px-5 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2">
+                                <span>📍</span> OPEN NAVIGATION
                             </button>
                         </div>
                     </div>
@@ -340,7 +313,6 @@ function handleMissionExtraction(data, isResuming = false) {
 
 function resetPortal() {
     localStorage.removeItem('velocis_active_session');
-    localStorage.removeItem('velocis_nav_active');
     location.reload();
 }
 </script>
