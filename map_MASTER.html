@@ -13,10 +13,12 @@
                 linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
             background-size: 40px 40px; height: 100%; width: 100%; position: absolute;
         }
+        /* MASTER VIBRANCY: High-intensity neon glow */
         #nav-path {
             stroke-dasharray: 1000; stroke-dashoffset: 1000;
             transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            filter: drop-shadow(0 0 8px #10b981);
+            filter: drop-shadow(0 0 15px #10b981);
+            will-change: filter;
         }
         .pulse-node { animation: pulse-ring 2s infinite; }
         @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
@@ -43,27 +45,29 @@
     </div>
 
     <div class="relative flex-1 bg-slate-950 overflow-hidden">
-        <div id="ar-container" class="absolute inset-0 z-0 hidden">
-            <video id="ar-video" class="w-full h-full object-cover opacity-50" playsinline muted></video>
-            <div class="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                <div class="text-emerald-400 text-6xl animate-bounce drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">⬆️</div>
-            </div>
-        </div>
+        
+        <video id="ar-video" class="absolute inset-0 w-full h-full object-cover z-0 hidden opacity-60" playsinline muted></video>
 
-        <div class="map-grid"></div>
+        <div class="map-grid z-10 pointer-events-none"></div>
 
-        <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
-            <circle id="start-node" cx="200" cy="330" r="6" fill="#10b981" opacity="0" />
-            <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
+        <svg id="map-canvas" class="absolute inset-0 w-full h-full z-30 -translate-y-16" viewBox="0 0 400 600">
+            <circle id="start-node" cx="200" cy="400" r="8" fill="#10b981" />
+            <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round" style="stroke-opacity: 1 !important;" />
 
-            <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
-                <rect x="-35" y="-45" width="70" height="40" rx="10" fill="#020617" stroke="#FFD700" stroke-width="1" />
-                <text x="0" y="-30" text-anchor="middle" fill="#FFD700" font-size="8" font-weight="900" class="uppercase">Your Gate</text>
-                <text x="0" y="-12" text-anchor="middle" fill="#FFD700" font-size="14" font-weight="900" id="gate-marker">--</text>
-                <circle cx="0" cy="0" r="8" fill="#FFD700" />
-                <circle cx="0" cy="0" r="16" fill="none" stroke="#FFD700" stroke-width="2" class="pulse-node" />
+            <g id="gate-node-group" transform="translate(200, 200)" opacity="0">
+                <rect x="-40" y="-50" width="80" height="50" rx="12" fill="#020617" stroke="#FFD700" stroke-width="4" />
+                <text x="0" y="-35" text-anchor="middle" fill="#FFD700" font-size="9" font-weight="900" class="uppercase">Your Gate</text>
+                <text x="0" y="-15" text-anchor="middle" fill="#FFD700" font-size="18" font-weight="900" id="gate-marker">--</text>
+                <circle cx="0" cy="0" r="10" fill="#FFD700" />
+                <circle cx="0" cy="0" r="22" fill="none" stroke="#FFD700" stroke-width="3" class="pulse-node" />
             </g>
         </svg>
+
+        <div id="ar-arrow-container" class="absolute inset-0 z-40 hidden pointer-events-none">
+            <div class="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div class="text-emerald-400 text-6xl animate-bounce" style="filter: drop-shadow(0 0 25px #10b981);">⬆️</div>
+            </div>
+        </div>
 
         <div class="absolute bottom-10 left-6 right-6 z-50">
             <div class="bg-slate-900/95 border border-white/10 p-5 rounded-[28px] shadow-2xl backdrop-blur-md">
@@ -104,13 +108,16 @@
 
         async function toggleAdvancedNav() {
             const video = document.getElementById('ar-video');
+            const arrowContainer = document.getElementById('ar-arrow-container');
             const btn = document.getElementById('ar-init-btn');
+            
             if (!navActive) {
                 try {
                     videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                     video.srcObject = videoStream; 
                     video.play();
-                    document.getElementById('ar-container').classList.remove('hidden');
+                    video.classList.remove('hidden');
+                    arrowContainer.classList.remove('hidden');
                     if (typeof DeviceOrientationEvent.requestPermission === 'function') { await DeviceOrientationEvent.requestPermission(); }
                     window.addEventListener('devicemotion', processMotion, true);
                     btn.innerText = "Stop Guided Walk";
@@ -146,30 +153,22 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: HIGH-HORIZON SYNC
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // COORDINATE SYNC: startY set to 330 to match the arrow's new 55% height
-            const startX = 200;
-            const endX = 200;
-            const startY = 330;     
-            const sweetSpotY = 120; 
+            const startX = 200, endX = 200, startY = 400, sweetSpotY = 200; 
 
             startNode.setAttribute('cx', startX);
             startNode.setAttribute('cy', startY);
             startNode.setAttribute('opacity', '1');
 
-            const destination = nodes[nodes.length - 1];
             gateGroup.setAttribute('transform', `translate(${endX}, ${sweetSpotY})`);
             gateGroup.setAttribute('opacity', '1');
 
-            // Draw solid Tactical Path
             const d = `M ${startX} ${startY} L ${endX} ${sweetSpotY}`;
-            
             pathElement.setAttribute('d', d);
             const pathLen = pathElement.getTotalLength();
             pathElement.style.strokeDasharray = pathLen;
@@ -177,28 +176,20 @@
         }
 
         function loadGateData() {
-            document.getElementById('dist-left').innerText = "--m";
-            document.getElementById('time-left').innerText = "-- MIN";
-
             const params = new URLSearchParams(window.location.search);
-            const gate = params.get('gate') || 'TBD';
-            const nodesParam = params.get('nodes');
-            
-            document.getElementById('gate-label').innerText = gate;
-            document.getElementById('gate-marker').innerText = gate;
+            document.getElementById('gate-label').innerText = params.get('gate') || 'TBD';
+            document.getElementById('gate-marker').innerText = params.get('gate') || 'TBD';
 
-            if (nodesParam) {
+            if (params.get('nodes')) {
                 try {
-                    routeNodes = JSON.parse(decodeURIComponent(nodesParam));
+                    routeNodes = JSON.parse(decodeURIComponent(params.get('nodes')));
                     let calculatedDist = 0;
                     for (let i = 0; i < routeNodes.length - 1; i++) {
                         calculatedDist += Math.sqrt(Math.pow(routeNodes[i+1].x - routeNodes[i].x, 2) + Math.pow(routeNodes[i+1].y - routeNodes[i].y, 2));
                     }
                     totalDistance = Math.round(calculatedDist * 0.8) || 150;
-                    
                     document.getElementById('dist-left').innerText = totalDistance + "m";
                     document.getElementById('time-left').innerText = Math.ceil(totalDistance / 75) + " MIN";
-                    
                     drawDynamicRoute(routeNodes);
                 } catch (e) {
                     console.error("Node Parsing Failed:", e);
