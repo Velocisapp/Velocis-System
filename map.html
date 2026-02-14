@@ -35,7 +35,7 @@
             <h1 class="text-xl font-black uppercase">Walking to Gate <span id="gate-label">--</span></h1>
         </div>
         <div class="flex gap-2">
-            <button onclick="exitNavigation('security.html')" class="bg-blue-600 border border-blue-400 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider active:scale-95 transition-all">
+            <button onclick="bridgeToJourney()" class="bg-blue-600 border border-blue-400 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider active:scale-95 transition-all">
                 Your Journey
             </button>
             <button onclick="exitNavigation()" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider">
@@ -95,15 +95,32 @@
         let routeNodes = [];
         let videoStream = null;
 
+        // --- ABSOLUTE KILL SWITCH: Disconnects hardware to clear red icon ---
         function exitNavigation(targetUrl = null) {
             if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
+                videoStream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log("Hardware Stream Terminated.");
+                });
+                videoStream = null;
             }
+            
+            const videoElement = document.getElementById('ar-video');
+            if (videoElement) {
+                videoElement.srcObject = null;
+                videoElement.classList.add('hidden');
+            }
+
             if (targetUrl) {
                 window.location.href = targetUrl;
             } else {
                 window.close();
             }
+        }
+
+        // --- BRIDGE REDIRECT: Uses Kill Switch before moving ---
+        function bridgeToJourney() {
+            exitNavigation('security.html');
         }
 
         async function toggleAdvancedNav() {
