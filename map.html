@@ -53,7 +53,7 @@
         <div class="map-grid"></div>
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
-            <circle id="start-node" cx="200" cy="340" r="6" fill="#10b981" opacity="0" />
+            <circle id="start-node" cx="200" cy="300" r="6" fill="#10b981" opacity="0" />
             <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
 
             <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
@@ -146,18 +146,18 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: HIGH-CLEARANCE START POINT (340)
+        // SURGICAL FIX: HIGH-HORIZON ASSEMBLY (START AT 300 / GATE AT 120)
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // HIGH-CLEARANCE LOCK: LIFTED to 340 to clear the bottom UI card completely
+            // HIGH-HORIZON LOCK: Pulls the entire mission assembly upward
             const startX = 200;
             const endX = 200;
-            const startY = 340;     
-            const sweetSpotY = 180; 
+            const startY = 300;     // LIFTED to 300 to clear the card
+            const sweetSpotY = 120; // LIFTED to 120 to pull the gate marker up
 
             startNode.setAttribute('cx', startX);
             startNode.setAttribute('cy', startY);
