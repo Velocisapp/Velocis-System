@@ -45,7 +45,7 @@
     <div class="relative flex-1 bg-slate-950 overflow-hidden">
         <div id="ar-container" class="absolute inset-0 z-0 hidden">
             <video id="ar-video" class="w-full h-full object-cover opacity-50" playsinline muted></video>
-            <div class="absolute top-[75%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div class="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                 <div class="text-emerald-400 text-6xl animate-bounce drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">⬆️</div>
             </div>
         </div>
@@ -53,7 +53,7 @@
         <div class="map-grid"></div>
 
         <svg id="map-canvas" class="absolute inset-0 w-full h-full z-10" viewBox="0 0 400 600">
-            <circle id="start-node" cx="200" cy="300" r="6" fill="#10b981" opacity="0" />
+            <circle id="start-node" cx="200" cy="330" r="6" fill="#10b981" opacity="0" />
             <path id="nav-path" d="" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
 
             <g id="gate-node-group" transform="translate(300, 150)" opacity="0">
@@ -146,18 +146,18 @@
             if (Math.round(currentTravelled) % 10 === 0 && navigator.vibrate) { navigator.vibrate(40); }
         }
 
-        // SURGICAL FIX: HIGH-HORIZON ASSEMBLY (START AT 300 / GATE AT 120)
+        // SURGICAL FIX: HIGH-HORIZON SYNC
         function drawDynamicRoute(nodes) {
             const pathElement = document.getElementById('nav-path');
             const startNode = document.getElementById('start-node');
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            // HIGH-HORIZON LOCK: Pulls the entire mission assembly upward
+            // COORDINATE SYNC: startY set to 330 to match the arrow's new 55% height
             const startX = 200;
             const endX = 200;
-            const startY = 300;     // LIFTED to 300 to clear the card
-            const sweetSpotY = 120; // LIFTED to 120 to pull the gate marker up
+            const startY = 330;     
+            const sweetSpotY = 120; 
 
             startNode.setAttribute('cx', startX);
             startNode.setAttribute('cy', startY);
@@ -167,7 +167,7 @@
             gateGroup.setAttribute('transform', `translate(${endX}, ${sweetSpotY})`);
             gateGroup.setAttribute('opacity', '1');
 
-            // Draw solid Tactical Path in the visible clearance area
+            // Draw solid Tactical Path
             const d = `M ${startX} ${startY} L ${endX} ${sweetSpotY}`;
             
             pathElement.setAttribute('d', d);
