@@ -16,6 +16,8 @@
         #nav-path {
             stroke-dasharray: 1000; stroke-dashoffset: 1000;
             transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            /* FORCED GLOW */
+            filter: drop-shadow(0 0 15px #10b981);
             will-change: filter;
         }
         .pulse-node { animation: pulse-ring 2s infinite; }
@@ -60,7 +62,7 @@
                 <rect x="-40" y="-55" width="80" height="55" rx="12" fill="#020617" stroke="#FFD700" stroke-width="4" />
                 <text x="0" y="-38" text-anchor="middle" fill="#FFD700" font-size="10" font-weight="900" class="uppercase">Your Gate</text>
                 <text x="0" y="-15" text-anchor="middle" fill="#FFD700" font-size="20" font-weight="900" id="gate-marker">--</text>
-                <circle cx="0" cy="0" r="12" fill="#FFD700" />
+                <circle cx="0" cy="0" r="10" fill="#FFD700" />
                 <circle cx="0" cy="0" r="25" fill="none" stroke="#FFD700" stroke-width="3" class="pulse-node" />
             </g>
         </svg>
@@ -152,7 +154,10 @@
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
-            const startX = 200, endX = 200, startY = 270, sweetSpotY = 120; 
+            const startX = 200;
+            const endX = 200;
+            const startY = 270;     
+            const sweetSpotY = 120; 
 
             startNode.setAttribute('cx', startX);
             startNode.setAttribute('cy', startY);
@@ -163,6 +168,7 @@
             gateGroup.setAttribute('opacity', '1');
 
             const d = `M ${startX} ${startY} L ${endX} ${sweetSpotY}`;
+            
             pathElement.setAttribute('d', d);
             const pathLen = pathElement.getTotalLength();
             pathElement.style.strokeDasharray = pathLen;
