@@ -152,6 +152,7 @@
             const gateGroup = document.getElementById('gate-node-group');
             if (!nodes || nodes.length < 2) return;
 
+            // Coordinate Lock: 320/160 spread for ViewBox 800 alignment
             const startX = 200, endX = 200, startY = 320, sweetSpotY = 160; 
 
             startNode.setAttribute('cx', startX);
