@@ -157,7 +157,9 @@ function handleMissionExtraction(data, isResuming = false) {
     const stages = data.ai_stages;
     const getMsg = (stage) => typeof stage === 'string' ? stage : (stage.text || stage.message || "Welcome!");
 
+    /* --- STABILITY FIX: Pre-process data strings --- */
     const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
+    const gateVal = data.gate || 'TBD';
 
     // Industrial text cleaning for long counter names
     const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
@@ -195,7 +197,7 @@ function handleMissionExtraction(data, isResuming = false) {
                     </div>
                     <div class="industrial-pill flex-1">
                         <p class="pill-label">Gate</p>
-                        <p class="pill-value">${data.gate || 'TBD'}</p>
+                        <p class="pill-value">${gateVal}</p>
                     </div>
                     <div class="industrial-pill flex-[1.2]">
                         <p class="pill-label text-center">Status</p>
@@ -259,9 +261,9 @@ function handleMissionExtraction(data, isResuming = false) {
                         <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-emerald-100">
                             <div>
                                 <p class="text-[9px] text-emerald-700 uppercase font-bold">Current Gate</p>
-                                <p class="text-sm font-black text-slate-900">${data.gate || 'Pnd'}</p>
+                                <p class="text-sm font-black text-slate-900">${gateVal}</p>
                             </div>
-                            <button onclick="window.open('map.html?gate=${data.gate || 'TBD'}&nodes=${nodesString}', '_blank')" 
+                            <button onclick="window.open('map.html?gate=${gateVal}&nodes=${nodesString}', 'velocis_map')" 
                                     class="${data.gate ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-400 shadow-slate-200'} text-white px-5 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2">
                                 <span>📍</span> OPEN NAVIGATION
                             </button>
