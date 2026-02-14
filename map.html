@@ -97,13 +97,15 @@
         let videoStream = null;
 
         function exitNavigation(targetUrl = null) {
+            // Surgical Reset: Tells portal navigation is closed
+            localStorage.removeItem('velocis_nav_active');
             if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
             if (targetUrl) { window.location.href = targetUrl; } else { window.close(); }
         }
 
         function bridgeToJourney() {
             const gate = document.getElementById('gate-marker').innerText;
-            exitNavigation(`security.html?gate=${gate}&status=active`);
+            window.location.href = `security.html?gate=${gate}&status=active`;
         }
 
         async function toggleAdvancedNav() {
@@ -123,6 +125,8 @@
                     btn.innerText = "Stop Guided Walk";
                     btn.classList.replace('bg-emerald-500', 'bg-slate-700');
                     navActive = true;
+                    // Ensure state is set when manually started
+                    localStorage.setItem('velocis_nav_active', 'true');
                 } catch (err) { alert("Sensors required."); }
             } else { exitNavigation('map.html'); }
         }
@@ -179,7 +183,7 @@
             const params = new URLSearchParams(window.location.search);
             const gate = params.get('gate') || 'TBD';
             document.getElementById('gate-label').innerText = gate;
-            document.getElementById('gate-marker').innerText = gate; // DYNAMIC DATA LOAD
+            document.getElementById('gate-marker').innerText = gate;
             if (params.get('nodes')) {
                 try {
                     routeNodes = JSON.parse(decodeURIComponent(params.get('nodes')));
@@ -191,6 +195,13 @@
                     document.getElementById('dist-left').innerText = totalDistance + "m";
                     document.getElementById('time-left').innerText = Math.ceil(totalDistance / 75) + " MIN";
                     drawDynamicRoute(routeNodes);
+
+                    // --- SURGICAL AUTO-RESUME TRIGGER ---
+                    if (localStorage.getItem('velocis_nav_active') === 'true') {
+                        // Small timeout ensures browser layers are ready for camera launch
+                        setTimeout(() => { toggleAdvancedNav(); }, 300);
+                    }
+
                 } catch (e) { console.error(e); }
             }
         }
