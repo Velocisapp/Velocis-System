@@ -6,18 +6,28 @@
     <title>VELOCIS™ | TRAVEL NAVIGATOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    body { background: #fdfdfd; color: #334155; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    body { background: #fdfdfd; color: #334155; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; min-height: 100vh; }
     body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'); background-size: cover; filter: blur(60px) brightness(1.1); z-index: -1; opacity: 0.4; }
     .glass-pill { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); border-radius: 50px; padding: 6px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     
-    /* SCANNER DIMENSION: Reduced to 260px to show bottom standby text */
-    .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 260px !important; width: 100%; border-radius: 40px; margin-bottom: 20px; }
+    /* TIMELINE WINDOW FIX: Restores labels and rounded corners */
+    #mission-timeline > div { 
+        min-height: 120px !important; 
+        padding-bottom: 24px !important; 
+        border-radius: 32px !important; 
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }
+
+    /* SCANNER WINDOW FIX: Pulls everything up for visibility */
+    .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 250px !important; width: 100%; border-radius: 40px; margin-bottom: 15px; }
     
     video { width: 100%; height: 100%; object-fit: cover; }
     .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 30px; border-radius: 20px; pointer-events: none; }
     #start-prompt { position: absolute; z-index: 50; background: rgba(15, 23, 42, 0.95); inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
 
-    /* TIMELINE ICON CENTERING: Flexbox method for stability */
+    /* ICON CENTERING & LABELS */
     #mission-timeline .w-10.h-10 { 
         width: 44px !important; 
         height: 44px !important; 
@@ -27,14 +37,10 @@
         align-items: center !important; 
         justify-content: center !important; 
         border-radius: 9999px; 
-        padding: 0 !important;
+        margin-bottom: 4px;
     }
-    #mission-timeline svg { 
-        width: 22px !important; 
-        height: 22px !important; 
-        flex-shrink: 0; 
-        display: block;
-    }
+    #mission-timeline svg { width: 22px !important; height: 22px !important; flex-shrink: 0; display: block; }
+    #mission-timeline p { display: block !important; opacity: 1 !important; }
 
     .industrial-pill { background: #eff6ff; border: 1px solid #dbeafe; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 8px 4px; min-height: 64px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
     .pill-label { font-size: 8px; font-weight: 800; color: #60a5fa; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.05em; }
