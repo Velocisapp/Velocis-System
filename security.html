@@ -10,42 +10,40 @@
     body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'); background-size: cover; filter: blur(60px) brightness(1.1); z-index: -1; opacity: 0.4; }
     .glass-pill { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); border-radius: 50px; padding: 6px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     
-    /* TIMELINE COMPACT LOCK: Prevents page scrolling */
     #mission-timeline > div { 
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        justify-content: space-around !important;
-        padding: 20px 10px !important;
-        height: 140px !important; /* Fixed industrial height */
-        border-radius: 32px !important;
+        justify-content: space-between !important;
+        padding: 0 20px !important;
+        height: 160px !important;
+        border-radius: 40px !important;
     }
 
-    /* ICON & LABEL UNIT: Centers text perfectly under icons */
-    #mission-timeline .flex.flex-col {
+    #mission-timeline div.flex-col {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 60px !important; /* Fixed width per unit */
+        height: 100% !important;
+        flex: 1 !important;
     }
 
     #mission-timeline .w-10.h-10 { 
-        width: 42px !important; 
-        height: 42px !important; 
+        width: 44px !important; 
+        height: 44px !important; 
         display: flex !important; 
         align-items: center !important; 
         justify-content: center !important; 
         border-radius: 9999px;
-        margin-bottom: 8px !important;
+        margin-bottom: 12px !important;
+        flex-shrink: 0 !important;
     }
 
-    #mission-timeline svg { width: 20px !important; height: 20px !important; flex-shrink: 0; }
-    #mission-timeline p { font-size: 7px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; margin: 0 !important; }
+    #mission-timeline svg { width: 22px !important; height: 22px !important; flex-shrink: 0; }
+    #mission-timeline p { font-size: 8px !important; font-weight: 900 !important; text-align: center !important; margin: 0 !important; letter-spacing: 0.05em !important; }
 
-    /* SCANNER VIEWPORT LOCK */
-    .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 240px !important; width: 100%; border-radius: 40px; }
-    
+    .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 240px !important; width: 100%; border-radius: 40px; margin-top: 10px; }
     video { width: 100%; height: 100%; object-fit: cover; }
     .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 30px; border-radius: 20px; pointer-events: none; }
     #start-prompt { position: absolute; z-index: 50; background: rgba(15, 23, 42, 0.95); inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
@@ -54,11 +52,9 @@
     .pill-label { font-size: 8px; font-weight: 800; color: #60a5fa; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.05em; }
     .pill-value { font-size: 11px; font-weight: 900; color: #1e293b; line-height: 1; word-break: break-word; text-align: center; }
     .status-pill-text { font-size: 9px; font-weight: 900; }
-    
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* CSS HIGHLIGHTS */
     .px-6.space-y-4 > div:has(.text-blue-600),
     .px-6.space-y-4 > div:has(.text-emerald-600),
     .px-6.space-y-4 > div:has(.text-blue-700) {
