@@ -6,46 +6,45 @@
     <title>VELOCIS™ | TRAVEL NAVIGATOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    body { background: #fdfdfd; color: #334155; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; min-height: 100vh; }
+    body { background: #fdfdfd; color: #334155; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; min-height: 100vh; }
     body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'); background-size: cover; filter: blur(60px) brightness(1.1); z-index: -1; opacity: 0.4; }
     .glass-pill { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); border-radius: 50px; padding: 6px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     
-    /* TIMELINE HORIZONTAL RESTORATION */
+    /* TIMELINE COMPACT LOCK: Prevents page scrolling */
     #mission-timeline > div { 
         display: flex !important;
-        flex-direction: row !important; /* Forces horizontal line back */
-        align-items: flex-start !important;
-        justify-content: space-between !important;
-        padding: 24px 20px !important;
-        min-height: 110px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-around !important;
+        padding: 20px 10px !important;
+        height: 140px !important; /* Fixed industrial height */
         border-radius: 32px !important;
     }
 
-    /* ICON WINDOW & LABELS FIX */
-    #mission-timeline .flex-col {
+    /* ICON & LABEL UNIT: Centers text perfectly under icons */
+    #mission-timeline .flex.flex-col {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 8px !important;
+        width: 60px !important; /* Fixed width per unit */
     }
 
     #mission-timeline .w-10.h-10 { 
-        width: 44px !important; 
-        height: 44px !important; 
-        min-width: 44px; 
-        min-height: 44px; 
+        width: 42px !important; 
+        height: 42px !important; 
         display: flex !important; 
         align-items: center !important; 
         justify-content: center !important; 
         border-radius: 9999px;
+        margin-bottom: 8px !important;
     }
 
     #mission-timeline svg { width: 20px !important; height: 20px !important; flex-shrink: 0; }
-    #mission-timeline p { font-size: 7px !important; font-weight: 900 !important; margin-top: 4px !important; display: block !important; }
+    #mission-timeline p { font-size: 7px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; margin: 0 !important; }
 
-    /* SCANNER WINDOW HEIGHT LOCK */
-    .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 260px !important; width: 100%; border-radius: 40px; margin-top: 10px; }
+    /* SCANNER VIEWPORT LOCK */
+    .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 240px !important; width: 100%; border-radius: 40px; }
     
     video { width: 100%; height: 100%; object-fit: cover; }
     .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 30px; border-radius: 20px; pointer-events: none; }
@@ -59,7 +58,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* PURE CSS HIGHLIGHTS */
+    /* CSS HIGHLIGHTS */
     .px-6.space-y-4 > div:has(.text-blue-600),
     .px-6.space-y-4 > div:has(.text-emerald-600),
     .px-6.space-y-4 > div:has(.text-blue-700) {
