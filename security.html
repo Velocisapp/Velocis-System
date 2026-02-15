@@ -35,6 +35,10 @@
         /* Timeline specific classes */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* INTELLIGENCE STYLES: Highlight Logic */
+        .stage-active { transform: scale(1.02); border: 2px solid #3b82f6 !important; ring: 4px; ring-color: white; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .stage-dimmed { opacity: 0.5; filter: grayscale(0.2); transform: scale(0.98); }
     </style>
 </head>
 <body class="p-8">
@@ -49,7 +53,7 @@
             
             <div class="flex flex-col items-center gap-2 z-10 opacity-60">
                 <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
                 </div>
                 <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Origin</p>
             </div>
@@ -63,14 +67,14 @@
 
             <div class="flex flex-col items-center gap-2 z-10 opacity-60">
                 <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="13" x="4" y="7" rx="2"/><path d="M9 7V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                 </div>
                 <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Arrival</p>
             </div>
 
             <div class="flex flex-col items-center gap-2 z-10 opacity-60">
                 <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 7h1"/><path d="M9 11h1"/><path d="M9 15h1"/><path d="M14 7h1"/><path d="M14 11h1"/><path d="M14 15h1"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
                 </div>
                 <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Hotel</p>
             </div>
@@ -115,7 +119,6 @@
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
 
-    // --- SESSION RESUME ENGINE ---
     window.onload = () => {
         const savedSession = localStorage.getItem('velocis_active_session');
         if (savedSession) {
@@ -139,7 +142,6 @@
         }
     }
 
-    /* --- DIGITAL INTAKE: Handles screenshots for same-phone users --- */
     async function handleScreenshot(input) {
         if (!input.files || !input.files[0]) return;
         
@@ -229,6 +231,15 @@ function handleMissionExtraction(data, isResuming = false) {
 
     const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
 
+    // --- INTELLIGENCE LOGIC: Detect Stage Focus ---
+    const flightStatus = (data.status || "").toLowerCase();
+    const isArrived = flightStatus.includes("landed") || flightStatus.includes("arrived");
+    const isEnRoute = flightStatus.includes("active") || flightStatus.includes("time") || flightStatus.includes("boarding");
+
+    const stage1Class = !isEnRoute && !isArrived ? 'stage-active' : 'stage-dimmed';
+    const stage3Class = isEnRoute ? 'stage-active' : 'stage-dimmed';
+    const stage4Class = isArrived ? 'stage-active' : 'stage-dimmed';
+
     document.body.innerHTML = `
         <div class="flex flex-col h-screen bg-slate-50 overflow-y-auto pb-32">
             
@@ -278,7 +289,7 @@ function handleMissionExtraction(data, isResuming = false) {
             </div>
 
             <div class="px-6 space-y-4 mb-8">
-                <div class="flex gap-4">
+                <div class="flex gap-4 transition-all duration-500 ${stage1Class}">
                     <div class="flex flex-col items-center">
                         <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-200">01</div>
                         <div class="w-0.5 h-full bg-slate-200 my-1"></div>
@@ -293,7 +304,7 @@ function handleMissionExtraction(data, isResuming = false) {
                     </div>
                 </div>
 
-                <div class="flex gap-4">
+                <div class="flex gap-4 opacity-80">
                     <div class="flex flex-col items-center">
                         <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-orange-200">02</div>
                         <div class="w-0.5 h-full bg-slate-200 my-1"></div>
@@ -315,7 +326,7 @@ function handleMissionExtraction(data, isResuming = false) {
                     </div>
                 </div>
 
-                <div class="flex gap-4">
+                <div class="flex gap-4 transition-all duration-500 ${stage3Class}">
                     <div class="flex flex-col items-center">
                         <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-emerald-200">03</div>
                         <div class="w-0.5 h-full bg-slate-200 my-1"></div>
@@ -336,7 +347,7 @@ function handleMissionExtraction(data, isResuming = false) {
                     </div>
                 </div>
 
-                <div class="flex gap-4 pb-4">
+                <div class="flex gap-4 pb-4 transition-all duration-500 ${stage4Class}">
                     <div class="flex flex-col items-center">
                         <div class="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-300">04</div>
                     </div>
@@ -344,7 +355,7 @@ function handleMissionExtraction(data, isResuming = false) {
                         <p class="text-[10px] text-blue-700 font-bold uppercase mb-2 tracking-widest">Arrival: ${data.dest || 'Destination'}</p>
                         <p class="text-sm font-bold text-slate-800 italic mb-4">"${getMsg(stages.stage4)}"</p>
                         <div class="p-4 bg-white rounded-2xl border border-dashed border-blue-300 text-center mb-4">
-                            <p class="text-[10px] font-black text-blue-600 tracking-widest uppercase">Bag Belt Number: TBD</p>
+                            <p class="text-[10px] font-black text-blue-600 tracking-widest uppercase">Bag Belt Number: ${data.belt || 'TBD'}</p>
                         </div>
                         <button onclick="window.location.href='index.html#ground-transport-market'" class="w-full py-4 bg-white text-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-200 active:scale-95 transition-all">
                             Ground Transportation Options
