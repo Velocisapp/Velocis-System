@@ -1,397 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VELOCIS™ | TRAVEL NAVIGATOR</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style>
-        body { background: #fdfdfd; color: #334155; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; min-height: 100vh; }
-        body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'); background-size: cover; filter: blur(60px) brightness(1.1); z-index: -1; opacity: 0.4; }
-        .glass-pill { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); border-radius: 50px; padding: 6px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 40px; border-radius: 20px; pointer-events: none; }
-        #start-prompt { position: absolute; z-index: 50; background: rgba(15, 23, 42, 0.95); inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VELOCIS™ | TRAVEL NAVIGATOR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { background: #fdfdfd; color: #334155; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; min-height: 100vh; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'); background-size: cover; filter: blur(60px) brightness(1.1); z-index: -1; opacity: 0.4; }
+        .glass-pill { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); border-radius: 50px; padding: 6px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .scanner-container { border: 2px solid rgba(100, 116, 139, 0.1); position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(59, 130, 246, 0.5); margin: 40px; border-radius: 20px; pointer-events: none; }
+        #start-prompt { position: absolute; z-index: 50; background: rgba(15, 23, 42, 0.95); inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
 
-        /* SURGICAL PILL REFINEMENT: Industrial Proportions */
-        .industrial-pill {
-            background: #eff6ff; /* blue-50 */
-            border: 1px solid #dbeafe; /* blue-100 */
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 8px 4px;
-            min-height: 64px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .pill-label { font-size: 8px; font-weight: 800; color: #60a5fa; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.05em; }
-        .pill-value { font-size: 11px; font-weight: 900; color: #1e293b; line-height: 1; word-break: break-word; text-align: center; }
-        .status-pill-text { font-size: 9px; font-weight: 900; }
-        
-        /* Timeline specific classes */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* SURGICAL PILL REFINEMENT: Industrial Proportions */
+        .industrial-pill {
+            background: #eff6ff; /* blue-50 */
+            border: 1px solid #dbeafe; /* blue-100 */
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px 4px;
+            min-height: 64px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .pill-label { font-size: 8px; font-weight: 800; color: #60a5fa; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.05em; }
+        .pill-value { font-size: 11px; font-weight: 900; color: #1e293b; line-height: 1; word-break: break-word; text-align: center; }
+        .status-pill-text { font-size: 9px; font-weight: 900; }
+        
+        /* Timeline specific classes */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* INTELLIGENCE STYLES: Highlight Logic */
-        .stage-active { transform: scale(1.02); border: 2px solid #3b82f6 !important; ring: 4px; ring-color: white; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-        .stage-dimmed { opacity: 0.5; filter: grayscale(0.2); transform: scale(0.98); }
-    </style>
+        /* INTELLIGENCE STYLES: Highlight Logic */
+        .stage-active { transform: scale(1.02); border: 2px solid #3b82f6 !important; ring: 4px; ring-color: white; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .stage-dimmed { opacity: 0.5; filter: grayscale(0.2); transform: scale(0.98); }
+    </style>
 </head>
 <body class="p-8">
-    <div class="flex justify-between mb-8">
-        <div id="status-pill" class="glass-pill text-slate-500 uppercase transition-all">Hub Connection: Ready</div>
-        <div class="glass-pill text-blue-500 uppercase">Live Auto-Scan</div>
-    </div>
+    <div class="flex justify-between mb-8">
+        <div id="status-pill" class="glass-pill text-slate-500 uppercase transition-all">Hub Connection: Ready</div>
+        <div class="glass-pill text-blue-500 uppercase">Live Auto-Scan</div>
+    </div>
 
-    <div id="mission-timeline" class="mb-10 px-1 overflow-x-auto no-scrollbar">
-        <div class="flex items-center justify-between min-w-[320px] px-6 py-4 bg-white/50 border border-slate-200 rounded-[24px] relative shadow-sm">
-            <div class="absolute top-1/2 left-12 right-12 h-[1px] bg-slate-200 -translate-y-4 z-0"></div>
-            
-            <div class="flex flex-col items-center gap-2 z-10 opacity-60">
-                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
-                </div>
-                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Origin</p>
-            </div>
+    <div id="mission-timeline" class="mb-10 px-1 overflow-x-auto no-scrollbar">
+        <div class="flex items-center justify-between min-w-[320px] px-6 py-4 bg-white/50 border border-slate-200 rounded-[24px] relative shadow-sm">
+            <div class="absolute top-1/2 left-12 right-12 h-[1px] bg-slate-200 -translate-y-4 z-0"></div>
+            
+            <div class="flex flex-col items-center gap-2 z-10 opacity-60">
+                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+                </div>
+                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Origin</p>
+            </div>
 
-            <div class="flex flex-col items-center gap-2 z-10">
-                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shadow-xl shadow-blue-100 text-white ring-4 ring-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
-                </div>
-                <p class="text-[7px] font-black text-blue-600 uppercase tracking-widest">Terminal</p>
-            </div>
+            <div class="flex flex-col items-center gap-2 z-10">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shadow-xl shadow-blue-100 text-white ring-4 ring-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+                </div>
+                <p class="text-[7px] font-black text-blue-600 uppercase tracking-widest">Terminal</p>
+            </div>
 
-            <div class="flex flex-col items-center gap-2 z-10 opacity-60">
-                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                </div>
-                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Arrival</p>
-            </div>
+            <div class="flex flex-col items-center gap-2 z-10 opacity-60">
+                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                </div>
+                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Arrival</p>
+            </div>
 
-            <div class="flex flex-col items-center gap-2 z-10 opacity-60">
-                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                </div>
-                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Hotel</p>
-            </div>
-        </div>
-    </div>
+            <div class="flex flex-col items-center gap-2 z-10 opacity-60">
+                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Hotel</p>
+            </div>
+        </div>
+    </div>
 
-    <div id="main-interface">
-        <h1 class="text-2xl font-light tracking-tight text-slate-800 mb-2 text-center uppercase tracking-tighter">Travel Navigator</h1>
-        <p class="text-[10px] text-slate-400 mb-10 uppercase tracking-[0.2em] text-center">Digital Terminal Guide</p>
+    <div id="main-interface">
+        <h1 class="text-2xl font-light tracking-tight text-slate-800 mb-2 text-center uppercase tracking-tighter">Travel Navigator</h1>
+        <p class="text-[10px] text-slate-400 mb-10 uppercase tracking-[0.2em] text-center">Digital Terminal Guide</p>
 
-        <div class="scanner-container w-full aspect-[1/1] rounded-[40px] shadow-2xl mb-10">
-            <div id="start-prompt">
-                <button onclick="startCamera()" class="w-64 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all mb-4 uppercase tracking-widest text-xs">
-                    Scan Your Ticket
-                </button>
-                
-                <input type="file" id="screenshot-input" accept="image/*" class="hidden" onchange="handleScreenshot(this)">
-                <button onclick="document.getElementById('screenshot-input').click()" class="w-64 py-3 bg-slate-700/50 border border-white/20 text-white font-bold rounded-2xl active:scale-95 transition-all uppercase tracking-widest text-[10px]">
-                    Import Digital Pass
-                </button>
-            </div>
-            
-            <video id="video" playsinline muted></video>
-            <div class="scan-overlay"></div>
-        </div>
+        <div class="scanner-container w-full aspect-[1/1] rounded-[40px] shadow-2xl mb-10">
+            <div id="start-prompt">
+                <button onclick="startCamera()" class="w-64 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all mb-4 uppercase tracking-widest text-xs">
+                    Scan Your Ticket
+                </button>
+                
+                <input type="file" id="screenshot-input" accept="image/*" class="hidden" onchange="handleScreenshot(this)">
+                <button onclick="document.getElementById('screenshot-input').click()" class="w-64 py-3 bg-slate-700/50 border border-white/20 text-white font-bold rounded-2xl active:scale-95 transition-all uppercase tracking-widest text-[10px]">
+                    Import Digital Pass
+                </button>
+            </div>
+            
+            <video id="video" playsinline muted></video>
+            <div class="scan-overlay"></div>
+        </div>
 
-        <div id="hint-text" class="text-center text-slate-400 text-[10px] uppercase tracking-widest animate-pulse">
-            Scanner Standby
-        </div>
-    </div>
+        <div id="hint-text" class="text-center text-slate-400 text-[10px] uppercase tracking-widest animate-pulse">
+            Scanner Standby
+        </div>
+    </div>
 
 <script>
-    const video = document.getElementById('video');
-    const statusPill = document.getElementById('status-pill');
-    const hintText = document.getElementById('hint-text');
-    const startPrompt = document.getElementById('start-prompt');
-    const IMAC_HUB_URL = 'https://velocis-gate-one.loca.lt/scan';
-    
-    const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    const video = document.getElementById('video');
+    const statusPill = document.getElementById('status-pill');
+    const hintText = document.getElementById('hint-text');
+    const startPrompt = document.getElementById('start-prompt');
+    const IMAC_HUB_URL = 'https://velocis-gate-one.loca.lt/scan';
+    
+    const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
-    let isProcessing = false;
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    let isProcessing = false;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
 
-    window.onload = () => {
-        const savedSession = localStorage.getItem('velocis_active_session');
-        if (savedSession) {
-            handleMissionExtraction(JSON.parse(savedSession), true);
-        }
-    };
+    window.onload = () => {
+        const savedSession = localStorage.getItem('velocis_active_session');
+        if (savedSession) {
+            handleMissionExtraction(JSON.parse(savedSession), true);
+        }
+    };
 
-    async function startCamera() {
-        startPrompt.style.display = 'none';
-        hintText.innerText = "Align document barcode";
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
-            });
-            video.srcObject = stream;
-            video.play();
-            requestAnimationFrame(scanFrame);
-        } catch (err) {
-            statusPill.innerText = "Camera Error";
-            alert("Please allow camera access.");
-        }
-    }
+    async function startCamera() {
+        startPrompt.style.display = 'none';
+        hintText.innerText = "Align document barcode";
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
+            video.srcObject = stream;
+            video.play();
+            requestAnimationFrame(scanFrame);
+        } catch (err) {
+            statusPill.innerText = "Camera Error";
+            alert("Please allow camera access.");
+        }
+    }
 
-    async function handleScreenshot(input) {
-        if (!input.files || !input.files[0]) return;
-        
-        hintText.innerText = "Reading your digital pass...";
-        statusPill.innerText = "Checking...";
-        
-        const formData = new FormData();
-        formData.append('image', input.files[0], 'screenshot.jpg');
+    async function handleScreenshot(input) {
+        if (!input.files || !input.files[0]) return;
+        
+        hintText.innerText = "Reading your digital pass...";
+        statusPill.innerText = "Checking...";
+        
+        const formData = new FormData();
+        formData.append('image', input.files[0], 'screenshot.jpg');
 
-        try {
-            const response = await fetch(IMAC_HUB_URL, { method: 'POST', body: formData });
-            if (response.status === 200) {
-                const data = await response.json();
-                if (data.name) {
-                    handleMissionExtraction(data);
-                    return;
-                }
-            }
-            alert("We couldn't read the pass. Please make sure the QR code is clear and try again.");
-        } catch (err) {
-            statusPill.innerText = "Connection Lost";
-        } finally {
-            input.value = ""; 
-        }
-    }
+        try {
+            const response = await fetch(IMAC_HUB_URL, { method: 'POST', body: formData });
+            if (response.status === 200) {
+                const data = await response.json();
+                if (data.name) {
+                    handleMissionExtraction(data);
+                    return;
+                }
+            }
+            alert("We couldn't read the pass. Please make sure the QR code is clear and try again.");
+        } catch (err) {
+            statusPill.innerText = "Connection Lost";
+        } finally {
+            input.value = ""; 
+        }
+    }
 
-    async function scanFrame() {
-        if (isProcessing) { requestAnimationFrame(scanFrame); return; }
+    async function scanFrame() {
+        if (isProcessing) { requestAnimationFrame(scanFrame); return; }
 
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            isProcessing = true;
-            canvas.toBlob(async (blob) => {
-                const formData = new FormData();
-                formData.append('image', blob, 'capture.jpg');
+            isProcessing = true;
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'capture.jpg');
 
-                try {
-                    const response = await fetch(IMAC_HUB_URL, { method: 'POST', body: formData });
-                    
-                    if (response.status === 200) {
-                        const data = await response.json();
-                        if (data.name) {
-                            handleMissionExtraction(data);
-                            return;
-                        }
-                    } else {
-                        hintText.innerText = "Hold Steady for Verification";
-                        statusPill.innerText = "Scanning...";
-                    }
-                } catch (err) {
-                    statusPill.innerText = "Bridge Lost";
-                }
-                
-                setTimeout(() => {
-                    isProcessing = false;
-                    requestAnimationFrame(scanFrame);
-                }, 600); 
+                try {
+                    const response = await fetch(IMAC_HUB_URL, { method: 'POST', body: formData });
+                    
+                    if (response.status === 200) {
+                        const data = await response.json();
+                        if (data.name) {
+                            handleMissionExtraction(data);
+                            return;
+                        }
+                    } else {
+                        hintText.innerText = "Hold Steady for Verification";
+                        statusPill.innerText = "Scanning...";
+                    }
+                } catch (err) {
+                    statusPill.innerText = "Bridge Lost";
+                }
+                
+                setTimeout(() => {
+                    isProcessing = false;
+                    requestAnimationFrame(scanFrame);
+                }, 600); 
 
-            }, 'image/jpeg', 0.85);
-        } else {
-            requestAnimationFrame(scanFrame);
-        }
-    }
+            }, 'image/jpeg', 0.85);
+        } else {
+            requestAnimationFrame(scanFrame);
+        }
+    }
 
 function handleMissionExtraction(data, isResuming = false) {
-    if (!isResuming) {
-        localStorage.setItem('velocis_active_session', JSON.stringify(data));
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-        successSound.play().catch(err => console.log("Audio feedback ready."));
-    }
+    if (!isResuming) {
+        localStorage.setItem('velocis_active_session', JSON.stringify(data));
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+        successSound.play().catch(err => console.log("Audio feedback ready."));
+    }
 
-    if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+    if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
-    const statusColor = data.status === "Delayed" ? "text-amber-500" : 
-                        data.status === "Cancelled" ? "text-red-500" : "text-emerald-500";
-    const statusBg = data.status === "Delayed" ? "bg-amber-500" : 
-                     data.status === "Cancelled" ? "bg-red-500" : "bg-emerald-500";
+    const statusColor = data.status === "Delayed" ? "text-amber-500" : 
+                        data.status === "Cancelled" ? "text-red-500" : "text-emerald-500";
+    const statusBg = data.status === "Delayed" ? "bg-amber-500" : 
+                     data.status === "Cancelled" ? "bg-red-500" : "bg-emerald-500";
 
-    const stages = data.ai_stages;
-    const getMsg = (stage) => typeof stage === 'string' ? stage : (stage.text || stage.message || "Welcome!");
+    const stages = data.ai_stages;
+    const getMsg = (stage) => typeof stage === 'string' ? stage : (stage.text || stage.message || "Welcome!");
 
-    const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
-    const gateVal = data.gate || 'TBD';
+    const nodesString = data.nav_nodes ? encodeURIComponent(JSON.stringify(data.nav_nodes)) : '';
+    const gateVal = data.gate || 'TBD';
 
-    const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
+    const displayCounter = data.counter.replace('Check-in Zone', 'Zone').replace('CONSOLIDATED HUB', 'Main');
 
-    // --- INTELLIGENCE LOGIC: Detect Stage Focus ---
-    const flightStatus = (data.status || "").toLowerCase();
-    const isArrived = flightStatus.includes("landed") || flightStatus.includes("arrived");
-    const isEnRoute = flightStatus.includes("active") || flightStatus.includes("time") || flightStatus.includes("boarding");
+    // --- INTELLIGENCE LOGIC: Detect Stage Focus ---
+    const flightStatus = (data.status || "").toLowerCase();
+    const isArrived = flightStatus.includes("landed") || flightStatus.includes("arrived");
+    const isEnRoute = flightStatus.includes("active") || flightStatus.includes("time") || flightStatus.includes("boarding");
 
-    const stage1Class = !isEnRoute && !isArrived ? 'stage-active' : 'stage-dimmed';
-    const stage3Class = isEnRoute ? 'stage-active' : 'stage-dimmed';
-    const stage4Class = isArrived ? 'stage-active' : 'stage-dimmed';
+    const stage1Class = !isEnRoute && !isArrived ? 'stage-active' : 'stage-dimmed';
+    const stage3Class = isEnRoute ? 'stage-active' : 'stage-dimmed';
+    const stage4Class = isArrived ? 'stage-active' : 'stage-dimmed';
 
-    document.body.innerHTML = `
-        <div class="flex flex-col h-screen bg-slate-50 overflow-y-auto pb-32">
-            
-            <div class="p-6 pb-2">
-                <div class="glass-pill text-blue-600 mb-2 w-fit uppercase font-bold text-[10px]">Traveler Verified</div>
-                <h1 class="text-4xl font-black text-slate-900 leading-tight uppercase mb-4">${data.name}</h1>
-                
-                <div class="flex gap-2 mb-4">
-                    <div class="flex-1 bg-white border-2 border-blue-100 p-2 rounded-xl">
-                        <p class="text-[8px] text-blue-400 font-bold uppercase">Flight</p>
-                        <p class="text-xs font-black text-slate-800">${data.flight}</p>
-                    </div>
-                    <div class="flex-[1.5] bg-white border-2 border-blue-100 p-2 rounded-xl">
-                        <p class="text-[8px] text-blue-400 font-bold uppercase">Departure</p>
-                        <p class="text-xs font-black text-slate-800">${data.origin}</p>
-                    </div>
-                    <div class="flex-[1.5] bg-white border-2 border-blue-100 p-2 rounded-xl">
-                        <p class="text-[8px] text-blue-400 font-bold uppercase">Arrival</p>
-                        <p class="text-xs font-black text-slate-800">${data.dest}</p>
-                    </div>
-                </div>
+    document.body.innerHTML = `
+        <div class="flex flex-col h-screen bg-slate-50 overflow-y-auto pb-32">
+            
+            <div class="p-6 pb-2">
+                <div class="glass-pill text-blue-600 mb-2 w-fit uppercase font-bold text-[10px]">Traveler Verified</div>
+                <h1 class="text-4xl font-black text-slate-900 leading-tight uppercase mb-4">${data.name}</h1>
+                
+                <div class="flex gap-2 mb-4">
+                    <div class="flex-1 bg-white border-2 border-blue-100 p-2 rounded-xl">
+                        <p class="text-[8px] text-blue-400 font-bold uppercase">Flight</p>
+                        <p class="text-xs font-black text-slate-800">${data.flight}</p>
+                    </div>
+                    <div class="flex-[1.5] bg-white border-2 border-blue-100 p-2 rounded-xl">
+                        <p class="text-[8px] text-blue-400 font-bold uppercase">Departure</p>
+                        <p class="text-xs font-black text-slate-800">${data.origin}</p>
+                    </div>
+                    <div class="flex-[1.5] bg-white border-2 border-blue-100 p-2 rounded-xl">
+                        <p class="text-[8px] text-blue-400 font-bold uppercase">Arrival</p>
+                        <p class="text-xs font-black text-slate-800">${data.dest}</p>
+                    </div>
+                </div>
 
-                <div class="flex gap-1.5 mb-6">
-                    <div class="industrial-pill flex-1">
-                        <p class="pill-label">Seat</p>
-                        <p class="pill-value text-blue-600">${data.seat || 'TBD'}</p>
-                    </div>
-                    <div class="industrial-pill flex-[1.4]">
-                        <p class="pill-label">Counter</p>
-                        <p class="pill-value">${displayCounter}</p>
-                    </div>
-                1    <div class="industrial-pill flex-1">
-                        <p class="pill-label">Gate</p>
-                        <p class="pill-value">${gateVal}</p>
-                    </div>
-                    <div class="industrial-pill flex-[1.2]">
-                        <p class="pill-label text-center">Status</p>
-                        <div class="flex items-center gap-1 justify-center">
-                            <span class="relative flex h-1.5 w-1.5">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${statusBg} opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 ${statusBg}"></span>
-                            </span>
-                            <p class="status-pill-text font-black ${statusColor} uppercase">${data.status || 'Active'}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <div class="flex gap-1.5 mb-6">
+                    <div class="industrial-pill flex-1">
+                        <p class="pill-label">Seat</p>
+                        <p class="pill-value text-blue-600">${data.seat || 'TBD'}</p>
+                    </div>
+                    <div class="industrial-pill flex-[1.4]">
+                        <p class="pill-label">Counter</p>
+                        <p class="pill-value">${displayCounter}</p>
+                    </div>
+                    <div class="industrial-pill flex-1">
+                        <p class="pill-label">Gate</p>
+                        <p class="pill-value">${gateVal}</p>
+                    </div>
+                    <div class="industrial-pill flex-[1.2]">
+                        <p class="pill-label text-center">Status</p>
+                        <div class="flex items-center gap-1 justify-center">
+                            <span class="relative flex h-1.5 w-1.5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${statusBg} opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 ${statusBg}"></span>
+                            </span>
+                            <p class="status-pill-text font-black ${statusColor} uppercase">${data.status || 'Active'}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="px-6 space-y-4 mb-8">
-                <div class="flex gap-4 transition-all duration-500 ${stage1Class}">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-200">01</div>
-                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
-                    </div>
-                    <div class="flex-1 bg-blue-50 p-5 rounded-[24px] shadow-sm border border-blue-100">
-                        <p class="text-[10px] text-blue-600 font-black uppercase tracking-widest mb-2">${data.airline_name || 'Airline'} Check-In</p>
-                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3 italic">"${getMsg(stages.stage1)}"</p>
-                        <div class="flex gap-4 border-t border-blue-100 pt-3">
-                            <div><p class="text-[9px] text-blue-400 uppercase font-bold">Terminal</p><p class="text-sm font-black text-slate-900">${data.terminal}</p></div>
-                            <div><p class="text-[9px] text-blue-400 uppercase font-bold">Zone</p><p class="text-sm font-black text-slate-900">${displayCounter}</p></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="px-6 space-y-4 mb-8">
+                <div class="flex gap-4 transition-all duration-500 ${stage1Class}">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-200">01</div>
+                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
+                    </div>
+                    <div class="flex-1 bg-blue-50 p-5 rounded-[24px] shadow-sm border border-blue-100">
+                        <p class="text-[10px] text-blue-600 font-black uppercase tracking-widest mb-2">${data.airline_name || 'Airline'} Check-In</p>
+                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3 italic">"${getMsg(stages.stage1)}"</p>
+                        <div class="flex gap-4 border-t border-blue-100 pt-3">
+                            <div><p class="text-[9px] text-blue-400 uppercase font-bold">Terminal</p><p class="text-sm font-black text-slate-900">${data.terminal}</p></div>
+                            <div><p class="text-[9px] text-blue-400 uppercase font-bold">Zone</p><p class="text-sm font-black text-slate-900">${displayCounter}</p></div>
+                        </div>
+                    </div>
+                </div>
 
-                <div class="flex gap-4 opacity-80">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-orange-200">02</div>
-                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
-                    </div>
-                    <div class="flex-1 bg-orange-50 p-5 rounded-[24px] shadow-sm border border-orange-100">
-                        <p class="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-2">Security Checkpoint</p>
-                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3">
-                            "Security is the next step. Please have your digital boarding pass and ID ready for the terminal inspectors."
-                        </p>
-                        <div class="p-3 bg-white rounded-xl border border-orange-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3 w-full">
-                                <span class="text-lg">🛡️</span>
-                                <div>
-                                    <p class="text-[9px] text-orange-900 font-bold uppercase tracking-tighter">Traveler Advisory</p>
-                                    <p class="text-[11px] text-orange-800 font-black uppercase leading-none">Prepare Documents</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div class="flex gap-4 opacity-80">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-orange-200">02</div>
+                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
+                    </div>
+                    <div class="flex-1 bg-orange-50 p-5 rounded-[24px] shadow-sm border border-orange-100">
+                        <p class="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-2">Security Checkpoint</p>
+                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3">
+                            "Security is the next step. Please have your digital boarding pass and ID ready for the terminal inspectors."
+                        </p>
+                        <div class="p-3 bg-white rounded-xl border border-orange-100 flex items-center justify-between">
+                            <div class="flex items-center gap-3 w-full">
+                                <span class="text-lg">🛡️</span>
+                                <div>
+                                    <p class="text-[9px] text-orange-900 font-bold uppercase tracking-tighter">Traveler Advisory</p>
+                                    <p class="text-[11px] text-orange-800 font-black uppercase leading-none">Prepare Documents</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <div class="flex gap-4 transition-all duration-500 ${stage3Class}">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-emerald-200">03</div>
-                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
-                    </div>
-                    <div class="flex-1 bg-emerald-50 p-5 rounded-[24px] shadow-sm border border-emerald-100">
-                        <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-2">Boarding Gate</p>
-                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3">"${getMsg(stages.stage3)}"</p>
-                        <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-emerald-100">
-                            <div>
-                                <p class="text-[9px] text-emerald-700 uppercase font-bold">Current Gate</p>
-                                <p class="text-sm font-black text-slate-900">${gateVal}</p>
-                            </div>
-                            <button onclick="window.open('map.html?gate=${gateVal}&nodes=${nodesString}', 'velocis_map')" 
-                                    class="${data.gate ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-400 shadow-slate-200'} text-white px-5 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2">
-                                <span>📍</span> OPEN NAVIGATION
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <div class="flex gap-4 transition-all duration-500 ${stage3Class}">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-emerald-200">03</div>
+                        <div class="w-0.5 h-full bg-slate-200 my-1"></div>
+                    </div>
+                    <div class="flex-1 bg-emerald-50 p-5 rounded-[24px] shadow-sm border border-emerald-100">
+                        <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-2">Boarding Gate</p>
+                        <p class="text-sm font-bold text-slate-800 leading-snug mb-3">"${getMsg(stages.stage3)}"</p>
+                        <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-emerald-100">
+                            <div>
+                                <p class="text-[9px] text-emerald-700 uppercase font-bold">Current Gate</p>
+                                <p class="text-sm font-black text-slate-900">${gateVal}</p>
+                            </div>
+                            <button onclick="window.open('map.html?gate=${gateVal}&nodes=${nodesString}', 'velocis_map')" 
+                                    class="${data.gate ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-400 shadow-slate-200'} text-white px-5 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2">
+                                <span>📍</span> OPEN NAVIGATION
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                <div class="flex gap-4 pb-4 transition-all duration-500 ${stage4Class}">
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-300">04</div>
-                    </div>
-                    <div class="flex-1 bg-blue-50 p-5 rounded-[24px] shadow-sm border border-blue-200">
-                        <p class="text-[10px] text-blue-700 font-bold uppercase mb-2 tracking-widest">Arrival: ${data.dest || 'Destination'}</p>
-                        <p class="text-sm font-bold text-slate-800 italic mb-4">"${getMsg(stages.stage4)}"</p>
-                        <div class="p-4 bg-white rounded-2xl border border-dashed border-blue-300 text-center mb-4">
-                            <p class="text-[10px] font-black text-blue-600 tracking-widest uppercase">Bag Belt Number: ${data.belt || 'TBD'}</p>
-                        </div>
-                        <button onclick="window.location.href='index.html#ground-transport-market'" class="w-full py-4 bg-white text-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-200 active:scale-95 transition-all">
-                            Ground Transportation Options
-                        </button>
-                    </div>
-                </div>
-            </div>
+                <div class="flex gap-4 pb-4 transition-all duration-500 ${stage4Class}">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-300">04</div>
+                    </div>
+                    <div class="flex-1 bg-blue-50 p-5 rounded-[24px] shadow-sm border border-blue-200">
+                        <p class="text-[10px] text-blue-700 font-bold uppercase mb-2 tracking-widest">Arrival: ${data.dest || 'Destination'}</p>
+                        <p class="text-sm font-bold text-slate-800 italic mb-4">"${getMsg(stages.stage4)}"</p>
+                        <div class="p-4 bg-white rounded-2xl border border-dashed border-blue-300 text-center mb-4">
+                            <p class="text-[10px] font-black text-blue-600 tracking-widest uppercase">Bag Belt Number: ${data.belt || 'TBD'}</p>
+                        </div>
+                        <button onclick="window.location.href='index.html#ground-transport-market'" class="w-full py-4 bg-white text-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-200 active:scale-95 transition-all">
+                            Ground Transportation Options
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-            <div class="px-6 mb-8">
-                <div class="bg-slate-900 rounded-[30px] p-6 text-white shadow-2xl">
-                    <p class="text-[10px] text-blue-400 font-bold uppercase mb-4 tracking-[0.2em]">Traveler Connectivity</p>
-                    <div class="flex gap-4">
-                        <a href="https://plans.gigsky.com/K31267/2CTPL/" target="_blank" class="flex-1 bg-white/5 p-4 rounded-2xl text-center border border-white/10">
-                            <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">GIGSKY</p>
-                            <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">In-Flight</p>
-                        </a>
-                        <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" target="_blank" class="flex-1 bg-white/5 p-4 rounded-2xl text-center border border-white/10">
-                            <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">BREEZE</p>
-                            <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">Ground</p>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <div class="px-6 mb-8">
+                <div class="bg-slate-900 rounded-[30px] p-6 text-white shadow-2xl">
+                    <p class="text-[10px] text-blue-400 font-bold uppercase mb-4 tracking-[0.2em]">Traveler Connectivity</p>
+                    <div class="flex gap-4">
+                        <a href="https://plans.gigsky.com/K31267/2CTPL/" target="_blank" class="flex-1 bg-white/5 p-4 rounded-2xl text-center border border-white/10">
+                            <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">GIGSKY</p>
+                            <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">In-Flight</p>
+                        </a>
+                        <a href="https://breezesim.com?sca_ref=10536336.qGcKodH2TZ" target="_blank" class="flex-1 bg-white/5 p-4 rounded-2xl text-center border border-white/10">
+                            <p class="text-[11px] font-black tracking-widest text-white mb-1 uppercase">BREEZE</p>
+                            <p class="text-[8px] text-blue-400 font-bold uppercase opacity-80">Ground</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-            <div class="px-6 pb-20">
-                <button onclick="resetPortal()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
-                    Scan New Ticket
-                </button>
-            </div>
-        </div>
-    `;
+            <div class="px-6 pb-20">
+                <button onclick="resetPortal()" class="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
+                    Scan New Ticket
+                </button>
+            </div>
+        </div>
+    `;
 }
 
 function resetPortal() {
-    localStorage.removeItem('velocis_active_session');
-    location.reload();
+    localStorage.removeItem('velocis_active_session');
+    location.reload();
 }
 </script>
 </body>
