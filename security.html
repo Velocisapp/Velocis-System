@@ -405,39 +405,6 @@ function resetPortal() {
     localStorage.removeItem('velocis_active_session');
     location.reload();
 }
-
-const velocisObserver = new MutationObserver(() => {
-    const statusPill = document.querySelector('.status-pill-text');
-    if (!statusPill) return;
-
-    const flightStatus = statusPill.innerText.toLowerCase();
-    const missionCards = document.querySelectorAll('.px-6.space-y-4 > div');
-    
-    if (missionCards.length >= 4) {
-        const isArrived = flightStatus.includes("landed") || flightStatus.includes("arrived");
-        const isEnRoute = flightStatus.includes("active") || flightStatus.includes("time") || flightStatus.includes("boarding");
-
-        missionCards.forEach(card => card.classList.remove('stage-active', 'stage-dimmed'));
-
-        if (isArrived) {
-            missionCards[0].classList.add('stage-dimmed');
-            missionCards[1].classList.add('stage-dimmed');
-            missionCards[2].classList.add('stage-dimmed');
-            missionCards[3].classList.add('stage-active');
-        } else if (isEnRoute) {
-            missionCards[0].classList.add('stage-dimmed');
-            missionCards[1].classList.add('stage-dimmed');
-            missionCards[2].classList.add('stage-active');
-            missionCards[3].classList.add('stage-dimmed');
-        } else {
-            missionCards[0].classList.add('stage-active');
-            missionCards[1].classList.add('stage-dimmed');
-            missionCards[2].classList.add('stage-dimmed');
-            missionCards[3].classList.add('stage-dimmed');
-        }
-    }
-});
-
 velocisObserver.observe(document.body, { childList: true, subtree: true });
 </script>
 </body>
