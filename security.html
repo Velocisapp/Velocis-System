@@ -407,14 +407,20 @@ const velocisObserver = new MutationObserver(() => {
         missionCards.forEach(card => card.classList.remove('stage-active', 'stage-dimmed'));
 
         if (isArrived) {
+            missionCards[0].classList.add('stage-dimmed');
+            missionCards[1].classList.add('stage-dimmed');
+            missionCards[2].classList.add('stage-dimmed');
             missionCards[3].classList.add('stage-active');
-            [0, 1, 2].forEach(i => missionCards[i].classList.add('stage-dimmed'));
         } else if (isEnRoute) {
+            missionCards[0].classList.add('stage-dimmed');
+            missionCards[1].classList.add('stage-dimmed');
             missionCards[2].classList.add('stage-active');
-            [0, 1, 3].forEach(i => missionCards[i].classList.add('stage-dimmed'));
+            missionCards[3].classList.add('stage-dimmed');
         } else {
             missionCards[0].classList.add('stage-active');
-            [1, 2, 3].forEach(i => missionCards[i].classList.add('stage-dimmed'));
+            missionCards[1].classList.add('stage-dimmed');
+            missionCards[2].classList.add('stage-dimmed');
+            missionCards[3].classList.add('stage-dimmed');
         }
     }
 });
